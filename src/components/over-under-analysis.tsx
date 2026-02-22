@@ -21,16 +21,6 @@ export function OverUnderAnalysis({ lastDigitTicks }: { lastDigitTicks: number[]
   const [prediction, setPrediction] = React.useState<{ outcome: Outcome; digit: number } | null>(null);
   const [animatedDigit, setAnimatedDigit] = React.useState(0);
 
-  const prevTicksRef = React.useRef(lastDigitTicks);
-
-  React.useEffect(() => {
-    if (showScanner && prevTicksRef.current !== lastDigitTicks) {
-      setShowScanner(false);
-      setPrediction(null);
-    }
-    prevTicksRef.current = lastDigitTicks;
-  }, [lastDigitTicks, showScanner]);
-
   const handleSelectDigit = (digit: number) => {
     setSelectedDigit(digit);
   };
@@ -122,6 +112,7 @@ export function OverUnderAnalysis({ lastDigitTicks }: { lastDigitTicks: number[]
         }
         
         setPrediction({ outcome: bestBet.outcome, digit: bestBet.digit });
+        handleSelectDigit(bestBet.digit);
       
       setShowScanner(true);
       setIsScanning(false);

@@ -21,16 +21,6 @@ export function MatchesDiffersAnalysis({ lastDigitTicks }: { lastDigitTicks: num
   const [prediction, setPrediction] = React.useState<{ outcome: Outcome; digit: number } | null>(null);
   const [animatedDigit, setAnimatedDigit] = React.useState(0);
 
-  const prevTicksRef = React.useRef(lastDigitTicks);
-
-  React.useEffect(() => {
-    if (showScanner && prevTicksRef.current !== lastDigitTicks) {
-      setShowScanner(false);
-      setPrediction(null);
-    }
-    prevTicksRef.current = lastDigitTicks;
-  }, [lastDigitTicks, showScanner]);
-
   const handleSelectDigit = (digit: number) => {
     setSelectedDigit(digit);
   };
@@ -105,6 +95,7 @@ export function MatchesDiffersAnalysis({ lastDigitTicks }: { lastDigitTicks: num
       }
 
       setPrediction({ outcome: 'M', digit: bestDigit });
+      handleSelectDigit(bestDigit);
       
       setShowScanner(true);
       setIsScanning(false);
