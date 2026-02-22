@@ -69,27 +69,25 @@ export function MatchesDiffersAnalysis({ lastDigitTicks }: { lastDigitTicks: num
     setPrediction(null);
 
     setTimeout(() => {
-      // Strategy: Find the digit with the highest match frequency.
-      let bestDigit = -1;
+      // New Strategy: Always predict the digit with the highest frequency.
+      let bestDigit = 0; // Default to 0
       let maxMatches = -1;
 
-      for (let i = 0; i < 10; i++) {
-        const matchCount = lastDigitTicks.filter(tick => tick === i).length;
-        if (matchCount > maxMatches) {
-          maxMatches = matchCount;
-          bestDigit = i;
-        }
+      if (lastDigitTicks.length > 0) {
+          const counts = Array(10).fill(0);
+          for (const tick of lastDigitTicks) {
+              counts[tick]++;
+          }
+
+          for (let i = 0; i < 10; i++) {
+              if (counts[i] > maxMatches) {
+                  maxMatches = counts[i];
+                  bestDigit = i;
+              }
+          }
       }
 
-      const maxMatchPercentage = lastDigitTicks.length > 0 ? (maxMatches / lastDigitTicks.length) * 100 : 0;
-      
-      // Predict a match if the best digit's frequency is significantly higher 
-      // than the statistical average (10%). We'll use a 15% threshold.
-      if (bestDigit !== -1 && maxMatchPercentage > 15) {
-          setPrediction({ outcome: 'M', digit: bestDigit });
-      } else {
-          setPrediction(null); // No strong signal for a match
-      }
+      setPrediction({ outcome: 'M', digit: bestDigit });
       
       setShowScanner(true);
       setIsScanning(false);
