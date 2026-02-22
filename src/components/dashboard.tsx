@@ -11,6 +11,7 @@ export function Dashboard() {
     const [lastDigitTicks, setLastDigitTicks] = React.useState<number[]>([]);
     const [maxTicks, setMaxTicks] = React.useState(1000);
     const [selectedMarket, setSelectedMarket] = React.useState(syntheticIndices[0].id);
+    const [decimalPlaces, setDecimalPlaces] = React.useState(2);
 
     React.useEffect(() => {
         // Truncate the ticks array if maxTicks is reduced
@@ -38,7 +39,15 @@ export function Dashboard() {
 
             if (data.msg_type === 'tick') {
                 const newPrice = data.tick.quote;
-                const newDigit = parseInt(newPrice.toString().slice(-1));
+                const priceString = newPrice.toString();
+                const decimalPart = priceString.split('.')[1];
+                if (decimalPart) {
+                    setDecimalPlaces(decimalPart.length);
+                } else {
+                    setDecimalPlaces(0);
+                }
+                
+                const newDigit = parseInt(priceString.slice(-1));
                 
                 setPrice(parseFloat(newPrice));
                 
@@ -113,6 +122,7 @@ export function Dashboard() {
                     handleMaxTicksBlur={handleMaxTicksBlur}
                     selectedMarket={selectedMarket}
                     onMarketChange={setSelectedMarket}
+                    decimalPlaces={decimalPlaces}
                 />
             </TabsContent>
 
@@ -125,6 +135,7 @@ export function Dashboard() {
                     handleMaxTicksBlur={handleMaxTicksBlur}
                     selectedMarket={selectedMarket}
                     onMarketChange={setSelectedMarket}
+                    decimalPlaces={decimalPlaces}
                 />
             </TabsContent>
         </Tabs>

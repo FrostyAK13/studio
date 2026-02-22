@@ -22,6 +22,7 @@ interface ScannerViewProps {
     handleMaxTicksBlur: () => void;
     selectedMarket: string;
     onMarketChange: (market: string) => void;
+    decimalPlaces: number;
 }
 
 export function ScannerView({
@@ -31,7 +32,8 @@ export function ScannerView({
     handleMaxTicksChange,
     handleMaxTicksBlur,
     selectedMarket,
-    onMarketChange
+    onMarketChange,
+    decimalPlaces
 }: ScannerViewProps) {
     return (
         <>
@@ -67,7 +69,7 @@ export function ScannerView({
                 </div>
                 <div className="rounded-lg p-4 flex flex-col items-center justify-center bg-gradient-to-br from-indigo-500 to-purple-600 text-primary-foreground">
                     <span className="text-sm tracking-widest">PRICE</span>
-                    <span className="text-4xl font-bold">{price.toFixed(2)}</span>
+                    <span className="text-4xl font-bold">{price.toFixed(decimalPlaces)}</span>
                 </div>
             </div>
 

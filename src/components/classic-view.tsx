@@ -19,6 +19,7 @@ interface ClassicViewProps {
     handleMaxTicksBlur: () => void;
     selectedMarket: string;
     onMarketChange: (market: string) => void;
+    decimalPlaces: number;
 }
 
 export function ClassicView({
@@ -29,6 +30,7 @@ export function ClassicView({
     handleMaxTicksBlur,
     selectedMarket,
     onMarketChange,
+    decimalPlaces,
 }: ClassicViewProps) {
     const [tradeType, setTradeType] = React.useState('even-odd');
     const [matchesDigit, setMatchesDigit] = React.useState(0);
@@ -114,7 +116,7 @@ export function ClassicView({
                         <CardContent className="p-6 flex items-center justify-between">
                             <div>
                                 <p className="text-sm text-muted-foreground">CURRENT PRICE</p>
-                                <p className="text-4xl font-bold text-primary">{price.toFixed(2)}</p>
+                                <p className="text-4xl font-bold text-primary">{price.toFixed(decimalPlaces)}</p>
                             </div>
                             <div className="flex gap-8 text-center">
                                 <div>
@@ -199,7 +201,7 @@ export function ClassicView({
                         <CardContent className="p-6 flex items-center justify-between">
                             <div>
                                 <p className="text-sm text-muted-foreground">CURRENT PRICE</p>
-                                <p className="text-4xl font-bold text-primary">{price.toFixed(2)}</p>
+                                <p className="text-4xl font-bold text-primary">{price.toFixed(decimalPlaces)}</p>
                             </div>
                             <div className="flex gap-8 text-center">
                                 <div>
@@ -284,7 +286,7 @@ export function ClassicView({
                         <CardContent className="p-6 flex items-center justify-between">
                             <div>
                                 <p className="text-sm text-muted-foreground">CURRENT PRICE</p>
-                                <p className="text-4xl font-bold text-primary">{price.toFixed(2)}</p>
+                                <p className="text-4xl font-bold text-primary">{price.toFixed(decimalPlaces)}</p>
                             </div>
                             <div className="flex gap-8 text-center">
                                 <div>
