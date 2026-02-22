@@ -17,7 +17,7 @@ export function EvenOddAnalysis({ lastDigitTicks }: { lastDigitTicks: number[] }
   const [showAllOutcomes, setShowAllOutcomes] = React.useState(false);
   const [showScanner, setShowScanner] = React.useState(false);
   const [isScanning, setIsScanning] = React.useState(false);
-  const [scannerStats, setScannerStats] = React.useState<{ longestEven: number; longestOdd: number; totalSwitches: number } | null>(null);
+  const [prediction, setPrediction] = React.useState<Outcome | null>(null);
 
   React.useEffect(() => {
     if (lastDigitTicks.length === 0) {
@@ -56,27 +56,23 @@ export function EvenOddAnalysis({ lastDigitTicks }: { lastDigitTicks: number[] }
   const handleScan = () => {
     if (showScanner) {
         setShowScanner(false);
+        setPrediction(null);
         return;
     }
     if (outcomes.length === 0) return;
 
     setIsScanning(true);
+    setPrediction(null);
 
     setTimeout(() => {
-      const streaks = outcomes.reduce((acc: {type: Outcome, count: number}[], outcome) => {
-          if (acc.length === 0 || acc[acc.length - 1].type !== outcome) {
-              acc.push({ type: outcome, count: 1 });
-          } else {
-              acc[acc.length - 1].count++;
-          }
-          return acc;
-      }, []);
-
-      const longestEven = Math.max(0, ...streaks.filter(s => s.type === 'E').map(s => s.count));
-      const longestOdd = Math.max(0, ...streaks.filter(s => s.type === 'O').map(s => s.count));
-      const totalSwitches = streaks.length > 1 ? streaks.length - 1 : 0;
+      if (percentages.even > percentages.odd) {
+          setPrediction('E');
+      } else if (percentages.odd > percentages.even) {
+          setPrediction('O');
+      } else {
+          setPrediction(outcomes.length > 0 ? (outcomes[0] === 'E' ? 'O' : 'E') : 'E');
+      }
       
-      setScannerStats({ longestEven, longestOdd, totalSwitches });
       setShowScanner(true);
       setIsScanning(false);
     }, 2000);
@@ -142,7 +138,7 @@ export function EvenOddAnalysis({ lastDigitTicks }: { lastDigitTicks: number[] }
         </div>
 
         <AnimatePresence>
-            {showScanner && scannerStats && (
+            {showScanner && prediction && (
                 <motion.div 
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
@@ -152,22 +148,14 @@ export function EvenOddAnalysis({ lastDigitTicks }: { lastDigitTicks: number[] }
                 >
                   <Card className="bg-card/70 w-full">
                     <CardHeader>
-                        <CardTitle className="text-lg">Scanner Prediction</CardTitle>
+                        <CardTitle className="text-lg">Prediction</CardTitle>
                     </CardHeader>
                     <CardContent>
-                        <div className="grid grid-cols-3 gap-2 text-center">
-                            <div>
-                                <p className="text-sm text-muted-foreground">Longest Even</p>
-                                <p className="text-2xl font-bold text-primary">{scannerStats.longestEven}</p>
-                            </div>
-                            <div>
-                                <p className="text-sm text-muted-foreground">Longest Odd</p>
-                                <p className="text-2xl font-bold text-primary">{scannerStats.longestOdd}</p>
-                            </div>
-                            <div>
-                                <p className="text-sm text-muted-foreground">Switches</p>
-                                <p className="text-2xl font-bold text-primary">{scannerStats.totalSwitches}</p>
-                            </div>
+                        <div className="text-center">
+                            <p className="text-sm text-muted-foreground">Next Outcome</p>
+                            <p className="text-4xl font-bold text-primary">
+                                {prediction === 'E' ? 'EVEN' : 'ODD'}
+                            </p>
                         </div>
                     </CardContent>
                   </Card>
