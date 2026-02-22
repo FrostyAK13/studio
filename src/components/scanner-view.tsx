@@ -20,6 +20,8 @@ interface ScannerViewProps {
     maxTicks: number;
     handleMaxTicksChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
     handleMaxTicksBlur: () => void;
+    selectedMarket: string;
+    onMarketChange: (market: string) => void;
 }
 
 export function ScannerView({
@@ -27,13 +29,15 @@ export function ScannerView({
     lastDigitTicks,
     maxTicks,
     handleMaxTicksChange,
-    handleMaxTicksBlur
+    handleMaxTicksBlur,
+    selectedMarket,
+    onMarketChange
 }: ScannerViewProps) {
     return (
         <>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
                 <div className="p-4 rounded-lg bg-card flex items-center justify-center">
-                    <Select defaultValue={syntheticIndices[0].id}>
+                    <Select value={selectedMarket} onValueChange={onMarketChange}>
                       <SelectTrigger className="w-full bg-transparent font-semibold text-lg h-full border-0 focus:ring-0 focus:ring-offset-0">
                         <SelectValue placeholder="Select Index" />
                       </SelectTrigger>

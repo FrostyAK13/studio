@@ -4,44 +4,59 @@ import * as React from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ScannerView } from './scanner-view';
 import { ClassicView } from './classic-view';
+import { syntheticIndices } from '@/lib/mock-data';
 
 export function Dashboard() {
-    const [price, setPrice] = React.useState(839.80);
+    const [price, setPrice] = React.useState(0);
     const [lastDigitTicks, setLastDigitTicks] = React.useState<number[]>([]);
     const [maxTicks, setMaxTicks] = React.useState(1000);
+    const [selectedMarket, setSelectedMarket] = React.useState(syntheticIndices[0].id);
 
     React.useEffect(() => {
-        // Initialize or adjust ticks when maxTicks changes
-        if (maxTicks < 10) return;
-        setLastDigitTicks(currentTicks => {
-            const currentLength = currentTicks.length;
-            if (currentLength < maxTicks) {
-                const additionalTicks = Array.from({ length: maxTicks - currentLength }, () => Math.floor(Math.random() * 10));
-                return [...additionalTicks, ...currentTicks];
-            } else {
-                return currentTicks.slice(currentTicks.length - maxTicks);
+        // Truncate the ticks array if maxTicks is reduced
+        setLastDigitTicks(prev => prev.slice(0, maxTicks));
+    }, [maxTicks]);
+
+
+    React.useEffect(() => {
+        setPrice(0);
+        setLastDigitTicks([]);
+
+        const ws = new WebSocket('wss://ws.binaryws.com/websockets/v3?app_id=84799');
+
+        ws.onopen = () => {
+            ws.send(JSON.stringify({ "ticks": selectedMarket, "subscribe": 1 }));
+        };
+
+        ws.onmessage = (event) => {
+            const data = JSON.parse(event.data);
+
+            if (data.error) {
+                console.error('WebSocket error:', data.error.message);
+                return;
             }
-        });
-    }, [maxTicks]);
 
-
-    React.useEffect(() => {
-        const interval = setInterval(() => {
-            setPrice(prevPrice => {
-                const newPrice = prevPrice + (Math.random() - 0.5) * 2;
-                const newDigit = parseInt(newPrice.toFixed(2).toString().slice(-1));
+            if (data.msg_type === 'tick') {
+                const newPrice = data.tick.quote;
+                const newDigit = parseInt(newPrice.toString().slice(-1));
                 
-                setLastDigitTicks(prevTicks => {
-                    const updatedTicks = [newDigit, ...prevTicks].slice(0, maxTicks);
-                    return updatedTicks;
-                });
+                setPrice(parseFloat(newPrice));
+                
+                setLastDigitTicks(prevTicks => [newDigit, ...prevTicks].slice(0, maxTicks));
+            }
+        };
 
-                return parseFloat(newPrice.toFixed(2));
-            });
-        }, 1500);
+        ws.onclose = () => {};
+        ws.onerror = (error) => {
+            console.error('WebSocket error:', error);
+        };
 
-        return () => clearInterval(interval);
-    }, [maxTicks]);
+        return () => {
+           if(ws.readyState === WebSocket.OPEN || ws.readyState === WebSocket.CONNECTING) {
+             ws.close();
+           }
+        };
+    }, [selectedMarket, maxTicks]);
 
     const handleMaxTicksChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const value = e.target.value;
@@ -96,6 +111,8 @@ export function Dashboard() {
                     maxTicks={maxTicks}
                     handleMaxTicksChange={handleMaxTicksChange}
                     handleMaxTicksBlur={handleMaxTicksBlur}
+                    selectedMarket={selectedMarket}
+                    onMarketChange={setSelectedMarket}
                 />
             </TabsContent>
 
@@ -106,6 +123,8 @@ export function Dashboard() {
                     maxTicks={maxTicks}
                     handleMaxTicksChange={handleMaxTicksChange}
                     handleMaxTicksBlur={handleMaxTicksBlur}
+                    selectedMarket={selectedMarket}
+                    onMarketChange={setSelectedMarket}
                 />
             </TabsContent>
         </Tabs>

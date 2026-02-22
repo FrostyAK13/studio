@@ -17,6 +17,8 @@ interface ClassicViewProps {
     maxTicks: number;
     handleMaxTicksChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
     handleMaxTicksBlur: () => void;
+    selectedMarket: string;
+    onMarketChange: (market: string) => void;
 }
 
 export function ClassicView({
@@ -25,6 +27,8 @@ export function ClassicView({
     maxTicks,
     handleMaxTicksChange,
     handleMaxTicksBlur,
+    selectedMarket,
+    onMarketChange,
 }: ClassicViewProps) {
     const [tradeType, setTradeType] = React.useState('even-odd');
     const [matchesDigit, setMatchesDigit] = React.useState(0);
@@ -63,7 +67,7 @@ export function ClassicView({
                 <CardContent className="p-6 grid grid-cols-1 md:grid-cols-3 gap-4">
                     <div>
                         <Label htmlFor="classic-market-select">Synthetic Market</Label>
-                        <Select defaultValue={syntheticIndices[0].id}>
+                        <Select value={selectedMarket} onValueChange={onMarketChange}>
                             <SelectTrigger id="classic-market-select">
                                 <SelectValue placeholder="Select Index" />
                             </SelectTrigger>
