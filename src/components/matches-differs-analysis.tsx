@@ -18,7 +18,7 @@ export function MatchesDiffersAnalysis({ lastDigitTicks }: { lastDigitTicks: num
   const [showAllOutcomes, setShowAllOutcomes] = React.useState(false);
   const [showScanner, setShowScanner] = React.useState(false);
   const [isScanning, setIsScanning] = React.useState(false);
-  const [prediction, setPrediction] = React.useState<Outcome | null>(null);
+  const [prediction, setPrediction] = React.useState<{ outcome: Outcome; digit: number } | null>(null);
 
   const handleSelectDigit = (digit: number) => {
     setSelectedDigit(digit);
@@ -63,17 +63,32 @@ export function MatchesDiffersAnalysis({ lastDigitTicks }: { lastDigitTicks: num
         setPrediction(null);
         return;
     }
-    if (outcomes.length === 0) return;
+    if (lastDigitTicks.length === 0) return;
 
     setIsScanning(true);
     setPrediction(null);
 
     setTimeout(() => {
-      // New strategy: Focus only on "MATCH" predictions
-      if (percentages.matches > percentages.differs) {
-          setPrediction('M');
+      // Strategy: Find the digit with the highest match frequency.
+      let bestDigit = -1;
+      let maxMatches = -1;
+
+      for (let i = 0; i < 10; i++) {
+        const matchCount = lastDigitTicks.filter(tick => tick === i).length;
+        if (matchCount > maxMatches) {
+          maxMatches = matchCount;
+          bestDigit = i;
+        }
+      }
+
+      const maxMatchPercentage = lastDigitTicks.length > 0 ? (maxMatches / lastDigitTicks.length) * 100 : 0;
+      
+      // Predict a match if the best digit's frequency is significantly higher 
+      // than the statistical average (10%). We'll use a 15% threshold.
+      if (bestDigit !== -1 && maxMatchPercentage > 15) {
+          setPrediction({ outcome: 'M', digit: bestDigit });
       } else {
-          setPrediction(null); // Do not predict "DIFFER"
+          setPrediction(null); // No strong signal for a match
       }
       
       setShowScanner(true);
@@ -170,7 +185,7 @@ export function MatchesDiffersAnalysis({ lastDigitTicks }: { lastDigitTicks: num
                         <div className="text-center">
                             <p className="text-sm text-muted-foreground">Next Outcome</p>
                             <p className="text-4xl font-bold text-primary">
-                                {prediction === 'M' ? 'MATCH' : 'DIFFER'}
+                                {`MATCH ${prediction.digit}`}
                             </p>
                         </div>
                     </CardContent>
