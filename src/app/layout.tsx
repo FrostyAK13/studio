@@ -3,8 +3,8 @@ import './globals.css';
 import { Toaster } from '@/components/ui/toaster';
 
 export const metadata: Metadata = {
-  title: 'DerivInsight Pro',
-  description: 'Advanced analysis tool for Deriv synthetic indices.',
+  title: 'frostytraders.com',
+  description: 'Advanced analysis tool for synthetic indices.',
 };
 
 export default function RootLayout({
