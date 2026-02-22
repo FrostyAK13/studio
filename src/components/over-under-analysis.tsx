@@ -6,29 +6,18 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
 import { cn } from '@/lib/utils';
-import type { DigitPatternAssistantInsightOutput } from '@/ai/flows/digit-pattern-assistant-insight';
+import { ScanLine } from 'lucide-react';
 
 type Outcome = 'O' | 'U';
 
-const AnalysisCard = ({ title, prediction, confidence, analysis }: { title: string; prediction: string | number; confidence: number; analysis: string; }) => (
-    <Card className="bg-card/70 w-full mt-4">
-        <CardHeader>
-            <CardTitle className="text-lg">{title}</CardTitle>
-        </CardHeader>
-        <CardContent>
-            <p className="text-4xl font-bold text-primary">{prediction.toString()}</p>
-            <p className="text-sm text-muted-foreground mt-1">Confidence: {(confidence * 100).toFixed(0)}%</p>
-            <p className="text-sm mt-4">{analysis}</p>
-        </CardContent>
-    </Card>
-);
-
-export function OverUnderAnalysis({ lastDigitTicks, analysis }: { lastDigitTicks: number[]; analysis: DigitPatternAssistantInsightOutput | null }) {
+export function OverUnderAnalysis({ lastDigitTicks }: { lastDigitTicks: number[]; }) {
   const [selectedDigit, setSelectedDigit] = React.useState<number>(5);
   const [outcomes, setOutcomes] = React.useState<Outcome[]>([]);
   const [streak, setStreak] = React.useState<{ type: Outcome; count: number }>({ type: 'U', count: 0 });
   const [percentages, setPercentages] = React.useState({ over: 0, under: 0 });
   const [showAllOutcomes, setShowAllOutcomes] = React.useState(false);
+  const [showScanner, setShowScanner] = React.useState(false);
+  const [scannerStats, setScannerStats] = React.useState<{ longestOver: number; longestUnder: number; totalSwitches: number } | null>(null);
 
   const handleSelectDigit = (digit: number) => {
     setSelectedDigit(digit);
@@ -75,6 +64,30 @@ export function OverUnderAnalysis({ lastDigitTicks, analysis }: { lastDigitTicks
         setPercentages({ over: 0, under: 0 });
     }
   }, [lastDigitTicks, selectedDigit]);
+
+  const handleScan = () => {
+    if (showScanner) {
+        setShowScanner(false);
+        return;
+    }
+    if (outcomes.length === 0) return;
+
+    const streaks = outcomes.reduce((acc: {type: Outcome, count: number}[], outcome) => {
+        if (acc.length === 0 || acc[acc.length - 1].type !== outcome) {
+            acc.push({ type: outcome, count: 1 });
+        } else {
+            acc[acc.length - 1].count++;
+        }
+        return acc;
+    }, []);
+
+    const longestOver = Math.max(0, ...streaks.filter(s => s.type === 'O').map(s => s.count));
+    const longestUnder = Math.max(0, ...streaks.filter(s => s.type === 'U').map(s => s.count));
+    const totalSwitches = streaks.length > 1 ? streaks.length - 1 : 0;
+    
+    setScannerStats({ longestOver, longestUnder, totalSwitches });
+    setShowScanner(true);
+  };
 
   const displayedOutcomes = showAllOutcomes ? outcomes.slice(0, 24) : outcomes.slice(0, 8);
 
@@ -141,20 +154,43 @@ export function OverUnderAnalysis({ lastDigitTicks, analysis }: { lastDigitTicks
             </Card>
         </div>
 
+        <div className="mt-6 text-center">
+            <Button onClick={handleScan} variant="secondary">
+                <ScanLine className="mr-2 h-4 w-4" />
+                {showScanner ? 'Hide Scanner' : 'Run Scanner'}
+            </Button>
+        </div>
+
         <AnimatePresence>
-            {analysis?.overUnder && (
+            {showScanner && scannerStats && (
                 <motion.div 
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
                     exit={{ opacity: 0, y: -20 }}
                     transition={{ duration: 0.5 }}
+                    className="mt-6"
                 >
-                    <AnalysisCard 
-                        title="AI Prediction: Over / Under"
-                        prediction={analysis.overUnder.prediction}
-                        confidence={analysis.overUnder.confidence}
-                        analysis={analysis.overUnder.analysis}
-                    />
+                  <Card className="bg-card/70 w-full">
+                    <CardHeader>
+                        <CardTitle className="text-lg">Scanner Results</CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                        <div className="grid grid-cols-3 gap-2 text-center">
+                            <div>
+                                <p className="text-sm text-muted-foreground">Longest Over</p>
+                                <p className="text-2xl font-bold text-primary">{scannerStats.longestOver}</p>
+                            </div>
+                            <div>
+                                <p className="text-sm text-muted-foreground">Longest Under</p>
+                                <p className="text-2xl font-bold text-primary">{scannerStats.longestUnder}</p>
+                            </div>
+                            <div>
+                                <p className="text-sm text-muted-foreground">Switches</p>
+                                <p className="text-2xl font-bold text-primary">{scannerStats.totalSwitches}</p>
+                            </div>
+                        </div>
+                    </CardContent>
+                  </Card>
                 </motion.div>
             )}
         </AnimatePresence>
