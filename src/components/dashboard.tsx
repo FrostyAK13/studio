@@ -1,7 +1,6 @@
 'use client';
 
 import * as React from 'react';
-import { Bitcoin } from 'lucide-react';
 
 import { Button } from '@/components/ui/button';
 import {
@@ -80,10 +79,19 @@ export function Dashboard() {
 
   return (
     <div className="flex min-h-screen w-full flex-col bg-background font-sans">
-      <header className="sticky top-0 z-30 flex h-16 items-center gap-4 border-b bg-background/95 px-4 backdrop-blur md:px-6">
+      <header className="sticky top-0 z-30 flex h-16 items-center justify-between border-b bg-background/95 px-4 backdrop-blur md:px-6">
         <div className="flex items-center gap-2">
-          <Bitcoin className="h-7 w-7 text-primary" />
-          <h1 className="text-xl font-bold text-foreground">frostytraders.com</h1>
+          <a
+            href="https://frostytraders.com"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-xl font-bold text-foreground transition-colors hover:text-primary"
+          >
+            frostytraders.com
+          </a>
+        </div>
+        <div>
+          <span className="font-semibold text-muted-foreground">EMPORER MIGOSI</span>
         </div>
       </header>
       <main className="flex-1 p-4 sm:p-6">
