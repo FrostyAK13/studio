@@ -1,14 +1,29 @@
 'use client';
 
 import * as React from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
 import { cn } from '@/lib/utils';
+import type { DigitPatternAssistantInsightOutput } from '@/ai/flows/digit-pattern-assistant-insight';
 
 type Outcome = 'O' | 'U';
 
-export function OverUnderAnalysis({ lastDigitTicks }: { lastDigitTicks: number[] }) {
+const AnalysisCard = ({ title, prediction, confidence, analysis }: { title: string; prediction: string | number; confidence: number; analysis: string; }) => (
+    <Card className="bg-card/70 w-full mt-4">
+        <CardHeader>
+            <CardTitle className="text-lg">{title}</CardTitle>
+        </CardHeader>
+        <CardContent>
+            <p className="text-4xl font-bold text-primary">{prediction.toString()}</p>
+            <p className="text-sm text-muted-foreground mt-1">Confidence: {(confidence * 100).toFixed(0)}%</p>
+            <p className="text-sm mt-4">{analysis}</p>
+        </CardContent>
+    </Card>
+);
+
+export function OverUnderAnalysis({ lastDigitTicks, analysis }: { lastDigitTicks: number[]; analysis: DigitPatternAssistantInsightOutput | null }) {
   const [selectedDigit, setSelectedDigit] = React.useState<number>(5);
   const [outcomes, setOutcomes] = React.useState<Outcome[]>([]);
   const [streak, setStreak] = React.useState<{ type: Outcome; count: number }>({ type: 'U', count: 0 });
@@ -52,8 +67,8 @@ export function OverUnderAnalysis({ lastDigitTicks }: { lastDigitTicks: number[]
         const overCount = newOutcomes.filter(o => o === 'O').length;
         const underCount = newOutcomes.length - overCount;
         setPercentages({
-          over: (overCount / newOutcomes.length) * 100,
-          under: (underCount / newOutcomes.length) * 100,
+          over: newOutcomes.length > 0 ? (overCount / newOutcomes.length) * 100 : 0,
+          under: newOutcomes.length > 0 ? (underCount / newOutcomes.length) * 100 : 0,
         });
     } else {
         setStreak({ type: 'U', count: 0 });
@@ -125,6 +140,24 @@ export function OverUnderAnalysis({ lastDigitTicks }: { lastDigitTicks: number[]
                 </CardContent>
             </Card>
         </div>
+
+        <AnimatePresence>
+            {analysis?.overUnder && (
+                <motion.div 
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -20 }}
+                    transition={{ duration: 0.5 }}
+                >
+                    <AnalysisCard 
+                        title="AI Prediction: Over / Under"
+                        prediction={analysis.overUnder.prediction}
+                        confidence={analysis.overUnder.confidence}
+                        analysis={analysis.overUnder.analysis}
+                    />
+                </motion.div>
+            )}
+        </AnimatePresence>
 
       </CardContent>
     </Card>

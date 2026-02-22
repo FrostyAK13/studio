@@ -1,14 +1,29 @@
 'use client';
 
 import * as React from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
 import { cn } from '@/lib/utils';
+import type { DigitPatternAssistantInsightOutput } from '@/ai/flows/digit-pattern-assistant-insight';
 
 type Outcome = 'M' | 'D';
 
-export function MatchesDiffersAnalysis({ lastDigitTicks }: { lastDigitTicks: number[] }) {
+const AnalysisCard = ({ title, prediction, confidence, analysis }: { title: string; prediction: string | number; confidence: number; analysis: string; }) => (
+    <Card className="bg-card/70 w-full mt-4">
+        <CardHeader>
+            <CardTitle className="text-lg">{title}</CardTitle>
+        </CardHeader>
+        <CardContent>
+            <p className="text-4xl font-bold text-primary">{prediction.toString()}</p>
+            <p className="text-sm text-muted-foreground mt-1">Confidence: {(confidence * 100).toFixed(0)}%</p>
+            <p className="text-sm mt-4">{analysis}</p>
+        </CardContent>
+    </Card>
+);
+
+export function MatchesDiffersAnalysis({ lastDigitTicks, analysis }: { lastDigitTicks: number[]; analysis: DigitPatternAssistantInsightOutput | null }) {
   const [selectedDigit, setSelectedDigit] = React.useState<number>(5);
   const [outcomes, setOutcomes] = React.useState<Outcome[]>([]);
   const [streak, setStreak] = React.useState<{ type: Outcome; count: number }>({ type: 'D', count: 0 });
@@ -30,21 +45,25 @@ export function MatchesDiffersAnalysis({ lastDigitTicks }: { lastDigitTicks: num
     const newOutcomes = lastDigitTicks.map(digit => (digit === selectedDigit ? 'M' : 'D'));
     setOutcomes(newOutcomes);
 
-    let currentStreak = { type: newOutcomes[0], count: 0 };
-    for (const outcome of newOutcomes) {
-      if (outcome === currentStreak.type) {
-        currentStreak.count++;
-      } else {
-        break;
-      }
+    if (newOutcomes.length > 0) {
+        let currentStreak = { type: newOutcomes[0], count: 0 };
+        for (const outcome of newOutcomes) {
+          if (outcome === currentStreak.type) {
+            currentStreak.count++;
+          } else {
+            break;
+          }
+        }
+        setStreak(currentStreak);
+    } else {
+        setStreak({ type: 'D', count: 0 });
     }
-    setStreak(currentStreak);
 
     const matchCount = newOutcomes.filter(o => o === 'M').length;
     const differCount = newOutcomes.length - matchCount;
     setPercentages({
-      matches: (matchCount / newOutcomes.length) * 100,
-      differs: (differCount / newOutcomes.length) * 100,
+      matches: newOutcomes.length > 0 ? (matchCount / newOutcomes.length) * 100 : 0,
+      differs: newOutcomes.length > 0 ? (differCount / newOutcomes.length) * 100 : 0,
     });
   }, [lastDigitTicks, selectedDigit]);
 
@@ -109,6 +128,23 @@ export function MatchesDiffersAnalysis({ lastDigitTicks }: { lastDigitTicks: num
             </Card>
         </div>
 
+        <AnimatePresence>
+            {analysis?.matches && (
+                <motion.div 
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -20 }}
+                    transition={{ duration: 0.5 }}
+                >
+                    <AnalysisCard 
+                        title="AI Prediction: Matches"
+                        prediction={analysis.matches.prediction}
+                        confidence={analysis.matches.confidence}
+                        analysis={analysis.matches.analysis}
+                    />
+                </motion.div>
+            )}
+        </AnimatePresence>
       </CardContent>
     </Card>
   );

@@ -1,7 +1,8 @@
 'use client';
 
 import * as React from 'react';
-import { Bitcoin, Settings } from 'lucide-react';
+import { Bitcoin, Settings, Loader, BrainCircuit, AlertTriangle } from 'lucide-react';
+import { AnimatePresence } from 'framer-motion';
 
 import { Button } from '@/components/ui/button';
 import {
@@ -14,15 +15,20 @@ import {
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { syntheticIndices } from '@/lib/mock-data';
-import { DigitAnalyzer } from './digit-analyzer';
 import { MatchesDiffersAnalysis } from './matches-differs-analysis';
 import { OverUnderAnalysis } from './over-under-analysis';
 import { EvenOddAnalysis } from './even-odd-analysis';
+import { getAnalysis } from '@/app/actions';
+import type { DigitPatternAssistantInsightOutput } from '@/ai/flows/digit-pattern-assistant-insight';
 
 export function Dashboard() {
     const [price, setPrice] = React.useState(839.80);
     const [lastDigitTicks, setLastDigitTicks] = React.useState<number[]>([]);
     const [maxTicks, setMaxTicks] = React.useState(1000);
+    
+    const [analysis, setAnalysis] = React.useState<DigitPatternAssistantInsightOutput | null>(null);
+    const [loading, setLoading] = React.useState(false);
+    const [error, setError] = React.useState<string | null>(null);
 
     React.useEffect(() => {
         // Initialize or adjust ticks when maxTicks changes
@@ -33,7 +39,7 @@ export function Dashboard() {
                 const additionalTicks = Array.from({ length: maxTicks - currentLength }, () => Math.floor(Math.random() * 10));
                 return [...additionalTicks, ...currentTicks];
             } else {
-                return currentTicks.slice(0, maxTicks);
+                return currentTicks.slice(currentTicks.length - maxTicks);
             }
         });
     }, [maxTicks]);
@@ -76,6 +82,21 @@ export function Dashboard() {
     const handleMaxTicksBlur = () => {
         if (maxTicks < 10) {
             setMaxTicks(10);
+        }
+    };
+
+    const handleGetAnalysis = async () => {
+        setLoading(true);
+        setError(null);
+        setAnalysis(null);
+        try {
+            const result = await getAnalysis(lastDigitTicks);
+            setAnalysis(result);
+        } catch (e) {
+            setError('Failed to get analysis. Please try again.');
+            console.error(e);
+        } finally {
+            setLoading(false);
         }
     };
 
@@ -130,13 +151,34 @@ export function Dashboard() {
                     <span className="text-4xl font-bold">{price.toFixed(2)}</span>
                 </div>
             </div>
-            <EvenOddAnalysis lastDigitTicks={lastDigitTicks} />
+
+            <div className="my-6 text-center">
+                <Button onClick={handleGetAnalysis} disabled={loading || lastDigitTicks.length === 0} size="lg">
+                    {loading ? <Loader className="mr-2 h-5 w-5 animate-spin" /> : <BrainCircuit className="mr-2 h-5 w-5" />}
+                    Get AI Predictions
+                </Button>
+            </div>
+            
+            <AnimatePresence>
+            {loading && (
+                 <div className="flex justify-center items-center h-24">
+                    <Loader className="h-12 w-12 animate-spin text-primary" />
+                 </div>
+            )}
+            </AnimatePresence>
+
+            {error && (
+                <div className="bg-destructive/20 text-destructive-foreground p-4 rounded-md flex items-center gap-4">
+                    <AlertTriangle/>
+                    {error}
+                </div>
+            )}
+
+            <EvenOddAnalysis lastDigitTicks={lastDigitTicks} analysis={analysis} />
             <div className="my-6" />
-            <MatchesDiffersAnalysis lastDigitTicks={lastDigitTicks} />
+            <MatchesDiffersAnalysis lastDigitTicks={lastDigitTicks} analysis={analysis} />
             <div className="my-6" />
-            <OverUnderAnalysis lastDigitTicks={lastDigitTicks} />
-            <div className="my-6" />
-            <DigitAnalyzer lastDigitTicks={lastDigitTicks} />
+            <OverUnderAnalysis lastDigitTicks={lastDigitTicks} analysis={analysis} />
         </div>
       </main>
     </div>
