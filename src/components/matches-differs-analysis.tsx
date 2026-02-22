@@ -63,15 +63,15 @@ export function MatchesDiffersAnalysis({ lastDigitTicks }: { lastDigitTicks: num
         setPrediction(null);
         return;
     }
-    if (lastDigitTicks.length === 0) return;
+    if (lastDigitTicks.length < 10) return;
 
     setIsScanning(true);
     setPrediction(null);
 
     setTimeout(() => {
-      // New Strategy: Always predict the digit with the highest frequency.
-      let bestDigit = 0; // Default to 0
-      let maxMatches = -1;
+      // Strategy: Find the digit with the highest frequency and predict a match on it.
+      let bestDigit = 0;
+      let maxFrequency = -1;
 
       if (lastDigitTicks.length > 0) {
           const counts = Array(10).fill(0);
@@ -80,8 +80,8 @@ export function MatchesDiffersAnalysis({ lastDigitTicks }: { lastDigitTicks: num
           }
 
           for (let i = 0; i < 10; i++) {
-              if (counts[i] > maxMatches) {
-                  maxMatches = counts[i];
+              if (counts[i] > maxFrequency) {
+                  maxFrequency = counts[i];
                   bestDigit = i;
               }
           }

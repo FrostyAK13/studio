@@ -59,22 +59,33 @@ export function EvenOddAnalysis({ lastDigitTicks }: { lastDigitTicks: number[] }
         setPrediction(null);
         return;
     }
-    if (outcomes.length === 0) return;
+    if (outcomes.length < 10) return;
 
     setIsScanning(true);
     setPrediction(null);
 
     setTimeout(() => {
-      if (percentages.even > percentages.odd) {
-          setPrediction('E');
-      } else if (percentages.odd > percentages.even) {
-          setPrediction('O');
-      } else {
-          setPrediction(outcomes.length > 0 ? (outcomes[0] === 'E' ? 'O' : 'E') : 'E');
-      }
-      
-      setShowScanner(true);
-      setIsScanning(false);
+        let predictedOutcome: Outcome;
+
+        // Strategy:
+        // 1. If one outcome is heavily dominant (>65%), predict that.
+        // 2. If there's a long streak (>= 5), predict a reversal (break of pattern).
+        // 3. Otherwise, predict the currently dominant outcome.
+        if (percentages.even > 65) {
+            predictedOutcome = 'E';
+        } else if (percentages.odd > 65) {
+            predictedOutcome = 'O';
+        } else if (streak.count >= 5) {
+            // Predict reversal of a long streak
+            predictedOutcome = streak.type === 'E' ? 'O' : 'E';
+        } else {
+            // Predict the most frequent outcome
+            predictedOutcome = percentages.even >= percentages.odd ? 'E' : 'O';
+        }
+        
+        setPrediction(predictedOutcome);
+        setShowScanner(true);
+        setIsScanning(false);
     }, 2000);
   };
 
