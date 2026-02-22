@@ -1,26 +1,9 @@
 'use client';
 
-import {
-  Bitcoin,
-  BrainCircuit,
-  History,
-  Settings,
-  Star,
-} from 'lucide-react';
+import * as React from 'react';
+import { Bitcoin, Settings } from 'lucide-react';
 
 import { Button } from '@/components/ui/button';
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from '@/components/ui/card';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { InteractiveChart } from './interactive-chart';
-import { DigitAnalyzer } from './digit-analyzer';
-import { Watchlist } from './watchlist';
-import { HistoricalData } from './historical-data';
 import {
   Select,
   SelectContent,
@@ -29,8 +12,21 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { syntheticIndices } from '@/lib/mock-data';
+import { DigitAnalyzer } from './digit-analyzer';
 
 export function Dashboard() {
+    const [price, setPrice] = React.useState(839.8);
+    const [ticks] = React.useState(1000);
+
+    React.useEffect(() => {
+        const interval = setInterval(() => {
+            const newPrice = price + (Math.random() - 0.5) * 2;
+            setPrice(parseFloat(newPrice.toFixed(1)));
+        }, 1500);
+
+        return () => clearInterval(interval);
+    }, [price]);
+
   return (
     <div className="flex min-h-screen w-full flex-col bg-background font-sans">
       <header className="sticky top-0 z-30 flex h-16 items-center gap-4 border-b bg-background/95 px-4 backdrop-blur md:px-6">
@@ -45,62 +41,33 @@ export function Dashboard() {
           </Button>
         </div>
       </header>
-      <main className="flex flex-1 flex-col gap-4 p-4 md:grid md:grid-cols-3 lg:grid-cols-4 lg:gap-6 lg:p-6">
-        <div className="flex flex-col gap-4 md:col-span-2 lg:col-span-3">
-          <Card className="flex-1">
-            <CardHeader className="flex flex-row items-center">
-              <div className="grid gap-2">
-                <CardTitle>Market Analysis</CardTitle>
-                <CardDescription>
-                  Real-time price movements for synthetic indices.
-                </CardDescription>
-              </div>
-              <div className="ml-auto">
-                <Select defaultValue={syntheticIndices[0].id}>
-                  <SelectTrigger className="w-[200px]">
-                    <SelectValue placeholder="Select Index" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {syntheticIndices.map((index) => (
-                      <SelectItem key={index.id} value={index.id}>
-                        {index.name}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-            </CardHeader>
-            <CardContent>
-              <InteractiveChart />
-            </CardContent>
-          </Card>
-        </div>
-        <div className="flex flex-col">
-          <Tabs defaultValue="analyzer" className="flex-1">
-            <TabsList className="grid w-full grid-cols-3">
-              <TabsTrigger value="analyzer">
-                <BrainCircuit className="mr-2 h-4 w-4" />
-                Analyzer
-              </TabsTrigger>
-              <TabsTrigger value="watchlist">
-                <Star className="mr-2 h-4 w-4" />
-                Watchlist
-              </TabsTrigger>
-              <TabsTrigger value="history">
-                <History className="mr-2 h-4 w-4" />
-                History
-              </TabsTrigger>
-            </TabsList>
-            <TabsContent value="analyzer" className="mt-4">
-              <DigitAnalyzer />
-            </TabsContent>
-            <TabsContent value="watchlist" className="mt-4">
-              <Watchlist />
-            </TabsContent>
-            <TabsContent value="history" className="mt-4">
-              <HistoricalData />
-            </TabsContent>
-          </Tabs>
+      <main className="flex-1 p-4 sm:p-6">
+        <div className="w-full max-w-4xl mx-auto">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+                <div className="p-4 rounded-lg bg-card flex items-center justify-center">
+                    <Select defaultValue={syntheticIndices[0].id}>
+                      <SelectTrigger className="w-full bg-transparent font-semibold text-lg h-full border-0 focus:ring-0 focus:ring-offset-0">
+                        <SelectValue placeholder="Select Index" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {syntheticIndices.map((index) => (
+                          <SelectItem key={index.id} value={index.id}>
+                            {index.name}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                </div>
+                 <div className="flex flex-col items-center justify-center p-4 rounded-lg bg-card">
+                    <span className="text-sm text-muted-foreground tracking-widest">TICKS</span>
+                    <span className="text-3xl font-bold">{ticks}</span>
+                </div>
+                <div className="rounded-lg p-4 flex flex-col items-center justify-center bg-gradient-to-br from-indigo-500 to-purple-600 text-primary-foreground">
+                    <span className="text-sm tracking-widest">PRICE</span>
+                    <span className="text-4xl font-bold">{price}</span>
+                </div>
+            </div>
+            <DigitAnalyzer />
         </div>
       </main>
     </div>

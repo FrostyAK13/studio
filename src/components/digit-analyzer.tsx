@@ -1,192 +1,83 @@
 'use client';
 
 import * as React from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
-import {
-  BrainCircuit,
-  Loader,
-  Sparkles,
-  Zap,
-  ChevronDown,
-  ChevronUp,
-} from 'lucide-react';
-import { getAnalysis } from '@/app/actions';
-import { Button } from '@/components/ui/button';
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardFooter,
-  CardHeader,
-  CardTitle,
-} from '@/components/ui/card';
-import { useToast } from '@/hooks/use-toast';
-import { generateLastDigitTicks } from '@/lib/mock-data';
-import type { DigitPatternAssistantInsightOutput } from '@/ai/flows/digit-pattern-assistant-insight';
-import { Badge } from './ui/badge';
-import { Skeleton } from './ui/skeleton';
-import { Progress } from './ui/progress';
+import { Card, CardContent } from '@/components/ui/card';
+
+const initialStats = [
+    { digit: 0, percentage: 8.20, color: 'red', position: 'bottom' as const },
+    { digit: 1, percentage: 9.50 },
+    { digit: 2, percentage: 8.80, color: 'orange' },
+    { digit: 3, percentage: 10.70 },
+    { digit: 4, percentage: 10.40 },
+    { digit: 5, percentage: 11.10, color: 'green' },
+    { digit: 6, percentage: 10.00 },
+    { digit: 7, percentage: 10.60 },
+    { digit: 8, percentage: 9.80 },
+    { digit: 9, percentage: 10.90, color: 'blue' },
+];
+
+const DigitStat = ({ digit, percentage, color, position }: { digit: number; percentage: number; color?: string; position?: 'bottom' }) => {
+    const colorClasses: { [key: string]: string } = {
+        red: 'border-red-500',
+        orange: 'border-orange-500',
+        green: 'border-green-500',
+        blue: 'border-blue-500',
+    };
+
+    const textColorClasses: { [key: string]: string } = {
+        red: 'text-red-500',
+        orange: 'text-orange-500',
+        green: 'text-green-500',
+        blue: 'text-blue-500',
+    };
+
+    return (
+        <div className="relative flex flex-col items-center">
+            <div className={`flex h-24 w-24 items-center justify-center rounded-full border-4 bg-card ${color ? colorClasses[color] : 'border-muted'}`}>
+                <div className="text-center">
+                    <div className="text-4xl font-bold">{digit}</div>
+                    <div className={`text-sm font-semibold ${color ? textColorClasses[color] : 'text-muted-foreground'}`}>{percentage.toFixed(2)}%</div>
+                </div>
+            </div>
+            {position === 'bottom' && <div className="absolute -bottom-3 h-0 w-0 border-x-8 border-t-8 border-x-transparent border-t-red-500" />}
+        </div>
+    );
+};
 
 export function DigitAnalyzer() {
-  const [ticks, setTicks] = React.useState<number[]>([]);
-  const [isAnalyzing, setIsAnalyzing] = React.useState(false);
-  const [analysisResult, setAnalysisResult] =
-    React.useState<DigitPatternAssistantInsightOutput | null>(null);
-  const { toast } = useToast();
+    const [stats, setStats] = React.useState(initialStats);
 
-  React.useEffect(() => {
-    const initialTicks = generateLastDigitTicks(20);
-    setTicks(initialTicks);
+    React.useEffect(() => {
+        const interval = setInterval(() => {
+            setStats(prevStats => {
+                const newStats = [...prevStats];
+                // Simulate some random fluctuation
+                for (let i = 0; i < newStats.length; i++) {
+                    const change = (Math.random() - 0.5) * 0.2;
+                    newStats[i].percentage += change;
+                    if (newStats[i].percentage < 0) newStats[i].percentage = 0;
+                }
+                
+                // Normalize to sum to 100
+                const total = newStats.reduce((acc, s) => acc + s.percentage, 0);
+                if (total === 0) return newStats; // Avoid division by zero
+                const scale = 100 / total;
+                return newStats.map(s => ({ ...s, percentage: s.percentage * scale }));
+            });
+        }, 1500);
 
-    const interval = setInterval(() => {
-      setTicks((prev) => {
-        const newTicks = [...prev, Math.floor(Math.random() * 10)];
-        if (newTicks.length > 20) {
-          return newTicks.slice(newTicks.length - 20);
-        }
-        return newTicks;
-      });
-    }, 1500);
+        return () => clearInterval(interval);
+    }, []);
 
-    return () => clearInterval(interval);
-  }, []);
-
-  const handleAnalysis = async () => {
-    setIsAnalyzing(true);
-    setAnalysisResult(null);
-    const analysisTicks = generateLastDigitTicks(100);
-
-    try {
-      const result = await getAnalysis(analysisTicks);
-      setAnalysisResult(result);
-    } catch (e: any) {
-      toast({
-        variant: 'destructive',
-        title: 'Analysis Failed',
-        description: e.message,
-      });
-    } finally {
-      setIsAnalyzing(false);
-    }
-  };
-
-  const renderPredictionCard = (
-    title: string,
-    prediction: string | number,
-    confidence: number,
-    analysis: string,
-    icon: React.ReactNode
-  ) => (
-    <Card>
-      <CardHeader className="flex flex-row items-center justify-between pb-2">
-        <CardTitle className="text-sm font-medium">{title}</CardTitle>
-        {icon}
-      </CardHeader>
-      <CardContent>
-        <div className="text-2xl font-bold">{prediction}</div>
-        <p className="text-xs text-muted-foreground">{analysis}</p>
-        <div className="mt-2 flex items-center gap-2">
-            <Progress value={confidence * 100} className="h-2" />
-            <span className="text-xs font-semibold text-muted-foreground">{(confidence * 100).toFixed(0)}%</span>
-        </div>
-      </CardContent>
-    </Card>
-  );
-
-  return (
-    <Card>
-      <CardHeader>
-        <CardTitle>Digit Pattern Assistant</CardTitle>
-        <CardDescription>AI-powered predictions for digit markets.</CardDescription>
-      </CardHeader>
-      <CardContent className="space-y-4">
-        <div>
-          <h4 className="mb-2 text-sm font-medium text-muted-foreground">
-            Live Last Digits
-          </h4>
-          <div className="flex flex-wrap gap-2">
-            <AnimatePresence>
-              {ticks.map((tick, index) => (
-                <motion.div
-                  key={`${tick}-${index}-${Math.random()}`}
-                  initial={{ opacity: 0, y: -20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, y: 20 }}
-                  transition={{ duration: 0.3 }}
-                >
-                  <Badge
-                    variant={tick % 2 === 0 ? 'secondary' : 'default'}
-                    className="flex h-8 w-8 items-center justify-center text-lg font-bold"
-                    style={{
-                      backgroundColor: tick < 5 ? `hsl(var(--primary) / ${tick * 0.1 + 0.3})` : `hsl(var(--accent) / ${ (tick-5) * 0.1 + 0.3})`
-                    }}
-                  >
-                    {tick}
-                  </Badge>
-                </motion.div>
-              ))}
-            </AnimatePresence>
-          </div>
-        </div>
-        
-        {isAnalyzing && (
-          <div className="grid gap-4 pt-4 md:grid-cols-1">
-            <Skeleton className="h-[125px] w-full" />
-            <Skeleton className="h-[125px] w-full" />
-            <Skeleton className="h-[125px] w-full" />
-            <Skeleton className="h-10 w-full" />
-          </div>
-        )}
-
-        {analysisResult && (
-          <div className="grid gap-4 pt-4 md:grid-cols-1">
-            {renderPredictionCard(
-              'Even / Odd',
-              analysisResult.evenOdd.prediction,
-              analysisResult.evenOdd.confidence,
-              analysisResult.evenOdd.analysis,
-              <Zap className="h-4 w-4 text-muted-foreground" />
-            )}
-            {renderPredictionCard(
-              'Over / Under',
-              analysisResult.overUnder.prediction,
-              analysisResult.overUnder.confidence,
-              analysisResult.overUnder.analysis,
-              analysisResult.overUnder.prediction === 'Over 3' ? <ChevronUp className="h-4 w-4 text-muted-foreground" /> : <ChevronDown className="h-4 w-4 text-muted-foreground" />
-            )}
-            {renderPredictionCard(
-              'Digit Match',
-              `Digit ${analysisResult.matches.prediction}`,
-              analysisResult.matches.confidence,
-              analysisResult.matches.analysis,
-              <Sparkles className="h-4 w-4 text-muted-foreground" />
-            )}
-             <Card>
-                <CardHeader className="pb-2">
-                    <CardTitle className="text-sm font-medium">General Insights</CardTitle>
-                </CardHeader>
-                <CardContent>
-                    <p className="text-sm text-muted-foreground">{analysisResult.generalInsights}</p>
-                </CardContent>
-            </Card>
-          </div>
-        )}
-      </CardContent>
-      <CardFooter>
-        <Button onClick={handleAnalysis} disabled={isAnalyzing} className="w-full">
-          {isAnalyzing ? (
-            <>
-              <Loader className="mr-2 h-4 w-4 animate-spin" />
-              Analyzing...
-            </>
-          ) : (
-            <>
-              <BrainCircuit className="mr-2 h-4 w-4" />
-              Get Predictions
-            </>
-          )}
-        </Button>
-      </CardFooter>
-    </Card>
-  );
+    return (
+        <Card className="bg-card/50">
+            <CardContent className="p-6">
+                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-y-8 gap-x-4 justify-items-center">
+                    {stats.map(stat => (
+                        <DigitStat key={stat.digit} {...stat} />
+                    ))}
+                </div>
+            </CardContent>
+        </Card>
+    );
 }
