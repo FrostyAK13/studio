@@ -15,6 +15,7 @@ import { syntheticIndices } from '@/lib/mock-data';
 import { DigitAnalyzer } from './digit-analyzer';
 import { MatchesDiffersAnalysis } from './matches-differs-analysis';
 import { OverUnderAnalysis } from './over-under-analysis';
+import { EvenOddAnalysis } from './even-odd-analysis';
 
 export function Dashboard() {
     const [price, setPrice] = React.useState(839.80);
@@ -69,6 +70,8 @@ export function Dashboard() {
                     <span className="text-4xl font-bold">{price.toFixed(2)}</span>
                 </div>
             </div>
+            <EvenOddAnalysis />
+            <div className="my-6" />
             <MatchesDiffersAnalysis />
             <div className="my-6" />
             <OverUnderAnalysis />
