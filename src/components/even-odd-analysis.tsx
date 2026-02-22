@@ -19,6 +19,16 @@ export function EvenOddAnalysis({ lastDigitTicks }: { lastDigitTicks: number[] }
   const [isScanning, setIsScanning] = React.useState(false);
   const [prediction, setPrediction] = React.useState<Outcome | null>(null);
 
+  const prevTicksRef = React.useRef(lastDigitTicks);
+
+  React.useEffect(() => {
+    if (showScanner && prevTicksRef.current !== lastDigitTicks) {
+      setShowScanner(false);
+      setPrediction(null);
+    }
+    prevTicksRef.current = lastDigitTicks;
+  }, [lastDigitTicks, showScanner]);
+
   React.useEffect(() => {
     if (lastDigitTicks.length === 0) {
       setOutcomes([]);

@@ -20,6 +20,16 @@ export function OverUnderAnalysis({ lastDigitTicks }: { lastDigitTicks: number[]
   const [isScanning, setIsScanning] = React.useState(false);
   const [prediction, setPrediction] = React.useState<{ outcome: Outcome; digit: number } | null>(null);
 
+  const prevTicksRef = React.useRef(lastDigitTicks);
+
+  React.useEffect(() => {
+    if (showScanner && prevTicksRef.current !== lastDigitTicks) {
+      setShowScanner(false);
+      setPrediction(null);
+    }
+    prevTicksRef.current = lastDigitTicks;
+  }, [lastDigitTicks, showScanner]);
+
   const handleSelectDigit = (digit: number) => {
     setSelectedDigit(digit);
   };
@@ -80,8 +90,8 @@ export function OverUnderAnalysis({ lastDigitTicks }: { lastDigitTicks: number[]
     setTimeout(() => {
         let bestBet = { outcome: 'U' as Outcome, digit: 5, rate: 0 };
 
-        // Check "Over" bets from 0 to 8
-        for (let d = 0; d <= 8; d++) {
+        // Check "Over" bets from 1 to 8 (excluding Over 0)
+        for (let d = 1; d <= 8; d++) {
           const relevantTicks = lastDigitTicks.filter(tick => tick !== d);
           if (relevantTicks.length > 0) {
               const overCount = relevantTicks.filter(tick => tick > d).length;
@@ -92,8 +102,8 @@ export function OverUnderAnalysis({ lastDigitTicks }: { lastDigitTicks: number[]
           }
         }
   
-        // Check "Under" bets from 1 to 9
-        for (let d = 1; d <= 9; d++) {
+        // Check "Under" bets from 1 to 8 (excluding Under 9)
+        for (let d = 1; d <= 8; d++) {
           const relevantTicks = lastDigitTicks.filter(tick => tick !== d);
           if (relevantTicks.length > 0) {
               const underCount = relevantTicks.filter(tick => tick < d).length;
