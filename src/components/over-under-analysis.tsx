@@ -72,29 +72,39 @@ export function OverUnderAnalysis({ lastDigitTicks }: { lastDigitTicks: number[]
         setPrediction(null);
         return;
     }
-    if (lastDigitTicks.length === 0) return;
+    if (lastDigitTicks.length < 10) return;
 
     setIsScanning(true);
     setPrediction(null);
 
     setTimeout(() => {
-        // New strategy: focus on "Over 3" and "Under 6"
-        const over3Count = lastDigitTicks.filter(d => d > 3).length;
-        const under6Count = lastDigitTicks.filter(d => d < 6).length;
-        const totalTicks = lastDigitTicks.length;
+        let bestBet = { outcome: 'U' as Outcome, digit: 5, rate: 0 };
 
-        if (totalTicks > 0) {
-            const over3Percentage = (over3Count / totalTicks) * 100;
-            const under6Percentage = (under6Count / totalTicks) * 100;
-
-            if (over3Percentage > under6Percentage) {
-                setPrediction({ outcome: 'O', digit: 3 });
-            } else {
-                setPrediction({ outcome: 'U', digit: 6 });
-            }
-        } else {
-            setPrediction({ outcome: 'U', digit: 6 }); // Default prediction
+        // Check "Over" bets from 0 to 8
+        for (let d = 0; d <= 8; d++) {
+          const relevantTicks = lastDigitTicks.filter(tick => tick !== d);
+          if (relevantTicks.length > 0) {
+              const overCount = relevantTicks.filter(tick => tick > d).length;
+              const rate = overCount / relevantTicks.length;
+              if (rate > bestBet.rate) {
+                  bestBet = { outcome: 'O', digit: d, rate: rate };
+              }
+          }
         }
+  
+        // Check "Under" bets from 1 to 9
+        for (let d = 1; d <= 9; d++) {
+          const relevantTicks = lastDigitTicks.filter(tick => tick !== d);
+          if (relevantTicks.length > 0) {
+              const underCount = relevantTicks.filter(tick => tick < d).length;
+              const rate = underCount / relevantTicks.length;
+              if (rate > bestBet.rate) {
+                  bestBet = { outcome: 'U', digit: d, rate: rate };
+              }
+          }
+        }
+        
+        setPrediction({ outcome: bestBet.outcome, digit: bestBet.digit });
       
       setShowScanner(true);
       setIsScanning(false);
