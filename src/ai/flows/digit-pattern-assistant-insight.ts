@@ -51,6 +51,7 @@ export async function getDigitPatternAssistantInsight(
 
 const digitPatternAssistantPrompt = ai.definePrompt({
   name: 'digitPatternAssistantPrompt',
+  model: 'googleai/gemini-1.5-flash',
   input: { schema: DigitPatternAssistantInsightInputSchema },
   output: { schema: DigitPatternAssistantInsightOutputSchema },
   prompt: `You are an AI-powered assistant specializing in analyzing real-time last digit ticks of synthetic indices for trading. Your goal is to provide simple, clear predictions for three specific markets: Even/Odd, Over/Under, and Matches. Remember that 0 is a valid digit and should be included in your analysis like any other digit; for example, it is an even number.

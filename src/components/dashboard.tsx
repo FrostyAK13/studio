@@ -107,12 +107,6 @@ export function Dashboard() {
           <Bitcoin className="h-7 w-7 text-primary" />
           <h1 className="text-xl font-bold text-foreground">DerivInsight Pro</h1>
         </div>
-        <div className="ml-auto">
-          <Button variant="ghost" size="icon">
-            <Settings className="h-5 w-5" />
-            <span className="sr-only">Settings</span>
-          </Button>
-        </div>
       </header>
       <main className="flex-1 p-4 sm:p-6">
         <div className="w-full max-w-4xl mx-auto">
