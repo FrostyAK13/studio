@@ -17,18 +17,36 @@ import { MatchesDiffersAnalysis } from './matches-differs-analysis';
 import { OverUnderAnalysis } from './over-under-analysis';
 import { EvenOddAnalysis } from './even-odd-analysis';
 
+const MAX_TICKS = 1000;
+
 export function Dashboard() {
     const [price, setPrice] = React.useState(839.80);
-    const [ticks] = React.useState(1000);
+    const [lastDigitTicks, setLastDigitTicks] = React.useState<number[]>([]);
 
     React.useEffect(() => {
+        const initialTicks = Array.from({ length: MAX_TICKS }, () => Math.floor(Math.random() * 10));
+        setLastDigitTicks(initialTicks);
+    }, []);
+
+    React.useEffect(() => {
+        if(lastDigitTicks.length === 0) return;
+
         const interval = setInterval(() => {
-            const newPrice = price + (Math.random() - 0.5) * 2;
-            setPrice(parseFloat(newPrice.toFixed(2)));
+            setPrice(prevPrice => {
+                const newPrice = prevPrice + (Math.random() - 0.5) * 2;
+                const newDigit = parseInt(newPrice.toFixed(2).toString().slice(-1));
+                
+                setLastDigitTicks(prevTicks => {
+                    const updatedTicks = [newDigit, ...prevTicks].slice(0, MAX_TICKS);
+                    return updatedTicks;
+                });
+
+                return parseFloat(newPrice.toFixed(2));
+            });
         }, 1500);
 
         return () => clearInterval(interval);
-    }, [price]);
+    }, [lastDigitTicks.length]);
 
   return (
     <div className="flex min-h-screen w-full flex-col bg-background font-sans">
@@ -63,20 +81,20 @@ export function Dashboard() {
                 </div>
                  <div className="flex flex-col items-center justify-center p-4 rounded-lg bg-card">
                     <span className="text-sm text-muted-foreground tracking-widest">TICKS</span>
-                    <span className="text-3xl font-bold">{ticks}</span>
+                    <span className="text-3xl font-bold">{lastDigitTicks.length}</span>
                 </div>
                 <div className="rounded-lg p-4 flex flex-col items-center justify-center bg-gradient-to-br from-indigo-500 to-purple-600 text-primary-foreground">
                     <span className="text-sm tracking-widest">PRICE</span>
                     <span className="text-4xl font-bold">{price.toFixed(2)}</span>
                 </div>
             </div>
-            <EvenOddAnalysis />
+            <EvenOddAnalysis lastDigitTicks={lastDigitTicks} />
             <div className="my-6" />
-            <MatchesDiffersAnalysis />
+            <MatchesDiffersAnalysis lastDigitTicks={lastDigitTicks} />
             <div className="my-6" />
-            <OverUnderAnalysis />
+            <OverUnderAnalysis lastDigitTicks={lastDigitTicks} />
             <div className="my-6" />
-            <DigitAnalyzer />
+            <DigitAnalyzer lastDigitTicks={lastDigitTicks} />
         </div>
       </main>
     </div>

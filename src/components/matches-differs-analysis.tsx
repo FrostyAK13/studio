@@ -8,7 +8,7 @@ import { cn } from '@/lib/utils';
 
 type Outcome = 'M' | 'D';
 
-export function MatchesDiffersAnalysis() {
+export function MatchesDiffersAnalysis({ lastDigitTicks }: { lastDigitTicks: number[] }) {
   const [selectedDigit, setSelectedDigit] = React.useState<number>(5);
   const [outcomes, setOutcomes] = React.useState<Outcome[]>([]);
   const [streak, setStreak] = React.useState<{ type: Outcome; count: number }>({ type: 'D', count: 0 });
@@ -17,41 +17,36 @@ export function MatchesDiffersAnalysis() {
 
   const handleSelectDigit = (digit: number) => {
     setSelectedDigit(digit);
-    setOutcomes([]);
-    setStreak({ type: 'D', count: 0 });
-    setPercentages({ matches: 0, differs: 0 });
   };
   
   React.useEffect(() => {
-    const interval = setInterval(() => {
-      const lastDigit = Math.floor(Math.random() * 10);
-      const newOutcome: Outcome = lastDigit === selectedDigit ? 'M' : 'D';
-
-      setOutcomes(prev => [newOutcome, ...prev].slice(0, 100));
-
-      setStreak(prev => {
-        if (newOutcome === prev.type) {
-          return { ...prev, count: prev.count + 1 };
-        }
-        return { type: newOutcome, count: 1 };
-      });
-    }, 1500);
-
-    return () => clearInterval(interval);
-  }, [selectedDigit]);
-
-  React.useEffect(() => {
-    if (outcomes.length === 0) {
+    if (lastDigitTicks.length === 0) {
+      setOutcomes([]);
+      setStreak({ type: 'D', count: 0 });
       setPercentages({ matches: 0, differs: 0 });
       return;
     }
-    const matchCount = outcomes.filter(o => o === 'M').length;
-    const differCount = outcomes.length - matchCount;
+
+    const newOutcomes = lastDigitTicks.map(digit => (digit === selectedDigit ? 'M' : 'D'));
+    setOutcomes(newOutcomes);
+
+    let currentStreak = { type: newOutcomes[0], count: 0 };
+    for (const outcome of newOutcomes) {
+      if (outcome === currentStreak.type) {
+        currentStreak.count++;
+      } else {
+        break;
+      }
+    }
+    setStreak(currentStreak);
+
+    const matchCount = newOutcomes.filter(o => o === 'M').length;
+    const differCount = newOutcomes.length - matchCount;
     setPercentages({
-      matches: (matchCount / outcomes.length) * 100,
-      differs: (differCount / outcomes.length) * 100,
+      matches: (matchCount / newOutcomes.length) * 100,
+      differs: (differCount / newOutcomes.length) * 100,
     });
-  }, [outcomes]);
+  }, [lastDigitTicks, selectedDigit]);
 
   const displayedOutcomes = showAllOutcomes ? outcomes.slice(0, 24) : outcomes.slice(0, 8);
 

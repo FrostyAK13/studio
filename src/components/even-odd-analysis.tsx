@@ -8,42 +8,40 @@ import { cn } from '@/lib/utils';
 
 type Outcome = 'E' | 'O';
 
-export function EvenOddAnalysis() {
+export function EvenOddAnalysis({ lastDigitTicks }: { lastDigitTicks: number[] }) {
   const [outcomes, setOutcomes] = React.useState<Outcome[]>([]);
   const [streak, setStreak] = React.useState<{ type: Outcome; count: number }>({ type: 'E', count: 0 });
   const [percentages, setPercentages] = React.useState({ even: 0, odd: 0 });
   const [showAllOutcomes, setShowAllOutcomes] = React.useState(false);
 
   React.useEffect(() => {
-    const interval = setInterval(() => {
-      const lastDigit = Math.floor(Math.random() * 10);
-      const newOutcome: Outcome = lastDigit % 2 === 0 ? 'E' : 'O';
-
-      setOutcomes(prev => [newOutcome, ...prev].slice(0, 100));
-
-      setStreak(prev => {
-        if (newOutcome === prev.type) {
-          return { ...prev, count: prev.count + 1 };
-        }
-        return { type: newOutcome, count: 1 };
-      });
-    }, 1500);
-
-    return () => clearInterval(interval);
-  }, []);
-
-  React.useEffect(() => {
-    if (outcomes.length === 0) {
+    if (lastDigitTicks.length === 0) {
+      setOutcomes([]);
+      setStreak({ type: 'E', count: 0 });
       setPercentages({ even: 0, odd: 0 });
       return;
     }
-    const evenCount = outcomes.filter(o => o === 'E').length;
-    const oddCount = outcomes.length - evenCount;
+
+    const newOutcomes = lastDigitTicks.map(digit => (digit % 2 === 0 ? 'E' : 'O'));
+    setOutcomes(newOutcomes);
+
+    let currentStreak = { type: newOutcomes[0], count: 0 };
+    for (const outcome of newOutcomes) {
+      if (outcome === currentStreak.type) {
+        currentStreak.count++;
+      } else {
+        break;
+      }
+    }
+    setStreak(currentStreak);
+
+    const evenCount = newOutcomes.filter(o => o === 'E').length;
+    const oddCount = newOutcomes.length - evenCount;
     setPercentages({
-      even: (evenCount / outcomes.length) * 100,
-      odd: (oddCount / outcomes.length) * 100,
+      even: (evenCount / newOutcomes.length) * 100,
+      odd: (oddCount / newOutcomes.length) * 100,
     });
-  }, [outcomes]);
+  }, [lastDigitTicks]);
 
   const displayedOutcomes = showAllOutcomes ? outcomes.slice(0, 24) : outcomes.slice(0, 8);
 

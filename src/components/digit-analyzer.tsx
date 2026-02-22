@@ -11,8 +11,8 @@ import type { DigitPatternAssistantInsightOutput } from '@/ai/flows/digit-patter
 const initialStats = Array.from({ length: 10 }, (_, i) => ({
     digit: i,
     percentage: 10.00,
-    color: i === 0 ? 'red' : i === 2 ? 'orange' : i === 5 ? 'green' : i === 9 ? 'blue' : undefined,
-    position: i === 0 ? 'bottom' as const : undefined,
+    color: undefined as string | undefined,
+    position: undefined as 'bottom' | undefined,
 }));
 
 const DigitStat = ({ digit, percentage, color, position }: { digit: number; percentage: number; color?: string; position?: 'bottom' }) => {
@@ -56,52 +56,47 @@ const AnalysisCard = ({ title, prediction, confidence, analysis }: { title: stri
     </Card>
 );
 
-export function DigitAnalyzer() {
+export function DigitAnalyzer({ lastDigitTicks }: { lastDigitTicks: number[] }) {
     const [stats, setStats] = React.useState(initialStats);
-    const [lastDigitTicks, setLastDigitTicks] = React.useState<number[]>([]);
     const [analysis, setAnalysis] = React.useState<DigitPatternAssistantInsightOutput | null>(null);
     const [loading, setLoading] = React.useState(false);
     const [error, setError] = React.useState<string | null>(null);
 
     React.useEffect(() => {
-        const initialTicks = Array.from({ length: 50 }, () => Math.floor(Math.random() * 10));
-        setLastDigitTicks(initialTicks);
+        if (lastDigitTicks.length === 0) {
+            setStats(initialStats);
+            return;
+        }
 
-        const interval = setInterval(() => {
-            setLastDigitTicks(prevTicks => {
-                const newDigit = Math.floor(Math.random() * 10);
-                const newTicks = [...prevTicks, newDigit].slice(-100); // Keep last 100 ticks
-                
-                const digitCounts = new Array(10).fill(0);
-                newTicks.forEach(tick => digitCounts[tick]++);
-                
-                const newStats = digitCounts.map((count, index) => ({
-                    ...initialStats[index],
-                    percentage: (count / newTicks.length) * 100
-                }));
+        const digitCounts = new Array(10).fill(0);
+        lastDigitTicks.forEach(tick => {
+            if (tick >= 0 && tick <= 9) {
+                digitCounts[tick]++;
+            }
+        });
+        
+        const newStats = digitCounts.map((count, index) => ({
+            digit: index,
+            percentage: (count / lastDigitTicks.length) * 100,
+            color: undefined as string | undefined,
+            position: undefined as 'bottom' | undefined,
+        }));
 
-                if (newTicks.length > 0) {
-                    let hotIndex = 0;
-                    let coldIndex = 0;
-                    for (let i = 1; i < newStats.length; i++) {
-                        if (newStats[i].percentage > newStats[hotIndex].percentage) hotIndex = i;
-                        if (newStats[i].percentage < newStats[coldIndex].percentage) coldIndex = i;
-                    }
-                    
-                    newStats.forEach(s => { s.color = undefined; s.position = undefined; });
-
-                    newStats[hotIndex].color = 'blue';
-                    newStats[coldIndex].color = 'red';
-                    newStats[coldIndex].position = 'bottom';
-                }
-                
-                setStats(newStats);
-                return newTicks;
-            });
-        }, 1500);
-
-        return () => clearInterval(interval);
-    }, []);
+        if (lastDigitTicks.length > 0) {
+            let hotIndex = 0;
+            let coldIndex = 0;
+            for (let i = 1; i < newStats.length; i++) {
+                if (newStats[i].percentage > newStats[hotIndex].percentage) hotIndex = i;
+                if (newStats[i].percentage < newStats[coldIndex].percentage) coldIndex = i;
+            }
+            
+            newStats[hotIndex].color = 'blue';
+            newStats[coldIndex].color = 'red';
+            newStats[coldIndex].position = 'bottom';
+        }
+        
+        setStats(newStats);
+    }, [lastDigitTicks]);
 
     const handleGetAnalysis = async () => {
         setLoading(true);

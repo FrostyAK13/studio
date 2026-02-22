@@ -8,7 +8,7 @@ import { cn } from '@/lib/utils';
 
 type Outcome = 'O' | 'U';
 
-export function OverUnderAnalysis() {
+export function OverUnderAnalysis({ lastDigitTicks }: { lastDigitTicks: number[] }) {
   const [selectedDigit, setSelectedDigit] = React.useState<number>(5);
   const [outcomes, setOutcomes] = React.useState<Outcome[]>([]);
   const [streak, setStreak] = React.useState<{ type: Outcome; count: number }>({ type: 'U', count: 0 });
@@ -17,48 +17,49 @@ export function OverUnderAnalysis() {
 
   const handleSelectDigit = (digit: number) => {
     setSelectedDigit(digit);
-    setOutcomes([]);
-    setStreak({ type: 'U', count: 0 });
-    setPercentages({ over: 0, under: 0 });
   };
   
   React.useEffect(() => {
-    const interval = setInterval(() => {
-      const lastDigit = Math.floor(Math.random() * 10);
-      let newOutcome: Outcome | null = null;
-      if (lastDigit > selectedDigit) {
-        newOutcome = 'O';
-      } else if (lastDigit < selectedDigit) {
-        newOutcome = 'U';
-      }
-
-      if (newOutcome) {
-        setOutcomes(prev => [newOutcome!, ...prev].slice(0, 100));
-
-        setStreak(prev => {
-          if (newOutcome === prev.type) {
-            return { ...prev, count: prev.count + 1 };
-          }
-          return { type: newOutcome!, count: 1 };
-        });
-      }
-    }, 1500);
-
-    return () => clearInterval(interval);
-  }, [selectedDigit]);
-
-  React.useEffect(() => {
-    if (outcomes.length === 0) {
-      setPercentages({ over: 0, under: 0 });
-      return;
+    if (lastDigitTicks.length === 0) {
+        setOutcomes([]);
+        setStreak({ type: 'U', count: 0 });
+        setPercentages({ over: 0, under: 0 });
+        return;
     }
-    const overCount = outcomes.filter(o => o === 'O').length;
-    const underCount = outcomes.length - overCount;
-    setPercentages({
-      over: (overCount / outcomes.length) * 100,
-      under: (underCount / outcomes.length) * 100,
-    });
-  }, [outcomes]);
+    
+    const newOutcomes: Outcome[] = lastDigitTicks.reduce((acc: Outcome[], digit) => {
+      if (digit > selectedDigit) {
+        acc.push('O');
+      } else if (digit < selectedDigit) {
+        acc.push('U');
+      }
+      return acc;
+    }, []);
+
+    setOutcomes(newOutcomes);
+
+    if(newOutcomes.length > 0) {
+        let currentStreak = { type: newOutcomes[0], count: 0 };
+        for (const outcome of newOutcomes) {
+          if (outcome === currentStreak.type) {
+            currentStreak.count++;
+          } else {
+            break;
+          }
+        }
+        setStreak(currentStreak);
+    
+        const overCount = newOutcomes.filter(o => o === 'O').length;
+        const underCount = newOutcomes.length - overCount;
+        setPercentages({
+          over: (overCount / newOutcomes.length) * 100,
+          under: (underCount / newOutcomes.length) * 100,
+        });
+    } else {
+        setStreak({ type: 'U', count: 0 });
+        setPercentages({ over: 0, under: 0 });
+    }
+  }, [lastDigitTicks, selectedDigit]);
 
   const displayedOutcomes = showAllOutcomes ? outcomes.slice(0, 24) : outcomes.slice(0, 8);
 
