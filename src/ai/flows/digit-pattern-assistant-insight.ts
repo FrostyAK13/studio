@@ -20,25 +20,24 @@ export type DigitPatternAssistantInsightInput = z.infer<
 >;
 
 const DigitPatternAssistantInsightOutputSchema = z.object({
-  patternsIdentified: z
-    .array(z.string())
-    .describe(
-      'List of recurring digit patterns identified (e.g., "alternating odd/even", "streaks of 7s").'
-    ),
-  anomaliesDetected: z
-    .array(z.string())
-    .describe(
-      'List of unusual or unexpected digit occurrences (e.g., "a sudden cluster of 0s after a period of high numbers").'
-    ),
-  insights: z
+  evenOdd: z.object({
+    prediction: z.enum(['Even', 'Odd']).describe('The most likely prediction for the next digit being Even or Odd.'),
+    confidence: z.number().min(0).max(1).describe('Confidence score for the Even/Odd prediction (0 to 1).'),
+    analysis: z.string().describe('Brief analysis for the Even/Odd prediction.'),
+  }),
+  overUnder: z.object({
+    prediction: z.enum(['Over 3', 'Under 6']).describe("The most likely prediction for the next digit being 'Over 3' (4-9) or 'Under 6' (0-5)."),
+    confidence: z.number().min(0).max(1).describe('Confidence score for the Over/Under prediction (0 to 1).'),
+    analysis: z.string().describe('Brief analysis for the Over/Under prediction.'),
+  }),
+  matches: z.object({
+    prediction: z.number().min(0).max(9).describe('The digit that is most likely to appear next.'),
+    confidence: z.number().min(0).max(1).describe('Confidence score for the digit match prediction (0 to 1).'),
+    analysis: z.string().describe('Brief analysis for the digit match prediction.'),
+  }),
+  generalInsights: z
     .string()
-    .describe('A comprehensive summary of potential trading insights derived from the digit analysis.'),
-  recommendations: z
-    .string()
-    .optional()
-    .describe(
-      'Optional: General trading recommendations or suggestions based on the identified patterns and anomalies.'
-    ),
+    .describe('A general summary of insights from the digit analysis.'),
 });
 export type DigitPatternAssistantInsightOutput = z.infer<
   typeof DigitPatternAssistantInsightOutputSchema
@@ -54,19 +53,19 @@ const digitPatternAssistantPrompt = ai.definePrompt({
   name: 'digitPatternAssistantPrompt',
   input: { schema: DigitPatternAssistantInsightInputSchema },
   output: { schema: DigitPatternAssistantInsightOutputSchema },
-  prompt: `You are an AI-powered assistant specializing in analyzing real-time last digit ticks of synthetic indices.
-Your goal is to identify recurring patterns and anomalies in the provided sequence of last digits, and then provide potential trading insights.
+  prompt: `You are an AI-powered assistant specializing in analyzing real-time last digit ticks of synthetic indices for trading. Your goal is to provide simple, clear predictions for three specific markets: Even/Odd, Over/Under, and Matches.
 
 Analyze the following sequence of the last digits (0-9) from recent synthetic index ticks:
 Digits: {{{JSON.stringify lastDigitTicks}}}
 
-Based on this data:
-1.  Identify any recurring patterns.
-2.  Detect any significant anomalies or unusual occurrences.
-3.  Provide clear, actionable insights for a trader.
-4.  Optionally, suggest general trading recommendations based on your findings.
+Based on this data, provide predictions for the following markets:
+1.  **Even/Odd**: Predict if the next digit will be Even (0, 2, 4, 6, 8) or Odd (1, 3, 5, 7, 9).
+2.  **Over/Under**: Predict if the next digit will be 'Over 3' (digits 4, 5, 6, 7, 8, 9) or 'Under 6' (digits 0, 1, 2, 3, 4, 5). Provide the single most likely prediction between these two.
+3.  **Matches**: Predict which single digit (0-9) is most likely to appear next.
 
-Ensure your output strictly adheres to the specified JSON schema for 'DigitPatternAssistantInsightOutput'.`,
+For each prediction, provide a confidence score (from 0.0 to 1.0) and a brief, simple analysis explaining your reasoning. Also provide a general insight summary.
+
+Ensure your output strictly adheres to the specified JSON schema for 'DigitPatternAssistantInsightOutput'. Keep the analysis simple and direct.`,
 });
 
 const digitPatternAssistantInsightFlow = ai.defineFlow(

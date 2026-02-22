@@ -2,7 +2,14 @@
 
 import * as React from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { BrainCircuit, Loader, AlertTriangle } from 'lucide-react';
+import {
+  BrainCircuit,
+  Loader,
+  Sparkles,
+  Zap,
+  ChevronDown,
+  ChevronUp,
+} from 'lucide-react';
 import { getAnalysis } from '@/app/actions';
 import { Button } from '@/components/ui/button';
 import {
@@ -18,6 +25,7 @@ import { generateLastDigitTicks } from '@/lib/mock-data';
 import type { DigitPatternAssistantInsightOutput } from '@/ai/flows/digit-pattern-assistant-insight';
 import { Badge } from './ui/badge';
 import { Skeleton } from './ui/skeleton';
+import { Progress } from './ui/progress';
 
 export function DigitAnalyzer() {
   const [ticks, setTicks] = React.useState<number[]>([]);
@@ -62,11 +70,34 @@ export function DigitAnalyzer() {
     }
   };
 
+  const renderPredictionCard = (
+    title: string,
+    prediction: string | number,
+    confidence: number,
+    analysis: string,
+    icon: React.ReactNode
+  ) => (
+    <Card>
+      <CardHeader className="flex flex-row items-center justify-between pb-2">
+        <CardTitle className="text-sm font-medium">{title}</CardTitle>
+        {icon}
+      </CardHeader>
+      <CardContent>
+        <div className="text-2xl font-bold">{prediction}</div>
+        <p className="text-xs text-muted-foreground">{analysis}</p>
+        <div className="mt-2 flex items-center gap-2">
+            <Progress value={confidence * 100} className="h-2" />
+            <span className="text-xs font-semibold text-muted-foreground">{(confidence * 100).toFixed(0)}%</span>
+        </div>
+      </CardContent>
+    </Card>
+  );
+
   return (
     <Card>
       <CardHeader>
         <CardTitle>Digit Pattern Assistant</CardTitle>
-        <CardDescription>AI-powered last digit analysis.</CardDescription>
+        <CardDescription>AI-powered predictions for digit markets.</CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
         <div>
@@ -77,7 +108,7 @@ export function DigitAnalyzer() {
             <AnimatePresence>
               {ticks.map((tick, index) => (
                 <motion.div
-                  key={`${tick}-${index}-${Math.random()}`} // Poor man's unique key for transition
+                  key={`${tick}-${index}-${Math.random()}`}
                   initial={{ opacity: 0, y: -20 }}
                   animate={{ opacity: 1, y: 0 }}
                   exit={{ opacity: 0, y: 20 }}
@@ -97,45 +128,47 @@ export function DigitAnalyzer() {
             </AnimatePresence>
           </div>
         </div>
+        
         {isAnalyzing && (
-          <div className="space-y-4 pt-4">
-            <Skeleton className="h-8 w-1/3" />
-            <Skeleton className="h-6 w-full" />
-            <Skeleton className="h-6 w-3/4" />
+          <div className="grid gap-4 pt-4 md:grid-cols-1">
+            <Skeleton className="h-[125px] w-full" />
+            <Skeleton className="h-[125px] w-full" />
+            <Skeleton className="h-[125px] w-full" />
+            <Skeleton className="h-10 w-full" />
           </div>
         )}
+
         {analysisResult && (
-          <div className="space-y-4 pt-4">
-            <div>
-              <h4 className="font-semibold">Insights</h4>
-              <p className="text-sm text-muted-foreground">{analysisResult.insights}</p>
-            </div>
-            {analysisResult.patternsIdentified?.length > 0 && (
-              <div>
-                <h4 className="font-semibold">Patterns Identified</h4>
-                <ul className="list-inside list-disc text-sm text-muted-foreground">
-                  {analysisResult.patternsIdentified.map((pattern, i) => (
-                    <li key={i}>{pattern}</li>
-                  ))}
-                </ul>
-              </div>
+          <div className="grid gap-4 pt-4 md:grid-cols-1">
+            {renderPredictionCard(
+              'Even / Odd',
+              analysisResult.evenOdd.prediction,
+              analysisResult.evenOdd.confidence,
+              analysisResult.evenOdd.analysis,
+              <Zap className="h-4 w-4 text-muted-foreground" />
             )}
-            {analysisResult.anomaliesDetected?.length > 0 && (
-              <div>
-                <h4 className="font-semibold">Anomalies Detected</h4>
-                <ul className="list-inside list-disc text-sm text-muted-foreground">
-                  {analysisResult.anomaliesDetected.map((anomaly, i) => (
-                    <li key={i}>{anomaly}</li>
-                  ))}
-                </ul>
-              </div>
+            {renderPredictionCard(
+              'Over / Under',
+              analysisResult.overUnder.prediction,
+              analysisResult.overUnder.confidence,
+              analysisResult.overUnder.analysis,
+              analysisResult.overUnder.prediction === 'Over 3' ? <ChevronUp className="h-4 w-4 text-muted-foreground" /> : <ChevronDown className="h-4 w-4 text-muted-foreground" />
             )}
-             {analysisResult.recommendations && (
-              <div>
-                <h4 className="font-semibold">Recommendations</h4>
-                <p className="text-sm text-muted-foreground">{analysisResult.recommendations}</p>
-              </div>
+            {renderPredictionCard(
+              'Digit Match',
+              `Digit ${analysisResult.matches.prediction}`,
+              analysisResult.matches.confidence,
+              analysisResult.matches.analysis,
+              <Sparkles className="h-4 w-4 text-muted-foreground" />
             )}
+             <Card>
+                <CardHeader className="pb-2">
+                    <CardTitle className="text-sm font-medium">General Insights</CardTitle>
+                </CardHeader>
+                <CardContent>
+                    <p className="text-sm text-muted-foreground">{analysisResult.generalInsights}</p>
+                </CardContent>
+            </Card>
           </div>
         )}
       </CardContent>
@@ -149,7 +182,7 @@ export function DigitAnalyzer() {
           ) : (
             <>
               <BrainCircuit className="mr-2 h-4 w-4" />
-              Analyze Last 100 Digits
+              Get Predictions
             </>
           )}
         </Button>
