@@ -11,7 +11,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { Slider } from '@/components/ui/slider';
+import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { syntheticIndices } from '@/lib/mock-data';
 import { DigitAnalyzer } from './digit-analyzer';
@@ -26,6 +26,7 @@ export function Dashboard() {
 
     React.useEffect(() => {
         // Initialize or adjust ticks when maxTicks changes
+        if (maxTicks < 10) return;
         setLastDigitTicks(currentTicks => {
             const currentLength = currentTicks.length;
             if (currentLength < maxTicks) {
@@ -55,6 +56,28 @@ export function Dashboard() {
 
         return () => clearInterval(interval);
     }, [maxTicks]);
+
+    const handleMaxTicksChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const value = e.target.value;
+        if (value === '') {
+            setMaxTicks(0); // Temporarily set to 0 to allow empty input
+            return;
+        }
+
+        let numValue = parseInt(value, 10);
+        if (!isNaN(numValue)) {
+            if (numValue > 5000) {
+                numValue = 5000;
+            }
+            setMaxTicks(numValue);
+        }
+    };
+
+    const handleMaxTicksBlur = () => {
+        if (maxTicks < 10) {
+            setMaxTicks(10);
+        }
+    };
 
   return (
     <div className="flex min-h-screen w-full flex-col bg-background font-sans">
@@ -90,16 +113,17 @@ export function Dashboard() {
                  <div className="flex flex-col items-center justify-center p-4 rounded-lg bg-card gap-3">
                     <div className="flex justify-between items-center w-full">
                       <Label htmlFor="max-ticks" className="text-sm text-muted-foreground tracking-widest">TICKS</Label>
-                      <span className="text-2xl font-bold">{maxTicks}</span>
-                    </div>
-                    <Slider
+                      <Input
                         id="max-ticks"
-                        min={10}
-                        max={5000}
-                        step={10}
-                        value={[maxTicks]}
-                        onValueChange={(value) => setMaxTicks(value[0])}
-                    />
+                        type="number"
+                        min="10"
+                        max="5000"
+                        value={maxTicks === 0 ? '' : maxTicks}
+                        onChange={handleMaxTicksChange}
+                        onBlur={handleMaxTicksBlur}
+                        className="w-24 text-right font-bold bg-card border-input focus:ring-ring text-2xl h-auto p-1 rounded-md"
+                      />
+                    </div>
                 </div>
                 <div className="rounded-lg p-4 flex flex-col items-center justify-center bg-gradient-to-br from-indigo-500 to-purple-600 text-primary-foreground">
                     <span className="text-sm tracking-widest">PRICE</span>
