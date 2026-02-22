@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
 import { cn } from '@/lib/utils';
-import { ScanLine } from 'lucide-react';
+import { ScanLine, Loader2 } from 'lucide-react';
 
 type Outcome = 'E' | 'O';
 
@@ -16,6 +16,7 @@ export function EvenOddAnalysis({ lastDigitTicks }: { lastDigitTicks: number[] }
   const [percentages, setPercentages] = React.useState({ even: 0, odd: 0 });
   const [showAllOutcomes, setShowAllOutcomes] = React.useState(false);
   const [showScanner, setShowScanner] = React.useState(false);
+  const [isScanning, setIsScanning] = React.useState(false);
   const [scannerStats, setScannerStats] = React.useState<{ longestEven: number; longestOdd: number; totalSwitches: number } | null>(null);
 
   React.useEffect(() => {
@@ -59,21 +60,26 @@ export function EvenOddAnalysis({ lastDigitTicks }: { lastDigitTicks: number[] }
     }
     if (outcomes.length === 0) return;
 
-    const streaks = outcomes.reduce((acc: {type: Outcome, count: number}[], outcome) => {
-        if (acc.length === 0 || acc[acc.length - 1].type !== outcome) {
-            acc.push({ type: outcome, count: 1 });
-        } else {
-            acc[acc.length - 1].count++;
-        }
-        return acc;
-    }, []);
+    setIsScanning(true);
 
-    const longestEven = Math.max(0, ...streaks.filter(s => s.type === 'E').map(s => s.count));
-    const longestOdd = Math.max(0, ...streaks.filter(s => s.type === 'O').map(s => s.count));
-    const totalSwitches = streaks.length > 1 ? streaks.length - 1 : 0;
-    
-    setScannerStats({ longestEven, longestOdd, totalSwitches });
-    setShowScanner(true);
+    setTimeout(() => {
+      const streaks = outcomes.reduce((acc: {type: Outcome, count: number}[], outcome) => {
+          if (acc.length === 0 || acc[acc.length - 1].type !== outcome) {
+              acc.push({ type: outcome, count: 1 });
+          } else {
+              acc[acc.length - 1].count++;
+          }
+          return acc;
+      }, []);
+
+      const longestEven = Math.max(0, ...streaks.filter(s => s.type === 'E').map(s => s.count));
+      const longestOdd = Math.max(0, ...streaks.filter(s => s.type === 'O').map(s => s.count));
+      const totalSwitches = streaks.length > 1 ? streaks.length - 1 : 0;
+      
+      setScannerStats({ longestEven, longestOdd, totalSwitches });
+      setShowScanner(true);
+      setIsScanning(false);
+    }, 2000);
   };
 
   const displayedOutcomes = showAllOutcomes ? outcomes.slice(0, 24) : outcomes.slice(0, 8);
@@ -125,9 +131,13 @@ export function EvenOddAnalysis({ lastDigitTicks }: { lastDigitTicks: number[] }
         </div>
 
         <div className="mt-6 text-center">
-            <Button onClick={handleScan} variant="secondary">
-                <ScanLine className="mr-2 h-4 w-4" />
-                {showScanner ? 'Hide Scanner' : 'Run Scanner'}
+            <Button onClick={handleScan} variant="secondary" disabled={isScanning}>
+                {isScanning ? (
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                ) : (
+                    <ScanLine className="mr-2 h-4 w-4" />
+                )}
+                {showScanner ? 'Hide Scanner' : isScanning ? 'Analyzing...' : 'Run Scanner'}
             </Button>
         </div>
 
@@ -142,7 +152,7 @@ export function EvenOddAnalysis({ lastDigitTicks }: { lastDigitTicks: number[] }
                 >
                   <Card className="bg-card/70 w-full">
                     <CardHeader>
-                        <CardTitle className="text-lg">Scanner Results</CardTitle>
+                        <CardTitle className="text-lg">Scanner Prediction</CardTitle>
                     </CardHeader>
                     <CardContent>
                         <div className="grid grid-cols-3 gap-2 text-center">

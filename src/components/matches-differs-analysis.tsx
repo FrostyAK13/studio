@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
 import { cn } from '@/lib/utils';
-import { ScanLine } from 'lucide-react';
+import { ScanLine, Loader2 } from 'lucide-react';
 
 type Outcome = 'M' | 'D';
 
@@ -17,6 +17,7 @@ export function MatchesDiffersAnalysis({ lastDigitTicks }: { lastDigitTicks: num
   const [percentages, setPercentages] = React.useState({ matches: 0, differs: 0 });
   const [showAllOutcomes, setShowAllOutcomes] = React.useState(false);
   const [showScanner, setShowScanner] = React.useState(false);
+  const [isScanning, setIsScanning] = React.useState(false);
   const [scannerStats, setScannerStats] = React.useState<{ longestMatch: number; longestDiffer: number; totalSwitches: number } | null>(null);
 
   const handleSelectDigit = (digit: number) => {
@@ -63,21 +64,26 @@ export function MatchesDiffersAnalysis({ lastDigitTicks }: { lastDigitTicks: num
     }
     if (outcomes.length === 0) return;
 
-    const streaks = outcomes.reduce((acc: {type: Outcome, count: number}[], outcome) => {
-        if (acc.length === 0 || acc[acc.length - 1].type !== outcome) {
-            acc.push({ type: outcome, count: 1 });
-        } else {
-            acc[acc.length - 1].count++;
-        }
-        return acc;
-    }, []);
+    setIsScanning(true);
 
-    const longestMatch = Math.max(0, ...streaks.filter(s => s.type === 'M').map(s => s.count));
-    const longestDiffer = Math.max(0, ...streaks.filter(s => s.type === 'D').map(s => s.count));
-    const totalSwitches = streaks.length > 1 ? streaks.length - 1 : 0;
-    
-    setScannerStats({ longestMatch, longestDiffer, totalSwitches });
-    setShowScanner(true);
+    setTimeout(() => {
+      const streaks = outcomes.reduce((acc: {type: Outcome, count: number}[], outcome) => {
+          if (acc.length === 0 || acc[acc.length - 1].type !== outcome) {
+              acc.push({ type: outcome, count: 1 });
+          } else {
+              acc[acc.length - 1].count++;
+          }
+          return acc;
+      }, []);
+
+      const longestMatch = Math.max(0, ...streaks.filter(s => s.type === 'M').map(s => s.count));
+      const longestDiffer = Math.max(0, ...streaks.filter(s => s.type === 'D').map(s => s.count));
+      const totalSwitches = streaks.length > 1 ? streaks.length - 1 : 0;
+      
+      setScannerStats({ longestMatch, longestDiffer, totalSwitches });
+      setShowScanner(true);
+      setIsScanning(false);
+    }, 2000);
   };
 
   const displayedOutcomes = showAllOutcomes ? outcomes.slice(0, 24) : outcomes.slice(0, 8);
@@ -142,9 +148,13 @@ export function MatchesDiffersAnalysis({ lastDigitTicks }: { lastDigitTicks: num
         </div>
 
         <div className="mt-6 text-center">
-            <Button onClick={handleScan} variant="secondary">
-                <ScanLine className="mr-2 h-4 w-4" />
-                {showScanner ? 'Hide Scanner' : 'Run Scanner'}
+            <Button onClick={handleScan} variant="secondary" disabled={isScanning}>
+                {isScanning ? (
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                ) : (
+                    <ScanLine className="mr-2 h-4 w-4" />
+                )}
+                {showScanner ? 'Hide Scanner' : isScanning ? 'Analyzing...' : 'Run Scanner'}
             </Button>
         </div>
 
@@ -159,7 +169,7 @@ export function MatchesDiffersAnalysis({ lastDigitTicks }: { lastDigitTicks: num
                 >
                   <Card className="bg-card/70 w-full">
                     <CardHeader>
-                        <CardTitle className="text-lg">Scanner Results</CardTitle>
+                        <CardTitle className="text-lg">Scanner Prediction</CardTitle>
                     </CardHeader>
                     <CardContent>
                         <div className="grid grid-cols-3 gap-2 text-center">
