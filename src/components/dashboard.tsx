@@ -11,33 +11,41 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
+import { Slider } from '@/components/ui/slider';
+import { Label } from '@/components/ui/label';
 import { syntheticIndices } from '@/lib/mock-data';
 import { DigitAnalyzer } from './digit-analyzer';
 import { MatchesDiffersAnalysis } from './matches-differs-analysis';
 import { OverUnderAnalysis } from './over-under-analysis';
 import { EvenOddAnalysis } from './even-odd-analysis';
 
-const MAX_TICKS = 1000;
-
 export function Dashboard() {
     const [price, setPrice] = React.useState(839.80);
     const [lastDigitTicks, setLastDigitTicks] = React.useState<number[]>([]);
+    const [maxTicks, setMaxTicks] = React.useState(1000);
 
     React.useEffect(() => {
-        const initialTicks = Array.from({ length: MAX_TICKS }, () => Math.floor(Math.random() * 10));
-        setLastDigitTicks(initialTicks);
-    }, []);
+        // Initialize or adjust ticks when maxTicks changes
+        setLastDigitTicks(currentTicks => {
+            const currentLength = currentTicks.length;
+            if (currentLength < maxTicks) {
+                const additionalTicks = Array.from({ length: maxTicks - currentLength }, () => Math.floor(Math.random() * 10));
+                return [...additionalTicks, ...currentTicks];
+            } else {
+                return currentTicks.slice(0, maxTicks);
+            }
+        });
+    }, [maxTicks]);
+
 
     React.useEffect(() => {
-        if(lastDigitTicks.length === 0) return;
-
         const interval = setInterval(() => {
             setPrice(prevPrice => {
                 const newPrice = prevPrice + (Math.random() - 0.5) * 2;
                 const newDigit = parseInt(newPrice.toFixed(2).toString().slice(-1));
                 
                 setLastDigitTicks(prevTicks => {
-                    const updatedTicks = [newDigit, ...prevTicks].slice(0, MAX_TICKS);
+                    const updatedTicks = [newDigit, ...prevTicks].slice(0, maxTicks);
                     return updatedTicks;
                 });
 
@@ -46,7 +54,7 @@ export function Dashboard() {
         }, 1500);
 
         return () => clearInterval(interval);
-    }, [lastDigitTicks.length]);
+    }, [maxTicks]);
 
   return (
     <div className="flex min-h-screen w-full flex-col bg-background font-sans">
@@ -79,9 +87,19 @@ export function Dashboard() {
                       </SelectContent>
                     </Select>
                 </div>
-                 <div className="flex flex-col items-center justify-center p-4 rounded-lg bg-card">
-                    <span className="text-sm text-muted-foreground tracking-widest">TICKS</span>
-                    <span className="text-3xl font-bold">{lastDigitTicks.length}</span>
+                 <div className="flex flex-col items-center justify-center p-4 rounded-lg bg-card gap-3">
+                    <div className="flex justify-between items-center w-full">
+                      <Label htmlFor="max-ticks" className="text-sm text-muted-foreground tracking-widest">TICKS</Label>
+                      <span className="text-2xl font-bold">{maxTicks}</span>
+                    </div>
+                    <Slider
+                        id="max-ticks"
+                        min={10}
+                        max={5000}
+                        step={10}
+                        value={[maxTicks]}
+                        onValueChange={(value) => setMaxTicks(value[0])}
+                    />
                 </div>
                 <div className="rounded-lg p-4 flex flex-col items-center justify-center bg-gradient-to-br from-indigo-500 to-purple-600 text-primary-foreground">
                     <span className="text-sm tracking-widest">PRICE</span>
