@@ -19,6 +19,7 @@ export function MatchesDiffersAnalysis({ lastDigitTicks }: { lastDigitTicks: num
   const [showScanner, setShowScanner] = React.useState(false);
   const [isScanning, setIsScanning] = React.useState(false);
   const [prediction, setPrediction] = React.useState<{ outcome: Outcome; digit: number } | null>(null);
+  const [animatedDigit, setAnimatedDigit] = React.useState(0);
 
   const prevTicksRef = React.useRef(lastDigitTicks);
 
@@ -76,9 +77,15 @@ export function MatchesDiffersAnalysis({ lastDigitTicks }: { lastDigitTicks: num
     if (lastDigitTicks.length < 10) return;
 
     setIsScanning(true);
+    setShowScanner(false);
     setPrediction(null);
 
+    const animationInterval = setInterval(() => {
+        setAnimatedDigit(Math.floor(Math.random() * 10));
+    }, 80);
+
     setTimeout(() => {
+      clearInterval(animationInterval);
       // Strategy: Find the digit with the highest frequency and predict a match on it.
       let bestDigit = 0;
       let maxFrequency = -1;
@@ -101,7 +108,7 @@ export function MatchesDiffersAnalysis({ lastDigitTicks }: { lastDigitTicks: num
       
       setShowScanner(true);
       setIsScanning(false);
-    }, 2000);
+    }, 2500);
   };
 
   const displayedOutcomes = showAllOutcomes ? outcomes.slice(0, 24) : outcomes.slice(0, 8);
@@ -175,9 +182,40 @@ export function MatchesDiffersAnalysis({ lastDigitTicks }: { lastDigitTicks: num
                 {showScanner ? 'Hide Scanner' : isScanning ? 'Analyzing...' : 'Run Scanner'}
             </Button>
         </div>
+        
+        {isScanning && (
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5 }}
+            className="mt-6"
+          >
+            <Card className="bg-card/70 w-full">
+              <CardHeader>
+                  <CardTitle className="text-lg">Analyzing Market...</CardTitle>
+              </CardHeader>
+              <CardContent>
+                  <div className="flex justify-center items-center h-24 overflow-hidden">
+                      <AnimatePresence mode="popLayout">
+                          <motion.div
+                              key={animatedDigit}
+                              initial={{ y: 50, opacity: 0, position: 'absolute' }}
+                              animate={{ y: 0, opacity: 1, position: 'relative' }}
+                              exit={{ y: -50, opacity: 0, position: 'absolute' }}
+                              transition={{ duration: 0.1, ease: 'easeInOut' }}
+                              className="text-6xl font-bold text-primary"
+                          >
+                              {animatedDigit}
+                          </motion.div>
+                      </AnimatePresence>
+                  </div>
+              </CardContent>
+            </Card>
+          </motion.div>
+        )}
 
         <AnimatePresence>
-            {showScanner && prediction && (
+            {showScanner && prediction && !isScanning && (
                 <motion.div 
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
