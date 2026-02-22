@@ -13,6 +13,7 @@ import {
 } from '@/components/ui/select';
 import { syntheticIndices } from '@/lib/mock-data';
 import { DigitAnalyzer } from './digit-analyzer';
+import { MatchesDiffersAnalysis } from './matches-differs-analysis';
 
 export function Dashboard() {
     const [price, setPrice] = React.useState(839.80);
@@ -67,6 +68,8 @@ export function Dashboard() {
                     <span className="text-4xl font-bold">{price.toFixed(2)}</span>
                 </div>
             </div>
+            <MatchesDiffersAnalysis />
+            <div className="my-6" />
             <DigitAnalyzer />
         </div>
       </main>
