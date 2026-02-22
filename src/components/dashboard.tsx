@@ -37,21 +37,20 @@ export function Dashboard() {
                 return;
             }
 
-            if (data.msg_type === 'tick') {
+            if (data.msg_type === 'tick' && data.tick) {
                 const newPrice = data.tick.quote;
-                const priceString = newPrice.toString();
-                const decimalPart = priceString.split('.')[1];
-                if (decimalPart) {
-                    setDecimalPlaces(decimalPart.length);
-                } else {
-                    setDecimalPlaces(0);
+                const pipSize = data.tick.pip_size;
+
+                if (typeof newPrice === 'number' && typeof pipSize === 'number') {
+                    const priceString = newPrice.toFixed(pipSize);
+                    setDecimalPlaces(pipSize);
+                    
+                    const newDigit = parseInt(priceString.slice(-1));
+                    
+                    setPrice(newPrice);
+                    
+                    setLastDigitTicks(prevTicks => [newDigit, ...prevTicks].slice(0, maxTicks));
                 }
-                
-                const newDigit = parseInt(priceString.slice(-1));
-                
-                setPrice(parseFloat(newPrice));
-                
-                setLastDigitTicks(prevTicks => [newDigit, ...prevTicks].slice(0, maxTicks));
             }
         };
 
