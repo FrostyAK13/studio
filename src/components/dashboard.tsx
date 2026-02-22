@@ -5,6 +5,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ScannerView } from './scanner-view';
 import { ClassicView } from './classic-view';
 import { syntheticIndices } from '@/lib/mock-data';
+import { DigitFrequencyView } from './digit-frequency-view';
 
 export function Dashboard() {
     const [price, setPrice] = React.useState(0);
@@ -107,9 +108,10 @@ export function Dashboard() {
       </header>
       <main className="flex-1 p-4 sm:p-6">
         <Tabs defaultValue="scanner" className="w-full max-w-4xl mx-auto">
-            <TabsList className="grid w-full grid-cols-2 mb-6">
+            <TabsList className="grid w-full grid-cols-3 mb-6">
                 <TabsTrigger value="scanner">Scanner</TabsTrigger>
                 <TabsTrigger value="classic">Classic</TabsTrigger>
+                <TabsTrigger value="frequency">Frequency</TabsTrigger>
             </TabsList>
 
             <TabsContent value="scanner">
@@ -127,6 +129,19 @@ export function Dashboard() {
 
             <TabsContent value="classic">
                 <ClassicView
+                    price={price}
+                    lastDigitTicks={lastDigitTicks}
+                    maxTicks={maxTicks}
+                    handleMaxTicksChange={handleMaxTicksChange}
+                    handleMaxTicksBlur={handleMaxTicksBlur}
+                    selectedMarket={selectedMarket}
+                    onMarketChange={setSelectedMarket}
+                    decimalPlaces={decimalPlaces}
+                />
+            </TabsContent>
+
+            <TabsContent value="frequency">
+                <DigitFrequencyView
                     price={price}
                     lastDigitTicks={lastDigitTicks}
                     maxTicks={maxTicks}
