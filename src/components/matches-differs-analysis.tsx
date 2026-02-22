@@ -69,12 +69,11 @@ export function MatchesDiffersAnalysis({ lastDigitTicks }: { lastDigitTicks: num
     setPrediction(null);
 
     setTimeout(() => {
+      // New strategy: Focus only on "MATCH" predictions
       if (percentages.matches > percentages.differs) {
           setPrediction('M');
-      } else if (percentages.differs > percentages.matches) {
-          setPrediction('D');
       } else {
-          setPrediction(outcomes.length > 0 ? (outcomes[0] === 'M' ? 'D' : 'M') : 'D');
+          setPrediction(null); // Do not predict "DIFFER"
       }
       
       setShowScanner(true);

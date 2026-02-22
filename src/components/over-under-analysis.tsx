@@ -18,7 +18,7 @@ export function OverUnderAnalysis({ lastDigitTicks }: { lastDigitTicks: number[]
   const [showAllOutcomes, setShowAllOutcomes] = React.useState(false);
   const [showScanner, setShowScanner] = React.useState(false);
   const [isScanning, setIsScanning] = React.useState(false);
-  const [prediction, setPrediction] = React.useState<Outcome | null>(null);
+  const [prediction, setPrediction] = React.useState<{ outcome: Outcome; digit: number } | null>(null);
 
   const handleSelectDigit = (digit: number) => {
     setSelectedDigit(digit);
@@ -72,18 +72,28 @@ export function OverUnderAnalysis({ lastDigitTicks }: { lastDigitTicks: number[]
         setPrediction(null);
         return;
     }
-    if (outcomes.length === 0) return;
+    if (lastDigitTicks.length === 0) return;
 
     setIsScanning(true);
     setPrediction(null);
 
     setTimeout(() => {
-        if (percentages.over > percentages.under) {
-            setPrediction('O');
-        } else if (percentages.under > percentages.over) {
-            setPrediction('U');
+        // New strategy: focus on "Over 3" and "Under 6"
+        const over3Count = lastDigitTicks.filter(d => d > 3).length;
+        const under6Count = lastDigitTicks.filter(d => d < 6).length;
+        const totalTicks = lastDigitTicks.length;
+
+        if (totalTicks > 0) {
+            const over3Percentage = (over3Count / totalTicks) * 100;
+            const under6Percentage = (under6Count / totalTicks) * 100;
+
+            if (over3Percentage > under6Percentage) {
+                setPrediction({ outcome: 'O', digit: 3 });
+            } else {
+                setPrediction({ outcome: 'U', digit: 6 });
+            }
         } else {
-            setPrediction(outcomes.length > 0 ? (outcomes[0] === 'O' ? 'U' : 'O') : 'U');
+            setPrediction({ outcome: 'U', digit: 6 }); // Default prediction
         }
       
       setShowScanner(true);
@@ -184,7 +194,7 @@ export function OverUnderAnalysis({ lastDigitTicks }: { lastDigitTicks: number[]
                         <div className="text-center">
                             <p className="text-sm text-muted-foreground">Next Outcome</p>
                             <p className="text-4xl font-bold text-primary">
-                                {prediction === 'O' ? 'OVER' : 'UNDER'}
+                                {prediction.outcome === 'O' ? `OVER ${prediction.digit}` : `UNDER ${prediction.digit}`}
                             </p>
                         </div>
                     </CardContent>
