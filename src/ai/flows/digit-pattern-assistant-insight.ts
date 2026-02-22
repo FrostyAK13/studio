@@ -53,7 +53,7 @@ const digitPatternAssistantPrompt = ai.definePrompt({
   name: 'digitPatternAssistantPrompt',
   input: { schema: DigitPatternAssistantInsightInputSchema },
   output: { schema: DigitPatternAssistantInsightOutputSchema },
-  prompt: `You are an AI-powered assistant specializing in analyzing real-time last digit ticks of synthetic indices for trading. Your goal is to provide simple, clear predictions for three specific markets: Even/Odd, Over/Under, and Matches.
+  prompt: `You are an AI-powered assistant specializing in analyzing real-time last digit ticks of synthetic indices for trading. Your goal is to provide simple, clear predictions for three specific markets: Even/Odd, Over/Under, and Matches. Remember that 0 is a valid digit and should be included in your analysis like any other digit; for example, it is an even number.
 
 Analyze the following sequence of the last digits (0-9) from recent synthetic index ticks:
 Digits: {{{JSON.stringify lastDigitTicks}}}

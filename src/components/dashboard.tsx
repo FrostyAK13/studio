@@ -15,13 +15,13 @@ import { syntheticIndices } from '@/lib/mock-data';
 import { DigitAnalyzer } from './digit-analyzer';
 
 export function Dashboard() {
-    const [price, setPrice] = React.useState(839.8);
+    const [price, setPrice] = React.useState(839.80);
     const [ticks] = React.useState(1000);
 
     React.useEffect(() => {
         const interval = setInterval(() => {
             const newPrice = price + (Math.random() - 0.5) * 2;
-            setPrice(parseFloat(newPrice.toFixed(1)));
+            setPrice(parseFloat(newPrice.toFixed(2)));
         }, 1500);
 
         return () => clearInterval(interval);
@@ -64,7 +64,7 @@ export function Dashboard() {
                 </div>
                 <div className="rounded-lg p-4 flex flex-col items-center justify-center bg-gradient-to-br from-indigo-500 to-purple-600 text-primary-foreground">
                     <span className="text-sm tracking-widest">PRICE</span>
-                    <span className="text-4xl font-bold">{price}</span>
+                    <span className="text-4xl font-bold">{price.toFixed(2)}</span>
                 </div>
             </div>
             <DigitAnalyzer />

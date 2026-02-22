@@ -6,6 +6,7 @@ import { BrainCircuit, Loader, AlertTriangle } from 'lucide-react';
 import { getAnalysis } from '@/app/actions';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import type { DigitPatternAssistantInsightOutput } from '@/ai/flows/digit-pattern-assistant-insight';
 
 const initialStats = Array.from({ length: 10 }, (_, i) => ({
@@ -44,7 +45,7 @@ const DigitStat = ({ digit, percentage, color, position }: { digit: number; perc
 };
 
 const AnalysisCard = ({ title, prediction, confidence, analysis }: { title: string; prediction: string | number; confidence: number; analysis: string; }) => (
-    <Card className="bg-card/70">
+    <Card className="bg-card/70 w-full">
         <CardHeader>
             <CardTitle className="text-lg">{title}</CardTitle>
         </CardHeader>
@@ -155,30 +156,42 @@ export function DigitAnalyzer() {
             <AnimatePresence>
             {analysis && (
                 <motion.div 
-                    className="grid grid-cols-1 md:grid-cols-3 gap-6"
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
                     exit={{ opacity: 0, y: -20 }}
                     transition={{ duration: 0.5 }}
                 >
-                    <AnalysisCard 
-                        title="Even / Odd"
-                        prediction={analysis.evenOdd.prediction}
-                        confidence={analysis.evenOdd.confidence}
-                        analysis={analysis.evenOdd.analysis}
-                    />
-                    <AnalysisCard 
-                        title="Over / Under"
-                        prediction={analysis.overUnder.prediction}
-                        confidence={analysis.overUnder.confidence}
-                        analysis={analysis.overUnder.analysis}
-                    />
-                    <AnalysisCard 
-                        title="Matches"
-                        prediction={analysis.matches.prediction}
-                        confidence={analysis.matches.confidence}
-                        analysis={analysis.matches.analysis}
-                    />
+                    <Tabs defaultValue="evenOdd" className="w-full">
+                        <TabsList className="grid w-full grid-cols-3">
+                            <TabsTrigger value="evenOdd">Even / Odd</TabsTrigger>
+                            <TabsTrigger value="overUnder">Over / Under</TabsTrigger>
+                            <TabsTrigger value="matches">Matches</TabsTrigger>
+                        </TabsList>
+                        <TabsContent value="evenOdd">
+                            <AnalysisCard 
+                                title="Even / Odd"
+                                prediction={analysis.evenOdd.prediction}
+                                confidence={analysis.evenOdd.confidence}
+                                analysis={analysis.evenOdd.analysis}
+                            />
+                        </TabsContent>
+                        <TabsContent value="overUnder">
+                            <AnalysisCard 
+                                title="Over / Under"
+                                prediction={analysis.overUnder.prediction}
+                                confidence={analysis.overUnder.confidence}
+                                analysis={analysis.overUnder.analysis}
+                            />
+                        </TabsContent>
+                        <TabsContent value="matches">
+                             <AnalysisCard 
+                                title="Matches"
+                                prediction={analysis.matches.prediction}
+                                confidence={analysis.matches.confidence}
+                                analysis={analysis.matches.analysis}
+                            />
+                        </TabsContent>
+                    </Tabs>
                 </motion.div>
             )}
             </AnimatePresence>
