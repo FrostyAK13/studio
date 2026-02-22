@@ -1,20 +1,19 @@
 'use client';
 
 import * as React from 'react';
-import { Card, CardContent } from '@/components/ui/card';
+import { motion, AnimatePresence } from 'framer-motion';
+import { BrainCircuit, Loader, AlertTriangle } from 'lucide-react';
+import { getAnalysis } from '@/app/actions';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import type { DigitPatternAssistantInsightOutput } from '@/ai/flows/digit-pattern-assistant-insight';
 
-const initialStats = [
-    { digit: 0, percentage: 8.20, color: 'red', position: 'bottom' as const },
-    { digit: 1, percentage: 9.50 },
-    { digit: 2, percentage: 8.80, color: 'orange' },
-    { digit: 3, percentage: 10.70 },
-    { digit: 4, percentage: 10.40 },
-    { digit: 5, percentage: 11.10, color: 'green' },
-    { digit: 6, percentage: 10.00 },
-    { digit: 7, percentage: 10.60 },
-    { digit: 8, percentage: 9.80 },
-    { digit: 9, percentage: 10.90, color: 'blue' },
-];
+const initialStats = Array.from({ length: 10 }, (_, i) => ({
+    digit: i,
+    percentage: 10.00,
+    color: i === 0 ? 'red' : i === 2 ? 'orange' : i === 5 ? 'green' : i === 9 ? 'blue' : undefined,
+    position: i === 0 ? 'bottom' as const : undefined,
+}));
 
 const DigitStat = ({ digit, percentage, color, position }: { digit: number; percentage: number; color?: string; position?: 'bottom' }) => {
     const colorClasses: { [key: string]: string } = {
@@ -44,40 +43,145 @@ const DigitStat = ({ digit, percentage, color, position }: { digit: number; perc
     );
 };
 
+const AnalysisCard = ({ title, prediction, confidence, analysis }: { title: string; prediction: string | number; confidence: number; analysis: string; }) => (
+    <Card className="bg-card/70">
+        <CardHeader>
+            <CardTitle className="text-lg">{title}</CardTitle>
+        </CardHeader>
+        <CardContent>
+            <p className="text-4xl font-bold text-primary">{prediction.toString()}</p>
+            <p className="text-sm text-muted-foreground mt-1">Confidence: {(confidence * 100).toFixed(0)}%</p>
+            <p className="text-sm mt-4">{analysis}</p>
+        </CardContent>
+    </Card>
+);
+
 export function DigitAnalyzer() {
     const [stats, setStats] = React.useState(initialStats);
+    const [lastDigitTicks, setLastDigitTicks] = React.useState<number[]>([]);
+    const [analysis, setAnalysis] = React.useState<DigitPatternAssistantInsightOutput | null>(null);
+    const [loading, setLoading] = React.useState(false);
+    const [error, setError] = React.useState<string | null>(null);
 
     React.useEffect(() => {
+        const initialTicks = Array.from({ length: 50 }, () => Math.floor(Math.random() * 10));
+        setLastDigitTicks(initialTicks);
+
         const interval = setInterval(() => {
-            setStats(prevStats => {
-                const newStats = [...prevStats];
-                // Simulate some random fluctuation
-                for (let i = 0; i < newStats.length; i++) {
-                    const change = (Math.random() - 0.5) * 0.2;
-                    newStats[i].percentage += change;
-                    if (newStats[i].percentage < 0) newStats[i].percentage = 0;
+            setLastDigitTicks(prevTicks => {
+                const newDigit = Math.floor(Math.random() * 10);
+                const newTicks = [...prevTicks, newDigit].slice(-100); // Keep last 100 ticks
+                
+                const digitCounts = new Array(10).fill(0);
+                newTicks.forEach(tick => digitCounts[tick]++);
+                
+                const newStats = digitCounts.map((count, index) => ({
+                    ...initialStats[index],
+                    percentage: (count / newTicks.length) * 100
+                }));
+
+                if (newTicks.length > 0) {
+                    let hotIndex = 0;
+                    let coldIndex = 0;
+                    for (let i = 1; i < newStats.length; i++) {
+                        if (newStats[i].percentage > newStats[hotIndex].percentage) hotIndex = i;
+                        if (newStats[i].percentage < newStats[coldIndex].percentage) coldIndex = i;
+                    }
+                    
+                    newStats.forEach(s => { s.color = undefined; s.position = undefined; });
+
+                    newStats[hotIndex].color = 'blue';
+                    newStats[coldIndex].color = 'red';
+                    newStats[coldIndex].position = 'bottom';
                 }
                 
-                // Normalize to sum to 100
-                const total = newStats.reduce((acc, s) => acc + s.percentage, 0);
-                if (total === 0) return newStats; // Avoid division by zero
-                const scale = 100 / total;
-                return newStats.map(s => ({ ...s, percentage: s.percentage * scale }));
+                setStats(newStats);
+                return newTicks;
             });
         }, 1500);
 
         return () => clearInterval(interval);
     }, []);
 
+    const handleGetAnalysis = async () => {
+        setLoading(true);
+        setError(null);
+        setAnalysis(null);
+        try {
+            const result = await getAnalysis(lastDigitTicks);
+            setAnalysis(result);
+        } catch (e) {
+            setError('Failed to get analysis. Please try again.');
+            console.error(e);
+        } finally {
+            setLoading(false);
+        }
+    };
+
     return (
-        <Card className="bg-card/50">
-            <CardContent className="p-6">
-                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-y-8 gap-x-4 justify-items-center">
-                    {stats.map(stat => (
-                        <DigitStat key={stat.digit} {...stat} />
-                    ))}
+        <>
+            <Card className="bg-card/50">
+                <CardContent className="p-6">
+                    <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-y-8 gap-x-4 justify-items-center">
+                        {stats.map(stat => (
+                            <DigitStat key={stat.digit} {...stat} />
+                        ))}
+                    </div>
+                </CardContent>
+            </Card>
+
+            <div className="my-6 text-center">
+                <Button onClick={handleGetAnalysis} disabled={loading || lastDigitTicks.length === 0} size="lg">
+                    {loading ? <Loader className="mr-2 h-5 w-5 animate-spin" /> : <BrainCircuit className="mr-2 h-5 w-5" />}
+                    Get AI Predictions
+                </Button>
+            </div>
+            
+            <AnimatePresence>
+            {loading && (
+                 <div className="flex justify-center items-center h-64">
+                    <Loader className="h-12 w-12 animate-spin text-primary" />
+                 </div>
+            )}
+            </AnimatePresence>
+
+            {error && (
+                <div className="bg-destructive/20 text-destructive-foreground p-4 rounded-md flex items-center gap-4">
+                    <AlertTriangle/>
+                    {error}
                 </div>
-            </CardContent>
-        </Card>
+            )}
+            
+            <AnimatePresence>
+            {analysis && (
+                <motion.div 
+                    className="grid grid-cols-1 md:grid-cols-3 gap-6"
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -20 }}
+                    transition={{ duration: 0.5 }}
+                >
+                    <AnalysisCard 
+                        title="Even / Odd"
+                        prediction={analysis.evenOdd.prediction}
+                        confidence={analysis.evenOdd.confidence}
+                        analysis={analysis.evenOdd.analysis}
+                    />
+                    <AnalysisCard 
+                        title="Over / Under"
+                        prediction={analysis.overUnder.prediction}
+                        confidence={analysis.overUnder.confidence}
+                        analysis={analysis.overUnder.analysis}
+                    />
+                    <AnalysisCard 
+                        title="Matches"
+                        prediction={analysis.matches.prediction}
+                        confidence={analysis.matches.confidence}
+                        analysis={analysis.matches.analysis}
+                    />
+                </motion.div>
+            )}
+            </AnimatePresence>
+        </>
     );
 }
