@@ -9,6 +9,7 @@ import { cn } from '@/lib/utils';
 import { ScanLine, Loader2 } from 'lucide-react';
 import { HackerAnimation } from './hacker-animation';
 import { syntheticIndices } from '@/lib/mock-data';
+import { ScannerAnimationContent } from './scanner-animation-content';
 
 type Outcome = 'E' | 'O';
 
@@ -192,9 +193,7 @@ export function EvenOddAnalysis({ lastDigitTicks, selectedMarket }: { lastDigitT
                             ))}
                         </div>
                     ) : (
-                        <div className="flex items-center justify-center h-full">
-                            <p>Analyzing market patterns...</p>
-                        </div>
+                       <ScannerAnimationContent />
                     )}
                 </HackerAnimation>
             )}
