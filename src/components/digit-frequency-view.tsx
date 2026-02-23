@@ -240,7 +240,7 @@ export function DigitFrequencyView({
                     <CardTitle className="text-base font-semibold">Digit Pattern</CardTitle>
                 </CardHeader>
                 <CardContent className="flex flex-wrap gap-2">
-                    {lastDigitTicks.slice(0, 30).map((digit, i) => (
+                    {[...lastDigitTicks.slice(0, 30)].reverse().map((digit, i) => (
                         <div key={i} className={cn("flex items-center justify-center w-8 h-8 rounded-full font-bold text-white")} style={{ backgroundColor: digitColors[digit] }}>
                             {digit}
                         </div>

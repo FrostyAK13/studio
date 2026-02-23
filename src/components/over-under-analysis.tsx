@@ -213,7 +213,7 @@ export function OverUnderAnalysis({ lastDigitTicks, selectedMarket }: OverUnderA
         </div>
 
         <div className="flex justify-center flex-wrap gap-2 mb-6 min-h-[56px]">
-            {displayedOutcomes.map((outcome, index) => (
+            {[...displayedOutcomes].reverse().map((outcome, index) => (
                 <div key={index} className={cn("flex items-center justify-center w-12 h-12 rounded-lg shadow-inner",
                   outcome === 'O' ? 'bg-teal-100 border border-teal-200' : outcome === 'U' ? 'bg-sky-100 border border-sky-200' : 'bg-slate-100 border border-slate-200'
                 )}>

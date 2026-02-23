@@ -176,7 +176,7 @@ export function RiseFallAnalysis({ lastDigitTicks, selectedMarket }: RiseFallAna
 
 
         <div className="flex justify-center flex-wrap gap-2 mb-6 min-h-[56px]">
-            {displayedOutcomes.map((outcome, index) => (
+            {[...displayedOutcomes].reverse().map((outcome, index) => (
                 <div key={index} className={cn("flex items-center justify-center w-12 h-12 rounded-lg shadow-inner",
                   outcome === 'R' ? 'bg-green-100 border border-green-200' : outcome === 'F' ? 'bg-red-100 border border-red-200' : 'bg-slate-100 border border-slate-200'
                 )}>

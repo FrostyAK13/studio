@@ -193,7 +193,7 @@ export function MatchesDiffersAnalysis({ lastDigitTicks, selectedMarket }: { las
         </div>
 
         <div className="flex justify-center flex-wrap gap-2 mb-6 min-h-[56px]">
-            {displayedOutcomes.map((outcome, index) => (
+            {[...displayedOutcomes].reverse().map((outcome, index) => (
                 <div key={index} className="flex items-center justify-center w-12 h-12 bg-card rounded-lg border border-border shadow-inner">
                     <span className="font-bold text-foreground text-lg">{outcome}</span>
                 </div>

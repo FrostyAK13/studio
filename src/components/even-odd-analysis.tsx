@@ -153,7 +153,7 @@ export function EvenOddAnalysis({ lastDigitTicks, selectedMarket }: { lastDigitT
         </div>
 
         <div className="flex justify-center flex-wrap gap-2 mb-6 min-h-[56px]">
-            {displayedOutcomes.map((outcome, index) => (
+            {[...displayedOutcomes].reverse().map((outcome, index) => (
                 <div key={index} className={cn("flex items-center justify-center w-12 h-12 rounded-lg shadow-inner",
                   outcome === 'E' ? 'bg-gradient-to-br from-blue-400 to-cyan-400' : 'bg-gradient-to-br from-violet-400 to-purple-500'
                 )}>

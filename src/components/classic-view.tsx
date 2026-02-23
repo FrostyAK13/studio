@@ -136,7 +136,7 @@ export function ClassicView({
                             <List className="h-5 w-5 text-muted-foreground" /> Even/Odd Pattern
                         </CardTitle></CardHeader>
                         <CardContent className="flex flex-wrap gap-2">
-                            {evenOddOutcomes.slice(0, 30).map((o, i) => (
+                            {[...evenOddOutcomes.slice(0, 30)].reverse().map((o, i) => (
                                 <div key={i} className={cn("flex items-center justify-center w-8 h-8 rounded-full font-bold text-white", o === 'E' ? 'bg-blue-500' : 'bg-violet-500')}>
                                     {o}
                                 </div>
@@ -221,7 +221,7 @@ export function ClassicView({
                             <Hash className="h-5 w-5 text-muted-foreground" /> Matches/Differs Pattern
                         </CardTitle></CardHeader>
                         <CardContent className="flex flex-wrap gap-2">
-                            {matchesDiffersOutcomes.slice(0, 30).map((o, i) => (
+                            {[...matchesDiffersOutcomes.slice(0, 30)].reverse().map((o, i) => (
                                 <div key={i} className={cn("flex items-center justify-center w-8 h-8 rounded-full font-bold text-white", o === 'M' ? 'bg-cyan-500' : 'bg-slate-500')}>
                                     {o}
                                 </div>
@@ -306,7 +306,7 @@ export function ClassicView({
                            <div className="flex flex-col"><ArrowUp className="h-3 w-3"/><ArrowDown className="h-3 w-3"/></div> Over/Under Pattern
                         </CardTitle></CardHeader>
                         <CardContent className="flex flex-wrap gap-2">
-                            {overUnderOutcomes.slice(0, 30).map((o, i) => (
+                            {[...overUnderOutcomes.slice(0, 30)].reverse().map((o, i) => (
                                 <div key={i} className={cn("flex items-center justify-center w-8 h-8 rounded-full font-bold text-white", o === 'O' ? 'bg-teal-500' : o === 'U' ? 'bg-indigo-500' : 'bg-slate-400')}>
                                     {o}
                                 </div>
