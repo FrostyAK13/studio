@@ -193,6 +193,8 @@ export function Dashboard() {
 
              <TabsContent value="ai-insight">
                 <AIInsightView
+                    price={price}
+                    decimalPlaces={decimalPlaces}
                     lastDigitTicks={lastDigitTicks}
                     selectedMarket={selectedMarket}
                     onMarketChange={setSelectedMarket}

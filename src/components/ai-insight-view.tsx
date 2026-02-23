@@ -14,6 +14,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '.
 import { Progress } from '@/components/ui/progress';
 
 interface AIInsightViewProps {
+    price: number;
+    decimalPlaces: number;
     lastDigitTicks: number[];
     selectedMarket: string;
     onMarketChange: (market: string) => void;
@@ -52,7 +54,7 @@ function DataCollectionAnimation({ progress, tickCount, recentTicks }: { progres
 }
 
 
-export function AIInsightView({ lastDigitTicks, selectedMarket, onMarketChange }: AIInsightViewProps) {
+export function AIInsightView({ price, decimalPlaces, lastDigitTicks, selectedMarket, onMarketChange }: AIInsightViewProps) {
     const [analysisState, setAnalysisState] = React.useState<AnalysisState>('idle');
     const [collectedTicks, setCollectedTicks] = React.useState<number[]>([]);
     const [insight, setInsight] = React.useState<MarketInsightOutput | null>(null);
@@ -163,23 +165,30 @@ export function AIInsightView({ lastDigitTicks, selectedMarket, onMarketChange }
                 </div>
             </CardHeader>
             <CardContent className="space-y-6">
-                <Card>
-                    <CardContent className="p-6">
-                        <Label htmlFor="ai-market-select">Synthetic Market</Label>
-                        <Select value={selectedMarket} onValueChange={onMarketChange} disabled={analysisState === 'collecting' || analysisState === 'analyzing'}>
-                            <SelectTrigger id="ai-market-select">
-                                <SelectValue placeholder="Select Index" />
-                            </SelectTrigger>
-                            <SelectContent>
-                                {syntheticIndices.map((index) => (
-                                <SelectItem key={index.id} value={index.id}>
-                                    {index.name}
-                                </SelectItem>
-                                ))}
-                            </SelectContent>
-                        </Select>
-                    </CardContent>
-                </Card>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <Card>
+                        <CardContent className="p-6">
+                            <Label htmlFor="ai-market-select">Synthetic Market</Label>
+                            <Select value={selectedMarket} onValueChange={onMarketChange} disabled={analysisState === 'collecting' || analysisState === 'analyzing'}>
+                                <SelectTrigger id="ai-market-select">
+                                    <SelectValue placeholder="Select Index" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    {syntheticIndices.map((index) => (
+                                    <SelectItem key={index.id} value={index.id}>
+                                        {index.name}
+                                    </SelectItem>
+                                    ))}
+                                </SelectContent>
+                            </Select>
+                        </CardContent>
+                    </Card>
+                    <div className="rounded-lg p-4 flex flex-col items-center justify-center bg-gradient-to-br from-blue-500 to-cyan-400 text-white">
+                        <span className="text-sm tracking-widest">PRICE</span>
+                        <span className="text-4xl font-bold">{price.toFixed(decimalPlaces)}</span>
+                    </div>
+                </div>
+
 
                 <div className="text-center">
                     <Button onClick={handleStartAnalysis} disabled={analysisState === 'collecting' || analysisState === 'analyzing'} size="lg">
