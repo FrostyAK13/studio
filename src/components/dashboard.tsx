@@ -26,8 +26,20 @@ export function Dashboard() {
 
         const ws = new WebSocket('wss://ws.binaryws.com/websockets/v3?app_id=84799');
 
+        let pipSize: number | null = null;
+        let historyBuffer: number[] | null = null;
+
+        const prependTickToState = (tick: { quote: number }, size: number) => {
+            const newPrice = tick.quote;
+            const priceString = newPrice.toFixed(size);
+            const newDigit = parseInt(priceString.slice(-1));
+
+            setPrice(newPrice);
+            setLastDigitTicks(prevTicks => [newDigit, ...prevTicks].slice(0, maxTicks));
+        };
+
         ws.onopen = () => {
-            ws.send(JSON.stringify({ "ticks": selectedMarket, "subscribe": 1 }));
+            ws.send(JSON.stringify({ "ticks_history": selectedMarket, "count": 1000, "end": "latest", "subscribe": 1 }));
         };
 
         ws.onmessage = (event) => {
@@ -38,19 +50,43 @@ export function Dashboard() {
                 return;
             }
 
-            if (data.msg_type === 'tick' && data.tick) {
-                const newPrice = data.tick.quote;
-                const pipSize = data.tick.pip_size;
+            if (data.msg_type === 'history') {
+                if (data.history && data.history.prices) {
+                    historyBuffer = data.history.prices;
+                }
+            }
 
-                if (typeof newPrice === 'number' && typeof pipSize === 'number') {
-                    const priceString = newPrice.toFixed(pipSize);
-                    setDecimalPlaces(pipSize);
-                    
-                    const newDigit = parseInt(priceString.slice(-1));
-                    
-                    setPrice(newPrice);
-                    
-                    setLastDigitTicks(prevTicks => [newDigit, ...prevTicks].slice(0, maxTicks));
+            if (data.msg_type === 'tick') {
+                if (data.tick && typeof data.tick.quote === 'number' && typeof data.tick.pip_size === 'number') {
+                    const currentTick = data.tick;
+
+                    if (pipSize === null) {
+                        // This is the first tick, so pipSize is now known.
+                        pipSize = currentTick.pip_size;
+                        setDecimalPlaces(pipSize);
+                        
+                        const currentPrice = currentTick.quote;
+                        const priceString = currentPrice.toFixed(pipSize);
+                        const currentDigit = parseInt(priceString.slice(-1));
+                        setPrice(currentPrice);
+
+                        if (historyBuffer) {
+                            // History arrived before this tick. Process history and this tick together.
+                            const historicalDigits = historyBuffer.map(p => {
+                                const priceString = p.toFixed(pipSize as number);
+                                return parseInt(priceString.slice(-1));
+                            }).reverse();
+                            
+                            setLastDigitTicks([currentDigit, ...historicalDigits].slice(0, maxTicks));
+                            historyBuffer = null; // Clear buffer
+                        } else {
+                            // Unlikely, but if history hasn't arrived, start with this tick.
+                            setLastDigitTicks([currentDigit]);
+                        }
+                    } else {
+                        // Not the first tick, just prepend it.
+                        prependTickToState(currentTick, pipSize);
+                    }
                 }
             }
         };
