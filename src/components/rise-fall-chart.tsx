@@ -5,7 +5,6 @@ import {
   AreaChart,
   Area,
   ComposedChart,
-  Line,
   Bar,
   Cell,
   XAxis,
@@ -26,9 +25,7 @@ import {
   BarChart2,
   BarChart,
   BarChartHorizontal,
-  Settings,
 } from 'lucide-react';
-import { cn } from '@/lib/utils';
 import { Skeleton } from './ui/skeleton';
 
 interface RiseFallChartProps {
@@ -50,19 +47,14 @@ const chartTypes: { label: string; value: ChartType; icon: React.ReactNode }[] =
 ];
 
 const timeIntervals: TimeInterval[] = [
-  { label: '1 tick', seconds: 0 },
-  { label: '1 minute', seconds: 60 },
-  { label: '2 minutes', seconds: 120 },
-  { label: '3 minutes', seconds: 180 },
-  { label: '5 minutes', seconds: 300 },
-  { label: '10 minutes', seconds: 600 },
-  { label: '15 minutes', seconds: 900 },
-  { label: '30 minutes', seconds: 1800 },
-  { label: '1 hour', seconds: 3600 },
-  { label: '2 hours', seconds: 7200 },
-  { label: '4 hours', seconds: 14400 },
-  { label: '8 hours', seconds: 28800 },
-  { label: '1 day', seconds: 86400 },
+  { label: 'Ticks', seconds: 0 },
+  { label: '1m', seconds: 60 },
+  { label: '5m', seconds: 300 },
+  { label: '15m', seconds: 900 },
+  { label: '30m', seconds: 1800 },
+  { label: '1h', seconds: 3600 },
+  { label: '4h', seconds: 14400 },
+  { label: '1d', seconds: 86400 },
 ];
 
 export function RiseFallChart({
@@ -71,7 +63,7 @@ export function RiseFallChart({
 }: RiseFallChartProps) {
   const [chartData, setChartData] = React.useState<any[]>([]);
   const [chartType, setChartType] = React.useState<ChartType>('candle');
-  const [timeInterval, setTimeInterval] = React.useState<number>(0);
+  const [timeInterval, setTimeInterval] = React.useState<number>(60);
 
   React.useEffect(() => {
     setChartData([]);
@@ -80,7 +72,7 @@ export function RiseFallChart({
     ws.onopen = () => {
       const request = {
         ticks_history: selectedMarket,
-        count: 100,
+        count: 1000,
         end: 'latest',
         subscribe: 1,
         ...(timeInterval > 0 && {
@@ -117,7 +109,7 @@ export function RiseFallChart({
           time: data.tick.epoch * 1000,
           price: data.tick.quote,
         };
-        setChartData((prev) => [...prev, tick].slice(-100));
+        setChartData((prev) => [...prev, tick].slice(-1000));
       } else if (data.msg_type === 'ohlc') {
         const candle = { ...data.ohlc, time: data.ohlc.epoch * 1000 };
         setChartData((prev) => {
@@ -126,7 +118,7 @@ export function RiseFallChart({
             newHistory[newHistory.length - 1] = candle;
             return newHistory;
           }
-          return [...newHistory, candle].slice(-100);
+          return [...newHistory, candle].slice(-1000);
         });
       }
     };
@@ -142,10 +134,9 @@ export function RiseFallChart({
     let dataToProcess = chartData;
     if (dataToProcess.length === 0) return [];
     
-    // If we are in tick mode, we need to aggregate into candles first
     if (timeInterval === 0 && dataToProcess[0]?.price) {
         const buckets: any[] = [];
-        const bucketSizeInMs = 5000; // 5 second candles from ticks
+        const bucketSizeInMs = 5000;
         if (dataToProcess.length < 2) return [];
 
         let currentBucketTime = Math.floor(dataToProcess[0].time / bucketSizeInMs) * bucketSizeInMs;
@@ -241,7 +232,7 @@ export function RiseFallChart({
     }
 
     return (
-      <ComposedChart data={ohlcData} margin={{ top: 5, right: 10, left: -20, bottom: 0 }}>
+      <ComposedChart data={ohlcData} margin={{ top: 5, right: 10, left: -20, bottom: 0 }} barCategoryGap={1}>
         <CartesianGrid vertical={false} strokeDasharray="3 3" />
         <XAxis dataKey="time" type="number" domain={['dataMin', 'dataMax']} tickLine={false} axisLine={false} tickMargin={8} tick={{ fontSize: 10 }} tickFormatter={(unixTime) => new Date(unixTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })} />
         <YAxis domain={domain} orientation="right" tickLine={false} axisLine={false} tickMargin={8} tickFormatter={(value) => (typeof value === 'number' ? value.toFixed(decimalPlaces) : '')} tick={{ fontSize: 10 }} />
@@ -250,7 +241,7 @@ export function RiseFallChart({
             const data = payload[0].payload;
             return (
               <div className="min-w-[12rem] rounded-lg border bg-background p-2 text-sm shadow-sm">
-                <p className="font-bold text-foreground mb-2">{new Date(data.time).toLocaleString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' })}</p>
+                <p className="font-bold text-foreground mb-2">{new Date(data.time).toLocaleString([], { dateStyle: 'short', timeStyle: 'medium' })}</p>
                 <div className="grid grid-cols-2 gap-x-4 gap-y-1">
                   <span className="text-muted-foreground">Open:</span><span className="font-medium text-right">{data.open.toFixed(decimalPlaces)}</span>
                   <span className="text-muted-foreground">High:</span><span className="font-medium text-right">{data.high.toFixed(decimalPlaces)}</span>
@@ -262,10 +253,10 @@ export function RiseFallChart({
           }
           return null;
         }} />
-        <Bar dataKey="wick" strokeWidth={1} barSize={2} isAnimationActive={false}>
+        <Bar dataKey="wick" strokeWidth={1} barSize={1} isAnimationActive={false}>
           {ohlcData.map((entry, index) => <Cell key={`cell-wick-${index}`} stroke={entry.color} fill={entry.color} />)}
         </Bar>
-        <Bar dataKey="body" barSize={12} isAnimationActive={false}>
+        <Bar dataKey="body" barSize={10} isAnimationActive={false}>
           {ohlcData.map((entry, index) => <Cell key={`cell-body-${index}`} stroke={entry.color} fill={entry.fillColor} />)}
         </Bar>
       </ComposedChart>
@@ -274,40 +265,44 @@ export function RiseFallChart({
 
   return (
     <div className="relative mt-4">
-      <div className="absolute top-0 right-0 z-10 p-2">
-        <Popover>
-          <PopoverTrigger asChild>
-            <Button size="icon" variant="outline" className="h-8 w-8">
-              <Settings className="h-4 w-4" />
-            </Button>
-          </PopoverTrigger>
-          <PopoverContent className="w-96">
-            <div className="grid gap-4">
-              <div className="space-y-2">
-                <h4 className="font-medium leading-none">Chart Types</h4>
-              </div>
-              <div className="grid grid-cols-4 gap-2">
-                {chartTypes.map((type) => (
-                  <Button key={type.value} variant={chartType === type.value ? 'secondary' : 'ghost'} size="sm" onClick={() => setChartType(type.value)} className="flex flex-col h-16 gap-1">
-                    {type.icon}
-                    {type.label}
-                  </Button>
-                ))}
-              </div>
-              <div className="space-y-2">
-                <h4 className="font-medium leading-none">Time Interval</h4>
-              </div>
-              <div className="grid grid-cols-4 gap-2">
+       <div className="flex flex-wrap items-center justify-between gap-2 mb-2">
+            <div className="flex items-center gap-1 flex-wrap">
                 {timeIntervals.map((interval) => (
-                  <Button key={interval.seconds} variant={timeInterval === interval.seconds ? 'secondary' : 'ghost'} size="sm" onClick={() => setTimeInterval(interval.seconds)}>
+                <Button
+                    key={interval.seconds}
+                    variant={timeInterval === interval.seconds ? 'secondary' : 'ghost'}
+                    size="sm"
+                    onClick={() => setTimeInterval(interval.seconds)}
+                    className="h-8 px-2 text-xs"
+                >
                     {interval.label}
-                  </Button>
+                </Button>
                 ))}
-              </div>
             </div>
-          </PopoverContent>
-        </Popover>
-      </div>
+            <Popover>
+                <PopoverTrigger asChild>
+                <Button size="icon" variant="ghost" className="h-8 w-8">
+                    {chartTypes.find(c => c.value === chartType)?.icon || <BarChart2 className="h-4 w-4" />}
+                </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-auto p-1">
+                <div className="flex gap-1">
+                    {chartTypes.map((type) => (
+                    <Button
+                        key={type.value}
+                        variant={chartType === type.value ? 'secondary' : 'ghost'}
+                        size="icon"
+                        onClick={() => setChartType(type.value)}
+                        title={type.label}
+                        className="h-8 w-8"
+                    >
+                        {type.icon}
+                    </Button>
+                    ))}
+                </div>
+                </PopoverContent>
+            </Popover>
+        </div>
       <ChartContainer config={chartConfig} className="h-48 w-full">
         <ResponsiveContainer>
             {renderChart()}
