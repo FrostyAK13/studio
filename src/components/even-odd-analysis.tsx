@@ -13,7 +13,14 @@ import { ScannerAnimationContent } from './scanner-animation-content';
 
 type Outcome = 'E' | 'O';
 
-export function EvenOddAnalysis({ lastDigitTicks, selectedMarket }: { lastDigitTicks: number[], selectedMarket: string }) {
+interface EvenOddAnalysisProps {
+  lastDigitTicks: number[], 
+  selectedMarket: string,
+  price: number;
+  decimalPlaces: number;
+}
+
+export function EvenOddAnalysis({ lastDigitTicks, selectedMarket, price, decimalPlaces }: EvenOddAnalysisProps) {
   const [outcomes, setOutcomes] = React.useState<Outcome[]>([]);
   const [streak, setStreak] = React.useState<{ type: Outcome; count: number }>({ type: 'E', count: 0 });
   const [percentages, setPercentages] = React.useState({ even: 0, odd: 0 });
@@ -147,9 +154,17 @@ export function EvenOddAnalysis({ lastDigitTicks, selectedMarket }: { lastDigitT
                 <h3 className="text-lg font-semibold">Even/Odd Analysis</h3>
                 <p className="text-sm text-muted-foreground -mt-1">{marketName}</p>
             </div>
-            <p className="text-muted-foreground font-medium text-right text-sm">
-                Current Streak: <br /> {streak.count}x {streak.type === 'E' ? 'Even' : 'Odd'}
-            </p>
+            <div className="flex items-start gap-8">
+                <div className="text-right">
+                    <p className="text-muted-foreground font-medium text-sm">
+                        Current Streak: <br /> {streak.count}x {streak.type === 'E' ? 'Even' : 'Odd'}
+                    </p>
+                </div>
+                <div className="text-right">
+                    <p className="text-sm text-muted-foreground">PRICE</p>
+                    <p className="text-2xl font-bold text-primary">{price.toFixed(decimalPlaces)}</p>
+                </div>
+            </div>
         </div>
 
         <div className="flex justify-center flex-wrap gap-2 mb-6 min-h-[56px]">

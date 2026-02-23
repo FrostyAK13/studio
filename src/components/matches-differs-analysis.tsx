@@ -13,7 +13,14 @@ import { ScannerAnimationContent } from './scanner-animation-content';
 
 type Outcome = 'M' | 'D';
 
-export function MatchesDiffersAnalysis({ lastDigitTicks, selectedMarket }: { lastDigitTicks: number[], selectedMarket: string }) {
+interface MatchesDiffersAnalysisProps {
+    lastDigitTicks: number[];
+    selectedMarket: string;
+    price: number;
+    decimalPlaces: number;
+}
+
+export function MatchesDiffersAnalysis({ lastDigitTicks, selectedMarket, price, decimalPlaces }: MatchesDiffersAnalysisProps) {
   const [selectedDigit, setSelectedDigit] = React.useState<number>(5);
   const [outcomes, setOutcomes] = React.useState<Outcome[]>([]);
   const [streak, setStreak] = React.useState<{ type: Outcome; count: number }>({ type: 'D', count: 0 });
@@ -171,9 +178,17 @@ export function MatchesDiffersAnalysis({ lastDigitTicks, selectedMarket }: { las
                 <h3 className="text-lg font-semibold">Matches/Differs Analysis</h3>
                 <p className="text-sm text-muted-foreground -mt-1">{marketName}</p>
             </div>
-            <p className="text-muted-foreground font-medium text-right text-sm">
-                Current Streak: <br /> {streak.count}x {streak.type === 'M' ? 'Match' : 'Differ'}
-            </p>
+            <div className="flex items-start gap-8">
+                <div className="text-right">
+                    <p className="text-muted-foreground font-medium text-sm">
+                        Current Streak: <br /> {streak.count}x {streak.type === 'M' ? 'Match' : 'Differ'}
+                    </p>
+                </div>
+                <div className="text-right">
+                    <p className="text-sm text-muted-foreground">PRICE</p>
+                    <p className="text-2xl font-bold text-primary">{price.toFixed(decimalPlaces)}</p>
+                </div>
+            </div>
         </div>
 
         <div className="flex justify-center flex-wrap gap-2 mb-6">

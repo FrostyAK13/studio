@@ -74,13 +74,13 @@ export function ScannerView({
                 </div>
             </div>
 
-            <OverUnderAnalysis lastDigitTicks={lastDigitTicks} selectedMarket={selectedMarket} />
+            <OverUnderAnalysis lastDigitTicks={lastDigitTicks} selectedMarket={selectedMarket} price={price} decimalPlaces={decimalPlaces} />
             <div className="my-6" />
-            <EvenOddAnalysis lastDigitTicks={lastDigitTicks} selectedMarket={selectedMarket} />
+            <EvenOddAnalysis lastDigitTicks={lastDigitTicks} selectedMarket={selectedMarket} price={price} decimalPlaces={decimalPlaces} />
             <div className="my-6" />
-            <MatchesDiffersAnalysis lastDigitTicks={lastDigitTicks} selectedMarket={selectedMarket} />
+            <MatchesDiffersAnalysis lastDigitTicks={lastDigitTicks} selectedMarket={selectedMarket} price={price} decimalPlaces={decimalPlaces} />
             <div className="my-6" />
-            <RiseFallAnalysis lastDigitTicks={lastDigitTicks} selectedMarket={selectedMarket} />
+            <RiseFallAnalysis lastDigitTicks={lastDigitTicks} selectedMarket={selectedMarket} price={price} decimalPlaces={decimalPlaces} />
         </>
     )
 }

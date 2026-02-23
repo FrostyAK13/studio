@@ -16,9 +16,11 @@ type Outcome = 'O' | 'U' | 'E';
 interface OverUnderAnalysisProps {
   lastDigitTicks: number[];
   selectedMarket: string;
+  price: number;
+  decimalPlaces: number;
 }
 
-export function OverUnderAnalysis({ lastDigitTicks, selectedMarket }: OverUnderAnalysisProps) {
+export function OverUnderAnalysis({ lastDigitTicks, selectedMarket, price, decimalPlaces }: OverUnderAnalysisProps) {
   const [selectedDigit, setSelectedDigit] = React.useState<number>(5);
   const [outcomes, setOutcomes] = React.useState<Outcome[]>([]);
   const [streak, setStreak] = React.useState<{ type: 'O' | 'U'; count: number }>({ type: 'U', count: 0 });
@@ -191,9 +193,17 @@ export function OverUnderAnalysis({ lastDigitTicks, selectedMarket }: OverUnderA
                 <h3 className="text-lg font-semibold">Over/Under Analysis</h3>
                 <p className="text-sm text-muted-foreground -mt-1">{marketName}</p>
             </div>
-            <p className="text-muted-foreground font-medium text-right text-sm">
-                Current Streak: <br/> {streak.count}x {streak.type === 'O' ? 'Over' : 'Under'}
-            </p>
+            <div className="flex items-start gap-8">
+                <div className="text-right">
+                    <p className="text-muted-foreground font-medium text-sm">
+                        Current Streak: <br/> {streak.count}x {streak.type === 'O' ? 'Over' : 'Under'}
+                    </p>
+                </div>
+                <div className="text-right">
+                    <p className="text-sm text-muted-foreground">PRICE</p>
+                    <p className="text-2xl font-bold text-primary">{price.toFixed(decimalPlaces)}</p>
+                </div>
+            </div>
         </div>
 
         <div className="flex justify-center flex-wrap gap-2 mb-6">

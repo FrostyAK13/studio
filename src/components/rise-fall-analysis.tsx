@@ -16,9 +16,11 @@ type Outcome = 'R' | 'F' | 'E';
 interface RiseFallAnalysisProps {
   lastDigitTicks: number[];
   selectedMarket: string;
+  price: number;
+  decimalPlaces: number;
 }
 
-export function RiseFallAnalysis({ lastDigitTicks, selectedMarket }: RiseFallAnalysisProps) {
+export function RiseFallAnalysis({ lastDigitTicks, selectedMarket, price, decimalPlaces }: RiseFallAnalysisProps) {
   const [outcomes, setOutcomes] = React.useState<Outcome[]>([]);
   const [streak, setStreak] = React.useState<{ type: 'R' | 'F'; count: number }>({ type: 'R', count: 0 });
   const [percentages, setPercentages] = React.useState({ rise: 0, fall: 0 });
@@ -169,9 +171,17 @@ export function RiseFallAnalysis({ lastDigitTicks, selectedMarket }: RiseFallAna
                 <h3 className="text-lg font-semibold">Rise/Fall Analysis</h3>
                 <p className="text-sm text-muted-foreground -mt-1">{marketName}</p>
             </div>
-            <p className="text-muted-foreground font-medium text-right text-sm">
-                Current Streak: <br/> {streak.count}x {streak.type === 'R' ? 'Rise' : 'Fall'}
-            </p>
+            <div className="flex items-start gap-8">
+                <div className="text-right">
+                    <p className="text-muted-foreground font-medium text-sm">
+                        Current Streak: <br/> {streak.count}x {streak.type === 'R' ? 'Rise' : 'Fall'}
+                    </p>
+                </div>
+                <div className="text-right">
+                    <p className="text-sm text-muted-foreground">PRICE</p>
+                    <p className="text-2xl font-bold text-primary">{price.toFixed(decimalPlaces)}</p>
+                </div>
+            </div>
         </div>
 
 
