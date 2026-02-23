@@ -7,6 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
 import { cn } from '@/lib/utils';
 import { ScanLine, Loader2 } from 'lucide-react';
+import { HackerAnimation } from './hacker-animation';
 
 type Outcome = 'E' | 'O';
 
@@ -18,7 +19,6 @@ export function EvenOddAnalysis({ lastDigitTicks }: { lastDigitTicks: number[] }
   const [showScanner, setShowScanner] = React.useState(false);
   const [isScanning, setIsScanning] = React.useState(false);
   const [prediction, setPrediction] = React.useState<Outcome | null>(null);
-  const [animatedDigit, setAnimatedDigit] = React.useState(0);
 
   React.useEffect(() => {
     if (lastDigitTicks.length === 0) {
@@ -66,12 +66,7 @@ export function EvenOddAnalysis({ lastDigitTicks }: { lastDigitTicks: number[] }
     setShowScanner(false);
     setPrediction(null);
 
-    const animationInterval = setInterval(() => {
-        setAnimatedDigit(Math.floor(Math.random() * 10));
-    }, 80);
-
     setTimeout(() => {
-        clearInterval(animationInterval);
         let predictedOutcome: Outcome;
 
         // Strategy:
@@ -155,36 +150,7 @@ export function EvenOddAnalysis({ lastDigitTicks }: { lastDigitTicks: number[] }
             </Button>
         </div>
         
-        {isScanning && (
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5 }}
-            className="mt-6"
-          >
-            <Card className="w-full">
-              <CardHeader>
-                  <CardTitle className="text-lg">Analyzing Market...</CardTitle>
-              </CardHeader>
-              <CardContent>
-                  <div className="flex justify-center items-center h-24 overflow-hidden">
-                      <AnimatePresence mode="popLayout">
-                          <motion.div
-                              key={animatedDigit}
-                              initial={{ y: 50, opacity: 0, position: 'absolute' }}
-                              animate={{ y: 0, opacity: 1, position: 'relative' }}
-                              exit={{ y: -50, opacity: 0, position: 'absolute' }}
-                              transition={{ duration: 0.1, ease: 'easeInOut' }}
-                              className="text-6xl font-bold text-primary"
-                          >
-                              {animatedDigit}
-                          </motion.div>
-                      </AnimatePresence>
-                  </div>
-              </CardContent>
-            </Card>
-          </motion.div>
-        )}
+        {isScanning && <HackerAnimation title="Analyzing Even/Odd Market..." />}
 
         <AnimatePresence>
             {showScanner && prediction && !isScanning && (

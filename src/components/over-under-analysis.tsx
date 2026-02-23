@@ -7,6 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
 import { cn } from '@/lib/utils';
 import { ScanLine, Loader2 } from 'lucide-react';
+import { HackerAnimation } from './hacker-animation';
 
 type Outcome = 'O' | 'U';
 
@@ -23,7 +24,6 @@ export function OverUnderAnalysis({ lastDigitTicks }: OverUnderAnalysisProps) {
   const [showScanner, setShowScanner] = React.useState(false);
   const [isScanning, setIsScanning] = React.useState(false);
   const [prediction, setPrediction] = React.useState<{ outcome: 'OVER' | 'UNDER'; digit: number; reasoning: string } | null>(null);
-  const [animatedDigit, setAnimatedDigit] = React.useState(0);
   const [error, setError] = React.useState<string | null>(null);
 
 
@@ -92,13 +92,7 @@ export function OverUnderAnalysis({ lastDigitTicks }: OverUnderAnalysisProps) {
     setPrediction(null);
     setError(null);
     
-    const animationInterval = setInterval(() => {
-        setAnimatedDigit(Math.floor(Math.random() * 10));
-    }, 80);
-
     setTimeout(() => {
-        clearInterval(animationInterval);
-        
         let predictedOutcome: 'OVER' | 'UNDER';
         let predictedDigit: number;
         let reasoning: string;
@@ -223,36 +217,7 @@ export function OverUnderAnalysis({ lastDigitTicks }: OverUnderAnalysisProps) {
             </Button>
         </div>
         
-        {isScanning && (
-            <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.5 }}
-                className="mt-6"
-            >
-                <Card className="w-full">
-                    <CardHeader>
-                        <CardTitle className="text-lg">Analyzing Market...</CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                        <div className="flex justify-center items-center h-24 overflow-hidden">
-                            <AnimatePresence mode="popLayout">
-                                <motion.div
-                                    key={animatedDigit}
-                                    initial={{ y: 50, opacity: 0, position: 'absolute' }}
-                                    animate={{ y: 0, opacity: 1, position: 'relative' }}
-                                    exit={{ y: -50, opacity: 0, position: 'absolute' }}
-                                    transition={{ duration: 0.1, ease: 'easeInOut' }}
-                                    className="text-6xl font-bold text-primary"
-                                >
-                                    {animatedDigit}
-                                </motion.div>
-                            </AnimatePresence>
-                        </div>
-                    </CardContent>
-                </Card>
-            </motion.div>
-        )}
+        {isScanning && <HackerAnimation title="Analyzing Over/Under Market..." />}
 
         <AnimatePresence>
             {showScanner && !isScanning && (
