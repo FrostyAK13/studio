@@ -19,6 +19,7 @@ import {
   BarChart2,
   BarChartBig,
   Minus,
+  AlertTriangle,
 } from 'lucide-react';
 
 import { Button } from '@/components/ui/button';
@@ -29,6 +30,7 @@ import {
 } from '@/components/ui/popover';
 import { ChartContainer } from '@/components/ui/chart';
 import { Skeleton } from './ui/skeleton';
+import { Alert, AlertDescription, AlertTitle } from './ui/alert';
 
 interface RiseFallChartProps {
   selectedMarket: string;
@@ -92,11 +94,20 @@ export function RiseFallChart({ selectedMarket, decimalPlaces }: RiseFallChartPr
   const [chartType, setChartType] = React.useState<ChartType>('candle');
   const [timeInterval, setTimeInterval] = React.useState<number>(60);
   const [isLoading, setIsLoading] = React.useState(true);
+  const [error, setError] = React.useState<string | null>(null);
   const wsRef = React.useRef<WebSocket | null>(null);
+  const is1sMarket = selectedMarket.startsWith('1HZ');
 
+  React.useEffect(() => {
+    if (is1sMarket && timeInterval > 0) {
+      setTimeInterval(0);
+    }
+  }, [selectedMarket, is1sMarket, timeInterval]);
+  
   React.useEffect(() => {
     setIsLoading(true);
     setChartData([]);
+    setError(null);
 
     if (wsRef.current) {
       wsRef.current.close();
@@ -120,10 +131,11 @@ export function RiseFallChart({ selectedMarket, decimalPlaces }: RiseFallChartPr
       const data = JSON.parse(event.data);
 
       if (data.error) {
-        console.error('WebSocket error:', data.error.message);
+        setError(data.error.message);
         return;
       }
       
+      setError(null);
       if (data.msg_type === 'candles') {
         setChartData(data.candles.map((c: any) => ({ ...c, time: c.epoch * 1000 })));
       } else if (data.msg_type === 'history') {
@@ -147,8 +159,8 @@ export function RiseFallChart({ selectedMarket, decimalPlaces }: RiseFallChartPr
       }
     };
 
-    ws.onerror = (err) => {
-        console.error('An error occurred with the WebSocket connection.');
+    ws.onerror = () => {
+        setError('An error occurred with the WebSocket connection.');
         setIsLoading(false);
     }
 
@@ -174,7 +186,7 @@ export function RiseFallChart({ selectedMarket, decimalPlaces }: RiseFallChartPr
   }, [chartData]);
   
   const domain = React.useMemo(() => {
-    if (processedData.length === 0) return [0,1];
+    if (processedData.length === 0) return ['auto', 'auto'];
     
     let min = Infinity;
     let max = -Infinity;
@@ -186,7 +198,7 @@ export function RiseFallChart({ selectedMarket, decimalPlaces }: RiseFallChartPr
         if (high !== undefined && high > max) max = high;
     });
 
-    if (min === Infinity || max === -Infinity) return [0, 1];
+    if (min === Infinity || max === -Infinity) return ['auto', 'auto'];
     
     const padding = (max - min) * 0.1 || 1;
     return [min - padding, max + padding];
@@ -218,7 +230,16 @@ export function RiseFallChart({ selectedMarket, decimalPlaces }: RiseFallChartPr
 
   const renderChart = () => {
     if (isLoading) return <Skeleton className="h-96 w-full" />;
-    if (processedData.length === 0) return <div className="flex h-96 w-full items-center justify-center text-muted-foreground">No data available.</div>;
+    if (error) return (
+        <div className="flex h-96 w-full items-center justify-center p-4">
+            <Alert variant="destructive" className="max-w-lg">
+                <AlertTriangle className="h-4 w-4" />
+                <AlertTitle>Error</AlertTitle>
+                <AlertDescription>{error}</AlertDescription>
+            </Alert>
+        </div>
+    );
+    if (processedData.length === 0) return <div className="flex h-96 w-full items-center justify-center text-muted-foreground">No data available for this market/timeframe.</div>;
 
     const isTickChart = timeInterval === 0;
     const showArea = isTickChart || chartType === 'area';
@@ -238,7 +259,7 @@ export function RiseFallChart({ selectedMarket, decimalPlaces }: RiseFallChartPr
     }
     
     return (
-      <ComposedChart data={processedData} margin={{ top: 5, right: 10, left: 10, bottom: 20 }} barGap={-3}>
+      <ComposedChart data={processedData} margin={{ top: 5, right: 10, left: 10, bottom: 20 }} barGap={0} barCategoryGap={1}>
         <CartesianGrid vertical={false} strokeDasharray="3 3" stroke="hsl(var(--border)/.5)" />
         <XAxis dataKey="time" scale="time" type="number" domain={['dataMin', 'dataMax']} tickLine={false} axisLine={false} tickMargin={8} tick={{ fontSize: 10 }} tickFormatter={(unixTime) => new Date(unixTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })} />
         <YAxis yAxisId="right" domain={domain} orientation="right" tickLine={false} axisLine={false} tickMargin={8} tickFormatter={(value) => (typeof value === 'number' ? value.toFixed(decimalPlaces) : '')} tick={{ fontSize: 10 }} />
@@ -251,7 +272,7 @@ export function RiseFallChart({ selectedMarket, decimalPlaces }: RiseFallChartPr
                 <Bar dataKey="wick" yAxisId="right" stroke="none" isAnimationActive={false} barSize={1}>
                     {processedData.map((d, i) => <Cell key={`wick-${i}`} fill={(d.close ?? 0) >= (d.open ?? 0) ? '#22c55e' : '#ef4444'} />)}
                 </Bar>
-                <Bar dataKey="body" yAxisId="right" isAnimationActive={false} barSize={3}>
+                <Bar dataKey="body" yAxisId="right" isAnimationActive={false}>
                     {processedData.map((d, i) => {
                         const isBullish = (d.close ?? 0) >= (d.open ?? 0);
                         const color = isBullish ? '#22c55e' : '#ef4444';
@@ -270,14 +291,14 @@ export function RiseFallChart({ selectedMarket, decimalPlaces }: RiseFallChartPr
        <div className="flex flex-wrap items-center justify-between gap-2 mb-2">
             <div className="flex items-center gap-1 flex-wrap">
                 {timeIntervals.map((interval) => (
-                <Button key={interval.label} variant={timeInterval === interval.seconds ? 'secondary' : 'ghost'} size="sm" onClick={() => setTimeInterval(interval.seconds)} className="h-8 px-2 text-xs">
+                <Button key={interval.label} variant={timeInterval === interval.seconds ? 'secondary' : 'ghost'} size="sm" onClick={() => setTimeInterval(interval.seconds)} className="h-8 px-2 text-xs" disabled={is1sMarket && interval.seconds > 0} title={is1sMarket && interval.seconds > 0 ? "Candles not available for this market" : ""}>
                     {interval.label}
                 </Button>
                 ))}
             </div>
             <Popover>
                 <PopoverTrigger asChild>
-                <Button size="icon" variant="ghost" className="h-8 w-8" disabled={timeInterval === 0}>
+                <Button size="icon" variant="ghost" className="h-8 w-8" disabled={timeInterval === 0 || is1sMarket}>
                     {chartTypes.find(c => c.value === chartType)?.icon || <BarChartBig className="h-4 w-4" />}
                 </Button>
                 </PopoverTrigger>
