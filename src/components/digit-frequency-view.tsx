@@ -1,7 +1,7 @@
 'use client';
 
 import * as React from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Input } from '@/components/ui/input';
@@ -9,6 +9,8 @@ import { syntheticIndices } from '@/lib/mock-data';
 import { cn } from '@/lib/utils';
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell } from 'recharts';
 import { ChartContainer } from '@/components/ui/chart';
+import { Badge } from '@/components/ui/badge';
+import { Compass } from 'lucide-react';
 
 interface DigitFrequencyViewProps {
     price: number;
@@ -79,6 +81,65 @@ export function DigitFrequencyView({
         return { highestDigit: highest, lowestDigit: lowest, chartData: data };
     }, [lastDigitTicks]);
     
+    const marketDirectionAnalysis = React.useMemo(() => {
+        const ticks = lastDigitTicks.slice(0, 50);
+        if (ticks.length < 10) {
+            return null;
+        }
+
+        // Even/Odd
+        const evenCount = ticks.filter(d => d % 2 === 0).length;
+        const evenPercentage = (evenCount / ticks.length) * 100;
+        const oddPercentage = 100 - evenPercentage;
+        const evenOddDominant = evenPercentage > oddPercentage ? 'Even' : 'Odd';
+        let evenOddReversal: 'Even' | 'Odd' | 'None' = 'None';
+        const evenOddOutcomes = ticks.map(d => d % 2 === 0 ? 'E' : 'O');
+        if (ticks.length >= 5) {
+            const lastFive = evenOddOutcomes.slice(0, 5);
+            if (lastFive.every(o => o === 'E')) evenOddReversal = 'Odd';
+            if (lastFive.every(o => o === 'O')) evenOddReversal = 'Even';
+        }
+
+        // Matches/Differs
+        const counts = Array(10).fill(0);
+        ticks.forEach(digit => { counts[digit]++; });
+        const hottestDigit = counts.reduce((maxIndex, p, i, arr) => p > arr[maxIndex] ? i : maxIndex, 0);
+        const coldestDigit = counts.reduce((minIndex, p, i, arr) => p < arr[minIndex] ? i : minIndex, 0);
+
+        // Over/Under
+        const lowerClusterCount = ticks.filter(d => d <= 4).length;
+        const higherClusterCount = ticks.length - lowerClusterCount;
+        const lowerPercentage = (lowerClusterCount / ticks.length) * 100;
+        const higherPercentage = 100 - lowerPercentage;
+        const clusterDominant = lowerPercentage > higherPercentage ? 'Lower (0-4)' : 'Higher (5-9)';
+        let clusterReversal: 'Lower (0-4)' | 'Higher (5-9)' | 'None' = 'None';
+        const clusterOutcomes = ticks.map(d => d <= 4 ? 'L' : 'H');
+        if (ticks.length >= 5) {
+            const lastFiveClusters = clusterOutcomes.slice(0, 5);
+            if (lastFiveClusters.every(c => c === 'L')) clusterReversal = 'Higher (5-9)';
+            if (lastFiveClusters.every(c => c === 'H')) clusterReversal = 'Lower (0-4)';
+        }
+
+        return {
+            evenOdd: {
+                dominant: evenOddDominant,
+                percentage: Math.max(evenPercentage, oddPercentage),
+                reversal: evenOddReversal
+            },
+            matchesDiffers: {
+                hottest: hottestDigit,
+                hottestCount: counts[hottestDigit],
+                coldest: coldestDigit,
+                coldestCount: counts[coldestDigit]
+            },
+            overUnder: {
+                dominant: clusterDominant,
+                percentage: Math.max(lowerPercentage, higherPercentage),
+                reversal: clusterReversal
+            }
+        };
+    }, [lastDigitTicks]);
+
     const chartConfig = {
       percentage: {
         label: "Percentage",
@@ -191,6 +252,65 @@ export function DigitFrequencyView({
                             </Bar>
                         </BarChart>
                     </ChartContainer>
+                </CardContent>
+            </Card>
+
+            <Card>
+                <CardHeader>
+                    <CardTitle className="text-base font-semibold flex items-center gap-2">
+                        <Compass className="h-5 w-5 text-muted-foreground" />
+                        Market Direction (Last 50 Ticks)
+                    </CardTitle>
+                    <CardDescription>Analysis of dominance and potential reversals.</CardDescription>
+                </CardHeader>
+                <CardContent>
+                    {!marketDirectionAnalysis ? (
+                        <p className="text-sm text-muted-foreground text-center py-4">
+                            Collecting more data for analysis... (needs at least 10 ticks)
+                        </p>
+                    ) : (
+                        <div className="space-y-4">
+                            <div className="p-4 border rounded-lg">
+                                <h4 className="font-semibold mb-2">Even / Odd</h4>
+                                <div className="flex justify-between items-center text-sm">
+                                    <span>Dominant Direction:</span>
+                                    <Badge variant="secondary" className="font-bold">{marketDirectionAnalysis.evenOdd.dominant} ({marketDirectionAnalysis.evenOdd.percentage.toFixed(0)}%)</Badge>
+                                </div>
+                                <div className="flex justify-between items-center text-sm mt-2">
+                                    <span>Reversal Signal:</span>
+                                    <Badge variant={marketDirectionAnalysis.evenOdd.reversal !== 'None' ? 'destructive' : 'outline'}>
+                                        {marketDirectionAnalysis.evenOdd.reversal}
+                                    </Badge>
+                                </div>
+                            </div>
+
+                            <div className="p-4 border rounded-lg">
+                                <h4 className="font-semibold mb-2">Digit Hot / Cold</h4>
+                                 <div className="flex justify-between items-center text-sm">
+                                    <span>Hottest Digit:</span>
+                                    <Badge variant="secondary" className="font-bold">{marketDirectionAnalysis.matchesDiffers.hottest} ({marketDirectionAnalysis.matchesDiffers.hottestCount} times)</Badge>
+                                </div>
+                                <div className="flex justify-between items-center text-sm mt-2">
+                                    <span>Coldest Digit:</span>
+                                    <Badge variant="outline">{marketDirectionAnalysis.matchesDiffers.coldest} ({marketDirectionAnalysis.matchesDiffers.coldestCount} times)</Badge>
+                                </div>
+                            </div>
+
+                            <div className="p-4 border rounded-lg">
+                                <h4 className="font-semibold mb-2">Over / Under Clusters</h4>
+                                <div className="flex justify-between items-center text-sm">
+                                    <span>Dominant Cluster:</span>
+                                    <Badge variant="secondary" className="font-bold">{marketDirectionAnalysis.overUnder.dominant} ({marketDirectionAnalysis.overUnder.percentage.toFixed(0)}%)</Badge>
+                                </div>
+                                 <div className="flex justify-between items-center text-sm mt-2">
+                                    <span>Reversal Signal:</span>
+                                    <Badge variant={marketDirectionAnalysis.overUnder.reversal !== 'None' ? 'destructive' : 'outline'}>
+                                        {marketDirectionAnalysis.overUnder.reversal}
+                                    </Badge>
+                                </div>
+                            </div>
+                        </div>
+                    )}
                 </CardContent>
             </Card>
 
