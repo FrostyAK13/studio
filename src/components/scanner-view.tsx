@@ -13,6 +13,7 @@ import { syntheticIndices } from '@/lib/mock-data';
 import { MatchesDiffersAnalysis } from './matches-differs-analysis';
 import { OverUnderAnalysis } from './over-under-analysis';
 import { EvenOddAnalysis } from './even-odd-analysis';
+import { RiseFallAnalysis } from './rise-fall-analysis';
 
 interface ScannerViewProps {
     price: number;
@@ -73,11 +74,13 @@ export function ScannerView({
                 </div>
             </div>
 
+            <OverUnderAnalysis lastDigitTicks={lastDigitTicks} selectedMarket={selectedMarket} />
+            <div className="my-6" />
             <EvenOddAnalysis lastDigitTicks={lastDigitTicks} selectedMarket={selectedMarket} />
             <div className="my-6" />
             <MatchesDiffersAnalysis lastDigitTicks={lastDigitTicks} selectedMarket={selectedMarket} />
             <div className="my-6" />
-            <OverUnderAnalysis lastDigitTicks={lastDigitTicks} selectedMarket={selectedMarket} />
+            <RiseFallAnalysis lastDigitTicks={lastDigitTicks} selectedMarket={selectedMarket} />
         </>
     )
 }

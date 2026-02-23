@@ -6,47 +6,41 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
 import { cn } from '@/lib/utils';
-import { ScanLine, Loader2 } from 'lucide-react';
+import { ScanLine, Loader2, TrendingUp, TrendingDown } from 'lucide-react';
 import { HackerAnimation } from './hacker-animation';
 import { syntheticIndices } from '@/lib/mock-data';
 import { ScannerAnimationContent } from './scanner-animation-content';
 
-type Outcome = 'O' | 'U';
+type Outcome = 'R' | 'F';
 
-interface OverUnderAnalysisProps {
+interface RiseFallAnalysisProps {
   lastDigitTicks: number[];
   selectedMarket: string;
 }
 
-export function OverUnderAnalysis({ lastDigitTicks, selectedMarket }: OverUnderAnalysisProps) {
-  const [selectedDigit, setSelectedDigit] = React.useState<number>(5);
+export function RiseFallAnalysis({ lastDigitTicks, selectedMarket }: RiseFallAnalysisProps) {
   const [outcomes, setOutcomes] = React.useState<Outcome[]>([]);
-  const [streak, setStreak] = React.useState<{ type: Outcome; count: number }>({ type: 'U', count: 0 });
-  const [percentages, setPercentages] = React.useState({ over: 0, under: 0 });
+  const [streak, setStreak] = React.useState<{ type: Outcome; count: number }>({ type: 'R', count: 0 });
+  const [percentages, setPercentages] = React.useState({ rise: 0, fall: 0 });
   const [showAllOutcomes, setShowAllOutcomes] = React.useState(false);
   const [isScanning, setIsScanning] = React.useState(false);
   const [scanResultLines, setScanResultLines] = React.useState<string[] | null>(null);
 
-  const handleSelectDigit = (digit: number) => {
-    setSelectedDigit(digit);
-  };
-  
   React.useEffect(() => {
-    if (lastDigitTicks.length === 0) {
+    if (lastDigitTicks.length < 2) {
         setOutcomes([]);
-        setStreak({ type: 'U', count: 0 });
-        setPercentages({ over: 0, under: 0 });
+        setStreak({ type: 'R', count: 0 });
+        setPercentages({ rise: 0, fall: 0 });
         return;
     }
     
-    const newOutcomes: Outcome[] = lastDigitTicks.reduce((acc: Outcome[], digit) => {
-      if (digit > selectedDigit) {
-        acc.push('O');
-      } else if (digit < selectedDigit) {
-        acc.push('U');
-      }
-      return acc;
-    }, []);
+    const newOutcomes: Outcome[] = [];
+    for (let i = 0; i < lastDigitTicks.length - 1; i++) {
+        const currentTick = lastDigitTicks[i];
+        const prevTick = lastDigitTicks[i+1];
+        if(currentTick > prevTick) newOutcomes.push('R');
+        else if (currentTick < prevTick) newOutcomes.push('F');
+    }
 
     setOutcomes(newOutcomes);
 
@@ -61,17 +55,17 @@ export function OverUnderAnalysis({ lastDigitTicks, selectedMarket }: OverUnderA
         }
         setStreak(currentStreak);
     
-        const overCount = newOutcomes.filter(o => o === 'O').length;
-        const underCount = newOutcomes.length - overCount;
+        const riseCount = newOutcomes.filter(o => o === 'R').length;
+        const fallCount = newOutcomes.length - riseCount;
         setPercentages({
-          over: newOutcomes.length > 0 ? (overCount / newOutcomes.length) * 100 : 0,
-          under: newOutcomes.length > 0 ? (underCount / newOutcomes.length) * 100 : 0,
+          rise: newOutcomes.length > 0 ? (riseCount / newOutcomes.length) * 100 : 0,
+          fall: newOutcomes.length > 0 ? (fallCount / newOutcomes.length) * 100 : 0,
         });
     } else {
-        setStreak({ type: 'U', count: 0 });
-        setPercentages({ over: 0, under: 0 });
+        setStreak({ type: 'R', count: 0 });
+        setPercentages({ rise: 0, fall: 0 });
     }
-  }, [lastDigitTicks, selectedDigit]);
+  }, [lastDigitTicks]);
 
   const handleScan = () => {
     if (isScanning) return;
@@ -93,61 +87,40 @@ export function OverUnderAnalysis({ lastDigitTicks, selectedMarket }: OverUnderA
     }
     
     setTimeout(() => {
-        let predictedOutcome: 'OVER' | 'UNDER';
-        let predictedDigit: number;
+        let predictedOutcome: 'RISE' | 'FALL';
         let reasoning: string;
 
-        // Strategy: Don't use selectedDigit for prediction. Use safer, fixed digits.
-        const overThreshold = 60;
-        const underThreshold = 60;
-        const streakThreshold = 5;
+        const riseThreshold = 60;
+        const fallThreshold = 60;
+        const streakThreshold = 4;
 
-        if (percentages.over > overThreshold) {
-            predictedOutcome = 'OVER';
-            predictedDigit = 2;
-            reasoning = `High 'Over' probability detected (${percentages.over.toFixed(1)}%). Predicting OVER a low digit.`;
-        } else if (percentages.under > underThreshold) {
-            predictedOutcome = 'UNDER';
-            predictedDigit = 7;
-            reasoning = `High 'Under' probability detected (${percentages.under.toFixed(1)}%). Predicting UNDER a high digit.`;
+        if (percentages.rise > riseThreshold) {
+            predictedOutcome = 'RISE';
+            reasoning = `High 'Rise' probability detected (${percentages.rise.toFixed(1)}%).`;
+        } else if (percentages.fall > fallThreshold) {
+            predictedOutcome = 'FALL';
+            reasoning = `High 'Fall' probability detected (${percentages.fall.toFixed(1)}%).`;
         } else if (streak.count >= streakThreshold) {
-            if (streak.type === 'O') {
-                predictedOutcome = 'UNDER';
-                predictedDigit = 7;
-                reasoning = `A long streak of 'Over' (${streak.count}x) suggests a potential reversal to Under.`;
-            } else { // streak.type === 'U'
-                predictedOutcome = 'OVER';
-                predictedDigit = 2;
-                reasoning = `A long streak of 'Under' (${streak.count}x) suggests a potential reversal to Over.`;
+            if (streak.type === 'R') {
+                predictedOutcome = 'FALL';
+                reasoning = `A long streak of 'Rise' (${streak.count}x) suggests a potential reversal to Fall.`;
+            } else { // streak.type === 'F'
+                predictedOutcome = 'RISE';
+                reasoning = `A long streak of 'Fall' (${streak.count}x) suggests a potential reversal to Rise.`;
             }
         } else {
-            // Fallback: If no strong signal, choose the higher probability and a safe digit.
-            if (percentages.over >= percentages.under) {
-                predictedOutcome = 'OVER';
-                predictedDigit = 2;
-                reasoning = 'No strong signal found. Defaulting to safer OVER trade based on general tendency.';
+            if (percentages.rise >= percentages.fall) {
+                predictedOutcome = 'RISE';
+                reasoning = 'No strong signal found. Defaulting to Rise based on general tendency.';
             } else {
-                predictedOutcome = 'UNDER';
-                predictedDigit = 7;
-                reasoning = 'No strong signal found. Defaulting to safer UNDER trade based on general tendency.';
+                predictedOutcome = 'FALL';
+                reasoning = 'No strong signal found. Defaulting to Fall based on general tendency.';
             }
         }
         
-        let entryPointDigit: number;
-        const predictionText = `${predictedOutcome} ${predictedDigit}`;
-
-        if (predictedOutcome === 'OVER') {
-            // Random digit between predictedDigit + 1 and 9
-            entryPointDigit = Math.floor(Math.random() * (9 - (predictedDigit + 1) + 1)) + (predictedDigit + 1);
-        } else { // UNDER
-            // Random digit between 0 and predictedDigit - 1
-            entryPointDigit = Math.floor(Math.random() * predictedDigit);
-        }
-
         const initialResults = [
             'Analysis Complete!',
-            `--> Prediction: ${predictionText}`,
-            `--> Entry Point: ${entryPointDigit}`,
+            `--> Prediction: ${predictedOutcome}`,
             '',
             `Reasoning: ${reasoning}`,
             ''
@@ -190,38 +163,21 @@ export function OverUnderAnalysis({ lastDigitTicks, selectedMarket }: OverUnderA
       <CardContent className="p-6">
         <div className="flex justify-between items-start mb-6">
             <div>
-                <h3 className="text-lg font-semibold">Over/Under Analysis</h3>
+                <h3 className="text-lg font-semibold">Rise/Fall Analysis</h3>
                 <p className="text-sm text-muted-foreground -mt-1">{marketName}</p>
             </div>
             <p className="text-muted-foreground font-medium text-right text-sm">
-                Current Streak: <br/> {streak.count}x {streak.type === 'O' ? 'Over' : 'Under'}
+                Current Streak: <br/> {streak.count}x {streak.type === 'R' ? 'Rise' : 'Fall'}
             </p>
         </div>
 
-        <div className="flex justify-center flex-wrap gap-2 mb-6">
-          {Array.from({ length: 10 }, (_, i) => (
-            <Button
-              key={i}
-              variant={selectedDigit === i ? 'default' : 'outline'}
-              className={cn(
-                'w-12 h-12 rounded-lg text-lg font-bold',
-                selectedDigit === i ? 'bg-primary text-primary-foreground shadow-lg shadow-primary/30' : 'bg-card'
-              )}
-              onClick={() => handleSelectDigit(i)}
-            >
-              {i}
-            </Button>
-          ))}
-        </div>
 
         <div className="flex justify-center flex-wrap gap-2 mb-6 min-h-[56px]">
             {displayedOutcomes.map((outcome, index) => (
                 <div key={index} className={cn("flex items-center justify-center w-12 h-12 rounded-lg shadow-inner",
-                  outcome === 'O' ? 'bg-teal-100 border border-teal-200' : 'bg-sky-100 border border-sky-200'
+                  outcome === 'R' ? 'bg-green-100 border border-green-200' : 'bg-red-100 border border-red-200'
                 )}>
-                    <span className={cn("font-bold text-lg",
-                      outcome === 'O' ? 'text-teal-700' : 'text-sky-700'
-                    )}>{outcome}</span>
+                    {outcome === 'R' ? <TrendingUp className="h-6 w-6 text-green-600" /> : <TrendingDown className="h-6 w-6 text-red-600" />}
                 </div>
             ))}
         </div>
@@ -235,18 +191,18 @@ export function OverUnderAnalysis({ lastDigitTicks, selectedMarket }: OverUnderA
         )}
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <Card className="bg-gradient-to-br from-teal-300 to-cyan-400 border-0 text-white">
+            <Card className="bg-gradient-to-br from-green-400 to-emerald-500 border-0 text-white">
                 <CardContent className="p-4">
-                    <p className="text-sm text-cyan-100/80">OVER</p>
-                    <p className="text-3xl font-bold my-2">{percentages.over.toFixed(1)}%</p>
-                    <Progress value={percentages.over} className="h-2 bg-white/20 [&>div]:bg-white" />
+                    <p className="text-sm text-emerald-100/80">RISE</p>
+                    <p className="text-3xl font-bold my-2">{percentages.rise.toFixed(1)}%</p>
+                    <Progress value={percentages.rise} className="h-2 bg-white/20 [&>div]:bg-white" />
                 </CardContent>
             </Card>
-            <Card className="bg-gradient-to-br from-sky-300 to-indigo-400 border-0 text-white">
+            <Card className="bg-gradient-to-br from-red-400 to-rose-500 border-0 text-white">
                  <CardContent className="p-4">
-                    <p className="text-sm text-indigo-100/80">UNDER</p>
-                    <p className="text-3xl font-bold my-2">{percentages.under.toFixed(1)}%</p>
-                    <Progress value={percentages.under} className="h-2 bg-white/20 [&>div]:bg-white" />
+                    <p className="text-sm text-rose-100/80">FALL</p>
+                    <p className="text-3xl font-bold my-2">{percentages.fall.toFixed(1)}%</p>
+                    <Progress value={percentages.fall} className="h-2 bg-white/20 [&>div]:bg-white" />
                 </CardContent>
             </Card>
         </div>
@@ -264,7 +220,7 @@ export function OverUnderAnalysis({ lastDigitTicks, selectedMarket }: OverUnderA
         
         <AnimatePresence>
             {(isScanning || scanResultLines) && (
-                 <HackerAnimation title={`Analysis Dashboard - Over/Under on ${marketName}`}>
+                 <HackerAnimation title={`Analysis Dashboard - Rise/Fall on ${marketName}`}>
                     {isScanning && !scanResultLines ? (
                         <ScannerAnimationContent />
                      ) : (

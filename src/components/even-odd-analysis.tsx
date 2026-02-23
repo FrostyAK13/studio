@@ -142,11 +142,14 @@ export function EvenOddAnalysis({ lastDigitTicks, selectedMarket }: { lastDigitT
   return (
     <Card>
       <CardContent className="p-6">
-        <div className="flex justify-between items-center mb-6">
-          <h3 className="text-lg font-semibold">Even/Odd Analysis</h3>
-          <p className="text-muted-foreground font-medium">
-            Current Streak: {streak.count}x {streak.type === 'E' ? 'Even' : 'Odd'}
-          </p>
+        <div className="flex justify-between items-start mb-6">
+            <div>
+                <h3 className="text-lg font-semibold">Even/Odd Analysis</h3>
+                <p className="text-sm text-muted-foreground -mt-1">{marketName}</p>
+            </div>
+            <p className="text-muted-foreground font-medium text-right text-sm">
+                Current Streak: <br /> {streak.count}x {streak.type === 'E' ? 'Even' : 'Odd'}
+            </p>
         </div>
 
         <div className="flex justify-center flex-wrap gap-2 mb-6 min-h-[56px]">
