@@ -11,7 +11,7 @@ import { HackerAnimation } from './hacker-animation';
 import { syntheticIndices } from '@/lib/mock-data';
 import { ScannerAnimationContent } from './scanner-animation-content';
 
-type Outcome = 'O' | 'U';
+type Outcome = 'O' | 'U' | 'E';
 
 interface OverUnderAnalysisProps {
   lastDigitTicks: number[];
@@ -21,7 +21,7 @@ interface OverUnderAnalysisProps {
 export function OverUnderAnalysis({ lastDigitTicks, selectedMarket }: OverUnderAnalysisProps) {
   const [selectedDigit, setSelectedDigit] = React.useState<number>(5);
   const [outcomes, setOutcomes] = React.useState<Outcome[]>([]);
-  const [streak, setStreak] = React.useState<{ type: Outcome; count: number }>({ type: 'U', count: 0 });
+  const [streak, setStreak] = React.useState<{ type: 'O' | 'U'; count: number }>({ type: 'U', count: 0 });
   const [percentages, setPercentages] = React.useState({ over: 0, under: 0 });
   const [showAllOutcomes, setShowAllOutcomes] = React.useState(false);
   const [isScanning, setIsScanning] = React.useState(false);
@@ -39,20 +39,18 @@ export function OverUnderAnalysis({ lastDigitTicks, selectedMarket }: OverUnderA
         return;
     }
     
-    const newOutcomes: Outcome[] = lastDigitTicks.reduce((acc: Outcome[], digit) => {
-      if (digit > selectedDigit) {
-        acc.push('O');
-      } else if (digit < selectedDigit) {
-        acc.push('U');
-      }
-      return acc;
-    }, []);
-
+    const newOutcomes: Outcome[] = lastDigitTicks.map((digit) => {
+        if (digit > selectedDigit) return 'O';
+        if (digit < selectedDigit) return 'U';
+        return 'E';
+    });
     setOutcomes(newOutcomes);
 
-    if(newOutcomes.length > 0) {
-        let currentStreak = { type: newOutcomes[0], count: 0 };
-        for (const outcome of newOutcomes) {
+    const overUnderOutcomes = newOutcomes.filter(o => o !== 'E') as ('O' | 'U')[];
+
+    if(overUnderOutcomes.length > 0) {
+        let currentStreak = { type: overUnderOutcomes[0], count: 0 };
+        for (const outcome of overUnderOutcomes) {
           if (outcome === currentStreak.type) {
             currentStreak.count++;
           } else {
@@ -61,11 +59,11 @@ export function OverUnderAnalysis({ lastDigitTicks, selectedMarket }: OverUnderA
         }
         setStreak(currentStreak);
     
-        const overCount = newOutcomes.filter(o => o === 'O').length;
-        const underCount = newOutcomes.length - overCount;
+        const overCount = overUnderOutcomes.filter(o => o === 'O').length;
+        const underCount = overUnderOutcomes.filter(o => o === 'U').length;
         setPercentages({
-          over: newOutcomes.length > 0 ? (overCount / newOutcomes.length) * 100 : 0,
-          under: newOutcomes.length > 0 ? (underCount / newOutcomes.length) * 100 : 0,
+          over: overUnderOutcomes.length > 0 ? (overCount / overUnderOutcomes.length) * 100 : 0,
+          under: overUnderOutcomes.length > 0 ? (underCount / overUnderOutcomes.length) * 100 : 0,
         });
     } else {
         setStreak({ type: 'U', count: 0 });
@@ -217,10 +215,10 @@ export function OverUnderAnalysis({ lastDigitTicks, selectedMarket }: OverUnderA
         <div className="flex justify-center flex-wrap gap-2 mb-6 min-h-[56px]">
             {displayedOutcomes.map((outcome, index) => (
                 <div key={index} className={cn("flex items-center justify-center w-12 h-12 rounded-lg shadow-inner",
-                  outcome === 'O' ? 'bg-teal-100 border border-teal-200' : 'bg-sky-100 border border-sky-200'
+                  outcome === 'O' ? 'bg-teal-100 border border-teal-200' : outcome === 'U' ? 'bg-sky-100 border border-sky-200' : 'bg-slate-100 border border-slate-200'
                 )}>
                     <span className={cn("font-bold text-lg",
-                      outcome === 'O' ? 'text-teal-700' : 'text-sky-700'
+                      outcome === 'O' ? 'text-teal-700' : outcome === 'U' ? 'text-sky-700' : 'text-slate-700'
                     )}>{outcome}</span>
                 </div>
             ))}

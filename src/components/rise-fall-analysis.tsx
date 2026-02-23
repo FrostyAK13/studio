@@ -6,12 +6,12 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
 import { cn } from '@/lib/utils';
-import { ScanLine, Loader2, TrendingUp, TrendingDown } from 'lucide-react';
+import { ScanLine, Loader2, TrendingUp, TrendingDown, Minus } from 'lucide-react';
 import { HackerAnimation } from './hacker-animation';
 import { syntheticIndices } from '@/lib/mock-data';
 import { ScannerAnimationContent } from './scanner-animation-content';
 
-type Outcome = 'R' | 'F';
+type Outcome = 'R' | 'F' | 'E';
 
 interface RiseFallAnalysisProps {
   lastDigitTicks: number[];
@@ -20,7 +20,7 @@ interface RiseFallAnalysisProps {
 
 export function RiseFallAnalysis({ lastDigitTicks, selectedMarket }: RiseFallAnalysisProps) {
   const [outcomes, setOutcomes] = React.useState<Outcome[]>([]);
-  const [streak, setStreak] = React.useState<{ type: Outcome; count: number }>({ type: 'R', count: 0 });
+  const [streak, setStreak] = React.useState<{ type: 'R' | 'F'; count: number }>({ type: 'R', count: 0 });
   const [percentages, setPercentages] = React.useState({ rise: 0, fall: 0 });
   const [showAllOutcomes, setShowAllOutcomes] = React.useState(false);
   const [isScanning, setIsScanning] = React.useState(false);
@@ -36,17 +36,20 @@ export function RiseFallAnalysis({ lastDigitTicks, selectedMarket }: RiseFallAna
     
     const newOutcomes: Outcome[] = [];
     for (let i = 0; i < lastDigitTicks.length - 1; i++) {
-        const currentTick = lastDigitTicks[i];
-        const prevTick = lastDigitTicks[i+1];
-        if(currentTick > prevTick) newOutcomes.push('R');
-        else if (currentTick < prevTick) newOutcomes.push('F');
+        const currentDigit = lastDigitTicks[i];
+        const prevDigit = lastDigitTicks[i+1];
+        if(currentDigit > prevDigit) newOutcomes.push('R');
+        else if (currentDigit < prevDigit) newOutcomes.push('F');
+        else newOutcomes.push('E');
     }
 
     setOutcomes(newOutcomes);
+    
+    const riseFallOutcomes = newOutcomes.filter(o => o !== 'E') as ('R' | 'F')[];
 
-    if(newOutcomes.length > 0) {
-        let currentStreak = { type: newOutcomes[0], count: 0 };
-        for (const outcome of newOutcomes) {
+    if(riseFallOutcomes.length > 0) {
+        let currentStreak = { type: riseFallOutcomes[0], count: 0 };
+        for (const outcome of riseFallOutcomes) {
           if (outcome === currentStreak.type) {
             currentStreak.count++;
           } else {
@@ -55,11 +58,11 @@ export function RiseFallAnalysis({ lastDigitTicks, selectedMarket }: RiseFallAna
         }
         setStreak(currentStreak);
     
-        const riseCount = newOutcomes.filter(o => o === 'R').length;
-        const fallCount = newOutcomes.length - riseCount;
+        const riseCount = riseFallOutcomes.filter(o => o === 'R').length;
+        const fallCount = riseFallOutcomes.filter(o => o === 'F').length;
         setPercentages({
-          rise: newOutcomes.length > 0 ? (riseCount / newOutcomes.length) * 100 : 0,
-          fall: newOutcomes.length > 0 ? (fallCount / newOutcomes.length) * 100 : 0,
+          rise: riseFallOutcomes.length > 0 ? (riseCount / riseFallOutcomes.length) * 100 : 0,
+          fall: riseFallOutcomes.length > 0 ? (fallCount / riseFallOutcomes.length) * 100 : 0,
         });
     } else {
         setStreak({ type: 'R', count: 0 });
@@ -175,9 +178,9 @@ export function RiseFallAnalysis({ lastDigitTicks, selectedMarket }: RiseFallAna
         <div className="flex justify-center flex-wrap gap-2 mb-6 min-h-[56px]">
             {displayedOutcomes.map((outcome, index) => (
                 <div key={index} className={cn("flex items-center justify-center w-12 h-12 rounded-lg shadow-inner",
-                  outcome === 'R' ? 'bg-green-100 border border-green-200' : 'bg-red-100 border border-red-200'
+                  outcome === 'R' ? 'bg-green-100 border border-green-200' : outcome === 'F' ? 'bg-red-100 border border-red-200' : 'bg-slate-100 border border-slate-200'
                 )}>
-                    {outcome === 'R' ? <TrendingUp className="h-6 w-6 text-green-600" /> : <TrendingDown className="h-6 w-6 text-red-600" />}
+                    {outcome === 'R' ? <TrendingUp className="h-6 w-6 text-green-600" /> : outcome === 'F' ? <TrendingDown className="h-6 w-6 text-red-600" /> : <Minus className="h-6 w-6 text-slate-600" />}
                 </div>
             ))}
         </div>

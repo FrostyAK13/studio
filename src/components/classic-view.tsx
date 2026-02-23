@@ -48,14 +48,14 @@ export function ClassicView({
     const differsCount = lastDigitTicks.length - matchesCount;
     const matchesPercentage = lastDigitTicks.length > 0 ? (matchesCount / lastDigitTicks.length) * 100 : 0;
     const differsPercentage = lastDigitTicks.length > 0 ? (differsCount / lastDigitTicks.length) * 100 : 0;
-    const matchesDiffersOutcomes = lastDigitTicks.map(digit => (digit === matchesDigit ? 'E' : 'D'));
+    const matchesDiffersOutcomes = lastDigitTicks.map(digit => (digit === matchesDigit ? 'M' : 'D'));
 
     // Over/Under calculations
-    const relevantOverUnderTicks = lastDigitTicks.filter(d => d !== overUnderDigit);
-    const overCount = relevantOverUnderTicks.filter(d => d > overUnderDigit).length;
-    const underCount = relevantOverUnderTicks.length - overCount;
-    const overPercentage = relevantOverUnderTicks.length > 0 ? (overCount / relevantOverUnderTicks.length) * 100 : 0;
-    const underPercentage = relevantOverUnderTicks.length > 0 ? (underCount / relevantOverUnderTicks.length) * 100 : 0;
+    const overCount = lastDigitTicks.filter(d => d > overUnderDigit).length;
+    const underCount = lastDigitTicks.filter(d => d < overUnderDigit).length;
+    const relevantOverUnderTicksCount = overCount + underCount;
+    const overPercentage = relevantOverUnderTicksCount > 0 ? (overCount / relevantOverUnderTicksCount) * 100 : 0;
+    const underPercentage = relevantOverUnderTicksCount > 0 ? (underCount / relevantOverUnderTicksCount) * 100 : 0;
     const overUnderOutcomes = lastDigitTicks.map(digit => {
         if (digit > overUnderDigit) return 'O';
         if (digit < overUnderDigit) return 'U';
@@ -222,7 +222,7 @@ export function ClassicView({
                         </CardTitle></CardHeader>
                         <CardContent className="flex flex-wrap gap-2">
                             {matchesDiffersOutcomes.slice(0, 30).map((o, i) => (
-                                <div key={i} className={cn("flex items-center justify-center w-8 h-8 rounded-full font-bold text-white", o === 'E' ? 'bg-cyan-500' : 'bg-slate-500')}>
+                                <div key={i} className={cn("flex items-center justify-center w-8 h-8 rounded-full font-bold text-white", o === 'M' ? 'bg-cyan-500' : 'bg-slate-500')}>
                                     {o}
                                 </div>
                             ))}
