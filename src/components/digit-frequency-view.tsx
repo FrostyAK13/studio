@@ -11,7 +11,6 @@ import { PieChart, Pie, Tooltip, ResponsiveContainer, Cell, Legend } from 'recha
 import { ChartContainer } from '@/components/ui/chart';
 import { Badge } from '@/components/ui/badge';
 import { Compass } from 'lucide-react';
-import { RiseFallChart } from './rise-fall-chart';
 
 interface DigitFrequencyViewProps {
     price: number;
@@ -135,34 +134,6 @@ export function DigitFrequencyView({
             { name: 'Higher (5-9)', value: higherPercentage, fill: '#ef4444' },
         ];
 
-        // Rise/Fall
-        const riseFallOutcomes: ('R' | 'F' | 'E')[] = [];
-        if (ticks.length >= 2) {
-            for (let i = 0; i < ticks.length - 1; i++) {
-                const currentDigit = ticks[i];
-                const prevDigit = ticks[i+1];
-                if(currentDigit > prevDigit) riseFallOutcomes.push('R');
-                else if (currentDigit < prevDigit) riseFallOutcomes.push('F');
-                else riseFallOutcomes.push('E');
-            }
-        }
-        const riseFallRelevantOutcomes = riseFallOutcomes.filter(o => o !== 'E') as ('R'|'F')[];
-        const riseCount = riseFallRelevantOutcomes.filter(o => o === 'R').length;
-        const fallCount = riseFallRelevantOutcomes.length - riseCount;
-        const risePercentage = riseFallRelevantOutcomes.length > 0 ? (riseCount / riseFallRelevantOutcomes.length) * 100 : 0;
-        const fallPercentage = riseFallRelevantOutcomes.length > 0 ? (fallCount / riseFallRelevantOutcomes.length) * 100 : 0;
-        let riseFallReversal: 'Rise' | 'Fall' | 'None' = 'None';
-        if (riseFallRelevantOutcomes.length >= 4) { // Rise/Fall streak threshold
-            const lastFour = riseFallRelevantOutcomes.slice(0, 4);
-            if (lastFour.every(o => o === 'R')) riseFallReversal = 'Fall';
-            if (lastFour.every(o => o === 'F')) riseFallReversal = 'Rise';
-        }
-        const riseFallChartData = [
-            { name: 'Rise', value: risePercentage, fill: '#22c55e' },
-            { name: 'Fall', value: fallPercentage, fill: '#ef4444' },
-        ];
-
-
         return {
             evenOdd: {
                 reversal: evenOddReversal,
@@ -176,10 +147,6 @@ export function DigitFrequencyView({
                 reversal: clusterReversal,
                 chartData: overUnderChartData,
             },
-            riseFall: {
-                reversal: riseFallReversal,
-                chartData: riseFallChartData,
-            }
         };
     }, [lastDigitTicks]);
 
@@ -524,58 +491,6 @@ export function DigitFrequencyView({
                                     </ChartContainer>
                                 </div>
                             </div>
-                            {marketDirectionAnalysis.riseFall && (
-                                <div className="p-4 border rounded-lg">
-                                    <div className="flex justify-between items-start mb-2">
-                                        <div>
-                                            <h4 className="font-semibold">Rise / Fall</h4>
-                                        </div>
-                                        <div className="text-right">
-                                            <p className="text-xs text-muted-foreground font-mono">PRICE</p>
-                                            <p className="font-bold text-primary text-lg">{price.toFixed(decimalPlaces)}</p>
-                                        </div>
-                                    </div>
-                                     <RiseFallChart selectedMarket={selectedMarket} decimalPlaces={decimalPlaces} />
-                                    <div className="grid grid-cols-2 items-center gap-4 mt-4">
-                                        <div className="space-y-3">
-                                            <div>
-                                                <div className="flex justify-between mb-1 text-sm">
-                                                    <span className="font-medium">Rise</span>
-                                                    <span className="text-muted-foreground">{marketDirectionAnalysis.riseFall.chartData[0].value.toFixed(1)}%</span>
-                                                </div>
-                                                <div className="w-full bg-muted rounded-full h-2 overflow-hidden">
-                                                    <div className="h-full rounded-full" style={{ width: `${marketDirectionAnalysis.riseFall.chartData[0].value}%`, backgroundColor: marketDirectionAnalysis.riseFall.chartData[0].fill }}></div>
-                                                </div>
-                                            </div>
-                                            <div>
-                                                <div className="flex justify-between mb-1 text-sm">
-                                                    <span className="font-medium">Fall</span>
-                                                    <span className="text-muted-foreground">{marketDirectionAnalysis.riseFall.chartData[1].value.toFixed(1)}%</span>
-                                                </div>
-                                                <div className="w-full bg-muted rounded-full h-2 overflow-hidden">
-                                                    <div className="h-full rounded-full" style={{ width: `${marketDirectionAnalysis.riseFall.chartData[1].value}%`, backgroundColor: marketDirectionAnalysis.riseFall.chartData[1].fill }}></div>
-                                                </div>
-                                            </div>
-                                            <div className="flex justify-between items-center text-sm pt-2">
-                                                <span>Reversal Signal:</span>
-                                                <Badge variant={marketDirectionAnalysis.riseFall.reversal !== 'None' ? 'destructive' : 'outline'}>
-                                                    {marketDirectionAnalysis.riseFall.reversal}
-                                                </Badge>
-                                            </div>
-                                        </div>
-                                        <ChartContainer config={{}} className="h-40 w-40 mx-auto">
-                                            <PieChart>
-                                                <Tooltip content={<MiniChartTooltip />} />
-                                                <Pie data={marketDirectionAnalysis.riseFall.chartData} dataKey="value" nameKey="name" innerRadius={40} outerRadius={60} paddingAngle={2}>
-                                                    {marketDirectionAnalysis.riseFall.chartData.map((entry) => (
-                                                        <Cell key={`cell-${entry.name}`} fill={entry.fill} />
-                                                    ))}
-                                                </Pie>
-                                            </PieChart>
-                                        </ChartContainer>
-                                    </div>
-                                </div>
-                            )}
                         </div>
                     )}
                 </CardContent>

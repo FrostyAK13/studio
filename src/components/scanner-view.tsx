@@ -80,7 +80,7 @@ export function ScannerView({
             <div className="my-6" />
             <MatchesDiffersAnalysis lastDigitTicks={lastDigitTicks} selectedMarket={selectedMarket} price={price} decimalPlaces={decimalPlaces} />
             <div className="my-6" />
-            <RiseFallAnalysis lastDigitTicks={lastDigitTicks} selectedMarket={selectedMarket} price={price} decimalPlaces={decimalPlaces} />
+            <RiseFallAnalysis selectedMarket={selectedMarket} />
         </>
     )
 }
