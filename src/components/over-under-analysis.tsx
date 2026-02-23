@@ -10,7 +10,12 @@ import { ScanLine, Loader2 } from 'lucide-react';
 
 type Outcome = 'O' | 'U';
 
-export function OverUnderAnalysis({ lastDigitTicks }: { lastDigitTicks: number[]; }) {
+interface OverUnderAnalysisProps {
+  lastDigitTicks: number[];
+  selectedMarket: string;
+}
+
+export function OverUnderAnalysis({ lastDigitTicks, selectedMarket }: OverUnderAnalysisProps) {
   const [selectedDigit, setSelectedDigit] = React.useState<number>(5);
   const [outcomes, setOutcomes] = React.useState<Outcome[]>([]);
   const [streak, setStreak] = React.useState<{ type: Outcome; count: number }>({ type: 'U', count: 0 });
@@ -73,7 +78,6 @@ export function OverUnderAnalysis({ lastDigitTicks }: { lastDigitTicks: number[]
         setPrediction(null);
         return;
     }
-    if (lastDigitTicks.length < 10) return;
 
     setIsScanning(true);
     setShowScanner(false);
@@ -85,37 +89,65 @@ export function OverUnderAnalysis({ lastDigitTicks }: { lastDigitTicks: number[]
 
     setTimeout(() => {
         clearInterval(animationInterval);
-        let bestBet = { outcome: 'U' as Outcome, digit: 5, rate: 0 };
 
-        // Check "Over" bets from 1 to 8 (excluding Over 0)
-        for (let d = 1; d <= 8; d++) {
-          const relevantTicks = lastDigitTicks.filter(tick => tick !== d);
-          if (relevantTicks.length > 0) {
-              const overCount = relevantTicks.filter(tick => tick > d).length;
-              const rate = overCount / relevantTicks.length;
-              if (rate > bestBet.rate) {
-                  bestBet = { outcome: 'O', digit: d, rate: rate };
-              }
-          }
+        const is1sIndex = selectedMarket.includes('1HZ');
+        const LOOKBACK = is1sIndex ? 35 : 25;
+        const MIN_LOSS_ZONE_DOMINANCE = is1sIndex ? 14 : 10;
+        const MIN_STREAK = is1sIndex ? 5 : 4;
+        const BIAS_STRENGTH_THRESHOLD = 0.40;
+
+        if (lastDigitTicks.length < LOOKBACK) {
+            setIsScanning(false);
+            setShowScanner(true);
+            setPrediction(null);
+            return;
         }
-  
-        // Check "Under" bets from 1 to 8 (excluding Under 9)
-        for (let d = 1; d <= 8; d++) {
-          const relevantTicks = lastDigitTicks.filter(tick => tick !== d);
-          if (relevantTicks.length > 0) {
-              const underCount = relevantTicks.filter(tick => tick < d).length;
-              const rate = underCount / relevantTicks.length;
-              if (rate > bestBet.rate) {
-                  bestBet = { outcome: 'U', digit: d, rate: rate };
-              }
-          }
+
+        const recentTicks = lastDigitTicks.slice(0, LOOKBACK);
+
+        // Check for OVER 2 signal
+        const LOW_LOSS_ZONE = [0, 1, 2];
+        const lowLossZoneCount = recentTicks.filter(tick => LOW_LOSS_ZONE.includes(tick)).length;
+        const lowBiasStrength = lowLossZoneCount / LOOKBACK;
+
+        if (lowBiasStrength >= BIAS_STRENGTH_THRESHOLD && lowLossZoneCount >= MIN_LOSS_ZONE_DOMINANCE) {
+            const mostRecentTick = lastDigitTicks[0];
+            const previousTicks = lastDigitTicks.slice(1, 1 + MIN_STREAK);
+            const isStreakPresent = previousTicks.length === MIN_STREAK && previousTicks.every(tick => LOW_LOSS_ZONE.includes(tick));
+
+            if (mostRecentTick >= 3 && isStreakPresent) {
+                setPrediction({ outcome: 'O', digit: 2 });
+                handleSelectDigit(2);
+                setShowScanner(true);
+                setIsScanning(false);
+                return;
+            }
         }
-        
-        setPrediction({ outcome: bestBet.outcome, digit: bestBet.digit });
-        handleSelectDigit(bestBet.digit);
-      
-      setShowScanner(true);
-      setIsScanning(false);
+
+        // Check for UNDER 7 signal
+        const HIGH_LOSS_ZONE = [7, 8, 9];
+        const highLossZoneCount = recentTicks.filter(tick => HIGH_LOSS_ZONE.includes(tick)).length;
+        const highBiasStrength = highLossZoneCount / LOOKBACK;
+
+        if (highBiasStrength >= BIAS_STRENGTH_THRESHOLD && highLossZoneCount >= MIN_LOSS_ZONE_DOMINANCE) {
+            const mostRecentTick = lastDigitTicks[0];
+            const previousTicks = lastDigitTicks.slice(1, 1 + MIN_STREAK);
+            const isStreakPresent = previousTicks.length === MIN_STREAK && previousTicks.every(tick => HIGH_LOSS_ZONE.includes(tick));
+
+            if (mostRecentTick <= 6 && isStreakPresent) {
+                setPrediction({ outcome: 'U', digit: 7 });
+                handleSelectDigit(7);
+                setShowScanner(true);
+                setIsScanning(false);
+                return;
+            }
+        }
+
+        // No signal found
+        setPrediction(null);
+        setShowScanner(true);
+        setIsScanning(false);
+
     }, 2500);
   };
 
@@ -227,7 +259,7 @@ export function OverUnderAnalysis({ lastDigitTicks }: { lastDigitTicks: number[]
         )}
 
         <AnimatePresence>
-            {showScanner && prediction && !isScanning && (
+            {showScanner && !isScanning && (
                 <motion.div 
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
@@ -240,12 +272,18 @@ export function OverUnderAnalysis({ lastDigitTicks }: { lastDigitTicks: number[]
                         <CardTitle className="text-lg">Prediction</CardTitle>
                     </CardHeader>
                     <CardContent>
-                        <div className="text-center">
-                            <p className="text-sm text-muted-foreground">Next Outcome</p>
-                            <p className="text-4xl font-bold text-primary">
-                                {prediction.outcome === 'O' ? `OVER ${prediction.digit}` : `UNDER ${prediction.digit}`}
-                            </p>
-                        </div>
+                        {prediction ? (
+                            <div className="text-center">
+                                <p className="text-sm text-muted-foreground">Next Outcome</p>
+                                <p className="text-4xl font-bold text-primary">
+                                    {prediction.outcome === 'O' ? `OVER ${prediction.digit}` : `UNDER ${prediction.digit}`}
+                                </p>
+                            </div>
+                        ) : (
+                            <div className="text-center">
+                                <p className="text-muted-foreground">No trading signal found.</p>
+                            </div>
+                        )}
                     </CardContent>
                   </Card>
                 </motion.div>

@@ -77,7 +77,7 @@ export function ScannerView({
             <div className="my-6" />
             <MatchesDiffersAnalysis lastDigitTicks={lastDigitTicks} />
             <div className="my-6" />
-            <OverUnderAnalysis lastDigitTicks={lastDigitTicks} />
+            <OverUnderAnalysis lastDigitTicks={lastDigitTicks} selectedMarket={selectedMarket} />
         </>
     )
 }
