@@ -70,7 +70,7 @@ export function RiseFallChart({
   decimalPlaces,
 }: RiseFallChartProps) {
   const [chartData, setChartData] = React.useState<any[]>([]);
-  const [chartType, setChartType] = React.useState<ChartType>('area');
+  const [chartType, setChartType] = React.useState<ChartType>('candle');
   const [timeInterval, setTimeInterval] = React.useState<number>(0);
 
   React.useEffect(() => {
@@ -122,7 +122,7 @@ export function RiseFallChart({
         const candle = { ...data.ohlc, time: data.ohlc.epoch * 1000 };
         setChartData((prev) => {
           const newHistory = [...prev];
-          if (newHistory[newHistory.length - 1]?.epoch === candle.epoch) {
+          if (newHistory.length > 0 && newHistory[newHistory.length - 1]?.epoch === candle.epoch) {
             newHistory[newHistory.length - 1] = candle;
             return newHistory;
           }
@@ -132,7 +132,7 @@ export function RiseFallChart({
     };
 
     return () => {
-      if (ws.readyState === WebSocket.OPEN) {
+      if (ws.readyState === WebSocket.OPEN || ws.readyState === WebSocket.CONNECTING) {
         ws.close();
       }
     };
@@ -143,7 +143,7 @@ export function RiseFallChart({
     if (dataToProcess.length === 0) return [];
     
     // If we are in tick mode, we need to aggregate into candles first
-    if (timeInterval === 0) {
+    if (timeInterval === 0 && dataToProcess[0]?.price) {
         const buckets: any[] = [];
         const bucketSizeInMs = 5000; // 5 second candles from ticks
         if (dataToProcess.length < 2) return [];
@@ -193,7 +193,7 @@ export function RiseFallChart({
       if (chartType === 'hollow' && isBullish) {
         fillColor = 'transparent';
       } else if (chartType === 'ohlc') {
-         fillColor = 'transparent'; // OHLC has no body fill
+         fillColor = 'transparent'; 
       }
 
       return {
@@ -207,13 +207,13 @@ export function RiseFallChart({
   }, [chartData, timeInterval, chartType]);
 
   const domain = React.useMemo(() => {
-    if (chartData.length < 2) return ['auto', 'auto'];
-    const prices = chartData.map((d) => d.price || d.high);
+    if (ohlcData.length < 2) return ['auto', 'auto'];
+    const prices = ohlcData.flatMap((d) => [d.high, d.low]);
     const min = Math.min(...prices);
     const max = Math.max(...prices);
     const padding = (max - min) * 0.1 || 1;
     return [min - padding, max + padding];
-  }, [chartData]);
+  }, [ohlcData]);
   
   const chartConfig = { price: { label: 'Price', color: 'hsl(var(--primary))' }};
 
@@ -222,7 +222,7 @@ export function RiseFallChart({
       return <Skeleton className="h-48 w-full" />;
     }
 
-    if (chartType === 'area' || chartType === 'line') {
+    if (chartType === 'area') {
       return (
         <AreaChart data={chartData} margin={{ top: 5, right: 10, left: -20, bottom: 0 }}>
           <defs>
@@ -235,7 +235,7 @@ export function RiseFallChart({
           <XAxis dataKey="time" type="number" domain={['dataMin', 'dataMax']} tickLine={false} axisLine={false} tickMargin={8} tick={{ fontSize: 10 }} tickFormatter={(unixTime) => new Date(unixTime).toLocaleTimeString([], { minute: '2-digit', second: '2-digit' })} />
           <YAxis domain={domain} orientation="right" tickLine={false} axisLine={false} tickMargin={8} tickFormatter={(value) => (typeof value === 'number' ? value.toFixed(decimalPlaces) : '')} tick={{ fontSize: 10 }} />
           <Tooltip cursor={{ stroke: 'hsl(var(--accent))' }} content={<ChartTooltipContent formatter={(value) => (typeof value === 'number' ? value.toFixed(decimalPlaces) : '')} indicator="dot" />} />
-          <Area dataKey="price" type="monotone" stroke="var(--color-price)" fill={chartType === 'area' ? 'url(#fillPrice)' : 'transparent'} strokeWidth={2} dot={false} isAnimationActive={false} />
+          <Area dataKey="price" type="monotone" stroke="var(--color-price)" fill={'url(#fillPrice)'} strokeWidth={2} dot={false} isAnimationActive={false} />
         </AreaChart>
       );
     }
@@ -262,13 +262,12 @@ export function RiseFallChart({
           }
           return null;
         }} />
-        <Bar dataKey="wick" strokeWidth={1} barSize={chartType === 'ohlc' ? 1 : 1} isAnimationActive={false}>
+        <Bar dataKey="wick" strokeWidth={1} barSize={2} isAnimationActive={false}>
           {ohlcData.map((entry, index) => <Cell key={`cell-wick-${index}`} stroke={entry.color} fill={entry.color} />)}
         </Bar>
-        <Bar dataKey="body" barSize={chartType === 'ohlc' ? 8 : 6} isAnimationActive={false}>
+        <Bar dataKey="body" barSize={12} isAnimationActive={false}>
           {ohlcData.map((entry, index) => <Cell key={`cell-body-${index}`} stroke={entry.color} fill={entry.fillColor} />)}
         </Bar>
-         {chartType === 'ohlc' && <Bar dataKey="open" barSize={3} isAnimationActive={false}><Cell/></Bar>}
       </ComposedChart>
     );
   };
