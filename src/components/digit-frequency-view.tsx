@@ -11,6 +11,7 @@ import { PieChart, Pie, Tooltip, ResponsiveContainer, Cell, Legend } from 'recha
 import { ChartContainer } from '@/components/ui/chart';
 import { Badge } from '@/components/ui/badge';
 import { Compass } from 'lucide-react';
+import { RiseFallChart } from './rise-fall-chart';
 
 interface DigitFrequencyViewProps {
     price: number;
@@ -272,11 +273,11 @@ export function DigitFrequencyView({
                     <CardTitle className="text-base font-semibold">Digit Pattern</CardTitle>
                 </CardHeader>
                 <CardContent className="flex flex-wrap gap-2">
-                    {lastDigitTicks.slice(0, 30).map((digit, i) => (
+                    {lastDigitTicks.slice(0, 30).reverse().map((digit, i) => (
                         <div key={i} className={cn("flex items-center justify-center w-8 h-8 rounded-full font-bold text-white")} style={{ backgroundColor: digitColors[digit] }}>
                             {digit}
                         </div>
-                    )).reverse()}
+                    ))}
                 </CardContent>
             </Card>
 
@@ -309,7 +310,7 @@ export function DigitFrequencyView({
                                 nameKey="digit"
                                 cx="50%"
                                 cy="50%"
-                                outerRadius={180}
+                                outerRadius={220}
                                 labelLine={false}
                                 label={({
                                     cx,
@@ -333,7 +334,7 @@ export function DigitFrequencyView({
                                             fill="white"
                                             textAnchor={x > cx ? "start" : "end"}
                                             dominantBaseline="central"
-                                            className="text-lg font-bold"
+                                            className="text-xl font-bold"
                                         >
                                             {chartData[index].digit}
                                         </text>
@@ -416,10 +417,10 @@ export function DigitFrequencyView({
                                             </Badge>
                                         </div>
                                     </div>
-                                    <ChartContainer config={{}} className="h-36 w-36 mx-auto">
+                                    <ChartContainer config={{}} className="h-40 w-40 mx-auto">
                                         <PieChart>
                                             <Tooltip content={<MiniChartTooltip />} />
-                                            <Pie data={marketDirectionAnalysis.evenOdd.chartData} dataKey="value" nameKey="name" innerRadius={36} outerRadius={56} paddingAngle={2}>
+                                            <Pie data={marketDirectionAnalysis.evenOdd.chartData} dataKey="value" nameKey="name" innerRadius={40} outerRadius={60} paddingAngle={2}>
                                                 {marketDirectionAnalysis.evenOdd.chartData.map((entry) => (
                                                     <Cell key={`cell-${entry.name}`} fill={entry.fill} />
                                                 ))}
@@ -461,10 +462,10 @@ export function DigitFrequencyView({
                                             </div>
                                         </div>
                                     </div>
-                                    <ChartContainer config={{}} className="h-36 w-36 mx-auto">
+                                    <ChartContainer config={{}} className="h-40 w-40 mx-auto">
                                         <PieChart>
                                             <Tooltip content={<MiniChartTooltip />} />
-                                            <Pie data={marketDirectionAnalysis.matchesDiffers.chartData} dataKey="value" nameKey="name" innerRadius={36} outerRadius={56} paddingAngle={2}>
+                                            <Pie data={marketDirectionAnalysis.matchesDiffers.chartData} dataKey="value" nameKey="name" innerRadius={40} outerRadius={60} paddingAngle={2}>
                                                 {marketDirectionAnalysis.matchesDiffers.chartData.map((entry) => (
                                                     <Cell key={`cell-${entry.name}`} fill={entry.fill} />
                                                 ))}
@@ -511,10 +512,10 @@ export function DigitFrequencyView({
                                             </Badge>
                                         </div>
                                     </div>
-                                    <ChartContainer config={{}} className="h-36 w-36 mx-auto">
+                                    <ChartContainer config={{}} className="h-40 w-40 mx-auto">
                                         <PieChart>
                                             <Tooltip content={<MiniChartTooltip />} />
-                                            <Pie data={marketDirectionAnalysis.overUnder.chartData} dataKey="value" nameKey="name" innerRadius={36} outerRadius={56} paddingAngle={2}>
+                                            <Pie data={marketDirectionAnalysis.overUnder.chartData} dataKey="value" nameKey="name" innerRadius={40} outerRadius={60} paddingAngle={2}>
                                                 {marketDirectionAnalysis.overUnder.chartData.map((entry) => (
                                                     <Cell key={`cell-${entry.name}`} fill={entry.fill} />
                                                 ))}
@@ -534,7 +535,8 @@ export function DigitFrequencyView({
                                             <p className="font-bold text-primary text-lg">{price.toFixed(decimalPlaces)}</p>
                                         </div>
                                     </div>
-                                    <div className="grid grid-cols-2 items-center gap-4">
+                                     <RiseFallChart lastDigitTicks={lastDigitTicks} />
+                                    <div className="grid grid-cols-2 items-center gap-4 mt-4">
                                         <div className="space-y-3">
                                             <div>
                                                 <div className="flex justify-between mb-1 text-sm">
@@ -561,10 +563,10 @@ export function DigitFrequencyView({
                                                 </Badge>
                                             </div>
                                         </div>
-                                        <ChartContainer config={{}} className="h-36 w-36 mx-auto">
+                                        <ChartContainer config={{}} className="h-40 w-40 mx-auto">
                                             <PieChart>
                                                 <Tooltip content={<MiniChartTooltip />} />
-                                                <Pie data={marketDirectionAnalysis.riseFall.chartData} dataKey="value" nameKey="name" innerRadius={36} outerRadius={56} paddingAngle={2}>
+                                                <Pie data={marketDirectionAnalysis.riseFall.chartData} dataKey="value" nameKey="name" innerRadius={40} outerRadius={60} paddingAngle={2}>
                                                     {marketDirectionAnalysis.riseFall.chartData.map((entry) => (
                                                         <Cell key={`cell-${entry.name}`} fill={entry.fill} />
                                                     ))}
