@@ -7,7 +7,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Input } from '@/components/ui/input';
 import { syntheticIndices } from '@/lib/mock-data';
 import { cn } from '@/lib/utils';
-import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell } from 'recharts';
+import { PieChart, Pie, Legend, Tooltip, ResponsiveContainer, Cell } from 'recharts';
 import { ChartContainer } from '@/components/ui/chart';
 import { Badge } from '@/components/ui/badge';
 import { Compass } from 'lucide-react';
@@ -141,9 +141,12 @@ export function DigitFrequencyView({
     }, [lastDigitTicks]);
 
     const chartConfig = {
-      percentage: {
-        label: "Percentage",
-      },
+      ...Object.fromEntries(
+        Array.from({ length: 10 }, (_, i) => [
+          i.toString(),
+          { label: `Digit ${i}`, color: digitColors[i] },
+        ])
+      ),
     }
 
     return (
@@ -218,39 +221,82 @@ export function DigitFrequencyView({
                 <CardHeader>
                     <CardTitle className="text-base font-semibold">Probability Analysis</CardTitle>
                 </CardHeader>
-                <CardContent>
-                    <ChartContainer config={chartConfig} className="h-64 w-full">
-                        <BarChart data={chartData} margin={{ top: 20, right: 0, left: -20, bottom: 5 }}>
-                            <XAxis dataKey="digit" tickLine={false} axisLine={false} />
-                            <YAxis tickFormatter={(value) => `${value.toFixed(0)}%`} tickLine={false} axisLine={false}/>
+                <CardContent className="flex items-center justify-center">
+                    <ChartContainer config={chartConfig} className="mx-auto aspect-square h-64">
+                        <PieChart>
                             <Tooltip
                                 cursor={false}
                                 content={({ active, payload }) => {
                                   if (active && payload && payload.length) {
                                     const data = payload[0].payload;
                                     return (
-                                      <div className="bg-popover text-popover-foreground rounded-md px-3 py-2 text-sm shadow-md border">
-                                        <p className="font-bold">{`Digit ${data.digit}`}</p>
-                                        <p>{`Count: ${data.count}`}</p>
-                                        <p>{`Percentage: ${data.percentage.toFixed(1)}%`}</p>
+                                      <div className="min-w-[8rem] rounded-lg border bg-background p-2 text-sm shadow-sm">
+                                        <p className="font-bold text-foreground">{`Digit ${data.digit}`}</p>
+                                        <p className="text-muted-foreground">{`Count: ${data.count}`}</p>
+                                        <p className="text-muted-foreground">{`Percentage: ${data.percentage.toFixed(1)}%`}</p>
                                       </div>
                                     );
                                   }
                                   return null;
                                 }}
                             />
-                            <Bar dataKey="percentage" radius={4}>
-                                {chartData.map((entry) => {
-                                    let color = 'hsl(var(--primary))';
-                                    if (entry.digit === highestDigit.digit) {
-                                        color = 'hsl(var(--chart-2))';
-                                    } else if (entry.digit === lowestDigit.digit) {
-                                        color = 'hsl(var(--destructive))';
-                                    }
-                                    return <Cell key={`cell-${entry.digit}`} fill={color} />;
-                                })}
-                            </Bar>
-                        </BarChart>
+                             <Pie
+                                data={chartData}
+                                dataKey="percentage"
+                                nameKey="digit"
+                                cx="50%"
+                                cy="50%"
+                                outerRadius={80}
+                                labelLine={false}
+                                label={({
+                                    cx,
+                                    cy,
+                                    midAngle,
+                                    innerRadius,
+                                    outerRadius,
+                                    index,
+                                }) => {
+                                    const RADIAN = Math.PI / 180
+                                    const radius = innerRadius + (outerRadius - innerRadius) * 0.5
+                                    const x = cx + radius * Math.cos(-midAngle * RADIAN)
+                                    const y = cy + radius * Math.sin(-midAngle * RADIAN)
+
+                                    if (chartData[index].percentage < 5) return null;
+
+                                    return (
+                                        <text
+                                            x={x}
+                                            y={y}
+                                            fill="white"
+                                            textAnchor={x > cx ? "start" : "end"}
+                                            dominantBaseline="central"
+                                            className="text-xs font-bold"
+                                        >
+                                            {chartData[index].digit}
+                                        </text>
+                                    )
+                                }}
+                            >
+                                {chartData.map((entry, index) => (
+                                    <Cell key={`cell-${index}`} fill={digitColors[entry.digit]} />
+                                ))}
+                            </Pie>
+                            <Legend
+                                content={({ payload }) => {
+                                return (
+                                    <ul className="flex flex-wrap gap-x-4 gap-y-2 justify-center mt-4 text-sm">
+                                    {payload?.map((entry, index) => (
+                                        <li key={`item-${index}`} className="flex items-center gap-2">
+                                        <span className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: entry.color }} />
+                                        <span className="text-muted-foreground">{entry.payload?.payload.digit}:</span>
+                                        <span className="font-medium">{entry.payload?.payload.percentage.toFixed(1)}%</span>
+                                        </li>
+                                    ))}
+                                    </ul>
+                                )
+                                }}
+                            />
+                        </PieChart>
                     </ChartContainer>
                 </CardContent>
             </Card>
