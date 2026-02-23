@@ -6,7 +6,7 @@ import { ScannerView } from './scanner-view';
 import { ClassicView } from './classic-view';
 import { syntheticIndices } from '@/lib/mock-data';
 import { DigitFrequencyView } from './digit-frequency-view';
-import { AIInsightView } from './ai-insight-view';
+import { InsightView } from './insight-view';
 
 export function Dashboard() {
     const [price, setPrice] = React.useState(0);
@@ -149,7 +149,7 @@ export function Dashboard() {
                 <TabsTrigger value="scanner">Scanner</TabsTrigger>
                 <TabsTrigger value="classic">Classic</TabsTrigger>
                 <TabsTrigger value="frequency">Frequency</TabsTrigger>
-                <TabsTrigger value="ai-insight">AI Insight</TabsTrigger>
+                <TabsTrigger value="insight">Insight</TabsTrigger>
             </TabsList>
 
             <TabsContent value="scanner">
@@ -191,8 +191,8 @@ export function Dashboard() {
                 />
             </TabsContent>
 
-             <TabsContent value="ai-insight">
-                <AIInsightView
+             <TabsContent value="insight">
+                <InsightView
                     price={price}
                     decimalPlaces={decimalPlaces}
                     lastDigitTicks={lastDigitTicks}

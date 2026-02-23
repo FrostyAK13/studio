@@ -3,17 +3,17 @@
 import * as React from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { BrainCircuit, Bot, Sparkles, AlertTriangle, Loader } from 'lucide-react';
+import { Lightbulb, Bot, Sparkles, AlertTriangle, Loader } from 'lucide-react';
 import { HackerAnimation } from './hacker-animation';
 import { ScannerAnimationContent } from './scanner-animation-content';
-import { getMarketInsight, type MarketInsightOutput } from '@/ai/flows/market-insight-flow';
+import { generateInsight, type InsightOutput } from '@/lib/insight-generator';
 import { syntheticIndices } from '@/lib/mock-data';
 import { Badge } from './ui/badge';
 import { Label } from './ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from './ui/select';
 import { Progress } from '@/components/ui/progress';
 
-interface AIInsightViewProps {
+interface InsightViewProps {
     price: number;
     decimalPlaces: number;
     lastDigitTicks: number[];
@@ -31,7 +31,7 @@ function DataCollectionAnimation({ progress, tickCount, recentTicks }: { progres
                     <Loader className="h-8 w-8 text-primary animate-spin"/>
                     <div>
                         <CardTitle className="text-2xl">Collecting Data</CardTitle>
-                        <CardDescription>The AI is capturing the next 50 ticks for analysis.</CardDescription>
+                        <CardDescription>Capturing the next 50 ticks for analysis.</CardDescription>
                     </div>
                 </div>
             </CardHeader>
@@ -54,27 +54,30 @@ function DataCollectionAnimation({ progress, tickCount, recentTicks }: { progres
 }
 
 
-export function AIInsightView({ price, decimalPlaces, lastDigitTicks, selectedMarket, onMarketChange }: AIInsightViewProps) {
+export function InsightView({ price, decimalPlaces, lastDigitTicks, selectedMarket, onMarketChange }: InsightViewProps) {
     const [analysisState, setAnalysisState] = React.useState<AnalysisState>('idle');
     const [collectedTicks, setCollectedTicks] = React.useState<number[]>([]);
-    const [insight, setInsight] = React.useState<MarketInsightOutput | null>(null);
+    const [insight, setInsight] = React.useState<InsightOutput | null>(null);
     const [error, setError] = React.useState<string | null>(null);
 
     const marketName = syntheticIndices.find(m => m.id === selectedMarket)?.name || selectedMarket;
 
-    const runAnalysis = async (ticks: number[]) => {
+    const runAnalysis = (ticks: number[]) => {
         setAnalysisState('analyzing');
-        try {
-            // Ticks are collected with newest first, reverse for chronological order for the AI
-            const ticksForAI = ticks.slice(0, 100).reverse();
-            const result = await getMarketInsight({ ticks: ticksForAI, marketId: selectedMarket });
-            setInsight(result);
-            setAnalysisState('complete');
-        } catch (e: any) {
-            console.error(e);
-            setError(e.message || "An unexpected error occurred.");
-            setAnalysisState('error');
-        }
+        // Simulate analysis time for the animation
+        setTimeout(() => {
+            try {
+                // Ticks are collected with newest first, reverse for chronological order
+                const ticksForAnalysis = [...ticks].reverse();
+                const result = generateInsight(ticksForAnalysis);
+                setInsight(result);
+                setAnalysisState('complete');
+            } catch (e: any) {
+                console.error(e);
+                setError(e.message || "An unexpected error occurred.");
+                setAnalysisState('error');
+            }
+        }, 2000); // 2 second delay for scanner animation
     };
 
     const handleStartAnalysis = () => {
@@ -108,14 +111,14 @@ export function AIInsightView({ price, decimalPlaces, lastDigitTicks, selectedMa
                     <DataCollectionAnimation
                         progress={(collectedTicks.length / 50) * 100}
                         tickCount={collectedTicks.length}
-                        recentTicks={collectedTicks.slice(0, 24).reverse()}
+                        recentTicks={[...collectedTicks].slice(0, 24).reverse()}
                     />
                 );
             case 'analyzing':
             case 'complete':
             case 'error':
                  return (
-                    <HackerAnimation title={`AI Analysis Report - ${marketName}`}>
+                    <HackerAnimation title={`Analysis Report - ${marketName}`}>
                         {analysisState === 'analyzing' ? (
                             <ScannerAnimationContent />
                         ) : error ? (
@@ -157,10 +160,10 @@ export function AIInsightView({ price, decimalPlaces, lastDigitTicks, selectedMa
         <Card>
             <CardHeader>
                 <div className='flex items-center gap-3'>
-                    <BrainCircuit className="h-8 w-8 text-primary" />
+                    <Lightbulb className="h-8 w-8 text-primary" />
                     <div>
-                        <CardTitle className="text-2xl">AI Strategy Insight</CardTitle>
-                        <CardDescription>Let an AI trading expert analyze the market and suggest a strategy.</CardDescription>
+                        <CardTitle className="text-2xl">Strategy Insight</CardTitle>
+                        <CardDescription>Let an automated expert analyze the market and suggest a strategy.</CardDescription>
                     </div>
                 </div>
             </CardHeader>
@@ -168,9 +171,9 @@ export function AIInsightView({ price, decimalPlaces, lastDigitTicks, selectedMa
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <Card>
                         <CardContent className="p-6">
-                            <Label htmlFor="ai-market-select">Synthetic Market</Label>
+                            <Label htmlFor="insight-market-select">Synthetic Market</Label>
                             <Select value={selectedMarket} onValueChange={onMarketChange} disabled={analysisState === 'collecting' || analysisState === 'analyzing'}>
-                                <SelectTrigger id="ai-market-select">
+                                <SelectTrigger id="insight-market-select">
                                     <SelectValue placeholder="Select Index" />
                                 </SelectTrigger>
                                 <SelectContent>
@@ -205,7 +208,7 @@ export function AIInsightView({ price, decimalPlaces, lastDigitTicks, selectedMa
                         ) : (
                             <>
                             <Sparkles className="mr-2 h-5 w-5" />
-                            Get AI Insight
+                            Get Insight
                             </>
                         )}
                     </Button>
