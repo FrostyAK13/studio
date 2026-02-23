@@ -128,7 +128,7 @@ export function MatchesDiffersAnalysis({ lastDigitTicks, selectedMarket }: { las
                 const finalLines = [...initialResults, `Running bot in 0 seconds...`, 'Bot activated!'];
                 setTimeout(() => {
                     setScanResultLines(null);
-                }, 2000);
+                }, 60000);
                 return finalLines;
             }
         });

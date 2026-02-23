@@ -154,7 +154,7 @@ export function OverUnderAnalysis({ lastDigitTicks, selectedMarket }: OverUnderA
                     const finalLines = [...initialResults, `Running bot in 0 seconds...`, 'Bot activated!'];
                     setTimeout(() => {
                         setScanResultLines(null);
-                    }, 2000);
+                    }, 60000);
                     return finalLines;
                 }
             });
