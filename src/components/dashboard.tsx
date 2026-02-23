@@ -6,6 +6,7 @@ import { ScannerView } from './scanner-view';
 import { ClassicView } from './classic-view';
 import { syntheticIndices } from '@/lib/mock-data';
 import { DigitFrequencyView } from './digit-frequency-view';
+import { AIInsightView } from './ai-insight-view';
 
 export function Dashboard() {
     const [price, setPrice] = React.useState(0);
@@ -144,10 +145,11 @@ export function Dashboard() {
       </header>
       <main className="flex-1 p-4 sm:p-6">
         <Tabs defaultValue="scanner" className="w-full max-w-7xl mx-auto">
-            <TabsList className="grid w-full grid-cols-3 mb-6">
+            <TabsList className="grid w-full grid-cols-4 mb-6">
                 <TabsTrigger value="scanner">Scanner</TabsTrigger>
                 <TabsTrigger value="classic">Classic</TabsTrigger>
                 <TabsTrigger value="frequency">Frequency</TabsTrigger>
+                <TabsTrigger value="ai-insight">AI Insight</TabsTrigger>
             </TabsList>
 
             <TabsContent value="scanner">
@@ -186,6 +188,13 @@ export function Dashboard() {
                     selectedMarket={selectedMarket}
                     onMarketChange={setSelectedMarket}
                     decimalPlaces={decimalPlaces}
+                />
+            </TabsContent>
+
+             <TabsContent value="ai-insight">
+                <AIInsightView
+                    lastDigitTicks={lastDigitTicks}
+                    selectedMarket={selectedMarket}
                 />
             </TabsContent>
         </Tabs>
