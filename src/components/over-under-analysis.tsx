@@ -3,29 +3,28 @@
 import * as React from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
 import { cn } from '@/lib/utils';
 import { ScanLine, Loader2 } from 'lucide-react';
 import { HackerAnimation } from './hacker-animation';
+import { syntheticIndices } from '@/lib/mock-data';
 
 type Outcome = 'O' | 'U';
 
 interface OverUnderAnalysisProps {
   lastDigitTicks: number[];
+  selectedMarket: string;
 }
 
-export function OverUnderAnalysis({ lastDigitTicks }: OverUnderAnalysisProps) {
+export function OverUnderAnalysis({ lastDigitTicks, selectedMarket }: OverUnderAnalysisProps) {
   const [selectedDigit, setSelectedDigit] = React.useState<number>(5);
   const [outcomes, setOutcomes] = React.useState<Outcome[]>([]);
   const [streak, setStreak] = React.useState<{ type: Outcome; count: number }>({ type: 'U', count: 0 });
   const [percentages, setPercentages] = React.useState({ over: 0, under: 0 });
   const [showAllOutcomes, setShowAllOutcomes] = React.useState(false);
-  const [showScanner, setShowScanner] = React.useState(false);
   const [isScanning, setIsScanning] = React.useState(false);
-  const [prediction, setPrediction] = React.useState<{ outcome: 'OVER' | 'UNDER'; digit: number; reasoning: string } | null>(null);
-  const [error, setError] = React.useState<string | null>(null);
-
+  const [scanResultLines, setScanResultLines] = React.useState<string[] | null>(null);
 
   const handleSelectDigit = (digit: number) => {
     setSelectedDigit(digit);
@@ -74,34 +73,27 @@ export function OverUnderAnalysis({ lastDigitTicks }: OverUnderAnalysisProps) {
   }, [lastDigitTicks, selectedDigit]);
 
   const handleScan = () => {
-    if (showScanner) {
-        setShowScanner(false);
-        setPrediction(null);
-        setError(null);
+    if (scanResultLines) {
+        setScanResultLines(null);
         return;
     }
 
+    let initialResults: string[];
+
     if (outcomes.length < 25) {
-        setError("Not enough tick data to run analysis. Please wait for at least 25 ticks.");
-        setShowScanner(true);
+        initialResults = ["Not enough tick data to run analysis.", "Please wait for at least 25 ticks."];
+        setScanResultLines(initialResults);
+        setTimeout(() => setScanResultLines(null), 3000);
         return;
     }
 
     setIsScanning(true);
-    setShowScanner(false);
-    setPrediction(null);
-    setError(null);
+    setScanResultLines(null);
     
     setTimeout(() => {
         let predictedOutcome: 'OVER' | 'UNDER';
         let predictedDigit: number;
         let reasoning: string;
-
-        // Strategy:
-        // 1. If 'Over' is heavily dominant (>65%), predict OVER a low digit.
-        // 2. If 'Under' is heavily dominant (>65%), predict UNDER a high digit.
-        // 3. If there's a long streak (>= 5), predict a reversal.
-        // 4. Otherwise, predict the current dominant trend.
 
         if (percentages.over > 65) {
             predictedOutcome = 'OVER';
@@ -112,7 +104,6 @@ export function OverUnderAnalysis({ lastDigitTicks }: OverUnderAnalysisProps) {
             predictedDigit = 7;
             reasoning = `Over ${percentages.under.toFixed(0)}% of recent ticks were 'Under'. Predicting a continuation of the trend under a high digit.`;
         } else if (streak.count >= 5) {
-            // Predict reversal
             if (streak.type === 'O') {
                 predictedOutcome = 'UNDER';
                 predictedDigit = selectedDigit;
@@ -123,7 +114,6 @@ export function OverUnderAnalysis({ lastDigitTicks }: OverUnderAnalysisProps) {
                 reasoning = `A long streak of 'Under' (${streak.count}x) suggests a potential reversal.`;
             }
         } else {
-            // Predict continuation of dominant trend
             if (percentages.over >= percentages.under) {
                 predictedOutcome = 'OVER';
                 predictedDigit = selectedDigit;
@@ -134,14 +124,43 @@ export function OverUnderAnalysis({ lastDigitTicks }: OverUnderAnalysisProps) {
                 reasoning = 'The market is currently showing a tendency for digits to be under the selected value.';
             }
         }
+        
+        initialResults = [
+            'Analysis Complete!',
+            `Predicted Entry: ${predictedOutcome} ${predictedDigit}`,
+            `Reasoning: "${reasoning}"`,
+            ''
+        ];
 
-        setPrediction({ outcome: predictedOutcome, digit: predictedDigit, reasoning: reasoning });
-        setShowScanner(true);
+        setScanResultLines(initialResults);
         setIsScanning(false);
+
+        let countdown = 5;
+        const interval = setInterval(() => {
+            setScanResultLines(prevLines => {
+                if (!prevLines) return null;
+                const baseLines = prevLines.slice(0, 4);
+    
+                if (countdown >= 0) {
+                    const newLines = [...baseLines, `Running bot in ${countdown} seconds...`];
+                    countdown--;
+                    return newLines;
+                } else {
+                    clearInterval(interval);
+                    const finalLines = [...baseLines, `Running bot in 0 seconds...`, 'Bot activated!'];
+                    setTimeout(() => {
+                        setScanResultLines(null);
+                    }, 2000);
+                    return finalLines;
+                }
+            });
+        }, 1000);
+
     }, 2500);
   };
 
   const displayedOutcomes = showAllOutcomes ? outcomes.slice(0, 24) : outcomes.slice(0, 8);
+  const marketName = syntheticIndices.find(m => m.id === selectedMarket)?.name || selectedMarket;
 
   return (
     <Card>
@@ -213,42 +232,19 @@ export function OverUnderAnalysis({ lastDigitTicks }: OverUnderAnalysisProps) {
                 ) : (
                     <ScanLine className="mr-2 h-4 w-4" />
                 )}
-                {showScanner ? 'Hide Scanner' : isScanning ? 'Analyzing...' : 'Run Scanner'}
+                {scanResultLines ? 'Hide Scanner' : isScanning ? 'Analyzing...' : 'Run Scanner'}
             </Button>
         </div>
         
-        {isScanning && <HackerAnimation title="Analyzing Over/Under Market..." />}
-
         <AnimatePresence>
-            {showScanner && !isScanning && (
-                <motion.div 
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0, y: -20 }}
-                    transition={{ duration: 0.5 }}
-                    className="mt-6"
-                >
-                  <Card className="w-full">
-                    <CardHeader>
-                        <CardTitle className="text-lg">Prediction</CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                        {prediction ? (
-                            <div className="text-center space-y-2">
-                                <p className="text-sm text-muted-foreground">Predicted Outcome</p>
-                                <p className="text-4xl font-bold text-primary">
-                                    {`${prediction.outcome} ${prediction.digit}`}
-                                </p>
-                                <p className="text-sm text-muted-foreground pt-2 italic">"{prediction.reasoning}"</p>
-                            </div>
-                        ) : (
-                            <div className="text-center">
-                                <p className="text-muted-foreground">{error || "No trading signal found."}</p>
-                            </div>
-                        )}
-                    </CardContent>
-                  </Card>
-                </motion.div>
+            {scanResultLines && (
+                 <HackerAnimation title={`Analysis Dashboard - Over/Under on ${marketName}`}>
+                    <div className="space-y-1">
+                        {scanResultLines.map((line, index) => (
+                            <p key={index}>{line}</p>
+                        ))}
+                    </div>
+                </HackerAnimation>
             )}
         </AnimatePresence>
 

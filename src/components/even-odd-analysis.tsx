@@ -3,22 +3,22 @@
 import * as React from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
 import { cn } from '@/lib/utils';
 import { ScanLine, Loader2 } from 'lucide-react';
 import { HackerAnimation } from './hacker-animation';
+import { syntheticIndices } from '@/lib/mock-data';
 
 type Outcome = 'E' | 'O';
 
-export function EvenOddAnalysis({ lastDigitTicks }: { lastDigitTicks: number[] }) {
+export function EvenOddAnalysis({ lastDigitTicks, selectedMarket }: { lastDigitTicks: number[], selectedMarket: string }) {
   const [outcomes, setOutcomes] = React.useState<Outcome[]>([]);
   const [streak, setStreak] = React.useState<{ type: Outcome; count: number }>({ type: 'E', count: 0 });
   const [percentages, setPercentages] = React.useState({ even: 0, odd: 0 });
   const [showAllOutcomes, setShowAllOutcomes] = React.useState(false);
-  const [showScanner, setShowScanner] = React.useState(false);
   const [isScanning, setIsScanning] = React.useState(false);
-  const [prediction, setPrediction] = React.useState<Outcome | null>(null);
+  const [scanResultLines, setScanResultLines] = React.useState<string[] | null>(null);
 
   React.useEffect(() => {
     if (lastDigitTicks.length === 0) {
@@ -55,43 +55,64 @@ export function EvenOddAnalysis({ lastDigitTicks }: { lastDigitTicks: number[] }
   }, [lastDigitTicks]);
 
   const handleScan = () => {
-    if (showScanner) {
-        setShowScanner(false);
-        setPrediction(null);
-        return;
+    if (scanResultLines) {
+      setScanResultLines(null);
+      return;
     }
     if (outcomes.length < 10) return;
 
     setIsScanning(true);
-    setShowScanner(false);
-    setPrediction(null);
+    setScanResultLines(null);
 
     setTimeout(() => {
         let predictedOutcome: Outcome;
 
-        // Strategy:
-        // 1. If one outcome is heavily dominant (>65%), predict that.
-        // 2. If there's a long streak (>= 5), predict a reversal (break of pattern).
-        // 3. Otherwise, predict the currently dominant outcome.
         if (percentages.even > 65) {
             predictedOutcome = 'E';
         } else if (percentages.odd > 65) {
             predictedOutcome = 'O';
         } else if (streak.count >= 5) {
-            // Predict reversal of a long streak
             predictedOutcome = streak.type === 'E' ? 'O' : 'E';
         } else {
-            // Predict the most frequent outcome
             predictedOutcome = percentages.even >= percentages.odd ? 'E' : 'O';
         }
-        
-        setPrediction(predictedOutcome);
-        setShowScanner(true);
+
+        const initialResults = [
+          'Analysis Complete!',
+          `Predicted Entry: ${predictedOutcome === 'E' ? 'EVEN' : 'ODD'}`,
+          `Even Probability: ${percentages.even.toFixed(2)}%`,
+          `Odd Probability: ${percentages.odd.toFixed(2)}%`,
+          ''
+        ];
+
+        setScanResultLines(initialResults);
         setIsScanning(false);
+        
+        let countdown = 5;
+        const interval = setInterval(() => {
+          setScanResultLines(prevLines => {
+              if (!prevLines) return null;
+              const baseLines = prevLines.slice(0, 5);
+
+              if (countdown >= 0) {
+                  const newLines = [...baseLines, `Running bot in ${countdown} seconds...`];
+                  countdown--;
+                  return newLines;
+              } else {
+                  clearInterval(interval);
+                  const finalLines = [...baseLines, `Running bot in 0 seconds...`, 'Bot activated!'];
+                  setTimeout(() => {
+                      setScanResultLines(null);
+                  }, 2000);
+                  return finalLines;
+              }
+          });
+        }, 1000);
     }, 2500);
   };
 
   const displayedOutcomes = showAllOutcomes ? outcomes.slice(0, 24) : outcomes.slice(0, 8);
+  const marketName = syntheticIndices.find(m => m.id === selectedMarket)?.name || selectedMarket;
 
   return (
     <Card>
@@ -146,35 +167,19 @@ export function EvenOddAnalysis({ lastDigitTicks }: { lastDigitTicks: number[] }
                 ) : (
                     <ScanLine className="mr-2 h-4 w-4" />
                 )}
-                {showScanner ? 'Hide Scanner' : isScanning ? 'Analyzing...' : 'Run Scanner'}
+                {scanResultLines ? 'Hide Scanner' : isScanning ? 'Analyzing...' : 'Run Scanner'}
             </Button>
         </div>
         
-        {isScanning && <HackerAnimation title="Analyzing Even/Odd Market..." />}
-
         <AnimatePresence>
-            {showScanner && prediction && !isScanning && (
-                <motion.div 
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0, y: -20 }}
-                    transition={{ duration: 0.5 }}
-                    className="mt-6"
-                >
-                  <Card className="w-full">
-                    <CardHeader>
-                        <CardTitle className="text-lg">Prediction</CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                        <div className="text-center">
-                            <p className="text-sm text-muted-foreground">Next Outcome</p>
-                            <p className="text-4xl font-bold text-primary">
-                                {prediction === 'E' ? 'EVEN' : 'ODD'}
-                            </p>
-                        </div>
-                    </CardContent>
-                  </Card>
-                </motion.div>
+            {scanResultLines && (
+                <HackerAnimation title={`Analysis Dashboard - Even/Odd on ${marketName}`}>
+                    <div className="space-y-1">
+                        {scanResultLines.map((line, index) => (
+                            <p key={index}>{line}</p>
+                        ))}
+                    </div>
+                </HackerAnimation>
             )}
         </AnimatePresence>
 

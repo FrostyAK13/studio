@@ -3,23 +3,23 @@
 import * as React from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
 import { cn } from '@/lib/utils';
 import { ScanLine, Loader2 } from 'lucide-react';
 import { HackerAnimation } from './hacker-animation';
+import { syntheticIndices } from '@/lib/mock-data';
 
 type Outcome = 'M' | 'D';
 
-export function MatchesDiffersAnalysis({ lastDigitTicks }: { lastDigitTicks: number[] }) {
+export function MatchesDiffersAnalysis({ lastDigitTicks, selectedMarket }: { lastDigitTicks: number[], selectedMarket: string }) {
   const [selectedDigit, setSelectedDigit] = React.useState<number>(5);
   const [outcomes, setOutcomes] = React.useState<Outcome[]>([]);
   const [streak, setStreak] = React.useState<{ type: Outcome; count: number }>({ type: 'D', count: 0 });
   const [percentages, setPercentages] = React.useState({ matches: 0, differs: 0 });
   const [showAllOutcomes, setShowAllOutcomes] = React.useState(false);
-  const [showScanner, setShowScanner] = React.useState(false);
   const [isScanning, setIsScanning] = React.useState(false);
-  const [prediction, setPrediction] = React.useState<{ outcome: Outcome; digit: number } | null>(null);
+  const [scanResultLines, setScanResultLines] = React.useState<string[] | null>(null);
 
   const handleSelectDigit = (digit: number) => {
     setSelectedDigit(digit);
@@ -59,19 +59,16 @@ export function MatchesDiffersAnalysis({ lastDigitTicks }: { lastDigitTicks: num
   }, [lastDigitTicks, selectedDigit]);
 
   const handleScan = () => {
-    if (showScanner) {
-        setShowScanner(false);
-        setPrediction(null);
-        return;
+    if (scanResultLines) {
+      setScanResultLines(null);
+      return;
     }
     if (lastDigitTicks.length < 10) return;
 
     setIsScanning(true);
-    setShowScanner(false);
-    setPrediction(null);
+    setScanResultLines(null);
 
     setTimeout(() => {
-      // Strategy: Find the digit with the highest frequency and predict a match on it.
       let bestDigit = 0;
       let maxFrequency = -1;
 
@@ -88,16 +85,47 @@ export function MatchesDiffersAnalysis({ lastDigitTicks }: { lastDigitTicks: num
               }
           }
       }
-
-      setPrediction({ outcome: 'M', digit: bestDigit });
       handleSelectDigit(bestDigit);
       
-      setShowScanner(true);
+      const tempOutcomes = lastDigitTicks.map(digit => (digit === bestDigit ? 'M' : 'D'));
+      const matchCount = tempOutcomes.filter(o => o === 'M').length;
+      const matchPercentage = lastDigitTicks.length > 0 ? (matchCount / lastDigitTicks.length) * 100 : 0;
+      
+      const initialResults = [
+        'Analysis Complete!',
+        `Predicted Entry: MATCH with ${bestDigit}`,
+        `Match Probability: ${matchPercentage.toFixed(2)}%`,
+        ''
+      ];
+
+      setScanResultLines(initialResults);
       setIsScanning(false);
+      
+      let countdown = 5;
+      const interval = setInterval(() => {
+        setScanResultLines(prevLines => {
+            if (!prevLines) return null;
+            const baseLines = prevLines.slice(0, 4);
+
+            if (countdown >= 0) {
+                const newLines = [...baseLines, `Running bot in ${countdown} seconds...`];
+                countdown--;
+                return newLines;
+            } else {
+                clearInterval(interval);
+                const finalLines = [...baseLines, `Running bot in 0 seconds...`, 'Bot activated!'];
+                setTimeout(() => {
+                    setScanResultLines(null);
+                }, 2000);
+                return finalLines;
+            }
+        });
+      }, 1000);
     }, 2500);
   };
 
   const displayedOutcomes = showAllOutcomes ? outcomes.slice(0, 24) : outcomes.slice(0, 8);
+  const marketName = syntheticIndices.find(m => m.id === selectedMarket)?.name || selectedMarket;
 
   return (
     <Card>
@@ -165,35 +193,19 @@ export function MatchesDiffersAnalysis({ lastDigitTicks }: { lastDigitTicks: num
                 ) : (
                     <ScanLine className="mr-2 h-4 w-4" />
                 )}
-                {showScanner ? 'Hide Scanner' : isScanning ? 'Analyzing...' : 'Run Scanner'}
+                {scanResultLines ? 'Hide Scanner' : isScanning ? 'Analyzing...' : 'Run Scanner'}
             </Button>
         </div>
         
-        {isScanning && <HackerAnimation title="Analyzing Matches/Differs Market..." />}
-
         <AnimatePresence>
-            {showScanner && prediction && !isScanning && (
-                <motion.div 
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0, y: -20 }}
-                    transition={{ duration: 0.5 }}
-                    className="mt-6"
-                >
-                  <Card className="w-full">
-                    <CardHeader>
-                        <CardTitle className="text-lg">Prediction</CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                        <div className="text-center">
-                            <p className="text-sm text-muted-foreground">Next Outcome</p>
-                            <p className="text-4xl font-bold text-primary">
-                                {`MATCH ${prediction.digit}`}
-                            </p>
-                        </div>
-                    </CardContent>
-                  </Card>
-                </motion.div>
+            {scanResultLines && (
+                <HackerAnimation title={`Analysis Dashboard - Matches & Differs on ${marketName}`}>
+                    <div className="space-y-1">
+                        {scanResultLines.map((line, index) => (
+                            <p key={index}>{line}</p>
+                        ))}
+                    </div>
+                </HackerAnimation>
             )}
         </AnimatePresence>
       </CardContent>
