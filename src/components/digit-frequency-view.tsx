@@ -91,7 +91,6 @@ export function DigitFrequencyView({
         const evenCount = ticks.filter(d => d % 2 === 0).length;
         const evenPercentage = (evenCount / ticks.length) * 100;
         const oddPercentage = 100 - evenPercentage;
-        const evenOddDominant = evenPercentage > oddPercentage ? 'Even' : 'Odd';
         let evenOddReversal: 'Even' | 'Odd' | 'None' = 'None';
         const evenOddOutcomes = ticks.map(d => d % 2 === 0 ? 'E' : 'O');
         if (ticks.length >= 5) {
@@ -108,10 +107,8 @@ export function DigitFrequencyView({
         const counts = Array(10).fill(0);
         ticks.forEach(digit => { counts[digit]++; });
         const hottestDigit = counts.reduce((maxIndex, p, i, arr) => p > arr[maxIndex] ? i : maxIndex, 0);
-        const coldestDigit = counts.reduce((minIndex, p, i, arr) => p < arr[minIndex] ? i : minIndex, 0);
         
         const matchesCount = counts[hottestDigit];
-        const differsCount = ticks.length - matchesCount;
         const matchesPercentage = (matchesCount / ticks.length) * 100;
         const differsPercentage = 100 - matchesPercentage;
         const matchesDiffersChartData = [
@@ -125,7 +122,6 @@ export function DigitFrequencyView({
         const higherClusterCount = ticks.length - lowerClusterCount;
         const lowerPercentage = (lowerClusterCount / ticks.length) * 100;
         const higherPercentage = 100 - lowerPercentage;
-        const clusterDominant = lowerPercentage > higherPercentage ? 'Lower (0-4)' : 'Higher (5-9)';
         let clusterReversal: 'Lower (0-4)' | 'Higher (5-9)' | 'None' = 'None';
         const clusterOutcomes = ticks.map(d => d <= 4 ? 'L' : 'H');
         if (ticks.length >= 5) {
@@ -140,21 +136,14 @@ export function DigitFrequencyView({
 
         return {
             evenOdd: {
-                dominant: evenOddDominant,
-                percentage: Math.max(evenPercentage, oddPercentage),
                 reversal: evenOddReversal,
                 chartData: evenOddChartData,
             },
             matchesDiffers: {
                 hottest: hottestDigit,
-                hottestCount: counts[hottestDigit],
-                coldest: coldestDigit,
-                coldestCount: counts[coldestDigit],
                 chartData: matchesDiffersChartData,
             },
             overUnder: {
-                dominant: clusterDominant,
-                percentage: Math.max(lowerPercentage, higherPercentage),
                 reversal: clusterReversal,
                 chartData: overUnderChartData,
             }
@@ -361,12 +350,26 @@ export function DigitFrequencyView({
                              <div className="p-4 border rounded-lg">
                                 <h4 className="font-semibold mb-2">Even / Odd</h4>
                                 <div className="grid grid-cols-2 items-center gap-4">
-                                    <div className="space-y-2">
-                                        <div className="flex justify-between items-center text-sm">
-                                            <span>Dominant:</span>
-                                            <Badge variant="secondary" className="font-bold">{marketDirectionAnalysis.evenOdd.dominant} ({marketDirectionAnalysis.evenOdd.percentage.toFixed(0)}%)</Badge>
+                                    <div className="space-y-3">
+                                        <div>
+                                            <div className="flex justify-between mb-1 text-sm">
+                                                <span className="font-medium">Even</span>
+                                                <span className="text-muted-foreground">{marketDirectionAnalysis.evenOdd.chartData[0].value.toFixed(1)}%</span>
+                                            </div>
+                                            <div className="w-full bg-muted rounded-full h-2 overflow-hidden">
+                                                <div className="h-full rounded-full" style={{ width: `${marketDirectionAnalysis.evenOdd.chartData[0].value}%`, backgroundColor: marketDirectionAnalysis.evenOdd.chartData[0].fill }}></div>
+                                            </div>
                                         </div>
-                                        <div className="flex justify-between items-center text-sm">
+                                        <div>
+                                            <div className="flex justify-between mb-1 text-sm">
+                                                <span className="font-medium">Odd</span>
+                                                <span className="text-muted-foreground">{marketDirectionAnalysis.evenOdd.chartData[1].value.toFixed(1)}%</span>
+                                            </div>
+                                            <div className="w-full bg-muted rounded-full h-2 overflow-hidden">
+                                                <div className="h-full rounded-full" style={{ width: `${marketDirectionAnalysis.evenOdd.chartData[1].value}%`, backgroundColor: marketDirectionAnalysis.evenOdd.chartData[1].fill }}></div>
+                                            </div>
+                                        </div>
+                                        <div className="flex justify-between items-center text-sm pt-2">
                                             <span>Reversal Signal:</span>
                                             <Badge variant={marketDirectionAnalysis.evenOdd.reversal !== 'None' ? 'destructive' : 'outline'}>
                                                 {marketDirectionAnalysis.evenOdd.reversal}
@@ -390,14 +393,24 @@ export function DigitFrequencyView({
                                 <h4 className="font-semibold mb-2">Matches / Differs</h4>
                                  <CardDescription className="text-xs mb-2 -mt-1">Analysis for Hottest Digit: {marketDirectionAnalysis.matchesDiffers.hottest}</CardDescription>
                                 <div className="grid grid-cols-2 items-center gap-4">
-                                     <div className="space-y-2">
-                                        <div className="flex justify-between items-center text-sm">
-                                            <span>Hottest Digit:</span>
-                                            <Badge variant="secondary" className="font-bold">{marketDirectionAnalysis.matchesDiffers.hottest} ({marketDirectionAnalysis.matchesDiffers.hottestCount} times)</Badge>
+                                     <div className="space-y-3">
+                                        <div>
+                                            <div className="flex justify-between mb-1 text-sm">
+                                                <span className="font-medium">Matches</span>
+                                                <span className="text-muted-foreground">{marketDirectionAnalysis.matchesDiffers.chartData[0].value.toFixed(1)}%</span>
+                                            </div>
+                                            <div className="w-full bg-muted rounded-full h-2 overflow-hidden">
+                                                <div className="h-full rounded-full" style={{ width: `${marketDirectionAnalysis.matchesDiffers.chartData[0].value}%`, backgroundColor: marketDirectionAnalysis.matchesDiffers.chartData[0].fill }}></div>
+                                            </div>
                                         </div>
-                                        <div className="flex justify-between items-center text-sm">
-                                            <span>Coldest Digit:</span>
-                                            <Badge variant="outline">{marketDirectionAnalysis.matchesDiffers.coldest} ({marketDirectionAnalysis.matchesDiffers.coldestCount} times)</Badge>
+                                        <div>
+                                            <div className="flex justify-between mb-1 text-sm">
+                                                <span className="font-medium">Differs</span>
+                                                <span className="text-muted-foreground">{marketDirectionAnalysis.matchesDiffers.chartData[1].value.toFixed(1)}%</span>
+                                            </div>
+                                            <div className="w-full bg-muted rounded-full h-2 overflow-hidden">
+                                                <div className="h-full rounded-full" style={{ width: `${marketDirectionAnalysis.matchesDiffers.chartData[1].value}%`, backgroundColor: marketDirectionAnalysis.matchesDiffers.chartData[1].fill }}></div>
+                                            </div>
                                         </div>
                                     </div>
                                     <ChartContainer config={{}} className="h-24 w-24 mx-auto">
@@ -416,12 +429,26 @@ export function DigitFrequencyView({
                             <div className="p-4 border rounded-lg">
                                 <h4 className="font-semibold mb-2">Over / Under Clusters</h4>
                                 <div className="grid grid-cols-2 items-center gap-4">
-                                    <div className="space-y-2">
-                                        <div className="flex justify-between items-center text-sm">
-                                            <span>Dominant Cluster:</span>
-                                            <Badge variant="secondary" className="font-bold">{marketDirectionAnalysis.overUnder.dominant} ({marketDirectionAnalysis.overUnder.percentage.toFixed(0)}%)</Badge>
+                                    <div className="space-y-3">
+                                        <div>
+                                            <div className="flex justify-between mb-1 text-sm">
+                                                <span className="font-medium">Lower (0-4)</span>
+                                                <span className="text-muted-foreground">{marketDirectionAnalysis.overUnder.chartData[0].value.toFixed(1)}%</span>
+                                            </div>
+                                            <div className="w-full bg-muted rounded-full h-2 overflow-hidden">
+                                                <div className="h-full rounded-full" style={{ width: `${marketDirectionAnalysis.overUnder.chartData[0].value}%`, backgroundColor: marketDirectionAnalysis.overUnder.chartData[0].fill }}></div>
+                                            </div>
                                         </div>
-                                        <div className="flex justify-between items-center text-sm">
+                                        <div>
+                                            <div className="flex justify-between mb-1 text-sm">
+                                                <span className="font-medium">Higher (5-9)</span>
+                                                <span className="text-muted-foreground">{marketDirectionAnalysis.overUnder.chartData[1].value.toFixed(1)}%</span>
+                                            </div>
+                                            <div className="w-full bg-muted rounded-full h-2 overflow-hidden">
+                                                <div className="h-full rounded-full" style={{ width: `${marketDirectionAnalysis.overUnder.chartData[1].value}%`, backgroundColor: marketDirectionAnalysis.overUnder.chartData[1].fill }}></div>
+                                            </div>
+                                        </div>
+                                        <div className="flex justify-between items-center text-sm pt-2">
                                             <span>Reversal Signal:</span>
                                             <Badge variant={marketDirectionAnalysis.overUnder.reversal !== 'None' ? 'destructive' : 'outline'}>
                                                 {marketDirectionAnalysis.overUnder.reversal}
