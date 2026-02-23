@@ -8,6 +8,7 @@
  */
 
 import {ai} from '@/ai/genkit';
+import {googleAI} from '@genkit-ai/google-genai';
 import {z} from 'genkit';
 
 const DigitPatternInsightInputSchema = z.object({
@@ -29,6 +30,7 @@ export async function getDigitPatternInsight(input: DigitPatternInsightInput): P
 
 const prompt = ai.definePrompt({
   name: 'digitPatternAssistantPrompt',
+  model: googleAI.model('gemini-1.5-flash-latest'),
   input: {schema: DigitPatternInsightInputSchema},
   output: {schema: DigitPatternInsightOutputSchema},
   prompt: `You are an expert trading analyst for Deriv.com synthetic indices. Your task is to analyze patterns in the last digit of market ticks and provide a prediction.
