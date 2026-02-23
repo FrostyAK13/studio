@@ -11,19 +11,22 @@ import { InsightView } from './insight-view';
 export function Dashboard() {
     const [price, setPrice] = React.useState(0);
     const [lastDigitTicks, setLastDigitTicks] = React.useState<number[]>([]);
+    const [priceHistory, setPriceHistory] = React.useState<number[]>([]);
     const [maxTicks, setMaxTicks] = React.useState(1000);
     const [selectedMarket, setSelectedMarket] = React.useState(syntheticIndices[0].id);
     const [decimalPlaces, setDecimalPlaces] = React.useState(2);
 
     React.useEffect(() => {
-        // Truncate the ticks array if maxTicks is reduced
+        // Truncate the arrays if maxTicks is reduced
         setLastDigitTicks(prev => prev.slice(0, maxTicks));
+        setPriceHistory(prev => prev.slice(0, maxTicks));
     }, [maxTicks]);
 
 
     React.useEffect(() => {
         setPrice(0);
         setLastDigitTicks([]);
+        setPriceHistory([]);
 
         const ws = new WebSocket('wss://ws.binaryws.com/websockets/v3?app_id=84799');
 
@@ -37,6 +40,7 @@ export function Dashboard() {
 
             setPrice(newPrice);
             setLastDigitTicks(prevTicks => [newDigit, ...prevTicks].slice(0, maxTicks));
+            setPriceHistory(prevPrices => [newPrice, ...prevPrices].slice(0, maxTicks));
         };
 
         ws.onopen = () => {
@@ -78,11 +82,16 @@ export function Dashboard() {
                                 return parseInt(priceString.slice(-1));
                             }).reverse();
                             
+                            const historicalPrices = historyBuffer.reverse();
+                            
                             setLastDigitTicks([currentDigit, ...historicalDigits].slice(0, maxTicks));
+                            setPriceHistory([currentPrice, ...historicalPrices].slice(0, maxTicks));
+                            
                             historyBuffer = null; // Clear buffer
                         } else {
                             // Unlikely, but if history hasn't arrived, start with this tick.
                             setLastDigitTicks([currentDigit]);
+                            setPriceHistory([currentPrice]);
                         }
                     } else {
                         // Not the first tick, just prepend it.
@@ -156,6 +165,7 @@ export function Dashboard() {
                 <ScannerView 
                     price={price} 
                     lastDigitTicks={lastDigitTicks}
+                    priceHistory={priceHistory}
                     maxTicks={maxTicks}
                     handleMaxTicksChange={handleMaxTicksChange}
                     handleMaxTicksBlur={handleMaxTicksBlur}
@@ -182,6 +192,7 @@ export function Dashboard() {
                 <DigitFrequencyView
                     price={price}
                     lastDigitTicks={lastDigitTicks}
+                    priceHistory={priceHistory}
                     maxTicks={maxTicks}
                     handleMaxTicksChange={handleMaxTicksChange}
                     handleMaxTicksBlur={handleMaxTicksBlur}

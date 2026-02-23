@@ -18,6 +18,7 @@ import { RiseFallAnalysis } from './rise-fall-analysis';
 interface ScannerViewProps {
     price: number;
     lastDigitTicks: number[];
+    priceHistory: number[];
     maxTicks: number;
     handleMaxTicksChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
     handleMaxTicksBlur: () => void;
@@ -29,6 +30,7 @@ interface ScannerViewProps {
 export function ScannerView({
     price,
     lastDigitTicks,
+    priceHistory,
     maxTicks,
     handleMaxTicksChange,
     handleMaxTicksBlur,
@@ -80,7 +82,12 @@ export function ScannerView({
             <div className="my-6" />
             <MatchesDiffersAnalysis lastDigitTicks={lastDigitTicks} selectedMarket={selectedMarket} price={price} decimalPlaces={decimalPlaces} />
             <div className="my-6" />
-            <RiseFallAnalysis selectedMarket={selectedMarket} />
+            <RiseFallAnalysis 
+                priceHistory={priceHistory}
+                selectedMarket={selectedMarket}
+                price={price}
+                decimalPlaces={decimalPlaces}
+            />
         </>
     )
 }

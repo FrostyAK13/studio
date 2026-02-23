@@ -11,10 +11,12 @@ import { PieChart, Pie, Tooltip, ResponsiveContainer, Cell, Legend } from 'recha
 import { ChartContainer } from '@/components/ui/chart';
 import { Badge } from '@/components/ui/badge';
 import { Compass } from 'lucide-react';
+import { RiseFallAnalysis } from './rise-fall-analysis';
 
 interface DigitFrequencyViewProps {
     price: number;
     lastDigitTicks: number[];
+    priceHistory: number[];
     maxTicks: number;
     handleMaxTicksChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
     handleMaxTicksBlur: () => void;
@@ -39,6 +41,7 @@ const digitColors = [
 export function DigitFrequencyView({
     price,
     lastDigitTicks,
+    priceHistory,
     maxTicks,
     handleMaxTicksChange,
     handleMaxTicksBlur,
@@ -495,6 +498,13 @@ export function DigitFrequencyView({
                     )}
                 </CardContent>
             </Card>
+
+            <RiseFallAnalysis 
+                priceHistory={priceHistory}
+                selectedMarket={selectedMarket}
+                price={price}
+                decimalPlaces={decimalPlaces}
+            />
 
         </div>
     );
