@@ -7,7 +7,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Input } from '@/components/ui/input';
 import { syntheticIndices } from '@/lib/mock-data';
 import { cn } from '@/lib/utils';
-import { PieChart, Pie, Tooltip, ResponsiveContainer, Cell } from 'recharts';
+import { PieChart, Pie, Tooltip, ResponsiveContainer, Cell, Legend } from 'recharts';
 import { ChartContainer } from '@/components/ui/chart';
 import { Badge } from '@/components/ui/badge';
 import { Compass } from 'lucide-react';
