@@ -148,7 +148,7 @@ export function RiseFallChart({ selectedMarket, decimalPlaces }: RiseFallChartPr
     };
 
     ws.onerror = (err) => {
-        console.error("WebSocket error:", err);
+        console.error('An error occurred with the WebSocket connection.');
         setIsLoading(false);
     }
 
@@ -238,20 +238,20 @@ export function RiseFallChart({ selectedMarket, decimalPlaces }: RiseFallChartPr
     }
     
     return (
-      <ComposedChart data={processedData} margin={{ top: 5, right: 10, left: 10, bottom: 20 }} barCategoryGap={1} barGap={0}>
+      <ComposedChart data={processedData} margin={{ top: 5, right: 10, left: 10, bottom: 20 }} barGap={-3}>
         <CartesianGrid vertical={false} strokeDasharray="3 3" stroke="hsl(var(--border)/.5)" />
         <XAxis dataKey="time" scale="time" type="number" domain={['dataMin', 'dataMax']} tickLine={false} axisLine={false} tickMargin={8} tick={{ fontSize: 10 }} tickFormatter={(unixTime) => new Date(unixTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })} />
         <YAxis yAxisId="right" domain={domain} orientation="right" tickLine={false} axisLine={false} tickMargin={8} tickFormatter={(value) => (typeof value === 'number' ? value.toFixed(decimalPlaces) : '')} tick={{ fontSize: 10 }} />
         <Tooltip content={<CustomTooltip />} />
         
         {chartType === 'ohlc' ? (
-             <Bar dataKey="close" yAxisId="right" shape={<OhlcBar />} isAnimationActive={false} />
+             <Bar dataKey="close" yAxisId="right" shape={<OhlcBar />} isAnimationActive={false} barSize={1} />
         ) : (
             <>
-                <Bar dataKey="wick" yAxisId="right" stroke="none" isAnimationActive={false}>
+                <Bar dataKey="wick" yAxisId="right" stroke="none" isAnimationActive={false} barSize={1}>
                     {processedData.map((d, i) => <Cell key={`wick-${i}`} fill={(d.close ?? 0) >= (d.open ?? 0) ? '#22c55e' : '#ef4444'} />)}
                 </Bar>
-                <Bar dataKey="body" yAxisId="right" isAnimationActive={false}>
+                <Bar dataKey="body" yAxisId="right" isAnimationActive={false} barSize={3}>
                     {processedData.map((d, i) => {
                         const isBullish = (d.close ?? 0) >= (d.open ?? 0);
                         const color = isBullish ? '#22c55e' : '#ef4444';
