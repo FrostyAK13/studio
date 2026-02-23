@@ -4,9 +4,6 @@ import * as React from 'react';
 import {
   Area,
   AreaChart,
-  Bar,
-  Cell,
-  ComposedChart,
   CartesianGrid,
   ResponsiveContainer,
   Tooltip,
@@ -14,18 +11,7 @@ import {
   YAxis,
   Brush,
 } from 'recharts';
-import {
-  AreaChart as AreaIcon,
-  BarChartBig,
-  AlertTriangle,
-} from 'lucide-react';
-
-import { Button } from '@/components/ui/button';
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from '@/components/ui/popover';
+import { AlertTriangle } from 'lucide-react';
 import { ChartContainer } from '@/components/ui/chart';
 import { Skeleton } from './ui/skeleton';
 import { Alert, AlertDescription, AlertTitle } from './ui/alert';
@@ -35,43 +21,12 @@ interface RiseFallChartProps {
   decimalPlaces: number;
 }
 
-type ChartType = 'area' | 'candle';
-type TimeInterval = {
-  label: string;
-  seconds: number;
-};
-
-const chartTypes: { label: string; value: ChartType; icon: React.ReactNode }[] = [
-  { label: 'Area', value: 'area', icon: <AreaIcon className="h-4 w-4" /> },
-  { label: 'Candles', value: 'candle', icon: <BarChartBig className="h-4 w-4" /> },
-];
-
-const timeIntervals: TimeInterval[] = [
-  { label: 'Ticks', seconds: 0 },
-  { label: '1m', seconds: 60 },
-  { label: '2m', seconds: 120 },
-  { label: '5m', seconds: 300 },
-  { label: '10m', seconds: 600 },
-  { label: '15m', seconds: 900 },
-  { label: '30m', seconds: 1800 },
-];
-
-
 export function RiseFallChart({ selectedMarket, decimalPlaces }: RiseFallChartProps) {
   const [chartData, setChartData] = React.useState<any[]>([]);
-  const [chartType, setChartType] = React.useState<ChartType>('candle');
-  const [timeInterval, setTimeInterval] = React.useState<number>(60);
   const [isLoading, setIsLoading] = React.useState(true);
   const [error, setError] = React.useState<string | null>(null);
   const wsRef = React.useRef<WebSocket | null>(null);
-  const is1sMarket = selectedMarket.startsWith('1HZ');
 
-  React.useEffect(() => {
-    if (is1sMarket && timeInterval > 0) {
-      setTimeInterval(0);
-    }
-  }, [selectedMarket, is1sMarket, timeInterval]);
-  
   React.useEffect(() => {
     setIsLoading(true);
     setChartData([]);
@@ -90,7 +45,6 @@ export function RiseFallChart({ selectedMarket, decimalPlaces }: RiseFallChartPr
         count: 1000,
         end: 'latest',
         subscribe: 1,
-        ...(timeInterval > 0 && { style: 'candles', granularity: timeInterval }),
       }));
     };
 
@@ -99,30 +53,17 @@ export function RiseFallChart({ selectedMarket, decimalPlaces }: RiseFallChartPr
       const data = JSON.parse(event.data);
 
       if (data.error) {
-        setError(data.error.message);
+        setError(data.error.message || 'An unknown error occurred.');
         return;
       }
       
       setError(null);
-      if (data.msg_type === 'candles') {
-        setChartData(data.candles.map((c: any) => ({ ...c, time: c.epoch * 1000 })));
-      } else if (data.msg_type === 'history') {
+      if (data.msg_type === 'history') {
         setChartData(data.history.prices.map((p: number, i: number) => ({ time: data.history.times[i] * 1000, price: p })));
-      } else if (data.msg_type === 'ohlc') {
-        if (timeInterval > 0) {
-          setChartData((prev) => {
-            const candle = { ...data.ohlc, time: data.ohlc.open_time * 1000 };
-            const lastCandle = prev[prev.length - 1];
-            if (lastCandle && lastCandle.time === candle.time) {
-              return [...prev.slice(0, -1), candle];
-            }
-            return [...prev.slice(-999), candle];
-          });
-        }
       } else if (data.msg_type === 'tick') {
-        if (timeInterval === 0) {
-          const tick = { time: data.tick.epoch * 1000, price: data.tick.quote };
-          setChartData((prev) => [...prev.slice(-999), tick]);
+        if (data.tick?.quote) {
+            const tick = { time: data.tick.epoch * 1000, price: data.tick.quote };
+            setChartData((prev) => [...prev.slice(-999), tick]);
         }
       }
     };
@@ -137,40 +78,14 @@ export function RiseFallChart({ selectedMarket, decimalPlaces }: RiseFallChartPr
         wsRef.current.close();
       }
     };
-  }, [selectedMarket, timeInterval]);
+  }, [selectedMarket]);
 
   const processedData = React.useMemo(() => {
     return chartData.map((d) => ({
-      ...d,
       time: d.time,
-      open: d.open ? parseFloat(d.open) : undefined,
-      high: d.high ? parseFloat(d.high) : undefined,
-      low: d.low ? parseFloat(d.low) : undefined,
-      close: d.close ? parseFloat(d.close) : undefined,
       price: d.price ? parseFloat(d.price) : undefined,
-      body: d.open && d.close ? [parseFloat(d.open), parseFloat(d.close)] : undefined,
-      wick: d.low && d.high ? [parseFloat(d.low), parseFloat(d.high)] : undefined,
     }));
   }, [chartData]);
-  
-  const domain = React.useMemo(() => {
-    if (processedData.length === 0) return ['auto', 'auto'];
-    
-    let min = Infinity;
-    let max = -Infinity;
-
-    processedData.forEach(d => {
-        const low = d.low ?? d.price;
-        const high = d.high ?? d.price;
-        if (low !== undefined && low < min) min = low;
-        if (high !== undefined && high > max) max = high;
-    });
-
-    if (min === Infinity || max === -Infinity) return ['auto', 'auto'];
-    
-    const padding = (max - min) * 0.1 || 1;
-    return [min - padding, max + padding];
-  }, [processedData]);
 
   const CustomTooltip = ({ active, payload, label }: any) => {
       if (active && payload && payload.length) {
@@ -178,15 +93,8 @@ export function RiseFallChart({ selectedMarket, decimalPlaces }: RiseFallChartPr
         return (
           <div className="min-w-[12rem] rounded-lg border bg-background p-2 text-sm shadow-sm">
             <p className="font-bold text-foreground mb-2">{new Date(label).toLocaleString([], { dateStyle: 'short', timeStyle: 'medium' })}</p>
-            {data.open !== undefined ? (
+            {data.price !== undefined && (
                  <div className="grid grid-cols-2 gap-x-4 gap-y-1">
-                  <span className="text-muted-foreground">Open:</span><span className="font-medium text-right">{data.open.toFixed(decimalPlaces)}</span>
-                  <span className="text-muted-foreground">High:</span><span className="font-medium text-right">{data.high.toFixed(decimalPlaces)}</span>
-                  <span className="text-muted-foreground">Low:</span><span className="font-medium text-right">{data.low.toFixed(decimalPlaces)}</span>
-                  <span className="text-muted-foreground">Close:</span><span className="font-medium text-right">{data.close.toFixed(decimalPlaces)}</span>
-                </div>
-            ) : (
-                <div className="grid grid-cols-2 gap-x-4 gap-y-1">
                     <span className="text-muted-foreground">Price:</span><span className="font-medium text-right">{data.price.toFixed(decimalPlaces)}</span>
                 </div>
             )}
@@ -207,74 +115,32 @@ export function RiseFallChart({ selectedMarket, decimalPlaces }: RiseFallChartPr
             </Alert>
         </div>
     );
-    if (processedData.length === 0) return <div className="flex h-full w-full items-center justify-center text-muted-foreground">No data available for this market/timeframe.</div>;
-
-    const isTickChart = timeInterval === 0;
-    const showArea = isTickChart || chartType === 'area';
-
-    if (showArea) {
-      return (
+    if (processedData.length === 0) return <div className="flex h-full w-full items-center justify-center text-muted-foreground">No data available for this market.</div>;
+    
+    // Set the brush to show the last 100 ticks.
+    const brushStartIndex = processedData.length > 100 ? processedData.length - 100 : 0;
+    
+    return (
         <AreaChart data={processedData} margin={{ top: 5, right: 10, left: 10, bottom: 20 }}>
           <defs><linearGradient id="fillPrice" x1="0" y1="0" x2="0" y2="1"><stop offset="5%" stopColor="hsl(var(--primary))" stopOpacity={0.8} /><stop offset="95%" stopColor="hsl(var(--primary))" stopOpacity={0.1} /></linearGradient></defs>
           <CartesianGrid vertical={false} strokeDasharray="3 3" stroke="hsl(var(--border)/.5)" />
-          <XAxis dataKey="time" scale="time" type="number" domain={['dataMin', 'dataMax']} tickLine={false} axisLine={false} tickMargin={8} tick={{ fontSize: 10 }} tickFormatter={(unixTime) => new Date(unixTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })} />
-          <YAxis domain={domain} orientation="right" tickLine={false} axisLine={false} tickMargin={8} tickFormatter={(value) => (typeof value === 'number' ? value.toFixed(decimalPlaces) : '')} tick={{ fontSize: 10 }} />
+          <XAxis hide dataKey="time" scale="time" type="number" />
+          <YAxis domain={['dataMin', 'dataMax']} orientation="right" tickLine={false} axisLine={false} tickMargin={8} tickFormatter={(value) => (typeof value === 'number' ? value.toFixed(decimalPlaces) : '')} tick={{ fontSize: 10 }} />
           <Tooltip content={<CustomTooltip />} />
           <Area dataKey="price" type="monotone" stroke="hsl(var(--primary))" fill={'url(#fillPrice)'} strokeWidth={2} dot={false} isAnimationActive={false} />
-          <Brush dataKey="time" height={30} stroke="hsl(var(--primary))" tickFormatter={(unixTime) => new Date(unixTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })} />
+          <Brush 
+            dataKey="time" 
+            height={30} 
+            stroke="hsl(var(--primary))" 
+            startIndex={brushStartIndex}
+            tickFormatter={(unixTime) => new Date(unixTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })} 
+          />
         </AreaChart>
-      );
-    }
-    
-    return (
-      <ComposedChart data={processedData} margin={{ top: 5, right: 10, left: 10, bottom: 20 }} barGap={0} barCategoryGap="10%">
-        <CartesianGrid vertical={false} strokeDasharray="3 3" stroke="hsl(var(--border)/.5)" />
-        <XAxis dataKey="time" scale="time" type="number" domain={['dataMin', 'dataMax']} tickLine={false} axisLine={false} tickMargin={8} tick={{ fontSize: 10 }} tickFormatter={(unixTime) => new Date(unixTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })} />
-        <YAxis yAxisId="right" domain={domain} orientation="right" tickLine={false} axisLine={false} tickMargin={8} tickFormatter={(value) => (typeof value === 'number' ? value.toFixed(decimalPlaces) : '')} tick={{ fontSize: 10 }} />
-        <Tooltip content={<CustomTooltip />} />
-        
-        <Bar dataKey="wick" yAxisId="right" stroke="none" isAnimationActive={false} barSize={1}>
-            {processedData.map((d, i) => <Cell key={`wick-${i}`} fill={(d.close ?? 0) >= (d.open ?? 0) ? '#22c55e' : '#ef4444'} />)}
-        </Bar>
-        <Bar dataKey="body" yAxisId="right" isAnimationActive={false} barSize={6}>
-            {processedData.map((d, i) => {
-                const isBullish = (d.close ?? 0) >= (d.open ?? 0);
-                const color = isBullish ? '#22c55e' : '#ef4444';
-                return <Cell key={`body-${i}`} fill={color} />;
-            })}
-        </Bar>
-        <Brush dataKey="time" height={30} stroke="hsl(var(--primary))" tickFormatter={(unixTime) => new Date(unixTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })} />
-      </ComposedChart>
     );
   };
 
   return (
     <div className="relative mt-4">
-       <div className="flex flex-wrap items-center justify-between gap-2 mb-2">
-            <div className="flex items-center gap-1 flex-wrap">
-                {timeIntervals.map((interval) => (
-                <Button key={interval.label} variant={timeInterval === interval.seconds ? 'secondary' : 'ghost'} size="sm" onClick={() => setTimeInterval(interval.seconds)} className="h-8 px-2 text-xs" disabled={is1sMarket && interval.seconds > 0} title={is1sMarket && interval.seconds > 0 ? "Candles not available for this market" : ""}>
-                    {interval.label}
-                </Button>
-                ))}
-            </div>
-            <Popover>
-                <PopoverTrigger asChild>
-                <Button size="icon" variant="ghost" className="h-8 w-8" disabled={timeInterval === 0 || is1sMarket}>
-                    {chartTypes.find(c => c.value === chartType)?.icon || <BarChartBig className="h-4 w-4" />}
-                </Button>
-                </PopoverTrigger>
-                <PopoverContent className="w-auto p-1">
-                <div className="flex gap-1">
-                    {chartTypes.map((type) => (
-                    <Button key={type.value} variant={chartType === type.value ? 'secondary' : 'ghost'} size="icon" onClick={() => setChartType(type.value)} title={type.label} className="h-8 w-8">
-                        {type.icon}
-                    </Button>
-                    ))}
-                </div>
-                </PopoverContent>
-            </Popover>
-        </div>
       <ChartContainer config={{}} className="h-[500px] w-full">
         <ResponsiveContainer>
             {renderChart()}
