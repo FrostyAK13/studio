@@ -16,9 +16,7 @@ import {
 } from 'recharts';
 import {
   AreaChart as AreaIcon,
-  BarChart2,
   BarChartBig,
-  Minus,
   AlertTriangle,
 } from 'lucide-react';
 
@@ -37,7 +35,7 @@ interface RiseFallChartProps {
   decimalPlaces: number;
 }
 
-type ChartType = 'area' | 'candle' | 'hollow' | 'ohlc';
+type ChartType = 'area' | 'candle';
 type TimeInterval = {
   label: string;
   seconds: number;
@@ -46,48 +44,18 @@ type TimeInterval = {
 const chartTypes: { label: string; value: ChartType; icon: React.ReactNode }[] = [
   { label: 'Area', value: 'area', icon: <AreaIcon className="h-4 w-4" /> },
   { label: 'Candles', value: 'candle', icon: <BarChartBig className="h-4 w-4" /> },
-  { label: 'Hollow', value: 'hollow', icon: <BarChart2 className="h-4 w-4" /> },
-  { label: 'OHLC', value: 'ohlc', icon: <Minus className="h-4 w-4 -rotate-45" /> },
 ];
 
 const timeIntervals: TimeInterval[] = [
   { label: 'Ticks', seconds: 0 },
   { label: '1m', seconds: 60 },
+  { label: '2m', seconds: 120 },
   { label: '5m', seconds: 300 },
+  { label: '10m', seconds: 600 },
   { label: '15m', seconds: 900 },
   { label: '30m', seconds: 1800 },
-  { label: '1h', seconds: 3600 },
-  { label: '4h', seconds: 14400 },
-  { label: '1d', seconds: 86400 },
 ];
 
-const OhlcBar = (props: any) => {
-    const { x, y, width, height, open, high, low, close } = props.payload;
-    const { yAxis } = props;
-    
-    if (x === undefined || y === undefined || width === undefined || height === undefined || !yAxis || high === undefined || low === undefined || open === undefined || close === undefined) {
-      return null;
-    }
-  
-    const isBullish = close >= open;
-    const color = isBullish ? '#22c55e' : '#ef4444';
-  
-    const yOpen = yAxis.scale(open);
-    const yClose = yAxis.scale(close);
-    const yHigh = yAxis.scale(high);
-    const yLow = yAxis.scale(low);
-  
-    return (
-      <g stroke={color} strokeWidth="1">
-        {/* Main vertical line (High-Low wick) */}
-        <path d={`M ${x + width / 2},${yHigh} L ${x + width / 2},${yLow}`} />
-        {/* Open tick */}
-        <path d={`M ${x},${yOpen} L ${x + width / 2},${yOpen}`} />
-        {/* Close tick */}
-        <path d={`M ${x + width / 2},${yClose} L ${x + width},${yClose}`} />
-      </g>
-    );
-};
 
 export function RiseFallChart({ selectedMarket, decimalPlaces }: RiseFallChartProps) {
   const [chartData, setChartData] = React.useState<any[]>([]);
@@ -229,9 +197,9 @@ export function RiseFallChart({ selectedMarket, decimalPlaces }: RiseFallChartPr
   };
 
   const renderChart = () => {
-    if (isLoading) return <Skeleton className="h-96 w-full" />;
+    if (isLoading) return <Skeleton className="h-full w-full" />;
     if (error) return (
-        <div className="flex h-96 w-full items-center justify-center p-4">
+        <div className="flex h-full w-full items-center justify-center p-4">
             <Alert variant="destructive" className="max-w-lg">
                 <AlertTriangle className="h-4 w-4" />
                 <AlertTitle>Error</AlertTitle>
@@ -239,7 +207,7 @@ export function RiseFallChart({ selectedMarket, decimalPlaces }: RiseFallChartPr
             </Alert>
         </div>
     );
-    if (processedData.length === 0) return <div className="flex h-96 w-full items-center justify-center text-muted-foreground">No data available for this market/timeframe.</div>;
+    if (processedData.length === 0) return <div className="flex h-full w-full items-center justify-center text-muted-foreground">No data available for this market/timeframe.</div>;
 
     const isTickChart = timeInterval === 0;
     const showArea = isTickChart || chartType === 'area';
@@ -259,28 +227,22 @@ export function RiseFallChart({ selectedMarket, decimalPlaces }: RiseFallChartPr
     }
     
     return (
-      <ComposedChart data={processedData} margin={{ top: 5, right: 10, left: 10, bottom: 20 }} barGap={0} barCategoryGap={1}>
+      <ComposedChart data={processedData} margin={{ top: 5, right: 10, left: 10, bottom: 20 }} barGap={0} barCategoryGap="10%">
         <CartesianGrid vertical={false} strokeDasharray="3 3" stroke="hsl(var(--border)/.5)" />
         <XAxis dataKey="time" scale="time" type="number" domain={['dataMin', 'dataMax']} tickLine={false} axisLine={false} tickMargin={8} tick={{ fontSize: 10 }} tickFormatter={(unixTime) => new Date(unixTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })} />
         <YAxis yAxisId="right" domain={domain} orientation="right" tickLine={false} axisLine={false} tickMargin={8} tickFormatter={(value) => (typeof value === 'number' ? value.toFixed(decimalPlaces) : '')} tick={{ fontSize: 10 }} />
         <Tooltip content={<CustomTooltip />} />
         
-        {chartType === 'ohlc' ? (
-             <Bar dataKey="close" yAxisId="right" shape={<OhlcBar />} isAnimationActive={false} barSize={1} />
-        ) : (
-            <>
-                <Bar dataKey="wick" yAxisId="right" stroke="none" isAnimationActive={false} barSize={1}>
-                    {processedData.map((d, i) => <Cell key={`wick-${i}`} fill={(d.close ?? 0) >= (d.open ?? 0) ? '#22c55e' : '#ef4444'} />)}
-                </Bar>
-                <Bar dataKey="body" yAxisId="right" isAnimationActive={false}>
-                    {processedData.map((d, i) => {
-                        const isBullish = (d.close ?? 0) >= (d.open ?? 0);
-                        const color = isBullish ? '#22c55e' : '#ef4444';
-                        return <Cell key={`body-${i}`} fill={chartType === 'hollow' && isBullish ? 'transparent' : color} stroke={color} strokeWidth={1} />;
-                    })}
-                </Bar>
-            </>
-        )}
+        <Bar dataKey="wick" yAxisId="right" stroke="none" isAnimationActive={false} barSize={1}>
+            {processedData.map((d, i) => <Cell key={`wick-${i}`} fill={(d.close ?? 0) >= (d.open ?? 0) ? '#22c55e' : '#ef4444'} />)}
+        </Bar>
+        <Bar dataKey="body" yAxisId="right" isAnimationActive={false} barSize={6}>
+            {processedData.map((d, i) => {
+                const isBullish = (d.close ?? 0) >= (d.open ?? 0);
+                const color = isBullish ? '#22c55e' : '#ef4444';
+                return <Cell key={`body-${i}`} fill={color} />;
+            })}
+        </Bar>
         <Brush dataKey="time" height={30} stroke="hsl(var(--primary))" tickFormatter={(unixTime) => new Date(unixTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })} />
       </ComposedChart>
     );
@@ -313,7 +275,7 @@ export function RiseFallChart({ selectedMarket, decimalPlaces }: RiseFallChartPr
                 </PopoverContent>
             </Popover>
         </div>
-      <ChartContainer config={{}} className="h-96 w-full">
+      <ChartContainer config={{}} className="h-[500px] w-full">
         <ResponsiveContainer>
             {renderChart()}
         </ResponsiveContainer>
