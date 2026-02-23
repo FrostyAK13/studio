@@ -3,8 +3,8 @@ import './globals.css';
 import { Toaster } from '@/components/ui/toaster';
 
 export const metadata: Metadata = {
-  title: 'frostytraders.com | EMPORER MIGOSI',
-  description: 'Advanced analysis tool for synthetic indices by EMPORER MIGOSI.',
+  title: 'frostytraders.com',
+  description: 'Your trading journey starts here.',
 };
 
 export default function RootLayout({
