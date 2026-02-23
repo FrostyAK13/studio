@@ -97,33 +97,39 @@ export function OverUnderAnalysis({ lastDigitTicks, selectedMarket }: OverUnderA
         let predictedDigit: number;
         let reasoning: string;
 
-        if (percentages.over > 65) {
+        // Strategy: Don't use selectedDigit for prediction. Use safer, fixed digits.
+        const overThreshold = 60;
+        const underThreshold = 60;
+        const streakThreshold = 5;
+
+        if (percentages.over > overThreshold) {
             predictedOutcome = 'OVER';
             predictedDigit = 2;
-            reasoning = `Over ${percentages.over.toFixed(0)}% of recent ticks were 'Over'. Predicting a continuation of the trend over a low digit.`;
-        } else if (percentages.under > 65) {
+            reasoning = `High 'Over' probability detected (${percentages.over.toFixed(1)}%). Predicting OVER a low digit.`;
+        } else if (percentages.under > underThreshold) {
             predictedOutcome = 'UNDER';
             predictedDigit = 7;
-            reasoning = `Over ${percentages.under.toFixed(0)}% of recent ticks were 'Under'. Predicting a continuation of the trend under a high digit.`;
-        } else if (streak.count >= 5) {
+            reasoning = `High 'Under' probability detected (${percentages.under.toFixed(1)}%). Predicting UNDER a high digit.`;
+        } else if (streak.count >= streakThreshold) {
             if (streak.type === 'O') {
                 predictedOutcome = 'UNDER';
-                predictedDigit = selectedDigit;
-                reasoning = `A long streak of 'Over' (${streak.count}x) suggests a potential reversal.`;
-            } else {
+                predictedDigit = 7;
+                reasoning = `A long streak of 'Over' (${streak.count}x) suggests a potential reversal to Under.`;
+            } else { // streak.type === 'U'
                 predictedOutcome = 'OVER';
-                predictedDigit = selectedDigit;
-                reasoning = `A long streak of 'Under' (${streak.count}x) suggests a potential reversal.`;
+                predictedDigit = 2;
+                reasoning = `A long streak of 'Under' (${streak.count}x) suggests a potential reversal to Over.`;
             }
         } else {
+            // Fallback: If no strong signal, choose the higher probability and a safe digit.
             if (percentages.over >= percentages.under) {
                 predictedOutcome = 'OVER';
-                predictedDigit = selectedDigit;
-                reasoning = 'The market is currently showing a tendency for digits to be over the selected value.';
+                predictedDigit = 2;
+                reasoning = 'No strong signal found. Defaulting to safer OVER trade based on general tendency.';
             } else {
                 predictedOutcome = 'UNDER';
-                predictedDigit = selectedDigit;
-                reasoning = 'The market is currently showing a tendency for digits to be under the selected value.';
+                predictedDigit = 7;
+                reasoning = 'No strong signal found. Defaulting to safer UNDER trade based on general tendency.';
             }
         }
         
@@ -244,14 +250,14 @@ export function OverUnderAnalysis({ lastDigitTicks, selectedMarket }: OverUnderA
         <AnimatePresence>
             {(isScanning || scanResultLines) && (
                  <HackerAnimation title={`Analysis Dashboard - Over/Under on ${marketName}`}>
-                    {scanResultLines ? (
+                    {isScanning && !scanResultLines ? (
+                        <ScannerAnimationContent />
+                     ) : (
                         <div className="space-y-1">
-                            {scanResultLines.map((line, index) => (
+                            {scanResultLines?.map((line, index) => (
                                 <p key={index}>{line}</p>
                             ))}
                         </div>
-                    ) : (
-                        <ScannerAnimationContent />
                     )}
                 </HackerAnimation>
             )}

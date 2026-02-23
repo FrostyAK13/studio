@@ -80,27 +80,35 @@ export function MatchesDiffersAnalysis({ lastDigitTicks, selectedMarket }: { las
 
     setTimeout(() => {
         let predictedOutcome: 'MATCH' | 'DIFFER';
-        const entryDigit = selectedDigit;
+        let entryDigit: number;
         let reasoning: string;
 
-        // Strategy: Follow the stronger probability unless a long streak suggests a reversal.
-        if (streak.count >= 4) { // 4 is a decent streak for a 1/10 vs 9/10 event
-             if(streak.type === 'M') {
-                predictedOutcome = 'DIFFER';
-                reasoning = `Long streak of matches (${streak.count}x) suggests a reversal.`;
-             } else {
-                predictedOutcome = 'MATCH';
-                reasoning = `Long streak of differs (${streak.count}x) suggests a reversal.`;
-             }
-        } else if (percentages.matches > 15) { // 10% is baseline, 15% is a significant deviation
+        // Strategy: Find the "hottest" digit for a potential MATCH trade.
+        const digitCounts = Array(10).fill(0);
+        lastDigitTicks.forEach(d => digitCounts[d]++);
+        
+        const digitPercentages = digitCounts.map(c => lastDigitTicks.length > 0 ? (c / lastDigitTicks.length) * 100 : 0);
+
+        let hottestDigit = 0;
+        let highestPercentage = 0;
+        digitPercentages.forEach((p, i) => {
+            if (p > highestPercentage) {
+                highestPercentage = p;
+                hottestDigit = i;
+            }
+        });
+
+        const matchThreshold = 15; // A digit appearing >15% of the time is significant (baseline is 10%)
+        
+        if (highestPercentage > matchThreshold) {
             predictedOutcome = 'MATCH';
-            reasoning = `High probability of MATCH (${percentages.matches.toFixed(1)}%).`;
-        } else if (percentages.differs > 95) { // 90% is baseline
-             predictedOutcome = 'DIFFER';
-             reasoning = `Very high probability of DIFFER (${percentages.differs.toFixed(1)}%).`;
+            entryDigit = hottestDigit;
+            reasoning = `High frequency of digit ${entryDigit} detected (${highestPercentage.toFixed(1)}%).`;
         } else {
-            predictedOutcome = 'DIFFER'; // Default to the safer bet
-            reasoning = 'No strong signal found, defaulting to higher probability trade.';
+            // Default to a DIFFER trade on the user's selected digit if no hot digit is found.
+            predictedOutcome = 'DIFFER';
+            entryDigit = selectedDigit;
+            reasoning = `No strong MATCH signal found. Defaulting to a DIFFER trade on the analyzed digit.`;
         }
       
       const initialResults = [
@@ -108,8 +116,7 @@ export function MatchesDiffersAnalysis({ lastDigitTicks, selectedMarket }: { las
         `--> Predicted Entry: ${predictedOutcome} on digit ${entryDigit}`,
         '',
         `Reasoning: ${reasoning}`,
-        `Match Prob: ${percentages.matches.toFixed(2)}%`,
-        `Differ Prob: ${percentages.differs.toFixed(2)}%`,
+        `Analyzed Frequency for Digit ${entryDigit}: ${digitPercentages[entryDigit].toFixed(2)}%`,
         ''
       ];
 
@@ -217,14 +224,14 @@ export function MatchesDiffersAnalysis({ lastDigitTicks, selectedMarket }: { las
         <AnimatePresence>
             {(isScanning || scanResultLines) && (
                 <HackerAnimation title={`Analysis Dashboard - Matches & Differs on ${marketName}`}>
-                    {scanResultLines ? (
+                    {isScanning && !scanResultLines ? (
+                        <ScannerAnimationContent />
+                    ) : (
                         <div className="space-y-1">
-                            {scanResultLines.map((line, index) => (
+                            {scanResultLines?.map((line, index) => (
                                 <p key={index}>{line}</p>
                             ))}
                         </div>
-                    ) : (
-                        <ScannerAnimationContent />
                     )}
                 </HackerAnimation>
             )}
