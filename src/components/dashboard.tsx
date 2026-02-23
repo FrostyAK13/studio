@@ -93,7 +93,7 @@ export function Dashboard() {
 
         ws.onclose = () => {};
         ws.onerror = (error) => {
-            console.error('WebSocket error:', error);
+            console.error('WebSocket error:', 'An error occurred with the WebSocket connection.');
         };
 
         return () => {
