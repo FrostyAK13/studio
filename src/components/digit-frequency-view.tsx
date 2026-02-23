@@ -24,16 +24,16 @@ interface DigitFrequencyViewProps {
 }
 
 const digitColors = [
-    '#818cf8', // 0 - indigo-400
-    '#60a5fa', // 1 - blue-400
-    '#38bdf8', // 2 - light-blue-400
-    '#22d3ee', // 3 - cyan-400
-    '#2dd4bf', // 4 - teal-400
-    '#34d399', // 5 - emerald-400
-    '#a3e635', // 6 - lime-400
-    '#facc15', // 7 - yellow-400
-    '#fb923c', // 8 - orange-400
-    '#f472b6'  // 9 - pink-400
+    '#3b82f6', // 0 - blue-500
+    '#06b6d4', // 1 - cyan-500
+    '#22c55e', // 2 - green-500
+    '#84cc16', // 3 - lime-500
+    '#f59e0b', // 4 - amber-500
+    '#ef4444', // 5 - red-500
+    '#ec4899', // 6 - pink-500
+    '#a855f7', // 7 - purple-500
+    '#f97316', // 8 - orange-500
+    '#14b8a6'  // 9 - teal-500
 ];
 
 export function DigitFrequencyView({
@@ -253,7 +253,7 @@ export function DigitFrequencyView({
                     <CardTitle className="text-base font-semibold">Probability Analysis</CardTitle>
                 </CardHeader>
                 <CardContent className="flex items-center justify-center">
-                    <ChartContainer config={chartConfig} className="mx-auto aspect-square h-64">
+                    <ChartContainer config={chartConfig} className="mx-auto aspect-square h-80">
                         <PieChart>
                             <Tooltip
                                 cursor={false}
@@ -277,7 +277,7 @@ export function DigitFrequencyView({
                                 nameKey="digit"
                                 cx="50%"
                                 cy="50%"
-                                outerRadius={80}
+                                outerRadius={120}
                                 labelLine={false}
                                 label={({
                                     cx,
@@ -301,7 +301,7 @@ export function DigitFrequencyView({
                                             fill="white"
                                             textAnchor={x > cx ? "start" : "end"}
                                             dominantBaseline="central"
-                                            className="text-xs font-bold"
+                                            className="text-sm font-bold"
                                         >
                                             {chartData[index].digit}
                                         </text>
