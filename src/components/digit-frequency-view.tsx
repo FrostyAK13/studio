@@ -504,6 +504,7 @@ export function DigitFrequencyView({
                 selectedMarket={selectedMarket}
                 price={price}
                 decimalPlaces={decimalPlaces}
+                variant="compact"
             />
 
         </div>

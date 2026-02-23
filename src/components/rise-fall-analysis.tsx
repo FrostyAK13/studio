@@ -10,6 +10,8 @@ import { HackerAnimation } from './hacker-animation';
 import { syntheticIndices } from '@/lib/mock-data';
 import { ScannerAnimationContent } from './scanner-animation-content';
 import { SimplePriceChart } from './simple-price-chart';
+import { PieChart, Pie, Tooltip, Cell } from 'recharts';
+import { ChartContainer } from '@/components/ui/chart';
 
 type Outcome = 'R' | 'F' | 'S'; // Rise, Fall, Same
 
@@ -18,9 +20,16 @@ interface RiseFallAnalysisProps {
   selectedMarket: string;
   price: number;
   decimalPlaces: number;
+  variant?: 'default' | 'compact';
 }
 
-export function RiseFallAnalysis({ priceHistory, selectedMarket, price, decimalPlaces }: RiseFallAnalysisProps) {
+export function RiseFallAnalysis({ 
+    priceHistory, 
+    selectedMarket, 
+    price, 
+    decimalPlaces, 
+    variant = 'default' 
+}: RiseFallAnalysisProps) {
   const [outcomes, setOutcomes] = React.useState<Outcome[]>([]);
   const [streak, setStreak] = React.useState<{ type: 'R' | 'F'; count: number }>({ type: 'R', count: 0 });
   const [percentages, setPercentages] = React.useState({ rise: 0, fall: 0 });
@@ -159,6 +168,31 @@ export function RiseFallAnalysis({ priceHistory, selectedMarket, price, decimalP
   }, [priceHistory]);
 
   const marketName = syntheticIndices.find(m => m.id === selectedMarket)?.name || selectedMarket;
+  
+  const riseFallPieData = [
+    { name: 'Rise', value: percentages.rise, fill: '#22c55e' }, // green-500
+    { name: 'Fall', value: percentages.fall, fill: '#ef4444' }, // red-500
+  ];
+
+  const MiniChartTooltip = ({ active, payload }: any) => {
+    if (active && payload && payload.length) {
+        return (
+        <div className="rounded-lg border bg-background p-2 text-sm shadow-sm">
+            <div className="grid grid-cols-2 gap-2">
+                <div className="flex flex-col">
+                    <span className="text-[0.70rem] uppercase text-muted-foreground">
+                    {payload[0].name}
+                    </span>
+                    <span className="font-bold text-foreground">
+                    {payload[0].value.toFixed(1)}%
+                    </span>
+                </div>
+            </div>
+        </div>
+        )
+    }
+    return null
+  };
 
   return (
     <Card>
@@ -183,50 +217,88 @@ export function RiseFallAnalysis({ priceHistory, selectedMarket, price, decimalP
 
         <SimplePriceChart data={chartData.slice(-100)} />
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-6">
-            <Card className="bg-gradient-to-br from-green-400 to-emerald-500 border-0 text-white">
-                <CardContent className="p-4">
-                    <p className="text-sm text-green-100/80 flex items-center gap-1"><TrendingUp size={16} /> RISE</p>
-                    <p className="text-3xl font-bold my-2">{percentages.rise.toFixed(1)}%</p>
-                    <Progress value={percentages.rise} className="h-2 bg-white/20 [&>div]:bg-white" />
-                </CardContent>
-            </Card>
-            <Card className="bg-gradient-to-br from-red-400 to-rose-500 border-0 text-white">
-                 <CardContent className="p-4">
-                    <p className="text-sm text-red-100/80 flex items-center gap-1"><TrendingDown size={16} /> FALL</p>
-                    <p className="text-3xl font-bold my-2">{percentages.fall.toFixed(1)}%</p>
-                    <Progress value={percentages.fall} className="h-2 bg-white/20 [&>div]:bg-white" />
-                </CardContent>
-            </Card>
-        </div>
+        {variant === 'default' && (
+            <>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-6">
+                    <Card className="bg-gradient-to-br from-green-400 to-emerald-500 border-0 text-white">
+                        <CardContent className="p-4">
+                            <p className="text-sm text-green-100/80 flex items-center gap-1"><TrendingUp size={16} /> RISE</p>
+                            <p className="text-3xl font-bold my-2">{percentages.rise.toFixed(1)}%</p>
+                            <Progress value={percentages.rise} className="h-2 bg-white/20 [&>div]:bg-white" />
+                        </CardContent>
+                    </Card>
+                    <Card className="bg-gradient-to-br from-red-400 to-rose-500 border-0 text-white">
+                        <CardContent className="p-4">
+                            <p className="text-sm text-red-100/80 flex items-center gap-1"><TrendingDown size={16} /> FALL</p>
+                            <p className="text-3xl font-bold my-2">{percentages.fall.toFixed(1)}%</p>
+                            <Progress value={percentages.fall} className="h-2 bg-white/20 [&>div]:bg-white" />
+                        </CardContent>
+                    </Card>
+                </div>
 
-        <div className="mt-6 text-center">
-            <Button onClick={handleScan} variant="secondary" disabled={isScanning}>
-                 {isScanning && !scanResultLines ? (
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                ) : (
-                    <ScanLine className="mr-2 h-4 w-4" />
-                )}
-                {scanResultLines ? 'Hide Scanner' : isScanning ? 'Analyzing...' : 'Run Scanner'}
-            </Button>
-        </div>
-        
-        <AnimatePresence>
-            {(isScanning || scanResultLines) && (
-                 <HackerAnimation title={`Analysis Dashboard - Rise/Fall on ${marketName}`}>
-                    {isScanning && !scanResultLines ? (
-                        <ScannerAnimationContent />
-                     ) : (
-                        <div className="space-y-1">
-                            {scanResultLines?.map((line, index) => (
-                                <p key={index}>{line}</p>
-                            ))}
-                        </div>
+                <div className="mt-6 text-center">
+                    <Button onClick={handleScan} variant="secondary" disabled={isScanning}>
+                        {isScanning && !scanResultLines ? (
+                            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                        ) : (
+                            <ScanLine className="mr-2 h-4 w-4" />
+                        )}
+                        {scanResultLines ? 'Hide Scanner' : isScanning ? 'Analyzing...' : 'Run Scanner'}
+                    </Button>
+                </div>
+                
+                <AnimatePresence>
+                    {(isScanning || scanResultLines) && (
+                        <HackerAnimation title={`Analysis Dashboard - Rise/Fall on ${marketName}`}>
+                            {isScanning && !scanResultLines ? (
+                                <ScannerAnimationContent />
+                            ) : (
+                                <div className="space-y-1">
+                                    {scanResultLines?.map((line, index) => (
+                                        <p key={index}>{line}</p>
+                                    ))}
+                                </div>
+                            )}
+                        </HackerAnimation>
                     )}
-                </HackerAnimation>
-            )}
-        </AnimatePresence>
+                </AnimatePresence>
+            </>
+        )}
 
+        {variant === 'compact' && (
+            <div className="grid grid-cols-2 items-center gap-4 mt-6">
+                <div className="space-y-3">
+                    <div>
+                        <div className="flex justify-between mb-1 text-sm">
+                            <span className="font-medium">Rise</span>
+                            <span className="text-muted-foreground">{percentages.rise.toFixed(1)}%</span>
+                        </div>
+                        <div className="w-full bg-muted rounded-full h-2 overflow-hidden">
+                            <div className="bg-green-500 h-full rounded-full" style={{ width: `${percentages.rise}%` }}></div>
+                        </div>
+                    </div>
+                    <div>
+                        <div className="flex justify-between mb-1 text-sm">
+                            <span className="font-medium">Fall</span>
+                            <span className="text-muted-foreground">{percentages.fall.toFixed(1)}%</span>
+                        </div>
+                        <div className="w-full bg-muted rounded-full h-2 overflow-hidden">
+                            <div className="bg-red-500 h-full rounded-full" style={{ width: `${percentages.fall}%` }}></div>
+                        </div>
+                    </div>
+                </div>
+                <ChartContainer config={{}} className="h-40 w-40 mx-auto">
+                    <PieChart>
+                        <Tooltip content={<MiniChartTooltip />} />
+                        <Pie data={riseFallPieData} dataKey="value" nameKey="name" innerRadius={40} outerRadius={60} paddingAngle={2}>
+                            {riseFallPieData.map((entry) => (
+                                <Cell key={`cell-${entry.name}`} fill={entry.fill} />
+                            ))}
+                        </Pie>
+                    </PieChart>
+                </ChartContainer>
+            </div>
+        )}
       </CardContent>
     </Card>
   );
