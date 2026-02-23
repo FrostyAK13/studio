@@ -195,6 +195,7 @@ export function Dashboard() {
                 <AIInsightView
                     lastDigitTicks={lastDigitTicks}
                     selectedMarket={selectedMarket}
+                    onMarketChange={setSelectedMarket}
                 />
             </TabsContent>
         </Tabs>

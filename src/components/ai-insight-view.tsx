@@ -9,13 +9,16 @@ import { ScannerAnimationContent } from './scanner-animation-content';
 import { getMarketInsight, type MarketInsightOutput } from '@/ai/flows/market-insight-flow';
 import { syntheticIndices } from '@/lib/mock-data';
 import { Badge } from './ui/badge';
+import { Label } from './ui/label';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from './ui/select';
 
 interface AIInsightViewProps {
     lastDigitTicks: number[];
     selectedMarket: string;
+    onMarketChange: (market: string) => void;
 }
 
-export function AIInsightView({ lastDigitTicks, selectedMarket }: AIInsightViewProps) {
+export function AIInsightView({ lastDigitTicks, selectedMarket, onMarketChange }: AIInsightViewProps) {
     const [isLoading, setIsLoading] = React.useState(false);
     const [insight, setInsight] = React.useState<MarketInsightOutput | null>(null);
     const [error, setError] = React.useState<string | null>(null);
@@ -56,25 +59,40 @@ export function AIInsightView({ lastDigitTicks, selectedMarket }: AIInsightViewP
                     </div>
                 </div>
             </CardHeader>
-            <CardContent className="text-center space-y-6">
-                <div className="p-6 bg-muted/50 rounded-lg">
-                    <p className='text-sm text-muted-foreground'>CURRENT MARKET</p>
-                    <p className='text-2xl font-bold text-primary'>{marketName}</p>
+            <CardContent className="space-y-6">
+                <Card>
+                    <CardContent className="p-6">
+                        <Label htmlFor="ai-market-select">Synthetic Market</Label>
+                        <Select value={selectedMarket} onValueChange={onMarketChange}>
+                            <SelectTrigger id="ai-market-select">
+                                <SelectValue placeholder="Select Index" />
+                            </SelectTrigger>
+                            <SelectContent>
+                                {syntheticIndices.map((index) => (
+                                <SelectItem key={index.id} value={index.id}>
+                                    {index.name}
+                                </SelectItem>
+                                ))}
+                            </SelectContent>
+                        </Select>
+                    </CardContent>
+                </Card>
+
+                <div className="text-center">
+                    <Button onClick={handleGetInsight} disabled={isLoading} size="lg">
+                        {isLoading ? (
+                            <>
+                                <Bot className="mr-2 h-5 w-5 animate-spin" />
+                                Analyzing...
+                            </>
+                        ) : (
+                            <>
+                               <Sparkles className="mr-2 h-5 w-5" />
+                               Get AI Insight
+                            </>
+                        )}
+                    </Button>
                 </div>
-                
-                <Button onClick={handleGetInsight} disabled={isLoading} size="lg">
-                    {isLoading ? (
-                        <>
-                            <Bot className="mr-2 h-5 w-5 animate-spin" />
-                            Analyzing...
-                        </>
-                    ) : (
-                        <>
-                           <Sparkles className="mr-2 h-5 w-5" />
-                           Get AI Insight
-                        </>
-                    )}
-                </Button>
 
                 {(isLoading || insight || error) && (
                     <HackerAnimation title={`AI Analysis Report - ${marketName}`}>
@@ -114,4 +132,3 @@ export function AIInsightView({ lastDigitTicks, selectedMarket }: AIInsightViewP
         </Card>
     );
 }
-
