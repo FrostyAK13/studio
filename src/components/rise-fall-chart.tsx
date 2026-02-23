@@ -62,7 +62,7 @@ const OhlcBar = (props: any) => {
     const { x, y, width, height, open, high, low, close } = props.payload;
     const { yAxis } = props;
     
-    if (x === undefined || y === undefined || width === undefined || height === undefined || !yAxis) {
+    if (x === undefined || y === undefined || width === undefined || height === undefined || !yAxis || high === undefined || low === undefined || open === undefined || close === undefined) {
       return null;
     }
   
@@ -227,20 +227,20 @@ export function RiseFallChart({ selectedMarket, decimalPlaces }: RiseFallChartPr
     }
     
     return (
-      <ComposedChart data={processedData} margin={{ top: 5, right: 10, left: -20, bottom: 0 }} barCategoryGap="20%">
+      <ComposedChart data={processedData} margin={{ top: 5, right: 10, left: -20, bottom: 0 }}>
         <CartesianGrid vertical={false} strokeDasharray="3 3" stroke="hsl(var(--border)/.5)" />
         <XAxis dataKey="time" scale="time" type="number" domain={['dataMin', 'dataMax']} tickLine={false} axisLine={false} tickMargin={8} tick={{ fontSize: 10 }} tickFormatter={(unixTime) => new Date(unixTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })} />
-        <YAxis dataKey="close" yAxisId="right" domain={domain} orientation="right" tickLine={false} axisLine={false} tickMargin={8} tickFormatter={(value) => (typeof value === 'number' ? value.toFixed(decimalPlaces) : '')} tick={{ fontSize: 10 }} />
+        <YAxis yAxisId="right" domain={domain} orientation="right" tickLine={false} axisLine={false} tickMargin={8} tickFormatter={(value) => (typeof value === 'number' ? value.toFixed(decimalPlaces) : '')} tick={{ fontSize: 10 }} />
         <Tooltip content={<CustomTooltip />} />
         
         {chartType === 'ohlc' ? (
-             <Bar dataKey="close" yAxisId="right" shape={<OhlcBar />} isAnimationActive={false} />
+             <Bar dataKey="body" yAxisId="right" shape={<OhlcBar />} isAnimationActive={false} />
         ) : (
             <>
                 <Bar dataKey="wick" yAxisId="right" stroke="none" barSize={1} isAnimationActive={false}>
                     {processedData.map((d, i) => <Cell key={`wick-${i}`} fill={(d.close ?? 0) >= (d.open ?? 0) ? '#22c55e' : '#ef4444'} />)}
                 </Bar>
-                <Bar dataKey="body" yAxisId="right" isAnimationActive={false}>
+                <Bar dataKey="body" yAxisId="right" isAnimationActive={false} maxBarSize={5}>
                     {processedData.map((d, i) => {
                         const isBullish = (d.close ?? 0) >= (d.open ?? 0);
                         const color = isBullish ? '#22c55e' : '#ef4444';
