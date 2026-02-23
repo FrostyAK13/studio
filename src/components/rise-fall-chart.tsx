@@ -12,6 +12,7 @@ import {
   Tooltip,
   XAxis,
   YAxis,
+  Brush,
 } from 'recharts';
 import {
   AreaChart as AreaIcon,
@@ -173,11 +174,20 @@ export function RiseFallChart({ selectedMarket, decimalPlaces }: RiseFallChartPr
   }, [chartData]);
   
   const domain = React.useMemo(() => {
-    if (processedData.length === 0) return ['auto', 'auto'];
-    const values = processedData.flatMap((d) => [d.high, d.low, d.price]).filter(v => v !== undefined) as number[];
-    if(values.length === 0) return ['auto', 'auto'];
-    const min = Math.min(...values);
-    const max = Math.max(...values);
+    if (processedData.length === 0) return [0,1];
+    
+    let min = Infinity;
+    let max = -Infinity;
+
+    processedData.forEach(d => {
+        const low = d.low ?? d.price;
+        const high = d.high ?? d.price;
+        if (low !== undefined && low < min) min = low;
+        if (high !== undefined && high > max) max = high;
+    });
+
+    if (min === Infinity || max === -Infinity) return [0, 1];
+    
     const padding = (max - min) * 0.1 || 1;
     return [min - padding, max + padding];
   }, [processedData]);
@@ -207,40 +217,41 @@ export function RiseFallChart({ selectedMarket, decimalPlaces }: RiseFallChartPr
   };
 
   const renderChart = () => {
-    if (isLoading) return <Skeleton className="h-48 w-full" />;
-    if (processedData.length === 0) return <div className="flex h-48 w-full items-center justify-center text-muted-foreground">No data available.</div>;
+    if (isLoading) return <Skeleton className="h-96 w-full" />;
+    if (processedData.length === 0) return <div className="flex h-96 w-full items-center justify-center text-muted-foreground">No data available.</div>;
 
     const isTickChart = timeInterval === 0;
     const showArea = isTickChart || chartType === 'area';
 
     if (showArea) {
       return (
-        <AreaChart data={processedData} margin={{ top: 5, right: 10, left: -20, bottom: 0 }}>
+        <AreaChart data={processedData} margin={{ top: 5, right: 10, left: 10, bottom: 20 }}>
           <defs><linearGradient id="fillPrice" x1="0" y1="0" x2="0" y2="1"><stop offset="5%" stopColor="hsl(var(--primary))" stopOpacity={0.8} /><stop offset="95%" stopColor="hsl(var(--primary))" stopOpacity={0.1} /></linearGradient></defs>
           <CartesianGrid vertical={false} strokeDasharray="3 3" stroke="hsl(var(--border)/.5)" />
           <XAxis dataKey="time" scale="time" type="number" domain={['dataMin', 'dataMax']} tickLine={false} axisLine={false} tickMargin={8} tick={{ fontSize: 10 }} tickFormatter={(unixTime) => new Date(unixTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })} />
           <YAxis domain={domain} orientation="right" tickLine={false} axisLine={false} tickMargin={8} tickFormatter={(value) => (typeof value === 'number' ? value.toFixed(decimalPlaces) : '')} tick={{ fontSize: 10 }} />
           <Tooltip content={<CustomTooltip />} />
           <Area dataKey="price" type="monotone" stroke="hsl(var(--primary))" fill={'url(#fillPrice)'} strokeWidth={2} dot={false} isAnimationActive={false} />
+          <Brush dataKey="time" height={30} stroke="hsl(var(--primary))" tickFormatter={(unixTime) => new Date(unixTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })} />
         </AreaChart>
       );
     }
     
     return (
-      <ComposedChart data={processedData} margin={{ top: 5, right: 10, left: -20, bottom: 0 }}>
+      <ComposedChart data={processedData} margin={{ top: 5, right: 10, left: 10, bottom: 20 }} barCategoryGap={1} barGap={0}>
         <CartesianGrid vertical={false} strokeDasharray="3 3" stroke="hsl(var(--border)/.5)" />
         <XAxis dataKey="time" scale="time" type="number" domain={['dataMin', 'dataMax']} tickLine={false} axisLine={false} tickMargin={8} tick={{ fontSize: 10 }} tickFormatter={(unixTime) => new Date(unixTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })} />
         <YAxis yAxisId="right" domain={domain} orientation="right" tickLine={false} axisLine={false} tickMargin={8} tickFormatter={(value) => (typeof value === 'number' ? value.toFixed(decimalPlaces) : '')} tick={{ fontSize: 10 }} />
         <Tooltip content={<CustomTooltip />} />
         
         {chartType === 'ohlc' ? (
-             <Bar dataKey="body" yAxisId="right" shape={<OhlcBar />} isAnimationActive={false} />
+             <Bar dataKey="close" yAxisId="right" shape={<OhlcBar />} isAnimationActive={false} />
         ) : (
             <>
-                <Bar dataKey="wick" yAxisId="right" stroke="none" barSize={1} isAnimationActive={false}>
+                <Bar dataKey="wick" yAxisId="right" stroke="none" isAnimationActive={false}>
                     {processedData.map((d, i) => <Cell key={`wick-${i}`} fill={(d.close ?? 0) >= (d.open ?? 0) ? '#22c55e' : '#ef4444'} />)}
                 </Bar>
-                <Bar dataKey="body" yAxisId="right" isAnimationActive={false} maxBarSize={5}>
+                <Bar dataKey="body" yAxisId="right" isAnimationActive={false}>
                     {processedData.map((d, i) => {
                         const isBullish = (d.close ?? 0) >= (d.open ?? 0);
                         const color = isBullish ? '#22c55e' : '#ef4444';
@@ -249,6 +260,7 @@ export function RiseFallChart({ selectedMarket, decimalPlaces }: RiseFallChartPr
                 </Bar>
             </>
         )}
+        <Brush dataKey="time" height={30} stroke="hsl(var(--primary))" tickFormatter={(unixTime) => new Date(unixTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })} />
       </ComposedChart>
     );
   };
@@ -280,7 +292,7 @@ export function RiseFallChart({ selectedMarket, decimalPlaces }: RiseFallChartPr
                 </PopoverContent>
             </Popover>
         </div>
-      <ChartContainer config={{}} className="h-48 w-full">
+      <ChartContainer config={{}} className="h-96 w-full">
         <ResponsiveContainer>
             {renderChart()}
         </ResponsiveContainer>
