@@ -7,7 +7,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Input } from '@/components/ui/input';
 import { syntheticIndices } from '@/lib/mock-data';
 import { cn } from '@/lib/utils';
-import { PieChart, Pie, Legend, Tooltip, ResponsiveContainer, Cell } from 'recharts';
+import { PieChart, Pie, Tooltip, ResponsiveContainer, Cell } from 'recharts';
 import { ChartContainer } from '@/components/ui/chart';
 import { Badge } from '@/components/ui/badge';
 import { Compass } from 'lucide-react';
@@ -99,12 +99,26 @@ export function DigitFrequencyView({
             if (lastFive.every(o => o === 'E')) evenOddReversal = 'Odd';
             if (lastFive.every(o => o === 'O')) evenOddReversal = 'Even';
         }
+        const evenOddChartData = [
+            { name: 'Even', value: evenPercentage, fill: 'hsl(var(--chart-2))' },
+            { name: 'Odd', value: oddPercentage, fill: 'hsl(var(--chart-5))' },
+        ];
 
         // Matches/Differs
         const counts = Array(10).fill(0);
         ticks.forEach(digit => { counts[digit]++; });
         const hottestDigit = counts.reduce((maxIndex, p, i, arr) => p > arr[maxIndex] ? i : maxIndex, 0);
         const coldestDigit = counts.reduce((minIndex, p, i, arr) => p < arr[minIndex] ? i : minIndex, 0);
+        
+        const matchesCount = counts[hottestDigit];
+        const differsCount = ticks.length - matchesCount;
+        const matchesPercentage = (matchesCount / ticks.length) * 100;
+        const differsPercentage = 100 - matchesPercentage;
+        const matchesDiffersChartData = [
+            { name: 'Matches', value: matchesPercentage, fill: 'hsl(var(--chart-1))' },
+            { name: 'Differs', value: differsPercentage, fill: 'hsl(var(--muted))' },
+        ];
+
 
         // Over/Under
         const lowerClusterCount = ticks.filter(d => d <= 4).length;
@@ -119,23 +133,30 @@ export function DigitFrequencyView({
             if (lastFiveClusters.every(c => c === 'L')) clusterReversal = 'Higher (5-9)';
             if (lastFiveClusters.every(c => c === 'H')) clusterReversal = 'Lower (0-4)';
         }
+        const overUnderChartData = [
+            { name: 'Lower (0-4)', value: lowerPercentage, fill: 'hsl(var(--chart-3))' },
+            { name: 'Higher (5-9)', value: higherPercentage, fill: 'hsl(var(--chart-4))' },
+        ];
 
         return {
             evenOdd: {
                 dominant: evenOddDominant,
                 percentage: Math.max(evenPercentage, oddPercentage),
-                reversal: evenOddReversal
+                reversal: evenOddReversal,
+                chartData: evenOddChartData,
             },
             matchesDiffers: {
                 hottest: hottestDigit,
                 hottestCount: counts[hottestDigit],
                 coldest: coldestDigit,
-                coldestCount: counts[coldestDigit]
+                coldestCount: counts[coldestDigit],
+                chartData: matchesDiffersChartData,
             },
             overUnder: {
                 dominant: clusterDominant,
                 percentage: Math.max(lowerPercentage, higherPercentage),
-                reversal: clusterReversal
+                reversal: clusterReversal,
+                chartData: overUnderChartData,
             }
         };
     }, [lastDigitTicks]);
@@ -148,6 +169,27 @@ export function DigitFrequencyView({
         ])
       ),
     }
+    
+    const MiniChartTooltip = ({ active, payload }: any) => {
+        if (active && payload && payload.length) {
+            return (
+            <div className="rounded-lg border bg-background p-2 text-sm shadow-sm">
+                <div className="grid grid-cols-2 gap-2">
+                    <div className="flex flex-col">
+                        <span className="text-[0.70rem] uppercase text-muted-foreground">
+                        {payload[0].name}
+                        </span>
+                        <span className="font-bold text-foreground">
+                        {payload[0].value.toFixed(1)}%
+                        </span>
+                    </div>
+                </div>
+            </div>
+            )
+        }
+        return null
+    }
+
 
     return (
         <div className="space-y-6">
@@ -316,43 +358,86 @@ export function DigitFrequencyView({
                         </p>
                     ) : (
                         <div className="space-y-4">
-                            <div className="p-4 border rounded-lg">
+                             <div className="p-4 border rounded-lg">
                                 <h4 className="font-semibold mb-2">Even / Odd</h4>
-                                <div className="flex justify-between items-center text-sm">
-                                    <span>Dominant Direction:</span>
-                                    <Badge variant="secondary" className="font-bold">{marketDirectionAnalysis.evenOdd.dominant} ({marketDirectionAnalysis.evenOdd.percentage.toFixed(0)}%)</Badge>
-                                </div>
-                                <div className="flex justify-between items-center text-sm mt-2">
-                                    <span>Reversal Signal:</span>
-                                    <Badge variant={marketDirectionAnalysis.evenOdd.reversal !== 'None' ? 'destructive' : 'outline'}>
-                                        {marketDirectionAnalysis.evenOdd.reversal}
-                                    </Badge>
+                                <div className="grid grid-cols-2 items-center gap-4">
+                                    <div className="space-y-2">
+                                        <div className="flex justify-between items-center text-sm">
+                                            <span>Dominant:</span>
+                                            <Badge variant="secondary" className="font-bold">{marketDirectionAnalysis.evenOdd.dominant} ({marketDirectionAnalysis.evenOdd.percentage.toFixed(0)}%)</Badge>
+                                        </div>
+                                        <div className="flex justify-between items-center text-sm">
+                                            <span>Reversal Signal:</span>
+                                            <Badge variant={marketDirectionAnalysis.evenOdd.reversal !== 'None' ? 'destructive' : 'outline'}>
+                                                {marketDirectionAnalysis.evenOdd.reversal}
+                                            </Badge>
+                                        </div>
+                                    </div>
+                                    <ChartContainer config={{}} className="h-24 w-24 mx-auto">
+                                        <PieChart>
+                                            <Tooltip content={<MiniChartTooltip />} />
+                                            <Pie data={marketDirectionAnalysis.evenOdd.chartData} dataKey="value" nameKey="name" innerRadius={18} outerRadius={30} paddingAngle={2}>
+                                                {marketDirectionAnalysis.evenOdd.chartData.map((entry) => (
+                                                    <Cell key={`cell-${entry.name}`} fill={entry.fill} />
+                                                ))}
+                                            </Pie>
+                                        </PieChart>
+                                    </ChartContainer>
                                 </div>
                             </div>
 
                             <div className="p-4 border rounded-lg">
-                                <h4 className="font-semibold mb-2">Digit Hot / Cold</h4>
-                                 <div className="flex justify-between items-center text-sm">
-                                    <span>Hottest Digit:</span>
-                                    <Badge variant="secondary" className="font-bold">{marketDirectionAnalysis.matchesDiffers.hottest} ({marketDirectionAnalysis.matchesDiffers.hottestCount} times)</Badge>
-                                </div>
-                                <div className="flex justify-between items-center text-sm mt-2">
-                                    <span>Coldest Digit:</span>
-                                    <Badge variant="outline">{marketDirectionAnalysis.matchesDiffers.coldest} ({marketDirectionAnalysis.matchesDiffers.coldestCount} times)</Badge>
+                                <h4 className="font-semibold mb-2">Matches / Differs</h4>
+                                 <CardDescription className="text-xs mb-2 -mt-1">Analysis for Hottest Digit: {marketDirectionAnalysis.matchesDiffers.hottest}</CardDescription>
+                                <div className="grid grid-cols-2 items-center gap-4">
+                                     <div className="space-y-2">
+                                        <div className="flex justify-between items-center text-sm">
+                                            <span>Hottest Digit:</span>
+                                            <Badge variant="secondary" className="font-bold">{marketDirectionAnalysis.matchesDiffers.hottest} ({marketDirectionAnalysis.matchesDiffers.hottestCount} times)</Badge>
+                                        </div>
+                                        <div className="flex justify-between items-center text-sm">
+                                            <span>Coldest Digit:</span>
+                                            <Badge variant="outline">{marketDirectionAnalysis.matchesDiffers.coldest} ({marketDirectionAnalysis.matchesDiffers.coldestCount} times)</Badge>
+                                        </div>
+                                    </div>
+                                    <ChartContainer config={{}} className="h-24 w-24 mx-auto">
+                                        <PieChart>
+                                            <Tooltip content={<MiniChartTooltip />} />
+                                            <Pie data={marketDirectionAnalysis.matchesDiffers.chartData} dataKey="value" nameKey="name" innerRadius={18} outerRadius={30} paddingAngle={2}>
+                                                {marketDirectionAnalysis.matchesDiffers.chartData.map((entry) => (
+                                                    <Cell key={`cell-${entry.name}`} fill={entry.fill} />
+                                                ))}
+                                            </Pie>
+                                        </PieChart>
+                                    </ChartContainer>
                                 </div>
                             </div>
 
                             <div className="p-4 border rounded-lg">
                                 <h4 className="font-semibold mb-2">Over / Under Clusters</h4>
-                                <div className="flex justify-between items-center text-sm">
-                                    <span>Dominant Cluster:</span>
-                                    <Badge variant="secondary" className="font-bold">{marketDirectionAnalysis.overUnder.dominant} ({marketDirectionAnalysis.overUnder.percentage.toFixed(0)}%)</Badge>
-                                </div>
-                                 <div className="flex justify-between items-center text-sm mt-2">
-                                    <span>Reversal Signal:</span>
-                                    <Badge variant={marketDirectionAnalysis.overUnder.reversal !== 'None' ? 'destructive' : 'outline'}>
-                                        {marketDirectionAnalysis.overUnder.reversal}
-                                    </Badge>
+                                <div className="grid grid-cols-2 items-center gap-4">
+                                    <div className="space-y-2">
+                                        <div className="flex justify-between items-center text-sm">
+                                            <span>Dominant Cluster:</span>
+                                            <Badge variant="secondary" className="font-bold">{marketDirectionAnalysis.overUnder.dominant} ({marketDirectionAnalysis.overUnder.percentage.toFixed(0)}%)</Badge>
+                                        </div>
+                                        <div className="flex justify-between items-center text-sm">
+                                            <span>Reversal Signal:</span>
+                                            <Badge variant={marketDirectionAnalysis.overUnder.reversal !== 'None' ? 'destructive' : 'outline'}>
+                                                {marketDirectionAnalysis.overUnder.reversal}
+                                            </Badge>
+                                        </div>
+                                    </div>
+                                    <ChartContainer config={{}} className="h-24 w-24 mx-auto">
+                                        <PieChart>
+                                            <Tooltip content={<MiniChartTooltip />} />
+                                            <Pie data={marketDirectionAnalysis.overUnder.chartData} dataKey="value" nameKey="name" innerRadius={18} outerRadius={30} paddingAngle={2}>
+                                                {marketDirectionAnalysis.overUnder.chartData.map((entry) => (
+                                                    <Cell key={`cell-${entry.name}`} fill={entry.fill} />
+                                                ))}
+                                            </Pie>
+                                        </PieChart>
+                                    </ChartContainer>
                                 </div>
                             </div>
                         </div>
