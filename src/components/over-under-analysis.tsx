@@ -122,7 +122,7 @@ export function OverUnderAnalysis({ lastDigitTicks }: { lastDigitTicks: number[]
   const displayedOutcomes = showAllOutcomes ? outcomes.slice(0, 24) : outcomes.slice(0, 8);
 
   return (
-    <Card className="bg-card/50">
+    <Card>
       <CardContent className="p-6">
         <div className="flex justify-between items-center mb-6">
           <h3 className="text-lg font-semibold">Over/Under Analysis</h3>
@@ -150,10 +150,10 @@ export function OverUnderAnalysis({ lastDigitTicks }: { lastDigitTicks: number[]
         <div className="flex justify-center flex-wrap gap-2 mb-6 min-h-[56px]">
             {displayedOutcomes.map((outcome, index) => (
                 <div key={index} className={cn("flex items-center justify-center w-12 h-12 rounded-lg shadow-inner",
-                  outcome === 'O' ? 'bg-gradient-to-br from-green-500/30 to-cyan-500/30 border border-green-400/30' : 'bg-gradient-to-br from-purple-500/30 to-blue-500/30 border border-purple-400/30'
+                  outcome === 'O' ? 'bg-teal-100 border border-teal-200' : 'bg-sky-100 border border-sky-200'
                 )}>
                     <span className={cn("font-bold text-lg",
-                      outcome === 'O' ? 'text-green-300' : 'text-purple-300'
+                      outcome === 'O' ? 'text-teal-700' : 'text-sky-700'
                     )}>{outcome}</span>
                 </div>
             ))}
@@ -168,18 +168,18 @@ export function OverUnderAnalysis({ lastDigitTicks }: { lastDigitTicks: number[]
         )}
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <Card className="bg-gradient-to-br from-green-500/30 to-cyan-500/30 border-0">
+            <Card className="bg-gradient-to-br from-teal-300 to-cyan-400 border-0 text-white">
                 <CardContent className="p-4">
-                    <p className="text-sm text-green-200/80">OVER</p>
+                    <p className="text-sm text-cyan-100/80">OVER</p>
                     <p className="text-3xl font-bold my-2">{percentages.over.toFixed(1)}%</p>
-                    <Progress value={percentages.over} className="h-2 bg-white/10 [&>div]:bg-gradient-to-r [&>div]:from-green-400 [&>div]:to-cyan-400" />
+                    <Progress value={percentages.over} className="h-2 bg-white/20 [&>div]:bg-white" />
                 </CardContent>
             </Card>
-            <Card className="bg-gradient-to-br from-purple-500/30 to-blue-500/30 border-0">
+            <Card className="bg-gradient-to-br from-sky-300 to-indigo-400 border-0 text-white">
                  <CardContent className="p-4">
-                    <p className="text-sm text-purple-200/80">UNDER</p>
+                    <p className="text-sm text-indigo-100/80">UNDER</p>
                     <p className="text-3xl font-bold my-2">{percentages.under.toFixed(1)}%</p>
-                    <Progress value={percentages.under} className="h-2 bg-white/10 [&>div]:bg-gradient-to-r [&>div]:from-purple-400 [&>div]:to-blue-400" />
+                    <Progress value={percentages.under} className="h-2 bg-white/20 [&>div]:bg-white" />
                 </CardContent>
             </Card>
         </div>
@@ -202,7 +202,7 @@ export function OverUnderAnalysis({ lastDigitTicks }: { lastDigitTicks: number[]
                 transition={{ duration: 0.5 }}
                 className="mt-6"
             >
-                <Card className="bg-card/70 w-full">
+                <Card className="w-full">
                     <CardHeader>
                         <CardTitle className="text-lg">Analyzing Market...</CardTitle>
                     </CardHeader>
@@ -235,7 +235,7 @@ export function OverUnderAnalysis({ lastDigitTicks }: { lastDigitTicks: number[]
                     transition={{ duration: 0.5 }}
                     className="mt-6"
                 >
-                  <Card className="bg-card/70 w-full">
+                  <Card className="w-full">
                     <CardHeader>
                         <CardTitle className="text-lg">Prediction</CardTitle>
                     </CardHeader>

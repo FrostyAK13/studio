@@ -137,7 +137,7 @@ export function ClassicView({
                         </CardTitle></CardHeader>
                         <CardContent className="flex flex-wrap gap-2">
                             {evenOddOutcomes.slice(0, 30).map((o, i) => (
-                                <div key={i} className={cn("flex items-center justify-center w-8 h-8 rounded-full font-bold text-white", o === 'E' ? 'bg-blue-600' : 'bg-red-600')}>
+                                <div key={i} className={cn("flex items-center justify-center w-8 h-8 rounded-full font-bold text-white", o === 'E' ? 'bg-blue-500' : 'bg-violet-500')}>
                                     {o}
                                 </div>
                             ))}
@@ -154,7 +154,7 @@ export function ClassicView({
                                     <span>Even</span>
                                 </div>
                                 <div className="w-full bg-muted rounded-full h-8 overflow-hidden border">
-                                    <div className="bg-green-500 h-full flex items-center justify-center text-white font-bold text-xs" style={{ width: `${evenPercentage}%` }}>
+                                    <div className="bg-blue-500 h-full flex items-center justify-center text-white font-bold text-xs" style={{ width: `${evenPercentage}%` }}>
                                         {evenPercentage.toFixed(1)}%
                                     </div>
                                 </div>
@@ -164,7 +164,7 @@ export function ClassicView({
                                     <span>Odd</span>
                                 </div>
                                 <div className="w-full bg-muted rounded-full h-8 overflow-hidden border">
-                                     <div className="bg-red-500 h-full flex items-center justify-center text-white font-bold text-xs" style={{ width: `${oddPercentage}%` }}>
+                                     <div className="bg-violet-500 h-full flex items-center justify-center text-white font-bold text-xs" style={{ width: `${oddPercentage}%` }}>
                                        {oddPercentage.toFixed(1)}%
                                     </div>
                                 </div>
@@ -222,7 +222,7 @@ export function ClassicView({
                         </CardTitle></CardHeader>
                         <CardContent className="flex flex-wrap gap-2">
                             {matchesDiffersOutcomes.slice(0, 30).map((o, i) => (
-                                <div key={i} className={cn("flex items-center justify-center w-8 h-8 rounded-full font-bold text-white", o === 'E' ? 'bg-orange-500' : 'bg-gray-500')}>
+                                <div key={i} className={cn("flex items-center justify-center w-8 h-8 rounded-full font-bold text-white", o === 'E' ? 'bg-cyan-500' : 'bg-slate-500')}>
                                     {o}
                                 </div>
                             ))}
@@ -239,7 +239,7 @@ export function ClassicView({
                                     <span>Matches</span>
                                 </div>
                                 <div className="w-full bg-muted rounded-full h-8 overflow-hidden border">
-                                    <div className="bg-green-500 h-full flex items-center justify-center text-white font-bold text-xs" style={{ width: `${matchesPercentage}%` }}>
+                                    <div className="bg-cyan-500 h-full flex items-center justify-center text-white font-bold text-xs" style={{ width: `${matchesPercentage}%` }}>
                                         {matchesPercentage.toFixed(1)}%
                                     </div>
                                 </div>
@@ -249,7 +249,7 @@ export function ClassicView({
                                     <span>Differs</span>
                                 </div>
                                 <div className="w-full bg-muted rounded-full h-8 overflow-hidden border">
-                                     <div className="bg-red-500 h-full flex items-center justify-center text-white font-bold text-xs" style={{ width: `${differsPercentage}%` }}>
+                                     <div className="bg-slate-500 h-full flex items-center justify-center text-white font-bold text-xs" style={{ width: `${differsPercentage}%` }}>
                                        {differsPercentage.toFixed(1)}%
                                     </div>
                                 </div>
@@ -307,7 +307,7 @@ export function ClassicView({
                         </CardTitle></CardHeader>
                         <CardContent className="flex flex-wrap gap-2">
                             {overUnderOutcomes.slice(0, 30).map((o, i) => (
-                                <div key={i} className={cn("flex items-center justify-center w-8 h-8 rounded-full font-bold text-white", o === 'O' ? 'bg-teal-500' : o === 'U' ? 'bg-purple-500' : 'bg-gray-500')}>
+                                <div key={i} className={cn("flex items-center justify-center w-8 h-8 rounded-full font-bold text-white", o === 'O' ? 'bg-teal-500' : o === 'U' ? 'bg-indigo-500' : 'bg-slate-400')}>
                                     {o}
                                 </div>
                             ))}
@@ -324,7 +324,7 @@ export function ClassicView({
                                     <span>Over</span>
                                 </div>
                                 <div className="w-full bg-muted rounded-full h-8 overflow-hidden border">
-                                    <div className="bg-green-500 h-full flex items-center justify-center text-white font-bold text-xs" style={{ width: `${overPercentage}%` }}>
+                                    <div className="bg-teal-500 h-full flex items-center justify-center text-white font-bold text-xs" style={{ width: `${overPercentage}%` }}>
                                         {overPercentage.toFixed(1)}%
                                     </div>
                                 </div>
@@ -334,7 +334,7 @@ export function ClassicView({
                                     <span>Under</span>
                                 </div>
                                 <div className="w-full bg-muted rounded-full h-8 overflow-hidden border">
-                                     <div className="bg-red-500 h-full flex items-center justify-center text-white font-bold text-xs" style={{ width: `${underPercentage}%` }}>
+                                     <div className="bg-indigo-500 h-full flex items-center justify-center text-white font-bold text-xs" style={{ width: `${underPercentage}%` }}>
                                        {underPercentage.toFixed(1)}%
                                     </div>
                                 </div>

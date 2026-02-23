@@ -105,7 +105,7 @@ export function MatchesDiffersAnalysis({ lastDigitTicks }: { lastDigitTicks: num
   const displayedOutcomes = showAllOutcomes ? outcomes.slice(0, 24) : outcomes.slice(0, 8);
 
   return (
-    <Card className="bg-card/50">
+    <Card>
       <CardContent className="p-6">
         <div className="flex justify-between items-center mb-6">
           <h3 className="text-lg font-semibold">Matches/Differs Analysis</h3>
@@ -132,8 +132,8 @@ export function MatchesDiffersAnalysis({ lastDigitTicks }: { lastDigitTicks: num
 
         <div className="flex justify-center flex-wrap gap-2 mb-6 min-h-[56px]">
             {displayedOutcomes.map((outcome, index) => (
-                <div key={index} className="flex items-center justify-center w-12 h-12 bg-card rounded-lg border border-orange-400/30 shadow-inner">
-                    <span className="font-bold text-orange-300 text-lg">{outcome}</span>
+                <div key={index} className="flex items-center justify-center w-12 h-12 bg-card rounded-lg border border-border shadow-inner">
+                    <span className="font-bold text-foreground text-lg">{outcome}</span>
                 </div>
             ))}
         </div>
@@ -147,18 +147,18 @@ export function MatchesDiffersAnalysis({ lastDigitTicks }: { lastDigitTicks: num
         )}
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <Card className="bg-gradient-to-br from-blue-900/40 to-purple-900/40 border-0">
+            <Card className="bg-gradient-to-br from-cyan-300 to-blue-400 border-0 text-white">
                 <CardContent className="p-4">
-                    <p className="text-sm text-blue-200/80">MATCHES</p>
+                    <p className="text-sm text-blue-100/80">MATCHES</p>
                     <p className="text-3xl font-bold my-2">{percentages.matches.toFixed(1)}%</p>
-                    <Progress value={percentages.matches} className="h-2 bg-white/10 [&>div]:bg-gradient-to-r [&>div]:from-cyan-400 [&>div]:to-blue-500" />
+                    <Progress value={percentages.matches} className="h-2 bg-white/20 [&>div]:bg-white" />
                 </CardContent>
             </Card>
-            <Card className="bg-gradient-to-br from-orange-500/30 to-yellow-500/30 border-0">
+            <Card className="bg-gradient-to-br from-slate-300 to-gray-400 border-0 text-slate-800">
                  <CardContent className="p-4">
-                    <p className="text-sm text-orange-200/80">DIFFERS</p>
+                    <p className="text-sm text-slate-700/80">DIFFERS</p>
                     <p className="text-3xl font-bold my-2">{percentages.differs.toFixed(1)}%</p>
-                    <Progress value={percentages.differs} className="h-2 bg-white/10 [&>div]:bg-gradient-to-r [&>div]:from-orange-400 [&>div]:to-yellow-500" />
+                    <Progress value={percentages.differs} className="h-2 bg-slate-600/20 [&>div]:bg-slate-800" />
                 </CardContent>
             </Card>
         </div>
@@ -181,7 +181,7 @@ export function MatchesDiffersAnalysis({ lastDigitTicks }: { lastDigitTicks: num
             transition={{ duration: 0.5 }}
             className="mt-6"
           >
-            <Card className="bg-card/70 w-full">
+            <Card className="w-full">
               <CardHeader>
                   <CardTitle className="text-lg">Analyzing Market...</CardTitle>
               </CardHeader>
@@ -214,7 +214,7 @@ export function MatchesDiffersAnalysis({ lastDigitTicks }: { lastDigitTicks: num
                     transition={{ duration: 0.5 }}
                     className="mt-6"
                 >
-                  <Card className="bg-card/70 w-full">
+                  <Card className="w-full">
                     <CardHeader>
                         <CardTitle className="text-lg">Prediction</CardTitle>
                     </CardHeader>

@@ -67,7 +67,7 @@ export function ScannerView({
                       />
                     </div>
                 </div>
-                <div className="rounded-lg p-4 flex flex-col items-center justify-center bg-gradient-to-br from-indigo-500 to-purple-600 text-primary-foreground">
+                <div className="rounded-lg p-4 flex flex-col items-center justify-center bg-gradient-to-br from-blue-500 to-cyan-400 text-white">
                     <span className="text-sm tracking-widest">PRICE</span>
                     <span className="text-4xl font-bold">{price.toFixed(decimalPlaces)}</span>
                 </div>

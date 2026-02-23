@@ -99,7 +99,7 @@ export function EvenOddAnalysis({ lastDigitTicks }: { lastDigitTicks: number[] }
   const displayedOutcomes = showAllOutcomes ? outcomes.slice(0, 24) : outcomes.slice(0, 8);
 
   return (
-    <Card className="bg-card/50">
+    <Card>
       <CardContent className="p-6">
         <div className="flex justify-between items-center mb-6">
           <h3 className="text-lg font-semibold">Even/Odd Analysis</h3>
@@ -111,7 +111,7 @@ export function EvenOddAnalysis({ lastDigitTicks }: { lastDigitTicks: number[] }
         <div className="flex justify-center flex-wrap gap-2 mb-6 min-h-[56px]">
             {displayedOutcomes.map((outcome, index) => (
                 <div key={index} className={cn("flex items-center justify-center w-12 h-12 rounded-lg shadow-inner",
-                  outcome === 'E' ? 'bg-gradient-to-br from-indigo-500 to-purple-600' : 'bg-gradient-to-br from-pink-500 to-red-500'
+                  outcome === 'E' ? 'bg-gradient-to-br from-blue-400 to-cyan-400' : 'bg-gradient-to-br from-violet-400 to-purple-500'
                 )}>
                     <span className={cn("font-bold text-lg text-primary-foreground",
                     )}>{outcome}</span>
@@ -128,18 +128,18 @@ export function EvenOddAnalysis({ lastDigitTicks }: { lastDigitTicks: number[] }
         )}
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <Card className="bg-gradient-to-br from-indigo-500 to-purple-600 border-0 text-primary-foreground">
+            <Card className="bg-gradient-to-br from-blue-400 to-cyan-400 border-0 text-primary-foreground">
                 <CardContent className="p-4">
-                    <p className="text-sm text-purple-200/80">EVEN</p>
+                    <p className="text-sm text-blue-100/80">EVEN</p>
                     <p className="text-3xl font-bold my-2">{percentages.even.toFixed(1)}%</p>
-                    <Progress value={percentages.even} className="h-2 bg-white/20 [&>div]:bg-white/80" />
+                    <Progress value={percentages.even} className="h-2 bg-white/20 [&>div]:bg-white" />
                 </CardContent>
             </Card>
-            <Card className="bg-gradient-to-br from-pink-500 to-red-500 border-0 text-primary-foreground">
+            <Card className="bg-gradient-to-br from-violet-400 to-purple-500 border-0 text-primary-foreground">
                  <CardContent className="p-4">
-                    <p className="text-sm text-red-200/80">ODD</p>
+                    <p className="text-sm text-violet-100/80">ODD</p>
                     <p className="text-3xl font-bold my-2">{percentages.odd.toFixed(1)}%</p>
-                    <Progress value={percentages.odd} className="h-2 bg-white/20 [&>div]:bg-white/80" />
+                    <Progress value={percentages.odd} className="h-2 bg-white/20 [&>div]:bg-white" />
                 </CardContent>
             </Card>
         </div>
@@ -162,7 +162,7 @@ export function EvenOddAnalysis({ lastDigitTicks }: { lastDigitTicks: number[] }
             transition={{ duration: 0.5 }}
             className="mt-6"
           >
-            <Card className="bg-card/70 w-full">
+            <Card className="w-full">
               <CardHeader>
                   <CardTitle className="text-lg">Analyzing Market...</CardTitle>
               </CardHeader>
@@ -195,7 +195,7 @@ export function EvenOddAnalysis({ lastDigitTicks }: { lastDigitTicks: number[] }
                     transition={{ duration: 0.5 }}
                     className="mt-6"
                 >
-                  <Card className="bg-card/70 w-full">
+                  <Card className="w-full">
                     <CardHeader>
                         <CardTitle className="text-lg">Prediction</CardTitle>
                     </CardHeader>

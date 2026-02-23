@@ -22,15 +22,15 @@ interface DigitFrequencyViewProps {
 }
 
 const digitColors = [
-    '#f87171', // 0 - red-400
-    '#fb923c', // 1 - orange-400
-    '#facc15', // 2 - yellow-400
-    '#a3e635', // 3 - lime-400
-    '#4ade80', // 4 - green-400
+    '#818cf8', // 0 - indigo-400
+    '#60a5fa', // 1 - blue-400
+    '#38bdf8', // 2 - light-blue-400
+    '#22d3ee', // 3 - cyan-400
+    '#2dd4bf', // 4 - teal-400
     '#34d399', // 5 - emerald-400
-    '#22d3ee', // 6 - cyan-400
-    '#60a5fa', // 7 - blue-400
-    '#a78bfa', // 8 - violet-400
+    '#a3e635', // 6 - lime-400
+    '#facc15', // 7 - yellow-400
+    '#fb923c', // 8 - orange-400
     '#f472b6'  // 9 - pink-400
 ];
 
@@ -168,7 +168,7 @@ export function DigitFrequencyView({
                                   if (active && payload && payload.length) {
                                     const data = payload[0].payload;
                                     return (
-                                      <div className="bg-popover text-popover-foreground rounded-md px-3 py-2 text-sm shadow-md">
+                                      <div className="bg-popover text-popover-foreground rounded-md px-3 py-2 text-sm shadow-md border">
                                         <p className="font-bold">{`Digit ${data.digit}`}</p>
                                         <p>{`Count: ${data.count}`}</p>
                                         <p>{`Percentage: ${data.percentage.toFixed(1)}%`}</p>
