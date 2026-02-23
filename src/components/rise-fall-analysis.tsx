@@ -19,10 +19,9 @@ interface RiseFallAnalysisProps {
   selectedMarket: string;
   price: number;
   decimalPlaces: number;
-  priceHistory: { time: number; price: number }[];
 }
 
-export function RiseFallAnalysis({ lastDigitTicks, selectedMarket, price, decimalPlaces, priceHistory }: RiseFallAnalysisProps) {
+export function RiseFallAnalysis({ lastDigitTicks, selectedMarket, price, decimalPlaces }: RiseFallAnalysisProps) {
   const [outcomes, setOutcomes] = React.useState<Outcome[]>([]);
   const [streak, setStreak] = React.useState<{ type: 'R' | 'F'; count: number }>({ type: 'R', count: 0 });
   const [percentages, setPercentages] = React.useState({ rise: 0, fall: 0 });
@@ -186,10 +185,10 @@ export function RiseFallAnalysis({ lastDigitTicks, selectedMarket, price, decima
             </div>
         </div>
 
-        <RiseFallChart priceHistory={priceHistory} decimalPlaces={decimalPlaces} />
+        <RiseFallChart selectedMarket={selectedMarket} decimalPlaces={decimalPlaces} />
 
-        <div className="flex justify-center flex-wrap gap-2 my-6 min-h-[56px]">
-            {[...displayedOutcomes].reverse().map((outcome, index) => (
+        <div className="flex flex-wrap-reverse justify-center gap-2 my-6 min-h-[56px]">
+            {displayedOutcomes.map((outcome, index) => (
                 <div key={index} className={cn("flex items-center justify-center w-12 h-12 rounded-lg shadow-inner",
                   outcome === 'R' ? 'bg-green-100 border border-green-200' : outcome === 'F' ? 'bg-red-100 border border-red-200' : 'bg-slate-100 border border-slate-200'
                 )}>

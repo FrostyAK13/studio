@@ -24,7 +24,6 @@ interface ScannerViewProps {
     selectedMarket: string;
     onMarketChange: (market: string) => void;
     decimalPlaces: number;
-    priceHistory: { time: number; price: number }[];
 }
 
 export function ScannerView({
@@ -36,7 +35,6 @@ export function ScannerView({
     selectedMarket,
     onMarketChange,
     decimalPlaces,
-    priceHistory
 }: ScannerViewProps) {
     return (
         <>
@@ -82,7 +80,7 @@ export function ScannerView({
             <div className="my-6" />
             <MatchesDiffersAnalysis lastDigitTicks={lastDigitTicks} selectedMarket={selectedMarket} price={price} decimalPlaces={decimalPlaces} />
             <div className="my-6" />
-            <RiseFallAnalysis lastDigitTicks={lastDigitTicks} selectedMarket={selectedMarket} price={price} decimalPlaces={decimalPlaces} priceHistory={priceHistory} />
+            <RiseFallAnalysis lastDigitTicks={lastDigitTicks} selectedMarket={selectedMarket} price={price} decimalPlaces={decimalPlaces} />
         </>
     )
 }

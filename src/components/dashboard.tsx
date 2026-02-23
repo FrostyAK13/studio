@@ -14,8 +14,6 @@ export function Dashboard() {
     const [maxTicks, setMaxTicks] = React.useState(1000);
     const [selectedMarket, setSelectedMarket] = React.useState(syntheticIndices[0].id);
     const [decimalPlaces, setDecimalPlaces] = React.useState(2);
-    const [priceHistory, setPriceHistory] = React.useState<{ time: number; price: number }[]>([]);
-    const maxHistoryPoints = 60; // Approx 1 minute of 1s ticks
 
     React.useEffect(() => {
         // Truncate the ticks array if maxTicks is reduced
@@ -26,7 +24,6 @@ export function Dashboard() {
     React.useEffect(() => {
         setPrice(0);
         setLastDigitTicks([]);
-        setPriceHistory([]);
 
         const ws = new WebSocket('wss://ws.binaryws.com/websockets/v3?app_id=84799');
 
@@ -43,7 +40,7 @@ export function Dashboard() {
         };
 
         ws.onopen = () => {
-            ws.send(JSON.stringify({ "ticks_history": selectedMarket, "count": maxHistoryPoints, "end": "latest", "subscribe": 1 }));
+            ws.send(JSON.stringify({ "ticks_history": selectedMarket, "count": 100, "end": "latest", "subscribe": 1 }));
         };
 
         ws.onmessage = (event) => {
@@ -55,24 +52,15 @@ export function Dashboard() {
             }
 
             if (data.msg_type === 'history') {
-                if (data.history && data.history.prices && data.history.times) {
+                if (data.history && data.history.prices) {
                     historyBuffer = data.history.prices;
-                     const historicalPrices = data.history.times.map((t: number, i: number) => ({
-                        time: t * 1000,
-                        price: data.history.prices[i]
-                    }));
-                    setPriceHistory(historicalPrices);
                 }
             }
 
             if (data.msg_type === 'tick') {
                 if (data.tick && typeof data.tick.quote === 'number' && typeof data.tick.pip_size === 'number') {
                     const currentTick = data.tick;
-
-                    const newPrice = currentTick.quote;
-                    const newTime = currentTick.epoch * 1000;
-                    setPriceHistory(prev => [...prev, { time: newTime, price: newPrice }].slice(-maxHistoryPoints));
-
+                    
                     if (pipSize === null) {
                         // This is the first tick, so pipSize is now known.
                         pipSize = currentTick.pip_size;
@@ -174,7 +162,6 @@ export function Dashboard() {
                     selectedMarket={selectedMarket}
                     onMarketChange={setSelectedMarket}
                     decimalPlaces={decimalPlaces}
-                    priceHistory={priceHistory}
                 />
             </TabsContent>
 
@@ -201,7 +188,6 @@ export function Dashboard() {
                     selectedMarket={selectedMarket}
                     onMarketChange={setSelectedMarket}
                     decimalPlaces={decimalPlaces}
-                    priceHistory={priceHistory}
                 />
             </TabsContent>
 
