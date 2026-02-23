@@ -25,7 +25,7 @@ interface DigitFrequencyViewProps {
 
 const digitColors = [
     '#3b82f6', // 0 - blue-500
-    '#06b6d4', // 1 - cyan-500
+    '#14b8a6', // 1 - teal-500
     '#22c55e', // 2 - green-500
     '#84cc16', // 3 - lime-500
     '#f59e0b', // 4 - amber-500
@@ -33,7 +33,7 @@ const digitColors = [
     '#ec4899', // 6 - pink-500
     '#a855f7', // 7 - purple-500
     '#f97316', // 8 - orange-500
-    '#14b8a6'  // 9 - teal-500
+    '#06b6d4'  // 9 - cyan-500
 ];
 
 export function DigitFrequencyView({
@@ -99,8 +99,8 @@ export function DigitFrequencyView({
             if (lastFive.every(o => o === 'O')) evenOddReversal = 'Even';
         }
         const evenOddChartData = [
-            { name: 'Even', value: evenPercentage, fill: 'hsl(var(--chart-2))' },
-            { name: 'Odd', value: oddPercentage, fill: 'hsl(var(--chart-5))' },
+            { name: 'Even', value: evenPercentage, fill: '#3b82f6' },
+            { name: 'Odd', value: oddPercentage, fill: '#a855f7' },
         ];
 
         // Matches/Differs
@@ -112,8 +112,8 @@ export function DigitFrequencyView({
         const matchesPercentage = (matchesCount / ticks.length) * 100;
         const differsPercentage = 100 - matchesPercentage;
         const matchesDiffersChartData = [
-            { name: 'Matches', value: matchesPercentage, fill: 'hsl(var(--chart-1))' },
-            { name: 'Differs', value: differsPercentage, fill: 'hsl(var(--muted))' },
+            { name: 'Matches', value: matchesPercentage, fill: '#14b8a6' },
+            { name: 'Differs', value: differsPercentage, fill: '#6b7280' },
         ];
 
 
@@ -130,8 +130,8 @@ export function DigitFrequencyView({
             if (lastFiveClusters.every(c => c === 'H')) clusterReversal = 'Lower (0-4)';
         }
         const overUnderChartData = [
-            { name: 'Lower (0-4)', value: lowerPercentage, fill: 'hsl(var(--chart-3))' },
-            { name: 'Higher (5-9)', value: higherPercentage, fill: 'hsl(var(--chart-4))' },
+            { name: 'Lower (0-4)', value: lowerPercentage, fill: '#22c55e' },
+            { name: 'Higher (5-9)', value: higherPercentage, fill: '#ef4444' },
         ];
 
         return {
@@ -253,7 +253,7 @@ export function DigitFrequencyView({
                     <CardTitle className="text-base font-semibold">Probability Analysis</CardTitle>
                 </CardHeader>
                 <CardContent className="flex items-center justify-center">
-                    <ChartContainer config={chartConfig} className="mx-auto aspect-square h-80">
+                    <ChartContainer config={chartConfig} className="mx-auto aspect-square h-[400px]">
                         <PieChart>
                             <Tooltip
                                 cursor={false}
@@ -277,7 +277,7 @@ export function DigitFrequencyView({
                                 nameKey="digit"
                                 cx="50%"
                                 cy="50%"
-                                outerRadius={120}
+                                outerRadius={150}
                                 labelLine={false}
                                 label={({
                                     cx,
@@ -301,7 +301,7 @@ export function DigitFrequencyView({
                                             fill="white"
                                             textAnchor={x > cx ? "start" : "end"}
                                             dominantBaseline="central"
-                                            className="text-sm font-bold"
+                                            className="text-base font-bold"
                                         >
                                             {chartData[index].digit}
                                         </text>
@@ -376,10 +376,10 @@ export function DigitFrequencyView({
                                             </Badge>
                                         </div>
                                     </div>
-                                    <ChartContainer config={{}} className="h-24 w-24 mx-auto">
+                                    <ChartContainer config={{}} className="h-32 w-32 mx-auto">
                                         <PieChart>
                                             <Tooltip content={<MiniChartTooltip />} />
-                                            <Pie data={marketDirectionAnalysis.evenOdd.chartData} dataKey="value" nameKey="name" innerRadius={18} outerRadius={30} paddingAngle={2}>
+                                            <Pie data={marketDirectionAnalysis.evenOdd.chartData} dataKey="value" nameKey="name" innerRadius={32} outerRadius={48} paddingAngle={2}>
                                                 {marketDirectionAnalysis.evenOdd.chartData.map((entry) => (
                                                     <Cell key={`cell-${entry.name}`} fill={entry.fill} />
                                                 ))}
@@ -413,10 +413,10 @@ export function DigitFrequencyView({
                                             </div>
                                         </div>
                                     </div>
-                                    <ChartContainer config={{}} className="h-24 w-24 mx-auto">
+                                    <ChartContainer config={{}} className="h-32 w-32 mx-auto">
                                         <PieChart>
                                             <Tooltip content={<MiniChartTooltip />} />
-                                            <Pie data={marketDirectionAnalysis.matchesDiffers.chartData} dataKey="value" nameKey="name" innerRadius={18} outerRadius={30} paddingAngle={2}>
+                                            <Pie data={marketDirectionAnalysis.matchesDiffers.chartData} dataKey="value" nameKey="name" innerRadius={32} outerRadius={48} paddingAngle={2}>
                                                 {marketDirectionAnalysis.matchesDiffers.chartData.map((entry) => (
                                                     <Cell key={`cell-${entry.name}`} fill={entry.fill} />
                                                 ))}
@@ -455,10 +455,10 @@ export function DigitFrequencyView({
                                             </Badge>
                                         </div>
                                     </div>
-                                    <ChartContainer config={{}} className="h-24 w-24 mx-auto">
+                                    <ChartContainer config={{}} className="h-32 w-32 mx-auto">
                                         <PieChart>
                                             <Tooltip content={<MiniChartTooltip />} />
-                                            <Pie data={marketDirectionAnalysis.overUnder.chartData} dataKey="value" nameKey="name" innerRadius={18} outerRadius={30} paddingAngle={2}>
+                                            <Pie data={marketDirectionAnalysis.overUnder.chartData} dataKey="value" nameKey="name" innerRadius={32} outerRadius={48} paddingAngle={2}>
                                                 {marketDirectionAnalysis.overUnder.chartData.map((entry) => (
                                                     <Cell key={`cell-${entry.name}`} fill={entry.fill} />
                                                 ))}
