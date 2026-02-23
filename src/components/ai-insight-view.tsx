@@ -70,7 +70,9 @@ export function AIInsightView({ lastDigitTicks, selectedMarket, onMarketChange }
         }
 
         try {
-            const result = await getMarketInsight({ ticks: lastDigitTicks, marketId: selectedMarket });
+            // Prepare ticks: take the most recent 100 and reverse them for chronological order.
+            const ticksForAI = lastDigitTicks.slice(0, 100).reverse();
+            const result = await getMarketInsight({ ticks: ticksForAI, marketId: selectedMarket });
             setInsight(result);
         } catch (e: any) {
             console.error(e);
@@ -115,7 +117,7 @@ export function AIInsightView({ lastDigitTicks, selectedMarket, onMarketChange }
                      <DataCollectionAnimation 
                         progress={(lastDigitTicks.length / 50) * 100}
                         tickCount={lastDigitTicks.length}
-                        recentTicks={lastDigitTicks.slice(0, 24)}
+                        recentTicks={lastDigitTicks.slice(0, 24).reverse()}
                     />
                 ) : (
                     <>

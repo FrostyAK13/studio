@@ -51,10 +51,9 @@ const marketInsightPrompt = ai.definePrompt({
 export async function getMarketInsight(input: MarketInsightInput): Promise<MarketInsightOutput> {
     const marketName = syntheticIndices.find(m => m.id === input.marketId)?.name || input.marketId;
     
-    // Ensure we only send the last 100 ticks to the model
-    const recentTicks = input.ticks.slice(0, 100);
+    // The ticks are pre-processed to be the most recent 100 in chronological order.
+    const {output} = await marketInsightPrompt({ ...input, marketName });
 
-    const {output} = await marketInsightPrompt({ ...input, ticks: recentTicks, marketName });
     if (!output) {
         throw new Error("The AI failed to generate an insight.");
     }
