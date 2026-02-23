@@ -19,6 +19,8 @@ interface AIInsightViewProps {
     onMarketChange: (market: string) => void;
 }
 
+type AnalysisState = 'idle' | 'collecting' | 'analyzing' | 'complete' | 'error';
+
 function DataCollectionAnimation({ progress, tickCount, recentTicks }: { progress: number, tickCount: number, recentTicks: number[] }) {
     return (
         <Card>
@@ -27,7 +29,7 @@ function DataCollectionAnimation({ progress, tickCount, recentTicks }: { progres
                     <Loader className="h-8 w-8 text-primary animate-spin"/>
                     <div>
                         <CardTitle className="text-2xl">Collecting Data</CardTitle>
-                        <CardDescription>The AI requires at least 50 ticks for an accurate analysis.</CardDescription>
+                        <CardDescription>The AI is capturing the next 50 ticks for analysis.</CardDescription>
                     </div>
                 </div>
             </CardHeader>
@@ -35,7 +37,7 @@ function DataCollectionAnimation({ progress, tickCount, recentTicks }: { progres
                 <Progress value={progress} className="w-full" />
                 <p className="text-sm text-muted-foreground text-center">{tickCount} / 50 ticks collected</p>
                 <div className="mt-4 p-4 bg-muted rounded-md min-h-[60px]">
-                    <p className="text-xs font-semibold text-muted-foreground mb-2">RECENT DIGITS</p>
+                    <p className="text-xs font-semibold text-muted-foreground mb-2">CAPTURED DIGITS</p>
                     <div className="flex flex-wrap gap-2">
                         {recentTicks.map((digit, i) => (
                             <div key={i} className="flex items-center justify-center w-7 h-7 rounded bg-background font-mono text-sm shadow-inner">
@@ -51,37 +53,103 @@ function DataCollectionAnimation({ progress, tickCount, recentTicks }: { progres
 
 
 export function AIInsightView({ lastDigitTicks, selectedMarket, onMarketChange }: AIInsightViewProps) {
-    const [isLoading, setIsLoading] = React.useState(false);
+    const [analysisState, setAnalysisState] = React.useState<AnalysisState>('idle');
+    const [collectedTicks, setCollectedTicks] = React.useState<number[]>([]);
     const [insight, setInsight] = React.useState<MarketInsightOutput | null>(null);
     const [error, setError] = React.useState<string | null>(null);
 
     const marketName = syntheticIndices.find(m => m.id === selectedMarket)?.name || selectedMarket;
-    const hasEnoughData = lastDigitTicks.length >= 50;
 
-    const handleGetInsight = async () => {
-        setIsLoading(true);
-        setInsight(null);
-        setError(null);
-
-        if (lastDigitTicks.length < 50) {
-            // This UI state should prevent this, but as a safeguard:
-            setIsLoading(false);
-            return;
-        }
-
+    const runAnalysis = async (ticks: number[]) => {
+        setAnalysisState('analyzing');
         try {
-            // Prepare ticks: take the most recent 100 and reverse them for chronological order.
-            const ticksForAI = lastDigitTicks.slice(0, 100).reverse();
+            // Ticks are collected with newest first, reverse for chronological order for the AI
+            const ticksForAI = ticks.slice(0, 100).reverse();
             const result = await getMarketInsight({ ticks: ticksForAI, marketId: selectedMarket });
             setInsight(result);
+            setAnalysisState('complete');
         } catch (e: any) {
             console.error(e);
             setError(e.message || "An unexpected error occurred.");
-        } finally {
-            setIsLoading(false);
+            setAnalysisState('error');
         }
     };
-    
+
+    const handleStartAnalysis = () => {
+        setInsight(null);
+        setError(null);
+        setCollectedTicks([]);
+        setAnalysisState('collecting');
+    };
+
+    React.useEffect(() => {
+        if (analysisState !== 'collecting') {
+            return;
+        }
+
+        // Check if a new tick has arrived. `lastDigitTicks` is prepended, so [0] is the newest.
+        if (lastDigitTicks.length > 0 && (collectedTicks.length === 0 || lastDigitTicks[0] !== collectedTicks[0])) {
+            const newCollected = [lastDigitTicks[0], ...collectedTicks];
+            setCollectedTicks(newCollected);
+
+            if (newCollected.length >= 50) {
+                runAnalysis(newCollected);
+            }
+        }
+    }, [lastDigitTicks, analysisState]); // Effect runs on each new tick from parent
+
+
+    const renderContent = () => {
+        switch (analysisState) {
+            case 'collecting':
+                return (
+                    <DataCollectionAnimation
+                        progress={(collectedTicks.length / 50) * 100}
+                        tickCount={collectedTicks.length}
+                        recentTicks={collectedTicks.slice(0, 24).reverse()}
+                    />
+                );
+            case 'analyzing':
+            case 'complete':
+            case 'error':
+                 return (
+                    <HackerAnimation title={`AI Analysis Report - ${marketName}`}>
+                        {analysisState === 'analyzing' ? (
+                            <ScannerAnimationContent />
+                        ) : error ? (
+                            <div className="text-left text-red-400 flex items-start gap-4">
+                                <AlertTriangle className="h-5 w-5 flex-shrink-0 mt-1"/>
+                                <div>
+                                    <p className="font-bold text-lg">Analysis Failed</p>
+                                    <p>{error}</p>
+                                </div>
+                            </div>
+                        ) : insight ? (
+                            <div className="text-left space-y-4">
+                                <div>
+                                    <p className="font-bold text-green-300">// MARKET SUMMARY</p>
+                                    <p className="text-base">{insight.summary}</p>
+                                </div>
+                                <div>
+                                    <p className="font-bold text-green-300">// RECOMMENDATION</p>
+                                    <div className='flex items-center gap-3'>
+                                        <p className="text-base">Strategy:</p>
+                                        <Badge variant={insight.recommendedStrategy === 'None' ? 'destructive' : 'secondary'} className="text-base font-bold">{insight.recommendedStrategy}</Badge>
+                                    </div>
+                                </div>
+                                <div>
+                                    <p className="font-bold text-green-300">// REASONING</p>
+                                    <p className="text-base">{insight.reasoning}</p>
+                                </div>
+                            </div>
+                        ) : null}
+                    </HackerAnimation>
+                 );
+            case 'idle':
+            default:
+                return null;
+        }
+    }
 
     return (
         <Card>
@@ -98,7 +166,7 @@ export function AIInsightView({ lastDigitTicks, selectedMarket, onMarketChange }
                 <Card>
                     <CardContent className="p-6">
                         <Label htmlFor="ai-market-select">Synthetic Market</Label>
-                        <Select value={selectedMarket} onValueChange={onMarketChange}>
+                        <Select value={selectedMarket} onValueChange={onMarketChange} disabled={analysisState === 'collecting' || analysisState === 'analyzing'}>
                             <SelectTrigger id="ai-market-select">
                                 <SelectValue placeholder="Select Index" />
                             </SelectTrigger>
@@ -113,64 +181,28 @@ export function AIInsightView({ lastDigitTicks, selectedMarket, onMarketChange }
                     </CardContent>
                 </Card>
 
-                {!hasEnoughData ? (
-                     <DataCollectionAnimation 
-                        progress={(lastDigitTicks.length / 50) * 100}
-                        tickCount={lastDigitTicks.length}
-                        recentTicks={lastDigitTicks.slice(0, 24).reverse()}
-                    />
-                ) : (
-                    <>
-                        <div className="text-center">
-                            <Button onClick={handleGetInsight} disabled={isLoading} size="lg">
-                                {isLoading ? (
-                                    <>
-                                        <Bot className="mr-2 h-5 w-5 animate-spin" />
-                                        Analyzing...
-                                    </>
-                                ) : (
-                                    <>
-                                    <Sparkles className="mr-2 h-5 w-5" />
-                                    Get AI Insight
-                                    </>
-                                )}
-                            </Button>
-                        </div>
-                        {(isLoading || insight || error) && (
-                            <HackerAnimation title={`AI Analysis Report - ${marketName}`}>
-                                {isLoading ? (
-                                    <ScannerAnimationContent />
-                                ) : error ? (
-                                    <div className="text-left text-red-400 flex items-start gap-4">
-                                        <AlertTriangle className="h-5 w-5 flex-shrink-0 mt-1"/>
-                                        <div>
-                                            <p className="font-bold text-lg">Analysis Failed</p>
-                                            <p>{error}</p>
-                                        </div>
-                                    </div>
-                                ) : insight ? (
-                                    <div className="text-left space-y-4">
-                                        <div>
-                                            <p className="font-bold text-green-300">// MARKET SUMMARY</p>
-                                            <p className="text-base">{insight.summary}</p>
-                                        </div>
-                                        <div>
-                                            <p className="font-bold text-green-300">// RECOMMENDATION</p>
-                                            <div className='flex items-center gap-3'>
-                                                <p className="text-base">Strategy:</p>
-                                                <Badge variant={insight.recommendedStrategy === 'None' ? 'destructive' : 'secondary'} className="text-base font-bold">{insight.recommendedStrategy}</Badge>
-                                            </div>
-                                        </div>
-                                        <div>
-                                            <p className="font-bold text-green-300">// REASONING</p>
-                                            <p className="text-base">{insight.reasoning}</p>
-                                        </div>
-                                    </div>
-                                ) : null}
-                            </HackerAnimation>
+                <div className="text-center">
+                    <Button onClick={handleStartAnalysis} disabled={analysisState === 'collecting' || analysisState === 'analyzing'} size="lg">
+                        {analysisState === 'collecting' ? (
+                            <>
+                                <Loader className="mr-2 h-5 w-5 animate-spin" />
+                                Collecting Ticks...
+                            </>
+                        ) : analysisState === 'analyzing' ? (
+                            <>
+                                <Bot className="mr-2 h-5 w-5 animate-spin" />
+                                Analyzing...
+                            </>
+                        ) : (
+                            <>
+                            <Sparkles className="mr-2 h-5 w-5" />
+                            Get AI Insight
+                            </>
                         )}
-                    </>
-                )}
+                    </Button>
+                </div>
+                
+                {renderContent()}
 
             </CardContent>
         </Card>
