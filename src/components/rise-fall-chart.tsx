@@ -254,7 +254,7 @@ export function RiseFallChart({
     }
 
     return (
-      <ComposedChart data={ohlcData} margin={{ top: 5, right: 10, left: -20, bottom: 0 }} barCategoryGap="20%">
+      <ComposedChart data={ohlcData} margin={{ top: 5, right: 10, left: -20, bottom: 0 }} barCategoryGap="10%">
         <CartesianGrid vertical={false} strokeDasharray="3 3" />
         <XAxis dataKey="time" type="number" domain={['dataMin', 'dataMax']} tickLine={false} axisLine={false} tickMargin={8} tick={{ fontSize: 10 }} tickFormatter={(unixTime) => new Date(unixTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })} />
         <YAxis domain={domain} orientation="right" tickLine={false} axisLine={false} tickMargin={8} tickFormatter={(value) => (typeof value === 'number' ? value.toFixed(decimalPlaces) : '')} tick={{ fontSize: 10 }} />
@@ -279,7 +279,7 @@ export function RiseFallChart({
           {ohlcData.map((entry, index) => <Cell key={`cell-wick-${index}`} stroke={entry.color} fill={entry.color} />)}
         </Bar>
         <Bar dataKey="body" isAnimationActive={false}>
-          {ohlcData.map((entry, index) => <Cell key={`cell-body-${index}`} stroke={entry.color} fill={entry.fillColor} />)}
+          {ohlcData.map((entry, index) => <Cell key={`cell-body-${index}`} stroke={entry.color} fill={entry.fillColor} strokeWidth={2}/>)}
         </Bar>
       </ComposedChart>
     );
