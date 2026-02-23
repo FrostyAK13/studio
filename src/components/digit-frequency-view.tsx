@@ -24,16 +24,16 @@ interface DigitFrequencyViewProps {
 }
 
 const digitColors = [
-    '#3b82f6', // 0 - blue-500
-    '#14b8a6', // 1 - teal-500
-    '#22c55e', // 2 - green-500
-    '#84cc16', // 3 - lime-500
-    '#f59e0b', // 4 - amber-500
-    '#ef4444', // 5 - red-500
-    '#ec4899', // 6 - pink-500
-    '#a855f7', // 7 - purple-500
-    '#f97316', // 8 - orange-500
-    '#06b6d4'  // 9 - cyan-500
+    '#f43f5e', // rose-500
+    '#f97316', // orange-500
+    '#f59e0b', // amber-500
+    '#84cc16', // lime-500
+    '#22c55e', // green-500
+    '#14b8a6', // teal-500
+    '#06b6d4', // cyan-500
+    '#3b82f6', // blue-500
+    '#8b5cf6', // violet-500
+    '#d946ef', // fuchsia-500
 ];
 
 export function DigitFrequencyView({
@@ -99,8 +99,8 @@ export function DigitFrequencyView({
             if (lastFive.every(o => o === 'O')) evenOddReversal = 'Even';
         }
         const evenOddChartData = [
-            { name: 'Even', value: evenPercentage, fill: '#3b82f6' },
-            { name: 'Odd', value: oddPercentage, fill: '#a855f7' },
+            { name: 'Even', value: evenPercentage, fill: '#8b5cf6' },
+            { name: 'Odd', value: oddPercentage, fill: '#ec4899' },
         ];
 
         // Matches/Differs
@@ -130,9 +130,37 @@ export function DigitFrequencyView({
             if (lastFiveClusters.every(c => c === 'H')) clusterReversal = 'Lower (0-4)';
         }
         const overUnderChartData = [
-            { name: 'Lower (0-4)', value: lowerPercentage, fill: '#22c55e' },
+            { name: 'Lower (0-4)', value: lowerPercentage, fill: '#3b82f6' },
             { name: 'Higher (5-9)', value: higherPercentage, fill: '#ef4444' },
         ];
+
+        // Rise/Fall
+        const riseFallOutcomes: ('R' | 'F' | 'E')[] = [];
+        if (ticks.length >= 2) {
+            for (let i = 0; i < ticks.length - 1; i++) {
+                const currentDigit = ticks[i];
+                const prevDigit = ticks[i+1];
+                if(currentDigit > prevDigit) riseFallOutcomes.push('R');
+                else if (currentDigit < prevDigit) riseFallOutcomes.push('F');
+                else riseFallOutcomes.push('E');
+            }
+        }
+        const riseFallRelevantOutcomes = riseFallOutcomes.filter(o => o !== 'E') as ('R'|'F')[];
+        const riseCount = riseFallRelevantOutcomes.filter(o => o === 'R').length;
+        const fallCount = riseFallRelevantOutcomes.length - riseCount;
+        const risePercentage = riseFallRelevantOutcomes.length > 0 ? (riseCount / riseFallRelevantOutcomes.length) * 100 : 0;
+        const fallPercentage = riseFallRelevantOutcomes.length > 0 ? (fallCount / riseFallRelevantOutcomes.length) * 100 : 0;
+        let riseFallReversal: 'Rise' | 'Fall' | 'None' = 'None';
+        if (riseFallRelevantOutcomes.length >= 4) { // Rise/Fall streak threshold
+            const lastFour = riseFallRelevantOutcomes.slice(0, 4);
+            if (lastFour.every(o => o === 'R')) riseFallReversal = 'Fall';
+            if (lastFour.every(o => o === 'F')) riseFallReversal = 'Rise';
+        }
+        const riseFallChartData = [
+            { name: 'Rise', value: risePercentage, fill: '#22c55e' },
+            { name: 'Fall', value: fallPercentage, fill: '#ef4444' },
+        ];
+
 
         return {
             evenOdd: {
@@ -146,6 +174,10 @@ export function DigitFrequencyView({
             overUnder: {
                 reversal: clusterReversal,
                 chartData: overUnderChartData,
+            },
+            riseFall: {
+                reversal: riseFallReversal,
+                chartData: riseFallChartData,
             }
         };
     }, [lastDigitTicks]);
@@ -240,11 +272,11 @@ export function DigitFrequencyView({
                     <CardTitle className="text-base font-semibold">Digit Pattern</CardTitle>
                 </CardHeader>
                 <CardContent className="flex flex-wrap gap-2">
-                    {[...lastDigitTicks.slice(0, 30)].reverse().map((digit, i) => (
+                    {lastDigitTicks.slice(0, 30).map((digit, i) => (
                         <div key={i} className={cn("flex items-center justify-center w-8 h-8 rounded-full font-bold text-white")} style={{ backgroundColor: digitColors[digit] }}>
                             {digit}
                         </div>
-                    ))}
+                    )).reverse()}
                 </CardContent>
             </Card>
 
@@ -253,7 +285,7 @@ export function DigitFrequencyView({
                     <CardTitle className="text-base font-semibold">Probability Analysis</CardTitle>
                 </CardHeader>
                 <CardContent className="flex items-center justify-center">
-                    <ChartContainer config={chartConfig} className="mx-auto aspect-square h-[400px]">
+                    <ChartContainer config={chartConfig} className="mx-auto aspect-square h-[450px]">
                         <PieChart>
                             <Tooltip
                                 cursor={false}
@@ -277,7 +309,7 @@ export function DigitFrequencyView({
                                 nameKey="digit"
                                 cx="50%"
                                 cy="50%"
-                                outerRadius={150}
+                                outerRadius={180}
                                 labelLine={false}
                                 label={({
                                     cx,
@@ -292,7 +324,7 @@ export function DigitFrequencyView({
                                     const x = cx + radius * Math.cos(-midAngle * RADIAN)
                                     const y = cy + radius * Math.sin(-midAngle * RADIAN)
 
-                                    if (chartData[index].percentage < 5) return null;
+                                    if (chartData[index].percentage < 4) return null;
 
                                     return (
                                         <text
@@ -301,7 +333,7 @@ export function DigitFrequencyView({
                                             fill="white"
                                             textAnchor={x > cx ? "start" : "end"}
                                             dominantBaseline="central"
-                                            className="text-base font-bold"
+                                            className="text-lg font-bold"
                                         >
                                             {chartData[index].digit}
                                         </text>
@@ -348,7 +380,15 @@ export function DigitFrequencyView({
                     ) : (
                         <div className="space-y-4">
                              <div className="p-4 border rounded-lg">
-                                <h4 className="font-semibold mb-2">Even / Odd</h4>
+                                <div className="flex justify-between items-start mb-2">
+                                    <div>
+                                        <h4 className="font-semibold">Even / Odd</h4>
+                                    </div>
+                                    <div className="text-right">
+                                        <p className="text-xs text-muted-foreground font-mono">PRICE</p>
+                                        <p className="font-bold text-primary text-lg">{price.toFixed(decimalPlaces)}</p>
+                                    </div>
+                                </div>
                                 <div className="grid grid-cols-2 items-center gap-4">
                                     <div className="space-y-3">
                                         <div>
@@ -376,10 +416,10 @@ export function DigitFrequencyView({
                                             </Badge>
                                         </div>
                                     </div>
-                                    <ChartContainer config={{}} className="h-32 w-32 mx-auto">
+                                    <ChartContainer config={{}} className="h-36 w-36 mx-auto">
                                         <PieChart>
                                             <Tooltip content={<MiniChartTooltip />} />
-                                            <Pie data={marketDirectionAnalysis.evenOdd.chartData} dataKey="value" nameKey="name" innerRadius={32} outerRadius={48} paddingAngle={2}>
+                                            <Pie data={marketDirectionAnalysis.evenOdd.chartData} dataKey="value" nameKey="name" innerRadius={36} outerRadius={56} paddingAngle={2}>
                                                 {marketDirectionAnalysis.evenOdd.chartData.map((entry) => (
                                                     <Cell key={`cell-${entry.name}`} fill={entry.fill} />
                                                 ))}
@@ -390,8 +430,16 @@ export function DigitFrequencyView({
                             </div>
 
                             <div className="p-4 border rounded-lg">
-                                <h4 className="font-semibold mb-2">Matches / Differs</h4>
-                                 <CardDescription className="text-xs mb-2 -mt-1">Analysis for Hottest Digit: {marketDirectionAnalysis.matchesDiffers.hottest}</CardDescription>
+                                <div className="flex justify-between items-start mb-2">
+                                    <div>
+                                        <h4 className="font-semibold">Matches / Differs</h4>
+                                        <CardDescription className="text-xs -mt-1">Analysis for Hottest Digit: {marketDirectionAnalysis.matchesDiffers.hottest}</CardDescription>
+                                    </div>
+                                    <div className="text-right">
+                                        <p className="text-xs text-muted-foreground font-mono">PRICE</p>
+                                        <p className="font-bold text-primary text-lg">{price.toFixed(decimalPlaces)}</p>
+                                    </div>
+                                </div>
                                 <div className="grid grid-cols-2 items-center gap-4">
                                      <div className="space-y-3">
                                         <div>
@@ -413,10 +461,10 @@ export function DigitFrequencyView({
                                             </div>
                                         </div>
                                     </div>
-                                    <ChartContainer config={{}} className="h-32 w-32 mx-auto">
+                                    <ChartContainer config={{}} className="h-36 w-36 mx-auto">
                                         <PieChart>
                                             <Tooltip content={<MiniChartTooltip />} />
-                                            <Pie data={marketDirectionAnalysis.matchesDiffers.chartData} dataKey="value" nameKey="name" innerRadius={32} outerRadius={48} paddingAngle={2}>
+                                            <Pie data={marketDirectionAnalysis.matchesDiffers.chartData} dataKey="value" nameKey="name" innerRadius={36} outerRadius={56} paddingAngle={2}>
                                                 {marketDirectionAnalysis.matchesDiffers.chartData.map((entry) => (
                                                     <Cell key={`cell-${entry.name}`} fill={entry.fill} />
                                                 ))}
@@ -427,7 +475,15 @@ export function DigitFrequencyView({
                             </div>
 
                             <div className="p-4 border rounded-lg">
-                                <h4 className="font-semibold mb-2">Over / Under Clusters</h4>
+                                <div className="flex justify-between items-start mb-2">
+                                    <div>
+                                        <h4 className="font-semibold">Over / Under Clusters</h4>
+                                    </div>
+                                    <div className="text-right">
+                                        <p className="text-xs text-muted-foreground font-mono">PRICE</p>
+                                        <p className="font-bold text-primary text-lg">{price.toFixed(decimalPlaces)}</p>
+                                    </div>
+                                </div>
                                 <div className="grid grid-cols-2 items-center gap-4">
                                     <div className="space-y-3">
                                         <div>
@@ -455,10 +511,10 @@ export function DigitFrequencyView({
                                             </Badge>
                                         </div>
                                     </div>
-                                    <ChartContainer config={{}} className="h-32 w-32 mx-auto">
+                                    <ChartContainer config={{}} className="h-36 w-36 mx-auto">
                                         <PieChart>
                                             <Tooltip content={<MiniChartTooltip />} />
-                                            <Pie data={marketDirectionAnalysis.overUnder.chartData} dataKey="value" nameKey="name" innerRadius={32} outerRadius={48} paddingAngle={2}>
+                                            <Pie data={marketDirectionAnalysis.overUnder.chartData} dataKey="value" nameKey="name" innerRadius={36} outerRadius={56} paddingAngle={2}>
                                                 {marketDirectionAnalysis.overUnder.chartData.map((entry) => (
                                                     <Cell key={`cell-${entry.name}`} fill={entry.fill} />
                                                 ))}
@@ -467,6 +523,57 @@ export function DigitFrequencyView({
                                     </ChartContainer>
                                 </div>
                             </div>
+                            {marketDirectionAnalysis.riseFall && (
+                                <div className="p-4 border rounded-lg">
+                                    <div className="flex justify-between items-start mb-2">
+                                        <div>
+                                            <h4 className="font-semibold">Rise / Fall</h4>
+                                        </div>
+                                        <div className="text-right">
+                                            <p className="text-xs text-muted-foreground font-mono">PRICE</p>
+                                            <p className="font-bold text-primary text-lg">{price.toFixed(decimalPlaces)}</p>
+                                        </div>
+                                    </div>
+                                    <div className="grid grid-cols-2 items-center gap-4">
+                                        <div className="space-y-3">
+                                            <div>
+                                                <div className="flex justify-between mb-1 text-sm">
+                                                    <span className="font-medium">Rise</span>
+                                                    <span className="text-muted-foreground">{marketDirectionAnalysis.riseFall.chartData[0].value.toFixed(1)}%</span>
+                                                </div>
+                                                <div className="w-full bg-muted rounded-full h-2 overflow-hidden">
+                                                    <div className="h-full rounded-full" style={{ width: `${marketDirectionAnalysis.riseFall.chartData[0].value}%`, backgroundColor: marketDirectionAnalysis.riseFall.chartData[0].fill }}></div>
+                                                </div>
+                                            </div>
+                                            <div>
+                                                <div className="flex justify-between mb-1 text-sm">
+                                                    <span className="font-medium">Fall</span>
+                                                    <span className="text-muted-foreground">{marketDirectionAnalysis.riseFall.chartData[1].value.toFixed(1)}%</span>
+                                                </div>
+                                                <div className="w-full bg-muted rounded-full h-2 overflow-hidden">
+                                                    <div className="h-full rounded-full" style={{ width: `${marketDirectionAnalysis.riseFall.chartData[1].value}%`, backgroundColor: marketDirectionAnalysis.riseFall.chartData[1].fill }}></div>
+                                                </div>
+                                            </div>
+                                            <div className="flex justify-between items-center text-sm pt-2">
+                                                <span>Reversal Signal:</span>
+                                                <Badge variant={marketDirectionAnalysis.riseFall.reversal !== 'None' ? 'destructive' : 'outline'}>
+                                                    {marketDirectionAnalysis.riseFall.reversal}
+                                                </Badge>
+                                            </div>
+                                        </div>
+                                        <ChartContainer config={{}} className="h-36 w-36 mx-auto">
+                                            <PieChart>
+                                                <Tooltip content={<MiniChartTooltip />} />
+                                                <Pie data={marketDirectionAnalysis.riseFall.chartData} dataKey="value" nameKey="name" innerRadius={36} outerRadius={56} paddingAngle={2}>
+                                                    {marketDirectionAnalysis.riseFall.chartData.map((entry) => (
+                                                        <Cell key={`cell-${entry.name}`} fill={entry.fill} />
+                                                    ))}
+                                                </Pie>
+                                            </PieChart>
+                                        </ChartContainer>
+                                    </div>
+                                </div>
+                            )}
                         </div>
                     )}
                 </CardContent>
