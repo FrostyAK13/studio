@@ -55,14 +55,23 @@ export function EvenOddAnalysis({ lastDigitTicks, selectedMarket }: { lastDigitT
   }, [lastDigitTicks]);
 
   const handleScan = () => {
+    if (isScanning) return;
+
     if (scanResultLines) {
       setScanResultLines(null);
       return;
     }
-    if (outcomes.length < 10) return;
-
+    
     setIsScanning(true);
-    setScanResultLines(null);
+
+    if (outcomes.length < 10) {
+        setTimeout(() => {
+            setScanResultLines(['Not enough data. Need at least 10 ticks.']);
+            setIsScanning(false);
+            setTimeout(() => setScanResultLines(null), 3000);
+        }, 1000);
+        return;
+    }
 
     setTimeout(() => {
         let predictedOutcome: Outcome;
@@ -91,16 +100,18 @@ export function EvenOddAnalysis({ lastDigitTicks, selectedMarket }: { lastDigitT
         let countdown = 5;
         const interval = setInterval(() => {
           setScanResultLines(prevLines => {
-              if (!prevLines) return null;
-              const baseLines = prevLines.slice(0, 5);
-
+              if (!prevLines) {
+                  clearInterval(interval);
+                  return null;
+              };
+              
               if (countdown >= 0) {
-                  const newLines = [...baseLines, `Running bot in ${countdown} seconds...`];
+                  const newLines = [...initialResults, `Running bot in ${countdown} seconds...`];
                   countdown--;
                   return newLines;
               } else {
                   clearInterval(interval);
-                  const finalLines = [...baseLines, `Running bot in 0 seconds...`, 'Bot activated!'];
+                  const finalLines = [...initialResults, `Running bot in 0 seconds...`, 'Bot activated!'];
                   setTimeout(() => {
                       setScanResultLines(null);
                   }, 2000);
@@ -162,7 +173,7 @@ export function EvenOddAnalysis({ lastDigitTicks, selectedMarket }: { lastDigitT
 
         <div className="mt-6 text-center">
             <Button onClick={handleScan} variant="secondary" disabled={isScanning}>
-                {isScanning ? (
+                {isScanning && !scanResultLines ? (
                     <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                 ) : (
                     <ScanLine className="mr-2 h-4 w-4" />
@@ -172,13 +183,19 @@ export function EvenOddAnalysis({ lastDigitTicks, selectedMarket }: { lastDigitT
         </div>
         
         <AnimatePresence>
-            {scanResultLines && (
+            {(isScanning || scanResultLines) && (
                 <HackerAnimation title={`Analysis Dashboard - Even/Odd on ${marketName}`}>
-                    <div className="space-y-1">
-                        {scanResultLines.map((line, index) => (
-                            <p key={index}>{line}</p>
-                        ))}
-                    </div>
+                    {scanResultLines ? (
+                        <div className="space-y-1">
+                            {scanResultLines.map((line, index) => (
+                                <p key={index}>{line}</p>
+                            ))}
+                        </div>
+                    ) : (
+                        <div className="flex items-center justify-center h-full">
+                            <p>Analyzing market patterns...</p>
+                        </div>
+                    )}
                 </HackerAnimation>
             )}
         </AnimatePresence>
