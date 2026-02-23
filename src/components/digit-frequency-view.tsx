@@ -22,6 +22,7 @@ interface DigitFrequencyViewProps {
     selectedMarket: string;
     onMarketChange: (market: string) => void;
     decimalPlaces: number;
+    priceHistory: { time: number; price: number }[];
 }
 
 const digitColors = [
@@ -46,6 +47,7 @@ export function DigitFrequencyView({
     selectedMarket,
     onMarketChange,
     decimalPlaces,
+    priceHistory
 }: DigitFrequencyViewProps) {
     const { highestDigit, lowestDigit, chartData } = React.useMemo(() => {
         if (lastDigitTicks.length === 0) {
@@ -273,7 +275,7 @@ export function DigitFrequencyView({
                     <CardTitle className="text-base font-semibold">Digit Pattern</CardTitle>
                 </CardHeader>
                 <CardContent className="flex flex-wrap gap-2">
-                    {lastDigitTicks.slice(0, 30).reverse().map((digit, i) => (
+                    {lastDigitTicks.slice(0, 30).map((digit, i) => (
                         <div key={i} className={cn("flex items-center justify-center w-8 h-8 rounded-full font-bold text-white")} style={{ backgroundColor: digitColors[digit] }}>
                             {digit}
                         </div>
@@ -535,7 +537,7 @@ export function DigitFrequencyView({
                                             <p className="font-bold text-primary text-lg">{price.toFixed(decimalPlaces)}</p>
                                         </div>
                                     </div>
-                                     <RiseFallChart lastDigitTicks={lastDigitTicks} />
+                                     <RiseFallChart priceHistory={priceHistory} decimalPlaces={decimalPlaces} />
                                     <div className="grid grid-cols-2 items-center gap-4 mt-4">
                                         <div className="space-y-3">
                                             <div>

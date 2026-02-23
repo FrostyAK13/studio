@@ -4,8 +4,8 @@ import * as React from 'react';
 import {
   LineChart,
   Line,
-  BarChart,
-  Bar,
+  AreaChart,
+  Area,
   XAxis,
   YAxis,
   CartesianGrid,
@@ -15,36 +15,46 @@ import {
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { ChartContainer, ChartTooltipContent } from '@/components/ui/chart';
-import { CandlestickChart, LineChart as LineChartIcon } from 'lucide-react';
+import { LineChart as LineChartIcon, AreaChart as AreaChartIcon } from 'lucide-react';
 
 interface RiseFallChartProps {
-  lastDigitTicks: number[];
+  priceHistory: { time: number; price: number }[];
+  decimalPlaces: number;
 }
 
-export function RiseFallChart({ lastDigitTicks }: RiseFallChartProps) {
-  const [chartType, setChartType] = React.useState<'line' | 'bar'>('line');
-
-  const chartData = React.useMemo(() => {
-    return lastDigitTicks
-      .slice(0, 50)
-      .reverse() // reverse to show oldest first
-      .map((digit, index) => ({
-        name: `${index + 1}`,
-        digit: digit,
-      }));
-  }, [lastDigitTicks]);
+export function RiseFallChart({ priceHistory, decimalPlaces }: RiseFallChartProps) {
+  const [chartType, setChartType] = React.useState<'area' | 'line'>('area');
 
   const chartConfig = {
-    digit: {
-      label: 'Digit',
+    price: {
+      label: 'Price',
       color: 'hsl(var(--primary))',
     },
   };
+
+  const domain = React.useMemo(() => {
+      if (priceHistory.length < 2) return ['auto', 'auto'];
+      const prices = priceHistory.map(d => d.price);
+      const min = Math.min(...prices);
+      const max = Math.max(...prices);
+      const padding = (max - min) * 0.1 || 1; // Add padding, ensure it's not 0
+      return [min - padding, max + padding];
+  }, [priceHistory]);
+
 
   return (
     <Card className="mt-4">
       <CardContent className="p-4">
         <div className="flex justify-end gap-2 mb-4">
+           <Button
+            size="icon"
+            variant={chartType === 'area' ? 'secondary' : 'ghost'}
+            onClick={() => setChartType('area')}
+            className="h-8 w-8"
+          >
+            <AreaChartIcon className="h-4 w-4" />
+            <span className="sr-only">Area Chart</span>
+          </Button>
           <Button
             size="icon"
             variant={chartType === 'line' ? 'secondary' : 'ghost'}
@@ -54,90 +64,102 @@ export function RiseFallChart({ lastDigitTicks }: RiseFallChartProps) {
             <LineChartIcon className="h-4 w-4" />
             <span className="sr-only">Line Chart</span>
           </Button>
-          <Button
-            size="icon"
-            variant={chartType === 'bar' ? 'secondary' : 'ghost'}
-            onClick={() => setChartType('bar')}
-            className="h-8 w-8"
-          >
-            <CandlestickChart className="h-4 w-4" />
-            <span className="sr-only">Bar Chart</span>
-          </Button>
         </div>
         <ChartContainer config={chartConfig} className="h-48 w-full">
           <ResponsiveContainer>
-            {chartType === 'line' ? (
-              <LineChart
-                data={chartData}
+            {chartType === 'area' ? (
+               <AreaChart
+                data={priceHistory}
                 margin={{ top: 5, right: 10, left: -20, bottom: 0 }}
               >
+                <defs>
+                  <linearGradient id="fillPrice" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="5%" stopColor="var(--color-price)" stopOpacity={0.8}/>
+                    <stop offset="95%" stopColor="var(--color-price)" stopOpacity={0.1}/>
+                  </linearGradient>
+                </defs>
                 <CartesianGrid vertical={false} strokeDasharray="3 3" />
                 <XAxis
-                  dataKey="name"
+                  dataKey="time"
+                  type="number"
+                  domain={['dataMin', 'dataMax']}
                   tickLine={false}
                   axisLine={false}
                   tickMargin={8}
                   tick={{ fontSize: 10 }}
-                  interval="preserveStartEnd"
+                  tickFormatter={(unixTime) => new Date(unixTime).toLocaleTimeString([], { minute: '2-digit', second: '2-digit' })}
                 />
                 <YAxis
-                  domain={[0, 9]}
-                  allowDecimals={false}
+                  domain={domain}
+                  orientation="right"
                   tickLine={false}
                   axisLine={false}
                   tickMargin={8}
-                  tickCount={10}
+                  tickFormatter={(value) => typeof value === 'number' ? value.toFixed(decimalPlaces) : ''}
+                  tick={{ fontSize: 10 }}
                 />
                 <Tooltip
-                  cursor={false}
+                  cursor={{ stroke: "hsl(var(--accent))" }} 
                   content={
                     <ChartTooltipContent
-                      formatter={(value, name, item) => `${item.payload.name}: ${value}`}
+                      formatter={(value) => typeof value === 'number' ? value.toFixed(decimalPlaces) : ''}
+                      indicator="dot"
+                    />
+                  }
+                />
+                <Area
+                  dataKey="price"
+                  type="monotone"
+                  stroke="var(--color-price)"
+                  fill="url(#fillPrice)"
+                  strokeWidth={2}
+                  dot={false}
+                  isAnimationActive={false}
+                />
+              </AreaChart>
+            ) : (
+               <LineChart
+                data={priceHistory}
+                margin={{ top: 5, right: 10, left: -20, bottom: 0 }}
+              >
+                <CartesianGrid vertical={false} strokeDasharray="3 3" />
+                <XAxis
+                  dataKey="time"
+                  type="number"
+                  domain={['dataMin', 'dataMax']}
+                  tickLine={false}
+                  axisLine={false}
+                  tickMargin={8}
+                  tick={{ fontSize: 10 }}
+                   tickFormatter={(unixTime) => new Date(unixTime).toLocaleTimeString([], { minute: '2-digit', second: '2-digit' })}
+                />
+                <YAxis
+                  domain={domain}
+                  orientation="right"
+                  tickLine={false}
+                  axisLine={false}
+                  tickMargin={8}
+                  tickFormatter={(value) => typeof value === 'number' ? value.toFixed(decimalPlaces) : ''}
+                  tick={{ fontSize: 10 }}
+                />
+                <Tooltip
+                  cursor={{ stroke: "hsl(var(--accent))" }} 
+                  content={
+                    <ChartTooltipContent
+                      formatter={(value) => typeof value === 'number' ? value.toFixed(decimalPlaces) : ''}
                       indicator="dot"
                     />
                   }
                 />
                 <Line
-                  dataKey="digit"
+                  dataKey="price"
                   type="monotone"
-                  stroke="var(--color-digit)"
+                  stroke="var(--color-price)"
                   strokeWidth={2}
-                  dot={true}
+                  dot={false}
+                  isAnimationActive={false}
                 />
               </LineChart>
-            ) : (
-              <BarChart
-                data={chartData}
-                margin={{ top: 5, right: 10, left: -20, bottom: 0 }}
-              >
-                <CartesianGrid vertical={false} strokeDasharray="3 3" />
-                <XAxis
-                  dataKey="name"
-                  tickLine={false}
-                  axisLine={false}
-                  tickMargin={8}
-                  tick={{ fontSize: 10 }}
-                  interval="preserveStartEnd"
-                />
-                <YAxis
-                  domain={[0, 9]}
-                  allowDecimals={false}
-                  tickLine={false}
-                  axisLine={false}
-                  tickMargin={8}
-                  tickCount={10}
-                />
-                <Tooltip
-                   cursor={false}
-                  content={
-                    <ChartTooltipContent
-                       formatter={(value, name, item) => `Tick ${item.payload.name}: ${value}`}
-                      indicator="dot"
-                    />
-                  }
-                />
-                <Bar dataKey="digit" fill="var(--color-digit)" radius={2} />
-              </BarChart>
             )}
           </ResponsiveContainer>
         </ChartContainer>

@@ -1,7 +1,7 @@
 'use client';
 
 import * as React from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { AnimatePresence } from 'framer-motion';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
@@ -19,9 +19,10 @@ interface RiseFallAnalysisProps {
   selectedMarket: string;
   price: number;
   decimalPlaces: number;
+  priceHistory: { time: number; price: number }[];
 }
 
-export function RiseFallAnalysis({ lastDigitTicks, selectedMarket, price, decimalPlaces }: RiseFallAnalysisProps) {
+export function RiseFallAnalysis({ lastDigitTicks, selectedMarket, price, decimalPlaces, priceHistory }: RiseFallAnalysisProps) {
   const [outcomes, setOutcomes] = React.useState<Outcome[]>([]);
   const [streak, setStreak] = React.useState<{ type: 'R' | 'F'; count: number }>({ type: 'R', count: 0 });
   const [percentages, setPercentages] = React.useState({ rise: 0, fall: 0 });
@@ -185,7 +186,7 @@ export function RiseFallAnalysis({ lastDigitTicks, selectedMarket, price, decima
             </div>
         </div>
 
-        <RiseFallChart lastDigitTicks={lastDigitTicks} />
+        <RiseFallChart priceHistory={priceHistory} decimalPlaces={decimalPlaces} />
 
         <div className="flex justify-center flex-wrap gap-2 my-6 min-h-[56px]">
             {[...displayedOutcomes].reverse().map((outcome, index) => (
