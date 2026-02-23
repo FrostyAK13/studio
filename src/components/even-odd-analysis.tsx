@@ -89,9 +89,11 @@ export function EvenOddAnalysis({ lastDigitTicks, selectedMarket }: { lastDigitT
 
         const initialResults = [
           'Analysis Complete!',
-          `Predicted Entry: ${predictedOutcome === 'E' ? 'EVEN' : 'ODD'}`,
+          `--> Predicted Entry: ${predictedOutcome === 'E' ? 'EVEN' : 'ODD'}`,
+          '',
           `Even Probability: ${percentages.even.toFixed(2)}%`,
           `Odd Probability: ${percentages.odd.toFixed(2)}%`,
+          `Current Streak: ${streak.count}x ${streak.type === 'E' ? 'Even' : 'Odd'}`,
           ''
         ];
 

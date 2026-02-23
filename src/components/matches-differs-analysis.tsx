@@ -69,42 +69,47 @@ export function MatchesDiffersAnalysis({ lastDigitTicks, selectedMarket }: { las
     
     setIsScanning(true);
 
-    if (lastDigitTicks.length < 10) {
-      setTimeout(() => {
-          setScanResultLines(['Not enough data. Need at least 10 ticks.']);
-          setIsScanning(false);
-          setTimeout(() => setScanResultLines(null), 3000);
-      }, 1000);
-      return;
+    if (outcomes.length < 10) {
+        setTimeout(() => {
+            setScanResultLines(['Not enough data. Need at least 10 ticks.']);
+            setIsScanning(false);
+            setTimeout(() => setScanResultLines(null), 3000);
+        }, 1000);
+        return;
     }
 
     setTimeout(() => {
-      let bestDigit = 0;
-      let maxFrequency = -1;
+        let predictedOutcome: 'MATCH' | 'DIFFER';
+        const entryDigit = selectedDigit;
+        let reasoning: string;
 
-      if (lastDigitTicks.length > 0) {
-          const counts = Array(10).fill(0);
-          for (const tick of lastDigitTicks) {
-              counts[tick]++;
-          }
-
-          for (let i = 0; i < 10; i++) {
-              if (counts[i] > maxFrequency) {
-                  maxFrequency = counts[i];
-                  bestDigit = i;
-              }
-          }
-      }
-      handleSelectDigit(bestDigit);
-      
-      const tempOutcomes = lastDigitTicks.map(digit => (digit === bestDigit ? 'M' : 'D'));
-      const matchCount = tempOutcomes.filter(o => o === 'M').length;
-      const matchPercentage = lastDigitTicks.length > 0 ? (matchCount / lastDigitTicks.length) * 100 : 0;
+        // Strategy: Follow the stronger probability unless a long streak suggests a reversal.
+        if (streak.count >= 4) { // 4 is a decent streak for a 1/10 vs 9/10 event
+             if(streak.type === 'M') {
+                predictedOutcome = 'DIFFER';
+                reasoning = `Long streak of matches (${streak.count}x) suggests a reversal.`;
+             } else {
+                predictedOutcome = 'MATCH';
+                reasoning = `Long streak of differs (${streak.count}x) suggests a reversal.`;
+             }
+        } else if (percentages.matches > 15) { // 10% is baseline, 15% is a significant deviation
+            predictedOutcome = 'MATCH';
+            reasoning = `High probability of MATCH (${percentages.matches.toFixed(1)}%).`;
+        } else if (percentages.differs > 95) { // 90% is baseline
+             predictedOutcome = 'DIFFER';
+             reasoning = `Very high probability of DIFFER (${percentages.differs.toFixed(1)}%).`;
+        } else {
+            predictedOutcome = 'DIFFER'; // Default to the safer bet
+            reasoning = 'No strong signal found, defaulting to higher probability trade.';
+        }
       
       const initialResults = [
         'Analysis Complete!',
-        `Predicted Entry: MATCH with ${bestDigit}`,
-        `Match Probability: ${matchPercentage.toFixed(2)}%`,
+        `--> Predicted Entry: ${predictedOutcome} on digit ${entryDigit}`,
+        '',
+        `Reasoning: ${reasoning}`,
+        `Match Prob: ${percentages.matches.toFixed(2)}%`,
+        `Differ Prob: ${percentages.differs.toFixed(2)}%`,
         ''
       ];
 
