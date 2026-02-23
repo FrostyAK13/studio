@@ -3,20 +3,20 @@
 import * as React from 'react';
 import { Area, AreaChart, ResponsiveContainer, CartesianGrid, YAxis } from 'recharts';
 
-const CustomDot = (props: any) => {
-    const { cx, cy, index } = props;
-    const isLastPoint = index === props.owner.points.length - 1;
-    if (isLastPoint && cx) {
-        return <circle cx={cx} cy={cy} r={4} strokeWidth={2} fill={'hsl(var(--foreground))'} stroke="hsl(var(--background))" />;
-    }
-    return null;
-};
-
 interface SimplePriceChartProps {
   data: { price: number }[];
 }
 
 export function SimplePriceChart({ data }: SimplePriceChartProps) {
+    const CustomDot = (props: any) => {
+        const { cx, cy, index } = props;
+        const isLastPoint = index === data.length - 1;
+        if (isLastPoint && cx) {
+            return <circle cx={cx} cy={cy} r={4} strokeWidth={2} fill={'hsl(var(--foreground))'} stroke="hsl(var(--background))" />;
+        }
+        return null;
+    };
+
     if (!data || data.length === 0) {
         return <div className="h-[120px] w-full flex items-center justify-center bg-muted rounded-md text-sm text-muted-foreground">Loading chart data...</div>;
     }
