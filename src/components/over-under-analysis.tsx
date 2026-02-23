@@ -133,10 +133,21 @@ export function OverUnderAnalysis({ lastDigitTicks, selectedMarket }: OverUnderA
             }
         }
         
+        let entryPointDigit: number;
+        const predictionText = `${predictedOutcome} ${predictedDigit}`;
+
+        if (predictedOutcome === 'OVER') {
+            // Random digit between predictedDigit + 1 and 9
+            entryPointDigit = Math.floor(Math.random() * (9 - (predictedDigit + 1) + 1)) + (predictedDigit + 1);
+        } else { // UNDER
+            // Random digit between 0 and predictedDigit - 1
+            entryPointDigit = Math.floor(Math.random() * predictedDigit);
+        }
+
         const initialResults = [
             'Analysis Complete!',
-            `--> Prediction: ${predictedOutcome}`,
-            `--> Entry Point: ${predictedDigit}`,
+            `--> Prediction: ${predictionText}`,
+            `--> Entry Point: ${entryPointDigit}`,
             '',
             `Reasoning: ${reasoning}`,
             ''

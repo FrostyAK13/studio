@@ -110,11 +110,22 @@ export function MatchesDiffersAnalysis({ lastDigitTicks, selectedMarket }: { las
             entryDigit = selectedDigit;
             reasoning = `No strong MATCH signal found. Defaulting to a DIFFER trade on the analyzed digit.`;
         }
+
+      let entryPointDigitExample: number;
+      const predictionText = `${predictedOutcome} ${entryDigit}`;
+
+      if (predictedOutcome === 'MATCH') {
+        entryPointDigitExample = entryDigit;
+      } else { // DIFFER
+        do {
+          entryPointDigitExample = Math.floor(Math.random() * 10);
+        } while (entryPointDigitExample === entryDigit);
+      }
       
       const initialResults = [
         'Analysis Complete!',
-        `--> Prediction: ${predictedOutcome}`,
-        `--> Entry Point Digit: ${entryDigit}`,
+        `--> Prediction: ${predictionText}`,
+        `--> Entry Point: ${entryPointDigitExample}`,
         '',
         `Reasoning: ${reasoning}`,
         `Analyzed Frequency for Digit ${entryDigit}: ${digitPercentages[entryDigit].toFixed(2)}%`,

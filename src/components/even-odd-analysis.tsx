@@ -86,10 +86,21 @@ export function EvenOddAnalysis({ lastDigitTicks, selectedMarket }: { lastDigitT
         } else {
             predictedOutcome = percentages.even >= percentages.odd ? 'E' : 'O';
         }
+        
+        let entryPointDigit: number;
+        const predictionText = predictedOutcome === 'E' ? 'EVEN' : 'ODD';
+        if (predictedOutcome === 'E') {
+            // Random even digit
+            entryPointDigit = Math.floor(Math.random() * 5) * 2;
+        } else { // ODD
+            // Random odd digit
+            entryPointDigit = Math.floor(Math.random() * 5) * 2 + 1;
+        }
 
         const initialResults = [
           'Analysis Complete!',
-          `--> Predicted Entry: ${predictedOutcome === 'E' ? 'EVEN' : 'ODD'}`,
+          `--> Prediction: ${predictionText}`,
+          `--> Entry Point: ${entryPointDigit}`,
           '',
           `Even Probability: ${percentages.even.toFixed(2)}%`,
           `Odd Probability: ${percentages.odd.toFixed(2)}%`,
