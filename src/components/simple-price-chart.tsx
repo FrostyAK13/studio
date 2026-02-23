@@ -12,7 +12,7 @@ export function SimplePriceChart({ data }: SimplePriceChartProps) {
         const { cx, cy, index } = props;
         const isLastPoint = index === data.length - 1;
         if (isLastPoint && cx) {
-            return <circle cx={cx} cy={cy} r={4} strokeWidth={2} fill={'hsl(var(--foreground))'} stroke="hsl(var(--background))" />;
+            return <circle key={index} cx={cx} cy={cy} r={4} strokeWidth={2} fill={'hsl(var(--foreground))'} stroke="hsl(var(--background))" />;
         }
         return null;
     };
