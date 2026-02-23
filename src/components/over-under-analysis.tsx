@@ -7,16 +7,14 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
 import { cn } from '@/lib/utils';
 import { ScanLine, Loader2 } from 'lucide-react';
-import { getAIPrediction } from '@/app/actions';
 
 type Outcome = 'O' | 'U';
 
 interface OverUnderAnalysisProps {
   lastDigitTicks: number[];
-  selectedMarket: string;
 }
 
-export function OverUnderAnalysis({ lastDigitTicks, selectedMarket }: OverUnderAnalysisProps) {
+export function OverUnderAnalysis({ lastDigitTicks }: OverUnderAnalysisProps) {
   const [selectedDigit, setSelectedDigit] = React.useState<number>(5);
   const [outcomes, setOutcomes] = React.useState<Outcome[]>([]);
   const [streak, setStreak] = React.useState<{ type: Outcome; count: number }>({ type: 'U', count: 0 });
@@ -75,7 +73,7 @@ export function OverUnderAnalysis({ lastDigitTicks, selectedMarket }: OverUnderA
     }
   }, [lastDigitTicks, selectedDigit]);
 
-  const handleScan = async () => {
+  const handleScan = () => {
     if (showScanner) {
         setShowScanner(false);
         setPrediction(null);
@@ -83,7 +81,7 @@ export function OverUnderAnalysis({ lastDigitTicks, selectedMarket }: OverUnderA
         return;
     }
 
-    if (lastDigitTicks.length < 25) {
+    if (outcomes.length < 25) {
         setError("Not enough tick data to run analysis. Please wait for at least 25 ticks.");
         setShowScanner(true);
         return;
@@ -98,26 +96,55 @@ export function OverUnderAnalysis({ lastDigitTicks, selectedMarket }: OverUnderA
         setAnimatedDigit(Math.floor(Math.random() * 10));
     }, 80);
 
-    try {
-        const aiPrediction = await getAIPrediction({
-            market: selectedMarket,
-            ticks: lastDigitTicks.slice(0, 100), // Send last 100 ticks
-        });
-
-        if (aiPrediction) {
-            setPrediction(aiPrediction);
-            handleSelectDigit(aiPrediction.digit);
-        } else {
-            setError("The AI could not determine a prediction. Please try again later.");
-        }
-    } catch (e) {
-        console.error("AI Prediction Error:", e);
-        setError("An error occurred while getting the AI prediction.");
-    } finally {
+    setTimeout(() => {
         clearInterval(animationInterval);
+        
+        let predictedOutcome: 'OVER' | 'UNDER';
+        let predictedDigit: number;
+        let reasoning: string;
+
+        // Strategy:
+        // 1. If 'Over' is heavily dominant (>65%), predict OVER a low digit.
+        // 2. If 'Under' is heavily dominant (>65%), predict UNDER a high digit.
+        // 3. If there's a long streak (>= 5), predict a reversal.
+        // 4. Otherwise, predict the current dominant trend.
+
+        if (percentages.over > 65) {
+            predictedOutcome = 'OVER';
+            predictedDigit = 2;
+            reasoning = `Over ${percentages.over.toFixed(0)}% of recent ticks were 'Over'. Predicting a continuation of the trend over a low digit.`;
+        } else if (percentages.under > 65) {
+            predictedOutcome = 'UNDER';
+            predictedDigit = 7;
+            reasoning = `Over ${percentages.under.toFixed(0)}% of recent ticks were 'Under'. Predicting a continuation of the trend under a high digit.`;
+        } else if (streak.count >= 5) {
+            // Predict reversal
+            if (streak.type === 'O') {
+                predictedOutcome = 'UNDER';
+                predictedDigit = selectedDigit;
+                reasoning = `A long streak of 'Over' (${streak.count}x) suggests a potential reversal.`;
+            } else {
+                predictedOutcome = 'OVER';
+                predictedDigit = selectedDigit;
+                reasoning = `A long streak of 'Under' (${streak.count}x) suggests a potential reversal.`;
+            }
+        } else {
+            // Predict continuation of dominant trend
+            if (percentages.over >= percentages.under) {
+                predictedOutcome = 'OVER';
+                predictedDigit = selectedDigit;
+                reasoning = 'The market is currently showing a tendency for digits to be over the selected value.';
+            } else {
+                predictedOutcome = 'UNDER';
+                predictedDigit = selectedDigit;
+                reasoning = 'The market is currently showing a tendency for digits to be under the selected value.';
+            }
+        }
+
+        setPrediction({ outcome: predictedOutcome, digit: predictedDigit, reasoning: reasoning });
         setShowScanner(true);
         setIsScanning(false);
-    }
+    }, 2500);
   };
 
   const displayedOutcomes = showAllOutcomes ? outcomes.slice(0, 24) : outcomes.slice(0, 8);
@@ -205,7 +232,7 @@ export function OverUnderAnalysis({ lastDigitTicks, selectedMarket }: OverUnderA
             >
                 <Card className="w-full">
                     <CardHeader>
-                        <CardTitle className="text-lg">AI is Analyzing Market...</CardTitle>
+                        <CardTitle className="text-lg">Analyzing Market...</CardTitle>
                     </CardHeader>
                     <CardContent>
                         <div className="flex justify-center items-center h-24 overflow-hidden">
@@ -238,7 +265,7 @@ export function OverUnderAnalysis({ lastDigitTicks, selectedMarket }: OverUnderA
                 >
                   <Card className="w-full">
                     <CardHeader>
-                        <CardTitle className="text-lg">AI Prediction</CardTitle>
+                        <CardTitle className="text-lg">Prediction</CardTitle>
                     </CardHeader>
                     <CardContent>
                         {prediction ? (
