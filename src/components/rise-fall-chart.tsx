@@ -105,16 +105,18 @@ export function RiseFallChart({
           setChartData(candles);
         }
       } else if (data.msg_type === 'tick') {
+        if (timeInterval > 0) return; // Ignore ticks if we are on candles
         const tick = {
           time: data.tick.epoch * 1000,
           price: data.tick.quote,
         };
         setChartData((prev) => [...prev, tick].slice(-1000));
       } else if (data.msg_type === 'ohlc') {
-        const candle = { ...data.ohlc, time: data.ohlc.epoch * 1000 };
+        if (timeInterval === 0) return; // Ignore ohlc if we are on ticks
+        const candle = { ...data.ohlc, time: data.ohlc.open_time * 1000 };
         setChartData((prev) => {
           const newHistory = [...prev];
-          if (newHistory.length > 0 && newHistory[newHistory.length - 1]?.epoch === candle.epoch) {
+          if (newHistory.length > 0 && newHistory[newHistory.length - 1]?.time === candle.time) {
             newHistory[newHistory.length - 1] = candle;
             return newHistory;
           }
@@ -213,26 +215,46 @@ export function RiseFallChart({
       return <Skeleton className="h-48 w-full" />;
     }
 
-    if (chartType === 'area') {
+    if (timeInterval === 0) { // Always show area chart for Ticks
+      const tickData = chartData.map(t => ({ time: t.time, price: parseFloat(t.price)}));
       return (
-        <AreaChart data={chartData} margin={{ top: 5, right: 10, left: -20, bottom: 0 }}>
+        <AreaChart data={tickData} margin={{ top: 5, right: 10, left: -20, bottom: 0 }}>
           <defs>
             <linearGradient id="fillPrice" x1="0" y1="0" x2="0" y2="1">
-              <stop offset="5%" stopColor="var(--color-price)" stopOpacity={0.8} />
-              <stop offset="95%" stopColor="var(--color-price)" stopOpacity={0.1} />
+              <stop offset="5%" stopColor="hsl(var(--primary))" stopOpacity={0.8} />
+              <stop offset="95%" stopColor="hsl(var(--primary))" stopOpacity={0.1} />
             </linearGradient>
           </defs>
           <CartesianGrid vertical={false} strokeDasharray="3 3" />
           <XAxis dataKey="time" type="number" domain={['dataMin', 'dataMax']} tickLine={false} axisLine={false} tickMargin={8} tick={{ fontSize: 10 }} tickFormatter={(unixTime) => new Date(unixTime).toLocaleTimeString([], { minute: '2-digit', second: '2-digit' })} />
           <YAxis domain={domain} orientation="right" tickLine={false} axisLine={false} tickMargin={8} tickFormatter={(value) => (typeof value === 'number' ? value.toFixed(decimalPlaces) : '')} tick={{ fontSize: 10 }} />
           <Tooltip cursor={{ stroke: 'hsl(var(--accent))' }} content={<ChartTooltipContent formatter={(value) => (typeof value === 'number' ? value.toFixed(decimalPlaces) : '')} indicator="dot" />} />
-          <Area dataKey="price" type="monotone" stroke="var(--color-price)" fill={'url(#fillPrice)'} strokeWidth={2} dot={false} isAnimationActive={false} />
+          <Area dataKey="price" type="monotone" stroke="hsl(var(--primary))" fill={'url(#fillPrice)'} strokeWidth={2} dot={false} isAnimationActive={false} />
         </AreaChart>
       );
     }
+    
+    if (chartType === 'area') {
+        const areaData = chartData.map(c => ({ time: c.time, price: parseFloat(c.close)}));
+        return (
+             <AreaChart data={areaData} margin={{ top: 5, right: 10, left: -20, bottom: 0 }}>
+                <defs>
+                    <linearGradient id="fillPriceArea" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="5%" stopColor="hsl(var(--primary))" stopOpacity={0.8} />
+                    <stop offset="95%" stopColor="hsl(var(--primary))" stopOpacity={0.1} />
+                    </linearGradient>
+                </defs>
+                <CartesianGrid vertical={false} strokeDasharray="3 3" />
+                <XAxis dataKey="time" type="number" domain={['dataMin', 'dataMax']} tickLine={false} axisLine={false} tickMargin={8} tick={{ fontSize: 10 }} tickFormatter={(unixTime) => new Date(unixTime).toLocaleTimeString([], { hour:'2-digit', minute: '2-digit' })} />
+                <YAxis domain={domain} orientation="right" tickLine={false} axisLine={false} tickMargin={8} tickFormatter={(value) => (typeof value === 'number' ? value.toFixed(decimalPlaces) : '')} tick={{ fontSize: 10 }} />
+                <Tooltip cursor={{ stroke: 'hsl(var(--accent))' }} content={<ChartTooltipContent formatter={(value) => (typeof value === 'number' ? value.toFixed(decimalPlaces) : '')} indicator="dot" />} />
+                <Area dataKey="price" type="monotone" stroke="hsl(var(--primary))" fill={'url(#fillPriceArea)'} strokeWidth={2} dot={false} isAnimationActive={false} />
+            </AreaChart>
+        )
+    }
 
     return (
-      <ComposedChart data={ohlcData} margin={{ top: 5, right: 10, left: -20, bottom: 0 }} barCategoryGap={1}>
+      <ComposedChart data={ohlcData} margin={{ top: 5, right: 10, left: -20, bottom: 0 }} barCategoryGap="20%">
         <CartesianGrid vertical={false} strokeDasharray="3 3" />
         <XAxis dataKey="time" type="number" domain={['dataMin', 'dataMax']} tickLine={false} axisLine={false} tickMargin={8} tick={{ fontSize: 10 }} tickFormatter={(unixTime) => new Date(unixTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })} />
         <YAxis domain={domain} orientation="right" tickLine={false} axisLine={false} tickMargin={8} tickFormatter={(value) => (typeof value === 'number' ? value.toFixed(decimalPlaces) : '')} tick={{ fontSize: 10 }} />
@@ -256,7 +278,7 @@ export function RiseFallChart({
         <Bar dataKey="wick" strokeWidth={1} barSize={1} isAnimationActive={false}>
           {ohlcData.map((entry, index) => <Cell key={`cell-wick-${index}`} stroke={entry.color} fill={entry.color} />)}
         </Bar>
-        <Bar dataKey="body" barSize={10} isAnimationActive={false}>
+        <Bar dataKey="body" isAnimationActive={false}>
           {ohlcData.map((entry, index) => <Cell key={`cell-body-${index}`} stroke={entry.color} fill={entry.fillColor} />)}
         </Bar>
       </ComposedChart>
@@ -281,7 +303,7 @@ export function RiseFallChart({
             </div>
             <Popover>
                 <PopoverTrigger asChild>
-                <Button size="icon" variant="ghost" className="h-8 w-8">
+                <Button size="icon" variant="ghost" className="h-8 w-8" disabled={timeInterval === 0}>
                     {chartTypes.find(c => c.value === chartType)?.icon || <BarChart2 className="h-4 w-4" />}
                 </Button>
                 </PopoverTrigger>
