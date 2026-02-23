@@ -7,6 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
 import { cn } from '@/lib/utils';
 import { ScanLine, Loader2 } from 'lucide-react';
+import { getAIPrediction } from '@/app/actions';
 
 type Outcome = 'O' | 'U';
 
@@ -23,8 +24,10 @@ export function OverUnderAnalysis({ lastDigitTicks, selectedMarket }: OverUnderA
   const [showAllOutcomes, setShowAllOutcomes] = React.useState(false);
   const [showScanner, setShowScanner] = React.useState(false);
   const [isScanning, setIsScanning] = React.useState(false);
-  const [prediction, setPrediction] = React.useState<{ outcome: Outcome; digit: number } | null>(null);
+  const [prediction, setPrediction] = React.useState<{ outcome: 'OVER' | 'UNDER'; digit: number; reasoning: string } | null>(null);
   const [animatedDigit, setAnimatedDigit] = React.useState(0);
+  const [error, setError] = React.useState<string | null>(null);
+
 
   const handleSelectDigit = (digit: number) => {
     setSelectedDigit(digit);
@@ -72,83 +75,49 @@ export function OverUnderAnalysis({ lastDigitTicks, selectedMarket }: OverUnderA
     }
   }, [lastDigitTicks, selectedDigit]);
 
-  const handleScan = () => {
+  const handleScan = async () => {
     if (showScanner) {
         setShowScanner(false);
         setPrediction(null);
+        setError(null);
+        return;
+    }
+
+    if (lastDigitTicks.length < 25) {
+        setError("Not enough tick data to run analysis. Please wait for at least 25 ticks.");
+        setShowScanner(true);
         return;
     }
 
     setIsScanning(true);
     setShowScanner(false);
     setPrediction(null);
+    setError(null);
     
     const animationInterval = setInterval(() => {
         setAnimatedDigit(Math.floor(Math.random() * 10));
     }, 80);
 
-    setTimeout(() => {
+    try {
+        const aiPrediction = await getAIPrediction({
+            market: selectedMarket,
+            ticks: lastDigitTicks.slice(0, 100), // Send last 100 ticks
+        });
+
+        if (aiPrediction) {
+            setPrediction(aiPrediction);
+            handleSelectDigit(aiPrediction.digit);
+        } else {
+            setError("The AI could not determine a prediction. Please try again later.");
+        }
+    } catch (e) {
+        console.error("AI Prediction Error:", e);
+        setError("An error occurred while getting the AI prediction.");
+    } finally {
         clearInterval(animationInterval);
-
-        const is1sIndex = selectedMarket.includes('1HZ');
-        const LOOKBACK = is1sIndex ? 35 : 25;
-        const MIN_LOSS_ZONE_DOMINANCE = is1sIndex ? 14 : 10;
-        const MIN_STREAK = is1sIndex ? 5 : 4;
-        const BIAS_STRENGTH_THRESHOLD = 0.40;
-
-        if (lastDigitTicks.length < LOOKBACK) {
-            setIsScanning(false);
-            setShowScanner(true);
-            setPrediction(null);
-            return;
-        }
-
-        const recentTicks = lastDigitTicks.slice(0, LOOKBACK);
-
-        // Check for OVER 2 signal
-        const LOW_LOSS_ZONE = [0, 1, 2];
-        const lowLossZoneCount = recentTicks.filter(tick => LOW_LOSS_ZONE.includes(tick)).length;
-        const lowBiasStrength = lowLossZoneCount / LOOKBACK;
-
-        if (lowBiasStrength >= BIAS_STRENGTH_THRESHOLD && lowLossZoneCount >= MIN_LOSS_ZONE_DOMINANCE) {
-            const mostRecentTick = lastDigitTicks[0];
-            const previousTicks = lastDigitTicks.slice(1, 1 + MIN_STREAK);
-            const isStreakPresent = previousTicks.length === MIN_STREAK && previousTicks.every(tick => LOW_LOSS_ZONE.includes(tick));
-
-            if (mostRecentTick >= 3 && isStreakPresent) {
-                setPrediction({ outcome: 'O', digit: 2 });
-                handleSelectDigit(2);
-                setShowScanner(true);
-                setIsScanning(false);
-                return;
-            }
-        }
-
-        // Check for UNDER 7 signal
-        const HIGH_LOSS_ZONE = [7, 8, 9];
-        const highLossZoneCount = recentTicks.filter(tick => HIGH_LOSS_ZONE.includes(tick)).length;
-        const highBiasStrength = highLossZoneCount / LOOKBACK;
-
-        if (highBiasStrength >= BIAS_STRENGTH_THRESHOLD && highLossZoneCount >= MIN_LOSS_ZONE_DOMINANCE) {
-            const mostRecentTick = lastDigitTicks[0];
-            const previousTicks = lastDigitTicks.slice(1, 1 + MIN_STREAK);
-            const isStreakPresent = previousTicks.length === MIN_STREAK && previousTicks.every(tick => HIGH_LOSS_ZONE.includes(tick));
-
-            if (mostRecentTick <= 6 && isStreakPresent) {
-                setPrediction({ outcome: 'U', digit: 7 });
-                handleSelectDigit(7);
-                setShowScanner(true);
-                setIsScanning(false);
-                return;
-            }
-        }
-
-        // No signal found
-        setPrediction(null);
         setShowScanner(true);
         setIsScanning(false);
-
-    }, 2500);
+    }
   };
 
   const displayedOutcomes = showAllOutcomes ? outcomes.slice(0, 24) : outcomes.slice(0, 8);
@@ -236,7 +205,7 @@ export function OverUnderAnalysis({ lastDigitTicks, selectedMarket }: OverUnderA
             >
                 <Card className="w-full">
                     <CardHeader>
-                        <CardTitle className="text-lg">Analyzing Market...</CardTitle>
+                        <CardTitle className="text-lg">AI is Analyzing Market...</CardTitle>
                     </CardHeader>
                     <CardContent>
                         <div className="flex justify-center items-center h-24 overflow-hidden">
@@ -269,19 +238,20 @@ export function OverUnderAnalysis({ lastDigitTicks, selectedMarket }: OverUnderA
                 >
                   <Card className="w-full">
                     <CardHeader>
-                        <CardTitle className="text-lg">Prediction</CardTitle>
+                        <CardTitle className="text-lg">AI Prediction</CardTitle>
                     </CardHeader>
                     <CardContent>
                         {prediction ? (
-                            <div className="text-center">
-                                <p className="text-sm text-muted-foreground">Next Outcome</p>
+                            <div className="text-center space-y-2">
+                                <p className="text-sm text-muted-foreground">Predicted Outcome</p>
                                 <p className="text-4xl font-bold text-primary">
-                                    {prediction.outcome === 'O' ? `OVER ${prediction.digit}` : `UNDER ${prediction.digit}`}
+                                    {`${prediction.outcome} ${prediction.digit}`}
                                 </p>
+                                <p className="text-sm text-muted-foreground pt-2 italic">"{prediction.reasoning}"</p>
                             </div>
                         ) : (
                             <div className="text-center">
-                                <p className="text-muted-foreground">No trading signal found.</p>
+                                <p className="text-muted-foreground">{error || "No trading signal found."}</p>
                             </div>
                         )}
                     </CardContent>
