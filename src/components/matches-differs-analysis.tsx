@@ -113,7 +113,8 @@ export function MatchesDiffersAnalysis({ lastDigitTicks, selectedMarket }: { las
       
       const initialResults = [
         'Analysis Complete!',
-        `--> Predicted Entry: ${predictedOutcome} on digit ${entryDigit}`,
+        `--> Prediction: ${predictedOutcome}`,
+        `--> Entry Point Digit: ${entryDigit}`,
         '',
         `Reasoning: ${reasoning}`,
         `Analyzed Frequency for Digit ${entryDigit}: ${digitPercentages[entryDigit].toFixed(2)}%`,

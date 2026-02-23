@@ -135,7 +135,8 @@ export function OverUnderAnalysis({ lastDigitTicks, selectedMarket }: OverUnderA
         
         const initialResults = [
             'Analysis Complete!',
-            `--> Predicted Entry: ${predictedOutcome} ${predictedDigit}`,
+            `--> Prediction: ${predictedOutcome}`,
+            `--> Entry Point: ${predictedDigit}`,
             '',
             `Reasoning: ${reasoning}`,
             ''
