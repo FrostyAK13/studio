@@ -26,7 +26,9 @@ export default function Loading() {
             <Skeleton className="h-[55vh] w-full" />
         </div>
         <div className="flex flex-col gap-4">
-            <div className="grid h-10 w-full grid-cols-3 rounded-md bg-muted p-1">
+            <div className="grid h-10 w-full grid-cols-5 rounded-md bg-muted p-1">
+                <Skeleton className="h-full w-full" />
+                <Skeleton className="h-full w-full" />
                 <Skeleton className="h-full w-full" />
                 <Skeleton className="h-full w-full" />
                 <Skeleton className="h-full w-full" />

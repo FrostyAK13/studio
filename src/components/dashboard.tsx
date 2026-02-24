@@ -7,6 +7,7 @@ import { AnalyzerView } from './analyzer-view';
 import { syntheticIndices } from '@/lib/mock-data';
 import { DigitFrequencyView } from './digit-frequency-view';
 import { InsightView } from './insight-view';
+import { VolatilityView } from './volatility-view';
 
 export function Dashboard() {
     const [price, setPrice] = React.useState(0);
@@ -16,27 +17,69 @@ export function Dashboard() {
     const [selectedMarket, setSelectedMarket] = React.useState(syntheticIndices[0].id);
     const [decimalPlaces, setDecimalPlaces] = React.useState(2);
 
+    const [tickTimestamps, setTickTimestamps] = React.useState<number[]>([]);
+    const [currentTps, setCurrentTps] = React.useState(0);
+    const [historicalTps, setHistoricalTps] = React.useState<{ time: string; tps: number }[]>([]);
+    const [highVolatilityDigits, setHighVolatilityDigits] = React.useState<number[]>([]);
+    const [lowVolatilityDigits, setLowVolatilityDigits] = React.useState<number[]>([]);
+    const HIGH_VOLATILITY_THRESHOLD = 5;
+    const LOW_VOLATILITY_THRESHOLD = 2;
+
     React.useEffect(() => {
         // Truncate the arrays if maxTicks is reduced
         setLastDigitTicks(prev => prev.slice(0, maxTicks));
         setPriceHistory(prev => prev.slice(0, maxTicks));
+        setTickTimestamps(prev => prev.slice(0, maxTicks));
     }, [maxTicks]);
+
+
+    React.useEffect(() => {
+        const tpsInterval = setInterval(() => {
+            const now = Date.now();
+            const oneSecondAgo = now - 1000;
+            const recentTicksCount = tickTimestamps.filter(t => t > oneSecondAgo).length;
+            setCurrentTps(recentTicksCount);
+
+            setHistoricalTps(prev => {
+                const newEntry = { 
+                    time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' }), 
+                    tps: recentTicksCount 
+                };
+                return [...prev, newEntry].slice(-60); // Keep last 60 seconds
+            });
+        }, 1000);
+
+        return () => clearInterval(tpsInterval);
+    }, [tickTimestamps]);
 
 
     React.useEffect(() => {
         setPrice(0);
         setLastDigitTicks([]);
         setPriceHistory([]);
+        setTickTimestamps([]);
+        setHighVolatilityDigits([]);
+        setLowVolatilityDigits([]);
+        setHistoricalTps([]);
 
         const ws = new WebSocket('wss://ws.binaryws.com/websockets/v3?app_id=84799');
 
         let pipSize: number | null = null;
-        let historyBuffer: number[] | null = null;
+        let historyBuffer: {time: number, price: number}[] | null = null;
 
-        const prependTickToState = (tick: { quote: number }, size: number) => {
+        const prependTickToState = (tick: { quote: number }, fromHistory = false) => {
             const newPrice = tick.quote;
-            const priceString = newPrice.toFixed(size);
+            const priceString = newPrice.toFixed(pipSize as number);
             const newDigit = parseInt(priceString.slice(-1));
+
+            if (!fromHistory) {
+                 if (currentTps > HIGH_VOLATILITY_THRESHOLD) {
+                    setHighVolatilityDigits(prev => [newDigit, ...prev].slice(0, 1000));
+                } else if (currentTps > 0 && currentTps < LOW_VOLATILITY_THRESHOLD) {
+                    setLowVolatilityDigits(prev => [newDigit, ...prev].slice(0, 1000));
+                }
+                setTickTimestamps(prev => [Date.now(), ...prev].slice(0, maxTicks));
+            }
 
             setPrice(newPrice);
             setLastDigitTicks(prevTicks => [newDigit, ...prevTicks].slice(0, maxTicks));
@@ -44,7 +87,7 @@ export function Dashboard() {
         };
 
         ws.onopen = () => {
-            ws.send(JSON.stringify({ "ticks_history": selectedMarket, "count": 100, "end": "latest", "subscribe": 1 }));
+            ws.send(JSON.stringify({ "ticks_history": selectedMarket, "count": 100, "end": "latest", "style": "ticks", "subscribe": 1 }));
         };
 
         ws.onmessage = (event) => {
@@ -56,47 +99,29 @@ export function Dashboard() {
             }
 
             if (data.msg_type === 'history') {
-                if (data.history && data.history.prices) {
-                    historyBuffer = data.history.prices;
+                if (data.history && data.history.times && data.history.prices) {
+                    historyBuffer = data.history.prices.map((price: number, index: number) => ({
+                        price: price,
+                        time: data.history.times[index]
+                    })).reverse(); // Newest is first
                 }
             }
 
             if (data.msg_type === 'tick') {
                 if (data.tick && typeof data.tick.quote === 'number' && typeof data.tick.pip_size === 'number') {
-                    const currentTick = data.tick;
-                    
                     if (pipSize === null) {
-                        // This is the first tick, so pipSize is now known.
-                        pipSize = currentTick.pip_size;
+                        pipSize = data.tick.pip_size;
                         setDecimalPlaces(pipSize);
                         
-                        const currentPrice = currentTick.quote;
-                        const priceString = currentPrice.toFixed(pipSize);
-                        const currentDigit = parseInt(priceString.slice(-1));
-                        setPrice(currentPrice);
-
                         if (historyBuffer) {
-                            // History arrived before this tick. Process history and this tick together.
-                            const historicalDigits = historyBuffer.map(p => {
-                                const priceString = p.toFixed(pipSize as number);
-                                return parseInt(priceString.slice(-1));
-                            }).reverse();
-                            
-                            const historicalPrices = historyBuffer.reverse();
-                            
-                            setLastDigitTicks([currentDigit, ...historicalDigits].slice(0, maxTicks));
-                            setPriceHistory([currentPrice, ...historicalPrices].slice(0, maxTicks));
-                            
-                            historyBuffer = null; // Clear buffer
-                        } else {
-                            // Unlikely, but if history hasn't arrived, start with this tick.
-                            setLastDigitTicks([currentDigit]);
-                            setPriceHistory([currentPrice]);
+                            // Process history first
+                            for (const historicalTick of historyBuffer) {
+                                prependTickToState({ quote: historicalTick.price }, true);
+                            }
+                            historyBuffer = null;
                         }
-                    } else {
-                        // Not the first tick, just prepend it.
-                        prependTickToState(currentTick, pipSize);
                     }
+                    prependTickToState(data.tick, false);
                 }
             }
         };
@@ -154,11 +179,12 @@ export function Dashboard() {
       </header>
       <main className="flex-1 p-4 sm:p-6">
         <Tabs defaultValue="scanner" className="w-full max-w-7xl mx-auto">
-            <TabsList className="grid w-full grid-cols-4 mb-6">
+            <TabsList className="grid w-full grid-cols-5 mb-6">
                 <TabsTrigger value="scanner">Scanner</TabsTrigger>
                 <TabsTrigger value="analyzer">Analyzer</TabsTrigger>
                 <TabsTrigger value="frequency">Frequency</TabsTrigger>
                 <TabsTrigger value="insight">Insight</TabsTrigger>
+                <TabsTrigger value="volatility">Volatility</TabsTrigger>
             </TabsList>
 
             <TabsContent value="scanner">
@@ -207,6 +233,17 @@ export function Dashboard() {
                     price={price}
                     decimalPlaces={decimalPlaces}
                     lastDigitTicks={lastDigitTicks}
+                    selectedMarket={selectedMarket}
+                    onMarketChange={setSelectedMarket}
+                />
+            </TabsContent>
+            
+            <TabsContent value="volatility">
+                <VolatilityView
+                    currentTps={currentTps}
+                    historicalTps={historicalTps}
+                    highVolatilityDigits={highVolatilityDigits}
+                    lowVolatilityDigits={lowVolatilityDigits}
                     selectedMarket={selectedMarket}
                     onMarketChange={setSelectedMarket}
                 />
