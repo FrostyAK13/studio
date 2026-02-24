@@ -8,6 +8,7 @@ import { syntheticIndices } from '@/lib/mock-data';
 import { Bar, BarChart, CartesianGrid, XAxis, YAxis, PieChart, Pie, Tooltip, ResponsiveContainer, Cell, Legend } from 'recharts';
 import { ChartContainer } from '@/components/ui/chart';
 import { Zap } from 'lucide-react';
+import { TickPacingVisualizer } from './tick-pacing-visualizer';
 
 interface CorrelationViewProps {
     currentTps: number;
@@ -16,6 +17,8 @@ interface CorrelationViewProps {
     lowVolatilityDigits: number[];
     selectedMarket: string;
     onMarketChange: (market: string) => void;
+    tickTimestamps: number[];
+    lastDigitTicks: number[];
 }
 
 const digitColors = [
@@ -105,6 +108,8 @@ export function CorrelationView({
     lowVolatilityDigits,
     selectedMarket,
     onMarketChange,
+    tickTimestamps,
+    lastDigitTicks,
 }: CorrelationViewProps) {
 
     const chartConfig = { tps: { label: "TPS", color: "hsl(var(--primary))" }};
@@ -174,6 +179,8 @@ export function CorrelationView({
                     </div>
                 </CardContent>
             </Card>
+
+            <TickPacingVisualizer tickTimestamps={tickTimestamps} lastDigitTicks={lastDigitTicks} />
             
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <DigitAnalysisChart digits={highVolatilityDigits} title="High Volatility Analysis" />

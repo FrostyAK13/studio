@@ -257,6 +257,8 @@ export function Dashboard() {
                     lowVolatilityDigits={lowVolatilityDigits}
                     selectedMarket={selectedMarket}
                     onMarketChange={setSelectedMarket}
+                    tickTimestamps={tickTimestamps}
+                    lastDigitTicks={lastDigitTicks}
                 />
             </TabsContent>
         </Tabs>
