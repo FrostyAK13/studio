@@ -3,7 +3,7 @@
 import * as React from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ScannerView } from './scanner-view';
-import { ClassicView } from './classic-view';
+import { AnalyzerView } from './analyzer-view';
 import { syntheticIndices } from '@/lib/mock-data';
 import { DigitFrequencyView } from './digit-frequency-view';
 import { InsightView } from './insight-view';
@@ -156,7 +156,7 @@ export function Dashboard() {
         <Tabs defaultValue="scanner" className="w-full max-w-7xl mx-auto">
             <TabsList className="grid w-full grid-cols-4 mb-6">
                 <TabsTrigger value="scanner">Scanner</TabsTrigger>
-                <TabsTrigger value="classic">Classic</TabsTrigger>
+                <TabsTrigger value="analyzer">Analyzer</TabsTrigger>
                 <TabsTrigger value="frequency">Frequency</TabsTrigger>
                 <TabsTrigger value="insight">Insight</TabsTrigger>
             </TabsList>
@@ -175,8 +175,8 @@ export function Dashboard() {
                 />
             </TabsContent>
 
-            <TabsContent value="classic">
-                <ClassicView
+            <TabsContent value="analyzer">
+                <AnalyzerView
                     price={price}
                     lastDigitTicks={lastDigitTicks}
                     maxTicks={maxTicks}

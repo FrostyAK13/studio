@@ -11,7 +11,7 @@ import { ArrowDown, ArrowUp, BarChartHorizontal, Hash, List } from 'lucide-react
 import { Button } from './ui/button';
 
 
-interface ClassicViewProps {
+interface AnalyzerViewProps {
     price: number;
     lastDigitTicks: number[];
     maxTicks: number;
@@ -22,7 +22,7 @@ interface ClassicViewProps {
     decimalPlaces: number;
 }
 
-export function ClassicView({
+export function AnalyzerView({
     price,
     lastDigitTicks,
     maxTicks,
@@ -31,7 +31,7 @@ export function ClassicView({
     selectedMarket,
     onMarketChange,
     decimalPlaces,
-}: ClassicViewProps) {
+}: AnalyzerViewProps) {
     const [tradeType, setTradeType] = React.useState('even-odd');
     const [matchesDigit, setMatchesDigit] = React.useState(0);
     const [overUnderDigit, setOverUnderDigit] = React.useState(5);
@@ -68,9 +68,9 @@ export function ClassicView({
              <Card>
                 <CardContent className="p-6 grid grid-cols-1 md:grid-cols-3 gap-4">
                     <div>
-                        <Label htmlFor="classic-market-select">Synthetic Market</Label>
+                        <Label htmlFor="analyzer-market-select">Synthetic Market</Label>
                         <Select value={selectedMarket} onValueChange={onMarketChange}>
-                            <SelectTrigger id="classic-market-select">
+                            <SelectTrigger id="analyzer-market-select">
                                 <SelectValue placeholder="Select Index" />
                             </SelectTrigger>
                             <SelectContent>
@@ -83,9 +83,9 @@ export function ClassicView({
                         </Select>
                     </div>
                     <div>
-                        <Label htmlFor="classic-trade-type">Trade Type</Label>
+                        <Label htmlFor="analyzer-trade-type">Trade Type</Label>
                         <Select value={tradeType} onValueChange={setTradeType}>
-                             <SelectTrigger id="classic-trade-type">
+                             <SelectTrigger id="analyzer-trade-type">
                                 <SelectValue placeholder="Select Trade Type" />
                             </SelectTrigger>
                             <SelectContent>
@@ -96,9 +96,9 @@ export function ClassicView({
                         </Select>
                     </div>
                     <div>
-                        <Label htmlFor="max-ticks-classic">Number of Ticks to Analyze</Label>
+                        <Label htmlFor="max-ticks-analyzer">Number of Ticks to Analyze</Label>
                         <Input
-                            id="max-ticks-classic"
+                            id="max-ticks-analyzer"
                             type="number"
                             min="10"
                             max="5000"
