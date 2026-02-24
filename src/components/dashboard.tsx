@@ -8,6 +8,9 @@ import { syntheticIndices } from '@/lib/mock-data';
 import { DigitFrequencyView } from './digit-frequency-view';
 import { InsightView } from './insight-view';
 import { VolatilityView } from './volatility-view';
+import { ConnectionStatus } from './connection-status';
+
+type ConnectionStatusType = 'connecting' | 'streaming' | 'disconnected';
 
 export function Dashboard() {
     const [price, setPrice] = React.useState(0);
@@ -16,6 +19,7 @@ export function Dashboard() {
     const [maxTicks, setMaxTicks] = React.useState(1000);
     const [selectedMarket, setSelectedMarket] = React.useState(syntheticIndices[0].id);
     const [decimalPlaces, setDecimalPlaces] = React.useState(2);
+    const [connectionStatus, setConnectionStatus] = React.useState<ConnectionStatusType>('connecting');
 
     const [tickTimestamps, setTickTimestamps] = React.useState<number[]>([]);
     const [currentTps, setCurrentTps] = React.useState(0);
@@ -61,6 +65,7 @@ export function Dashboard() {
         setHighVolatilityDigits([]);
         setLowVolatilityDigits([]);
         setHistoricalTps([]);
+        setConnectionStatus('connecting');
 
         const ws = new WebSocket('wss://ws.binaryws.com/websockets/v3?app_id=84799');
 
@@ -95,6 +100,7 @@ export function Dashboard() {
 
             if (data.error) {
                 console.error('WebSocket error:', data.error.message);
+                setConnectionStatus('disconnected');
                 return;
             }
 
@@ -108,6 +114,7 @@ export function Dashboard() {
             }
 
             if (data.msg_type === 'tick') {
+                setConnectionStatus('streaming');
                 if (data.tick && typeof data.tick.quote === 'number' && typeof data.tick.pip_size === 'number') {
                     if (pipSize === null) {
                         pipSize = data.tick.pip_size;
@@ -126,8 +133,11 @@ export function Dashboard() {
             }
         };
 
-        ws.onclose = () => {};
+        ws.onclose = () => {
+            setConnectionStatus('disconnected');
+        };
         ws.onerror = (error) => {
+            setConnectionStatus('disconnected');
             console.error('WebSocket error:', 'An error occurred with the WebSocket connection.');
         };
 
@@ -163,7 +173,7 @@ export function Dashboard() {
   return (
     <div className="flex min-h-screen w-full flex-col bg-background font-sans">
       <header className="sticky top-0 z-30 flex h-16 items-center justify-between border-b bg-background/95 px-4 backdrop-blur md:px-6">
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-4">
           <a
             href="https://frostytraders.com"
             target="_blank"
@@ -172,6 +182,7 @@ export function Dashboard() {
           >
             frostytraders.com
           </a>
+          <ConnectionStatus status={connectionStatus} />
         </div>
         <div>
           <span className="font-semibold text-muted-foreground">EMPORER MIGOSI</span>
