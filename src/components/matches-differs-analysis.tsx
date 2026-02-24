@@ -224,18 +224,18 @@ export function MatchesDiffersAnalysis({ lastDigitTicks, selectedMarket, price, 
         )}
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <Card className="bg-gradient-to-br from-cyan-300 to-blue-400 border-0 text-white">
+            <Card className="bg-gradient-to-br from-chart-2 to-emerald-400 border-0 text-white">
                 <CardContent className="p-4">
                     <p className="text-sm text-blue-100/80">MATCHES</p>
                     <p className="text-3xl font-bold my-2">{percentages.matches.toFixed(1)}%</p>
                     <Progress value={percentages.matches} className="h-2 bg-white/20 [&>div]:bg-white" />
                 </CardContent>
             </Card>
-            <Card className="bg-gradient-to-br from-slate-300 to-gray-400 border-0 text-slate-800">
+            <Card className="bg-gradient-to-br from-chart-5 to-amber-400 border-0 text-white">
                  <CardContent className="p-4">
                     <p className="text-sm text-slate-700/80">DIFFERS</p>
                     <p className="text-3xl font-bold my-2">{percentages.differs.toFixed(1)}%</p>
-                    <Progress value={percentages.differs} className="h-2 bg-slate-600/20 [&>div]:bg-slate-800" />
+                    <Progress value={percentages.differs} className="h-2 bg-white/20 [&>div]:bg-white" />
                 </CardContent>
             </Card>
         </div>

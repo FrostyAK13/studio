@@ -21,10 +21,7 @@ interface CorrelationViewProps {
     lastDigitTicks: number[];
 }
 
-const digitColors = [
-    '#f43f5e', '#f97316', '#f59e0b', '#84cc16', '#22c55e', 
-    '#14b8a6', '#06b6d4', '#3b82f6', '#8b5cf6', '#d946ef'
-];
+const digitColors = Array.from({ length: 10 }, (_, i) => `hsl(var(--chart-${i + 1}))`);
 
 
 const DigitAnalysisChart = ({ digits, title }: { digits: number[], title: string }) => {
@@ -140,7 +137,7 @@ export function CorrelationView({
                     <CardDescription>Analysis of tick speed and frequency.</CardDescription>
                 </CardHeader>
                 <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <div className="flex flex-col items-center justify-center rounded-lg bg-gradient-to-br from-amber-400 to-orange-500 text-white p-6 gap-2">
+                    <div className="flex flex-col items-center justify-center rounded-lg bg-gradient-to-br from-chart-4 to-chart-5 text-white p-6 gap-2">
                         <div className="flex items-center gap-2 text-amber-100">
                             <Zap className="h-5 w-5" />
                             <span className="text-sm font-medium tracking-widest">LIVE TICK SPEED</span>

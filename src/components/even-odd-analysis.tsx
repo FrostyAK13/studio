@@ -170,7 +170,7 @@ export function EvenOddAnalysis({ lastDigitTicks, selectedMarket, price, decimal
         <div className="flex justify-center flex-wrap gap-2 mb-6 min-h-[56px]">
             {[...displayedOutcomes].reverse().map((outcome, index) => (
                 <div key={index} className={cn("flex items-center justify-center w-12 h-12 rounded-lg shadow-inner",
-                  outcome === 'E' ? 'bg-gradient-to-br from-blue-400 to-cyan-400' : 'bg-gradient-to-br from-violet-400 to-purple-500'
+                  outcome === 'E' ? 'bg-gradient-to-br from-chart-1 to-blue-400' : 'bg-gradient-to-br from-chart-3 to-purple-500'
                 )}>
                     <span className={cn("font-bold text-lg text-primary-foreground",
                     )}>{outcome}</span>
@@ -187,14 +187,14 @@ export function EvenOddAnalysis({ lastDigitTicks, selectedMarket, price, decimal
         )}
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <Card className="bg-gradient-to-br from-blue-400 to-cyan-400 border-0 text-primary-foreground">
+            <Card className="bg-gradient-to-br from-chart-1 to-blue-400 border-0 text-primary-foreground">
                 <CardContent className="p-4">
                     <p className="text-sm text-blue-100/80">EVEN</p>
                     <p className="text-3xl font-bold my-2">{percentages.even.toFixed(1)}%</p>
                     <Progress value={percentages.even} className="h-2 bg-white/20 [&>div]:bg-white" />
                 </CardContent>
             </Card>
-            <Card className="bg-gradient-to-br from-violet-400 to-purple-500 border-0 text-primary-foreground">
+            <Card className="bg-gradient-to-br from-chart-3 to-purple-500 border-0 text-primary-foreground">
                  <CardContent className="p-4">
                     <p className="text-sm text-violet-100/80">ODD</p>
                     <p className="text-3xl font-bold my-2">{percentages.odd.toFixed(1)}%</p>

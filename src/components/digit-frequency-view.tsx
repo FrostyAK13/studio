@@ -25,18 +25,7 @@ interface DigitFrequencyViewProps {
     decimalPlaces: number;
 }
 
-const digitColors = [
-    '#f43f5e', // rose-500
-    '#f97316', // orange-500
-    '#f59e0b', // amber-500
-    '#84cc16', // lime-500
-    '#22c55e', // green-500
-    '#14b8a6', // teal-500
-    '#06b6d4', // cyan-500
-    '#3b82f6', // blue-500
-    '#8b5cf6', // violet-500
-    '#d946ef', // fuchsia-500
-];
+const digitColors = Array.from({ length: 10 }, (_, i) => `hsl(var(--chart-${i + 1}))`);
 
 export function DigitFrequencyView({
     price,
@@ -102,8 +91,8 @@ export function DigitFrequencyView({
             if (lastFive.every(o => o === 'O')) evenOddReversal = 'Even';
         }
         const evenOddChartData = [
-            { name: 'Even', value: evenPercentage, fill: '#8b5cf6' },
-            { name: 'Odd', value: oddPercentage, fill: '#ec4899' },
+            { name: 'Even', value: evenPercentage, fill: 'hsl(var(--chart-1))' },
+            { name: 'Odd', value: oddPercentage, fill: 'hsl(var(--chart-3))' },
         ];
 
         // Matches/Differs
@@ -115,8 +104,8 @@ export function DigitFrequencyView({
         const matchesPercentage = (matchesCount / ticks.length) * 100;
         const differsPercentage = 100 - matchesPercentage;
         const matchesDiffersChartData = [
-            { name: 'Matches', value: matchesPercentage, fill: '#14b8a6' },
-            { name: 'Differs', value: differsPercentage, fill: '#6b7280' },
+            { name: 'Matches', value: matchesPercentage, fill: 'hsl(var(--chart-2))' },
+            { name: 'Differs', value: differsPercentage, fill: 'hsl(var(--chart-5))' },
         ];
 
 
@@ -133,8 +122,8 @@ export function DigitFrequencyView({
             if (lastFiveClusters.every(c => c === 'H')) clusterReversal = 'Lower (0-4)';
         }
         const overUnderChartData = [
-            { name: 'Lower (0-4)', value: lowerPercentage, fill: '#3b82f6' },
-            { name: 'Higher (5-9)', value: higherPercentage, fill: '#ef4444' },
+            { name: 'Lower (0-4)', value: lowerPercentage, fill: 'hsl(var(--chart-1))' },
+            { name: 'Higher (5-9)', value: higherPercentage, fill: 'hsl(var(--destructive))' },
         ];
 
         // Over Cluster (0-2 vs 3-9)
@@ -143,8 +132,8 @@ export function DigitFrequencyView({
         const overClusterLowPercentage = (overClusterLowCount / ticks.length) * 100;
         const overClusterHighPercentage = 100 - overClusterLowPercentage;
         const overClusterChartData = [
-            { name: 'Low (0-2)', value: overClusterLowPercentage, fill: '#3b82f6' },
-            { name: 'High (3-9)', value: overClusterHighPercentage, fill: '#ef4444' },
+            { name: 'Low (0-2)', value: overClusterLowPercentage, fill: 'hsl(var(--chart-1))' },
+            { name: 'High (3-9)', value: overClusterHighPercentage, fill: 'hsl(var(--destructive))' },
         ];
 
         // Under Cluster (0-6 vs 7-9)
@@ -153,8 +142,8 @@ export function DigitFrequencyView({
         const underClusterLowPercentage = (underClusterLowCount / ticks.length) * 100;
         const underClusterHighPercentage = 100 - underClusterLowPercentage;
         const underClusterChartData = [
-            { name: 'Low (0-6)', value: underClusterLowPercentage, fill: '#3b82f6' },
-            { name: 'High (7-9)', value: underClusterHighPercentage, fill: '#ef4444' },
+            { name: 'Low (0-6)', value: underClusterLowPercentage, fill: 'hsl(var(--chart-1))' },
+            { name: 'High (7-9)', value: underClusterHighPercentage, fill: 'hsl(var(--destructive))' },
         ];
 
 

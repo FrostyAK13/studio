@@ -38,44 +38,54 @@ export function AnalyzerView({
     const [matchesDigit, setMatchesDigit] = React.useState(0);
     const [overUnderDigit, setOverUnderDigit] = React.useState(5);
     
-    // Even/Odd calculations
+    const evenOddChartData = React.useMemo(() => {
+        const evenCount = lastDigitTicks.filter(d => d % 2 === 0).length;
+        const oddCount = lastDigitTicks.length - evenCount;
+        const evenPercentage = lastDigitTicks.length > 0 ? (evenCount / lastDigitTicks.length) * 100 : 0;
+        const oddPercentage = lastDigitTicks.length > 0 ? (oddCount / lastDigitTicks.length) * 100 : 0;
+        return [
+            { name: 'Even', value: evenPercentage, color: 'hsl(var(--chart-1))' },
+            { name: 'Odd', value: oddPercentage, color: 'hsl(var(--chart-3))' },
+        ];
+    }, [lastDigitTicks]);
     const evenCount = lastDigitTicks.filter(d => d % 2 === 0).length;
     const oddCount = lastDigitTicks.length - evenCount;
-    const evenPercentage = lastDigitTicks.length > 0 ? (evenCount / lastDigitTicks.length) * 100 : 0;
-    const oddPercentage = lastDigitTicks.length > 0 ? (oddCount / lastDigitTicks.length) * 100 : 0;
     const evenOddOutcomes = lastDigitTicks.map(digit => (digit % 2 === 0 ? 'E' : 'O'));
-    const evenOddChartData = [
-        { name: 'Even', value: evenPercentage, color: '#3b82f6' },
-        { name: 'Odd', value: oddPercentage, color: '#8b5cf6' },
-    ];
 
-    // Matches/Differs calculations
+
+    const matchesDiffersChartData = React.useMemo(() => {
+        const matchesCount = lastDigitTicks.filter(d => d === matchesDigit).length;
+        const differsCount = lastDigitTicks.length - matchesCount;
+        const matchesPercentage = lastDigitTicks.length > 0 ? (matchesCount / lastDigitTicks.length) * 100 : 0;
+        const differsPercentage = lastDigitTicks.length > 0 ? (differsCount / lastDigitTicks.length) * 100 : 0;
+         return [
+            { name: 'Matches', value: matchesPercentage, color: 'hsl(var(--chart-2))' },
+            { name: 'Differs', value: differsPercentage, color: 'hsl(var(--chart-5))' },
+        ];
+    }, [lastDigitTicks, matchesDigit]);
     const matchesCount = lastDigitTicks.filter(d => d === matchesDigit).length;
     const differsCount = lastDigitTicks.length - matchesCount;
-    const matchesPercentage = lastDigitTicks.length > 0 ? (matchesCount / lastDigitTicks.length) * 100 : 0;
-    const differsPercentage = lastDigitTicks.length > 0 ? (differsCount / lastDigitTicks.length) * 100 : 0;
     const matchesDiffersOutcomes = lastDigitTicks.map(digit => (digit === matchesDigit ? 'M' : 'D'));
-    const matchesDiffersChartData = [
-        { name: 'Matches', value: matchesPercentage, color: '#06b6d4' },
-        { name: 'Differs', value: differsPercentage, color: '#64748b' },
-    ];
 
 
-    // Over/Under calculations
+    const overUnderChartData = React.useMemo(() => {
+        const overCount = lastDigitTicks.filter(d => d > overUnderDigit).length;
+        const underCount = lastDigitTicks.filter(d => d < overUnderDigit).length;
+        const relevantOverUnderTicksCount = overCount + underCount;
+        const overPercentage = relevantOverUnderTicksCount > 0 ? (overCount / relevantOverUnderTicksCount) * 100 : 0;
+        const underPercentage = relevantOverUnderTicksCount > 0 ? (underCount / relevantOverUnderTicksCount) * 100 : 0;
+        return [
+            { name: 'Over', value: overPercentage, color: 'hsl(var(--accent))' },
+            { name: 'Under', value: underPercentage, color: 'hsl(var(--destructive))' },
+        ];
+    }, [lastDigitTicks, overUnderDigit]);
     const overCount = lastDigitTicks.filter(d => d > overUnderDigit).length;
     const underCount = lastDigitTicks.filter(d => d < overUnderDigit).length;
-    const relevantOverUnderTicksCount = overCount + underCount;
-    const overPercentage = relevantOverUnderTicksCount > 0 ? (overCount / relevantOverUnderTicksCount) * 100 : 0;
-    const underPercentage = relevantOverUnderTicksCount > 0 ? (underCount / relevantOverUnderTicksCount) * 100 : 0;
     const overUnderOutcomes = lastDigitTicks.map(digit => {
         if (digit > overUnderDigit) return 'O';
         if (digit < overUnderDigit) return 'U';
         return 'E';
     });
-    const overUnderChartData = [
-        { name: 'Over', value: overPercentage, color: '#14b8a6' },
-        { name: 'Under', value: underPercentage, color: '#6366f1' },
-    ];
 
 
     return (
@@ -152,7 +162,7 @@ export function AnalyzerView({
                         </CardTitle></CardHeader>
                         <CardContent className="flex flex-wrap gap-2">
                             {[...evenOddOutcomes.slice(0, 30)].reverse().map((o, i) => (
-                                <div key={i} className={cn("flex items-center justify-center w-8 h-8 rounded-full font-bold text-white", o === 'E' ? 'bg-blue-500' : 'bg-violet-500')}>
+                                <div key={i} className={cn("flex items-center justify-center w-8 h-8 rounded-full font-bold text-white", o === 'E' ? 'bg-chart-1' : 'bg-chart-3')}>
                                     {o}
                                 </div>
                             ))}
@@ -169,8 +179,8 @@ export function AnalyzerView({
                                     <span>Even</span>
                                 </div>
                                 <div className="w-full bg-muted rounded-full h-8 overflow-hidden border">
-                                    <div className="bg-blue-500 h-full flex items-center justify-center text-white font-bold text-xs" style={{ width: `${evenPercentage}%` }}>
-                                        {evenPercentage.toFixed(1)}%
+                                    <div className="bg-chart-1 h-full flex items-center justify-center text-white font-bold text-xs" style={{ width: `${evenOddChartData[0].value}%` }}>
+                                        {evenOddChartData[0].value.toFixed(1)}%
                                     </div>
                                 </div>
                             </div>
@@ -179,8 +189,8 @@ export function AnalyzerView({
                                     <span>Odd</span>
                                 </div>
                                 <div className="w-full bg-muted rounded-full h-8 overflow-hidden border">
-                                     <div className="bg-violet-500 h-full flex items-center justify-center text-white font-bold text-xs" style={{ width: `${oddPercentage}%` }}>
-                                       {oddPercentage.toFixed(1)}%
+                                     <div className="bg-chart-3 h-full flex items-center justify-center text-white font-bold text-xs" style={{ width: `${evenOddChartData[1].value}%` }}>
+                                       {evenOddChartData[1].value.toFixed(1)}%
                                     </div>
                                 </div>
                             </div>
@@ -301,7 +311,7 @@ export function AnalyzerView({
                         </CardTitle></CardHeader>
                         <CardContent className="flex flex-wrap gap-2">
                             {[...matchesDiffersOutcomes.slice(0, 30)].reverse().map((o, i) => (
-                                <div key={i} className={cn("flex items-center justify-center w-8 h-8 rounded-full font-bold text-white", o === 'M' ? 'bg-cyan-500' : 'bg-slate-500')}>
+                                <div key={i} className={cn("flex items-center justify-center w-8 h-8 rounded-full font-bold text-white", o === 'M' ? 'bg-chart-2' : 'bg-chart-5')}>
                                     {o}
                                 </div>
                             ))}
@@ -318,8 +328,8 @@ export function AnalyzerView({
                                     <span>Matches</span>
                                 </div>
                                 <div className="w-full bg-muted rounded-full h-8 overflow-hidden border">
-                                    <div className="bg-cyan-500 h-full flex items-center justify-center text-white font-bold text-xs" style={{ width: `${matchesPercentage}%` }}>
-                                        {matchesPercentage.toFixed(1)}%
+                                    <div className="bg-chart-2 h-full flex items-center justify-center text-white font-bold text-xs" style={{ width: `${matchesDiffersChartData[0].value}%` }}>
+                                        {matchesDiffersChartData[0].value.toFixed(1)}%
                                     </div>
                                 </div>
                             </div>
@@ -328,8 +338,8 @@ export function AnalyzerView({
                                     <span>Differs</span>
                                 </div>
                                 <div className="w-full bg-muted rounded-full h-8 overflow-hidden border">
-                                     <div className="bg-slate-500 h-full flex items-center justify-center text-white font-bold text-xs" style={{ width: `${differsPercentage}%` }}>
-                                       {differsPercentage.toFixed(1)}%
+                                     <div className="bg-chart-5 h-full flex items-center justify-center text-white font-bold text-xs" style={{ width: `${matchesDiffersChartData[1].value}%` }}>
+                                       {matchesDiffersChartData[1].value.toFixed(1)}%
                                     </div>
                                 </div>
                             </div>
@@ -450,7 +460,7 @@ export function AnalyzerView({
                         </CardTitle></CardHeader>
                         <CardContent className="flex flex-wrap gap-2">
                             {[...overUnderOutcomes.slice(0, 30)].reverse().map((o, i) => (
-                                <div key={i} className={cn("flex items-center justify-center w-8 h-8 rounded-full font-bold text-white", o === 'O' ? 'bg-teal-500' : o === 'U' ? 'bg-indigo-500' : 'bg-slate-400')}>
+                                <div key={i} className={cn("flex items-center justify-center w-8 h-8 rounded-full font-bold text-white", o === 'O' ? 'bg-accent' : o === 'U' ? 'bg-destructive' : 'bg-slate-400')}>
                                     {o}
                                 </div>
                             ))}
@@ -467,8 +477,8 @@ export function AnalyzerView({
                                     <span>Over</span>
                                 </div>
                                 <div className="w-full bg-muted rounded-full h-8 overflow-hidden border">
-                                    <div className="bg-teal-500 h-full flex items-center justify-center text-white font-bold text-xs" style={{ width: `${overPercentage}%` }}>
-                                        {overPercentage.toFixed(1)}%
+                                    <div className="bg-accent h-full flex items-center justify-center text-accent-foreground font-bold text-xs" style={{ width: `${overUnderChartData[0].value}%` }}>
+                                        {overUnderChartData[0].value.toFixed(1)}%
                                     </div>
                                 </div>
                             </div>
@@ -477,8 +487,8 @@ export function AnalyzerView({
                                     <span>Under</span>
                                 </div>
                                 <div className="w-full bg-muted rounded-full h-8 overflow-hidden border">
-                                     <div className="bg-indigo-500 h-full flex items-center justify-center text-white font-bold text-xs" style={{ width: `${underPercentage}%` }}>
-                                       {underPercentage.toFixed(1)}%
+                                     <div className="bg-destructive h-full flex items-center justify-center text-destructive-foreground font-bold text-xs" style={{ width: `${overUnderChartData[1].value}%` }}>
+                                       {overUnderChartData[1].value.toFixed(1)}%
                                     </div>
                                 </div>
                             </div>

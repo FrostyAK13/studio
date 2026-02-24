@@ -225,10 +225,10 @@ export function OverUnderAnalysis({ lastDigitTicks, selectedMarket, price, decim
         <div className="flex justify-center flex-wrap gap-2 mb-6 min-h-[56px]">
             {[...displayedOutcomes].reverse().map((outcome, index) => (
                 <div key={index} className={cn("flex items-center justify-center w-12 h-12 rounded-lg shadow-inner",
-                  outcome === 'O' ? 'bg-teal-100 border border-teal-200' : outcome === 'U' ? 'bg-sky-100 border border-sky-200' : 'bg-slate-100 border border-slate-200'
+                  outcome === 'O' ? 'bg-accent/10 border border-accent/20' : outcome === 'U' ? 'bg-destructive/10 border border-destructive/20' : 'bg-muted border'
                 )}>
                     <span className={cn("font-bold text-lg",
-                      outcome === 'O' ? 'text-teal-700' : outcome === 'U' ? 'text-sky-700' : 'text-slate-700'
+                      outcome === 'O' ? 'text-accent' : outcome === 'U' ? 'text-destructive' : 'text-muted-foreground'
                     )}>{outcome}</span>
                 </div>
             ))}
@@ -243,16 +243,16 @@ export function OverUnderAnalysis({ lastDigitTicks, selectedMarket, price, decim
         )}
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <Card className="bg-gradient-to-br from-teal-300 to-cyan-400 border-0 text-white">
+            <Card className="bg-gradient-to-br from-accent to-green-400 border-0 text-accent-foreground">
                 <CardContent className="p-4">
-                    <p className="text-sm text-cyan-100/80">OVER</p>
+                    <p className="text-sm text-green-100/80">OVER</p>
                     <p className="text-3xl font-bold my-2">{percentages.over.toFixed(1)}%</p>
                     <Progress value={percentages.over} className="h-2 bg-white/20 [&>div]:bg-white" />
                 </CardContent>
             </Card>
-            <Card className="bg-gradient-to-br from-sky-300 to-indigo-400 border-0 text-white">
+            <Card className="bg-gradient-to-br from-destructive to-red-400 border-0 text-destructive-foreground">
                  <CardContent className="p-4">
-                    <p className="text-sm text-indigo-100/80">UNDER</p>
+                    <p className="text-sm text-red-100/80">UNDER</p>
                     <p className="text-3xl font-bold my-2">{percentages.under.toFixed(1)}%</p>
                     <Progress value={percentages.under} className="h-2 bg-white/20 [&>div]:bg-white" />
                 </CardContent>

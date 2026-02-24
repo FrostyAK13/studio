@@ -170,8 +170,8 @@ export function RiseFallAnalysis({
   const marketName = syntheticIndices.find(m => m.id === selectedMarket)?.name || selectedMarket;
   
   const riseFallPieData = [
-    { name: 'Rise', value: percentages.rise, fill: '#22c55e' }, // green-500
-    { name: 'Fall', value: percentages.fall, fill: '#ef4444' }, // red-500
+    { name: 'Rise', value: percentages.rise, fill: 'hsl(var(--accent))' },
+    { name: 'Fall', value: percentages.fall, fill: 'hsl(var(--destructive))' },
   ];
 
   const MiniChartTooltip = ({ active, payload }: any) => {
@@ -220,14 +220,14 @@ export function RiseFallAnalysis({
         {variant === 'default' && (
             <>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-6">
-                    <Card className="bg-gradient-to-br from-green-400 to-emerald-500 border-0 text-white">
+                    <Card className="bg-gradient-to-br from-accent to-green-400 border-0 text-white">
                         <CardContent className="p-4">
                             <p className="text-sm text-green-100/80 flex items-center gap-1"><TrendingUp size={16} /> RISE</p>
                             <p className="text-3xl font-bold my-2">{percentages.rise.toFixed(1)}%</p>
                             <Progress value={percentages.rise} className="h-2 bg-white/20 [&>div]:bg-white" />
                         </CardContent>
                     </Card>
-                    <Card className="bg-gradient-to-br from-red-400 to-rose-500 border-0 text-white">
+                    <Card className="bg-gradient-to-br from-destructive to-red-400 border-0 text-white">
                         <CardContent className="p-4">
                             <p className="text-sm text-red-100/80 flex items-center gap-1"><TrendingDown size={16} /> FALL</p>
                             <p className="text-3xl font-bold my-2">{percentages.fall.toFixed(1)}%</p>
@@ -274,7 +274,7 @@ export function RiseFallAnalysis({
                             <span className="text-muted-foreground">{percentages.rise.toFixed(1)}%</span>
                         </div>
                         <div className="w-full bg-muted rounded-full h-2 overflow-hidden">
-                            <div className="bg-green-500 h-full rounded-full" style={{ width: `${percentages.rise}%` }}></div>
+                            <div className="bg-accent h-full rounded-full" style={{ width: `${percentages.rise}%` }}></div>
                         </div>
                     </div>
                     <div>
@@ -283,7 +283,7 @@ export function RiseFallAnalysis({
                             <span className="text-muted-foreground">{percentages.fall.toFixed(1)}%</span>
                         </div>
                         <div className="w-full bg-muted rounded-full h-2 overflow-hidden">
-                            <div className="bg-red-500 h-full rounded-full" style={{ width: `${percentages.fall}%` }}></div>
+                            <div className="bg-destructive h-full rounded-full" style={{ width: `${percentages.fall}%` }}></div>
                         </div>
                     </div>
                 </div>
