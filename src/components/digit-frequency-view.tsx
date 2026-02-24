@@ -137,6 +137,27 @@ export function DigitFrequencyView({
             { name: 'Higher (5-9)', value: higherPercentage, fill: '#ef4444' },
         ];
 
+        // Over Cluster (0-2 vs 3-9)
+        const overClusterLowCount = ticks.filter(d => d <= 2).length;
+        const overClusterHighCount = ticks.length - overClusterLowCount;
+        const overClusterLowPercentage = (overClusterLowCount / ticks.length) * 100;
+        const overClusterHighPercentage = 100 - overClusterLowPercentage;
+        const overClusterChartData = [
+            { name: 'Low (0-2)', value: overClusterLowPercentage, fill: '#3b82f6' },
+            { name: 'High (3-9)', value: overClusterHighPercentage, fill: '#ef4444' },
+        ];
+
+        // Under Cluster (0-6 vs 7-9)
+        const underClusterLowCount = ticks.filter(d => d <= 6).length;
+        const underClusterHighCount = ticks.length - underClusterLowCount;
+        const underClusterLowPercentage = (underClusterLowCount / ticks.length) * 100;
+        const underClusterHighPercentage = 100 - underClusterLowPercentage;
+        const underClusterChartData = [
+            { name: 'Low (0-6)', value: underClusterLowPercentage, fill: '#3b82f6' },
+            { name: 'High (7-9)', value: underClusterHighPercentage, fill: '#ef4444' },
+        ];
+
+
         return {
             evenOdd: {
                 reversal: evenOddReversal,
@@ -150,6 +171,12 @@ export function DigitFrequencyView({
                 reversal: clusterReversal,
                 chartData: overUnderChartData,
             },
+            overCluster: {
+                chartData: overClusterChartData
+            },
+            underCluster: {
+                chartData: underClusterChartData
+            }
         };
     }, [lastDigitTicks]);
 
@@ -487,6 +514,94 @@ export function DigitFrequencyView({
                                             <Tooltip content={<MiniChartTooltip />} />
                                             <Pie data={marketDirectionAnalysis.overUnder.chartData} dataKey="value" nameKey="name" innerRadius={40} outerRadius={60} paddingAngle={2}>
                                                 {marketDirectionAnalysis.overUnder.chartData.map((entry) => (
+                                                    <Cell key={`cell-${entry.name}`} fill={entry.fill} />
+                                                ))}
+                                            </Pie>
+                                        </PieChart>
+                                    </ChartContainer>
+                                </div>
+                            </div>
+                            
+                            <div className="p-4 border rounded-lg">
+                                <div className="flex justify-between items-start mb-2">
+                                    <div>
+                                        <h4 className="font-semibold">Over Cluster</h4>
+                                    </div>
+                                    <div className="text-right">
+                                        <p className="text-xs text-muted-foreground font-mono">PRICE</p>
+                                        <p className="font-bold text-primary text-lg">{price.toFixed(decimalPlaces)}</p>
+                                    </div>
+                                </div>
+                                <div className="grid grid-cols-2 items-center gap-4">
+                                    <div className="space-y-3">
+                                        <div>
+                                            <div className="flex justify-between mb-1 text-sm">
+                                                <span className="font-medium">Low (0-2)</span>
+                                                <span className="text-muted-foreground">{marketDirectionAnalysis.overCluster.chartData[0].value.toFixed(1)}%</span>
+                                            </div>
+                                            <div className="w-full bg-muted rounded-full h-2 overflow-hidden">
+                                                <div className="h-full rounded-full" style={{ width: `${marketDirectionAnalysis.overCluster.chartData[0].value}%`, backgroundColor: marketDirectionAnalysis.overCluster.chartData[0].fill }}></div>
+                                            </div>
+                                        </div>
+                                        <div>
+                                            <div className="flex justify-between mb-1 text-sm">
+                                                <span className="font-medium">High (3-9)</span>
+                                                <span className="text-muted-foreground">{marketDirectionAnalysis.overCluster.chartData[1].value.toFixed(1)}%</span>
+                                            </div>
+                                            <div className="w-full bg-muted rounded-full h-2 overflow-hidden">
+                                                <div className="h-full rounded-full" style={{ width: `${marketDirectionAnalysis.overCluster.chartData[1].value}%`, backgroundColor: marketDirectionAnalysis.overCluster.chartData[1].fill }}></div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <ChartContainer config={{}} className="h-40 w-40 mx-auto">
+                                        <PieChart>
+                                            <Tooltip content={<MiniChartTooltip />} />
+                                            <Pie data={marketDirectionAnalysis.overCluster.chartData} dataKey="value" nameKey="name" innerRadius={40} outerRadius={60} paddingAngle={2}>
+                                                {marketDirectionAnalysis.overCluster.chartData.map((entry) => (
+                                                    <Cell key={`cell-${entry.name}`} fill={entry.fill} />
+                                                ))}
+                                            </Pie>
+                                        </PieChart>
+                                    </ChartContainer>
+                                </div>
+                            </div>
+                            
+                            <div className="p-4 border rounded-lg">
+                                <div className="flex justify-between items-start mb-2">
+                                    <div>
+                                        <h4 className="font-semibold">Under Cluster</h4>
+                                    </div>
+                                    <div className="text-right">
+                                        <p className="text-xs text-muted-foreground font-mono">PRICE</p>
+                                        <p className="font-bold text-primary text-lg">{price.toFixed(decimalPlaces)}</p>
+                                    </div>
+                                </div>
+                                <div className="grid grid-cols-2 items-center gap-4">
+                                    <div className="space-y-3">
+                                        <div>
+                                            <div className="flex justify-between mb-1 text-sm">
+                                                <span className="font-medium">Low (0-6)</span>
+                                                <span className="text-muted-foreground">{marketDirectionAnalysis.underCluster.chartData[0].value.toFixed(1)}%</span>
+                                            </div>
+                                            <div className="w-full bg-muted rounded-full h-2 overflow-hidden">
+                                                <div className="h-full rounded-full" style={{ width: `${marketDirectionAnalysis.underCluster.chartData[0].value}%`, backgroundColor: marketDirectionAnalysis.underCluster.chartData[0].fill }}></div>
+                                            </div>
+                                        </div>
+                                        <div>
+                                            <div className="flex justify-between mb-1 text-sm">
+                                                <span className="font-medium">High (7-9)</span>
+                                                <span className="text-muted-foreground">{marketDirectionAnalysis.underCluster.chartData[1].value.toFixed(1)}%</span>
+                                            </div>
+                                            <div className="w-full bg-muted rounded-full h-2 overflow-hidden">
+                                                <div className="h-full rounded-full" style={{ width: `${marketDirectionAnalysis.underCluster.chartData[1].value}%`, backgroundColor: marketDirectionAnalysis.underCluster.chartData[1].fill }}></div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <ChartContainer config={{}} className="h-40 w-40 mx-auto">
+                                        <PieChart>
+                                            <Tooltip content={<MiniChartTooltip />} />
+                                            <Pie data={marketDirectionAnalysis.underCluster.chartData} dataKey="value" nameKey="name" innerRadius={40} outerRadius={60} paddingAngle={2}>
+                                                {marketDirectionAnalysis.underCluster.chartData.map((entry) => (
                                                     <Cell key={`cell-${entry.name}`} fill={entry.fill} />
                                                 ))}
                                             </Pie>
