@@ -7,7 +7,7 @@ import { AnalyzerView } from './analyzer-view';
 import { syntheticIndices } from '@/lib/mock-data';
 import { DigitFrequencyView } from './digit-frequency-view';
 import { InsightView } from './insight-view';
-import { VolatilityView } from './volatility-view';
+import { CorrelationView } from './correlation-view';
 import { ConnectionStatus } from './connection-status';
 
 type ConnectionStatusType = 'connecting' | 'streaming' | 'disconnected';
@@ -195,7 +195,7 @@ export function Dashboard() {
                 <TabsTrigger value="analyzer">Analyzer</TabsTrigger>
                 <TabsTrigger value="frequency">Frequency</TabsTrigger>
                 <TabsTrigger value="insight">Insight</TabsTrigger>
-                <TabsTrigger value="volatility">Volatility</TabsTrigger>
+                <TabsTrigger value="correlation">Correlation</TabsTrigger>
             </TabsList>
 
             <TabsContent value="scanner">
@@ -249,8 +249,8 @@ export function Dashboard() {
                 />
             </TabsContent>
             
-            <TabsContent value="volatility">
-                <VolatilityView
+            <TabsContent value="correlation">
+                <CorrelationView
                     currentTps={currentTps}
                     historicalTps={historicalTps}
                     highVolatilityDigits={highVolatilityDigits}
