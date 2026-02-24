@@ -14,14 +14,14 @@ import {ai} from '@/ai/genkit';
 import {z} from 'zod';
 
 // Define the Zod schema for the input, which includes the market name and the tick data.
-export const InsightInputSchema = z.object({
+const InsightInputSchema = z.object({
   marketName: z.string().describe('The name of the synthetic market being analyzed.'),
   ticks: z.array(z.number()).describe('An array of the last 50 last-digit ticks, with the most recent tick first.'),
 });
 export type InsightInput = z.infer<typeof InsightInputSchema>;
 
 // Define the Zod schema for the structured output we expect from the AI.
-export const InsightOutputSchema = z.object({
+const InsightOutputSchema = z.object({
   summary: z.string().describe('A concise, one-sentence summary of the current market condition.'),
   recommendedStrategy: z
     .enum(['Even/Odd', 'Matches/Differs', 'Over/Under', 'None'])

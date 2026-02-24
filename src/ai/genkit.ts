@@ -1,4 +1,3 @@
-'use server';
 /**
  * @fileoverview This file initializes the Genkit AI instance with the Google AI plugin.
  * It ensures that the AI capabilities are available throughout the server-side
