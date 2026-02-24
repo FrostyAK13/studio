@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Lightbulb, Bot, Sparkles, AlertTriangle, Loader } from 'lucide-react';
 import { HackerAnimation } from './hacker-animation';
 import { ScannerAnimationContent } from './scanner-animation-content';
-import { generateInsight, type InsightOutput } from '@/lib/insight-generator';
+import { generateStrategyInsight, type InsightOutput } from '@/ai/flows/generate-strategy-insight';
 import { syntheticIndices } from '@/lib/mock-data';
 import { Badge } from './ui/badge';
 import { Label } from './ui/label';
@@ -62,22 +62,21 @@ export function InsightView({ price, decimalPlaces, lastDigitTicks, selectedMark
 
     const marketName = syntheticIndices.find(m => m.id === selectedMarket)?.name || selectedMarket;
 
-    const runAnalysis = (ticks: number[]) => {
+    const runAnalysis = async (ticks: number[]) => {
         setAnalysisState('analyzing');
-        // Simulate analysis time for the animation
-        setTimeout(() => {
-            try {
-                // Ticks are collected with newest first, reverse for chronological order
-                const ticksForAnalysis = [...ticks].reverse();
-                const result = generateInsight(ticksForAnalysis);
-                setInsight(result);
-                setAnalysisState('complete');
-            } catch (e: any) {
-                console.error(e);
-                setError(e.message || "An unexpected error occurred.");
-                setAnalysisState('error');
-            }
-        }, 2000); // 2 second delay for scanner animation
+        try {
+            // The AI flow expects the market name and the ticks.
+            const result = await generateStrategyInsight({
+                marketName,
+                ticks, // Ticks are already newest first, which the flow handles.
+            });
+            setInsight(result);
+            setAnalysisState('complete');
+        } catch (e: any) {
+            console.error("AI Insight Error:", e);
+            setError(e.message || "An unexpected error occurred during AI analysis.");
+            setAnalysisState('error');
+        }
     };
 
     const handleStartAnalysis = () => {
@@ -118,7 +117,7 @@ export function InsightView({ price, decimalPlaces, lastDigitTicks, selectedMark
             case 'complete':
             case 'error':
                  return (
-                    <HackerAnimation title={`Analysis Report - ${marketName}`}>
+                    <HackerAnimation title={`AI Analysis Report - ${marketName}`}>
                         {analysisState === 'analyzing' ? (
                             <ScannerAnimationContent />
                         ) : error ? (
@@ -163,7 +162,7 @@ export function InsightView({ price, decimalPlaces, lastDigitTicks, selectedMark
                     <Lightbulb className="h-8 w-8 text-primary" />
                     <div>
                         <CardTitle className="text-2xl">Strategy Insight</CardTitle>
-                        <CardDescription>Let an automated expert analyze the market and suggest a strategy.</CardDescription>
+                        <CardDescription>Let a generative AI analyze the market and suggest a strategy.</CardDescription>
                     </div>
                 </div>
             </CardHeader>
@@ -208,7 +207,7 @@ export function InsightView({ price, decimalPlaces, lastDigitTicks, selectedMark
                         ) : (
                             <>
                             <Sparkles className="mr-2 h-5 w-5" />
-                            Get Insight
+                            Get AI Insight
                             </>
                         )}
                     </Button>
