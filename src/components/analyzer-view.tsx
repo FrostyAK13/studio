@@ -1,7 +1,7 @@
 'use client';
 
 import * as React from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Input } from '@/components/ui/input';
@@ -9,6 +9,8 @@ import { syntheticIndices } from '@/lib/mock-data';
 import { cn } from '@/lib/utils';
 import { ArrowDown, ArrowUp, BarChartHorizontal, Hash, List } from 'lucide-react';
 import { Button } from './ui/button';
+import { PieChart, Pie, Cell, Tooltip, Legend } from 'recharts';
+import { ChartContainer } from '@/components/ui/chart';
 
 
 interface AnalyzerViewProps {
@@ -42,6 +44,10 @@ export function AnalyzerView({
     const evenPercentage = lastDigitTicks.length > 0 ? (evenCount / lastDigitTicks.length) * 100 : 0;
     const oddPercentage = lastDigitTicks.length > 0 ? (oddCount / lastDigitTicks.length) * 100 : 0;
     const evenOddOutcomes = lastDigitTicks.map(digit => (digit % 2 === 0 ? 'E' : 'O'));
+    const evenOddChartData = [
+        { name: 'Even', value: evenPercentage, color: '#3b82f6' },
+        { name: 'Odd', value: oddPercentage, color: '#8b5cf6' },
+    ];
 
     // Matches/Differs calculations
     const matchesCount = lastDigitTicks.filter(d => d === matchesDigit).length;
@@ -49,6 +55,11 @@ export function AnalyzerView({
     const matchesPercentage = lastDigitTicks.length > 0 ? (matchesCount / lastDigitTicks.length) * 100 : 0;
     const differsPercentage = lastDigitTicks.length > 0 ? (differsCount / lastDigitTicks.length) * 100 : 0;
     const matchesDiffersOutcomes = lastDigitTicks.map(digit => (digit === matchesDigit ? 'M' : 'D'));
+    const matchesDiffersChartData = [
+        { name: 'Matches', value: matchesPercentage, color: '#06b6d4' },
+        { name: 'Differs', value: differsPercentage, color: '#64748b' },
+    ];
+
 
     // Over/Under calculations
     const overCount = lastDigitTicks.filter(d => d > overUnderDigit).length;
@@ -61,6 +72,10 @@ export function AnalyzerView({
         if (digit < overUnderDigit) return 'U';
         return 'E';
     });
+    const overUnderChartData = [
+        { name: 'Over', value: overPercentage, color: '#14b8a6' },
+        { name: 'Under', value: underPercentage, color: '#6366f1' },
+    ];
 
 
     return (
@@ -171,6 +186,70 @@ export function AnalyzerView({
                             </div>
                         </CardContent>
                     </Card>
+                    <Card>
+                        <CardHeader>
+                            <CardTitle className="text-base font-semibold">Probability Distribution</CardTitle>
+                            <CardDescription>Current Price: {price.toFixed(decimalPlaces)}</CardDescription>
+                        </CardHeader>
+                        <CardContent className="flex items-center justify-center p-0">
+                            <ChartContainer config={{}} className="mx-auto aspect-square h-[400px]">
+                                <PieChart>
+                                    <Tooltip
+                                        content={({ active, payload }) => {
+                                        if (active && payload && payload.length) {
+                                            const data = payload[0].payload;
+                                            return (
+                                            <div className="min-w-[8rem] rounded-lg border bg-background p-2 text-sm shadow-sm">
+                                                <p className="font-bold text-foreground">{`${data.name}`}</p>
+                                                <p className="text-muted-foreground">{`Probability: ${data.value.toFixed(1)}%`}</p>
+                                            </div>
+                                            );
+                                        }
+                                        return null;
+                                        }}
+                                    />
+                                    <Pie
+                                        data={evenOddChartData}
+                                        dataKey="value"
+                                        nameKey="name"
+                                        cx="50%"
+                                        cy="50%"
+                                        outerRadius={150}
+                                        labelLine={false}
+                                        label={({ cx, cy, midAngle, innerRadius, outerRadius, value}) => {
+                                            const RADIAN = Math.PI / 180
+                                            const radius = innerRadius + (outerRadius - innerRadius) * 0.6
+                                            const x = cx + radius * Math.cos(-midAngle * RADIAN)
+                                            const y = cy + radius * Math.sin(-midAngle * RADIAN)
+
+                                            if (value < 5) return null;
+
+                                            return (
+                                                <text x={x} y={y} fill="white" textAnchor="middle" dominantBaseline="central" className="text-base font-bold">
+                                                    {`${value.toFixed(0)}%`}
+                                                </text>
+                                            )
+                                        }}
+                                    >
+                                        {evenOddChartData.map((entry) => (
+                                            <Cell key={`cell-${entry.name}`} fill={entry.color} className="stroke-background hover:opacity-80" />
+                                        ))}
+                                    </Pie>
+                                    <Legend content={({ payload }) => (
+                                        <ul className="flex flex-wrap gap-x-4 gap-y-2 justify-center mt-4 text-sm">
+                                            {payload?.map((entry, index) => (
+                                                <li key={`item-${index}`} className="flex items-center gap-2">
+                                                    <span className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: entry.color }} />
+                                                    <span className="text-muted-foreground">{entry.value}:</span>
+                                                    <span className="font-medium">{evenOddChartData[index].value.toFixed(1)}%</span>
+                                                </li>
+                                            ))}
+                                        </ul>
+                                    )} />
+                                </PieChart>
+                            </ChartContainer>
+                        </CardContent>
+                    </Card>
                 </>
             )}
 
@@ -256,6 +335,70 @@ export function AnalyzerView({
                             </div>
                         </CardContent>
                     </Card>
+                     <Card>
+                        <CardHeader>
+                            <CardTitle className="text-base font-semibold">Probability Distribution</CardTitle>
+                            <CardDescription>Current Price: {price.toFixed(decimalPlaces)}</CardDescription>
+                        </CardHeader>
+                        <CardContent className="flex items-center justify-center p-0">
+                            <ChartContainer config={{}} className="mx-auto aspect-square h-[400px]">
+                                <PieChart>
+                                    <Tooltip
+                                        content={({ active, payload }) => {
+                                        if (active && payload && payload.length) {
+                                            const data = payload[0].payload;
+                                            return (
+                                            <div className="min-w-[8rem] rounded-lg border bg-background p-2 text-sm shadow-sm">
+                                                <p className="font-bold text-foreground">{`${data.name}`}</p>
+                                                <p className="text-muted-foreground">{`Probability: ${data.value.toFixed(1)}%`}</p>
+                                            </div>
+                                            );
+                                        }
+                                        return null;
+                                        }}
+                                    />
+                                    <Pie
+                                        data={matchesDiffersChartData}
+                                        dataKey="value"
+                                        nameKey="name"
+                                        cx="50%"
+                                        cy="50%"
+                                        outerRadius={150}
+                                        labelLine={false}
+                                        label={({ cx, cy, midAngle, innerRadius, outerRadius, value}) => {
+                                            const RADIAN = Math.PI / 180
+                                            const radius = innerRadius + (outerRadius - innerRadius) * 0.6
+                                            const x = cx + radius * Math.cos(-midAngle * RADIAN)
+                                            const y = cy + radius * Math.sin(-midAngle * RADIAN)
+
+                                            if (value < 5) return null;
+
+                                            return (
+                                                <text x={x} y={y} fill="white" textAnchor="middle" dominantBaseline="central" className="text-base font-bold">
+                                                    {`${value.toFixed(0)}%`}
+                                                </text>
+                                            )
+                                        }}
+                                    >
+                                        {matchesDiffersChartData.map((entry) => (
+                                            <Cell key={`cell-${entry.name}`} fill={entry.color} className="stroke-background hover:opacity-80" />
+                                        ))}
+                                    </Pie>
+                                    <Legend content={({ payload }) => (
+                                        <ul className="flex flex-wrap gap-x-4 gap-y-2 justify-center mt-4 text-sm">
+                                            {payload?.map((entry, index) => (
+                                                <li key={`item-${index}`} className="flex items-center gap-2">
+                                                    <span className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: entry.color }} />
+                                                    <span className="text-muted-foreground">{entry.value}:</span>
+                                                    <span className="font-medium">{matchesDiffersChartData[index].value.toFixed(1)}%</span>
+                                                </li>
+                                            ))}
+                                        </ul>
+                                    )} />
+                                </PieChart>
+                            </ChartContainer>
+                        </CardContent>
+                    </Card>
                 </>
             )}
 
@@ -339,6 +482,70 @@ export function AnalyzerView({
                                     </div>
                                 </div>
                             </div>
+                        </CardContent>
+                    </Card>
+                     <Card>
+                        <CardHeader>
+                            <CardTitle className="text-base font-semibold">Probability Distribution</CardTitle>
+                            <CardDescription>Current Price: {price.toFixed(decimalPlaces)}</CardDescription>
+                        </CardHeader>
+                        <CardContent className="flex items-center justify-center p-0">
+                            <ChartContainer config={{}} className="mx-auto aspect-square h-[400px]">
+                                <PieChart>
+                                    <Tooltip
+                                        content={({ active, payload }) => {
+                                        if (active && payload && payload.length) {
+                                            const data = payload[0].payload;
+                                            return (
+                                            <div className="min-w-[8rem] rounded-lg border bg-background p-2 text-sm shadow-sm">
+                                                <p className="font-bold text-foreground">{`${data.name}`}</p>
+                                                <p className="text-muted-foreground">{`Probability: ${data.value.toFixed(1)}%`}</p>
+                                            </div>
+                                            );
+                                        }
+                                        return null;
+                                        }}
+                                    />
+                                    <Pie
+                                        data={overUnderChartData}
+                                        dataKey="value"
+                                        nameKey="name"
+                                        cx="50%"
+                                        cy="50%"
+                                        outerRadius={150}
+                                        labelLine={false}
+                                        label={({ cx, cy, midAngle, innerRadius, outerRadius, value}) => {
+                                            const RADIAN = Math.PI / 180
+                                            const radius = innerRadius + (outerRadius - innerRadius) * 0.6
+                                            const x = cx + radius * Math.cos(-midAngle * RADIAN)
+                                            const y = cy + radius * Math.sin(-midAngle * RADIAN)
+
+                                            if (value < 5) return null;
+
+                                            return (
+                                                <text x={x} y={y} fill="white" textAnchor="middle" dominantBaseline="central" className="text-base font-bold">
+                                                    {`${value.toFixed(0)}%`}
+                                                </text>
+                                            )
+                                        }}
+                                    >
+                                        {overUnderChartData.map((entry) => (
+                                            <Cell key={`cell-${entry.name}`} fill={entry.color} className="stroke-background hover:opacity-80" />
+                                        ))}
+                                    </Pie>
+                                    <Legend content={({ payload }) => (
+                                        <ul className="flex flex-wrap gap-x-4 gap-y-2 justify-center mt-4 text-sm">
+                                            {payload?.map((entry, index) => (
+                                                <li key={`item-${index}`} className="flex items-center gap-2">
+                                                    <span className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: entry.color }} />
+                                                    <span className="text-muted-foreground">{entry.value}:</span>
+                                                    <span className="font-medium">{overUnderChartData[index].value.toFixed(1)}%</span>
+                                                </li>
+                                            ))}
+                                        </ul>
+                                    )} />
+                                </PieChart>
+                            </ChartContainer>
                         </CardContent>
                     </Card>
                 </>
