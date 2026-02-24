@@ -1,78 +1,348 @@
-'use server';
-/**
- * @fileOverview Provides an AI-powered flow to generate trading strategy insights.
- *
- * This file defines a Genkit flow that uses a generative AI model to analyze
- * a series of market ticks and recommend a trading strategy.
- *
- * - generateStrategyInsight - An exported function to invoke the AI flow.
- * - InsightInput - The Zod schema for the flow's input.
- * - InsightOutput - The Zod schema for the flow's output.
- */
+'use client';
 
-import {ai} from '@/ai/genkit';
-import {z} from 'zod';
+import * as React from 'react';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Label } from '@/components/ui/label';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Input } from '@/components/ui/input';
+import { syntheticIndices } from '@/lib/mock-data';
+import { cn } from '@/lib/utils';
+import { ArrowDown, ArrowUp, BarChartHorizontal, Hash, List } from 'lucide-react';
+import { Button } from './ui/button';
 
-// Define the Zod schema for the input, which includes the market name and the tick data.
-const InsightInputSchema = z.object({
-  marketName: z.string().describe('The name of the synthetic market being analyzed.'),
-  ticks: z.array(z.number()).describe('An array of the last 50 last-digit ticks, with the most recent tick first.'),
-});
-export type InsightInput = z.infer<typeof InsightInputSchema>;
 
-// Define the Zod schema for the structured output we expect from the AI.
-const InsightOutputSchema = z.object({
-  summary: z.string().describe('A concise, one-sentence summary of the current market condition.'),
-  recommendedStrategy: z
-    .enum(['Even/Odd', 'Matches/Differs', 'Over/Under', 'None'])
-    .describe('The single best trading strategy to use based on the analysis. Can be "None" if no clear strategy emerges.'),
-  reasoning: z.string().describe('A clear, step-by-step explanation for why the recommended strategy was chosen, citing patterns in the data.'),
-});
-export type InsightOutput = z.infer<typeof InsightOutputSchema>;
+interface ClassicViewProps {
+    price: number;
+    lastDigitTicks: number[];
+    maxTicks: number;
+    handleMaxTicksChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
+    handleMaxTicksBlur: () => void;
+    selectedMarket: string;
+    onMarketChange: (market: string) => void;
+    decimalPlaces: number;
+}
 
-// Define the Genkit prompt that will be sent to the AI model.
-const insightPrompt = ai.definePrompt({
-  name: 'strategyInsightPrompt',
-  input: {schema: InsightInputSchema},
-  output: {schema: InsightOutputSchema},
-  prompt: `You are an expert trading analyst specializing in synthetic indices. Your task is to analyze the last 50 single-digit ticks from the '{{marketName}}' market and recommend a trading strategy.
-
-The ticks are provided chronologically (oldest to newest). Here is the data:
-{{ticks}}
-
-Analyze the data for the following patterns:
-1.  **Even/Odd Bias:** Is there a strong dominance of even or odd numbers (e.g., >65%)?
-2.  **Digit Frequency:** Is any single digit appearing with unusually high frequency (e.g., >18%)?
-3.  **Streaks:** Are there any long consecutive streaks of a particular pattern (e.g., 6 or more even numbers in a row)?
-
-Based on your analysis, provide a concise summary, recommend a single strategy ('Even/Odd', 'Matches/Differs', 'Over/Under', or 'None'), and give a clear reasoning for your choice.`,
-});
-
-// Define the Genkit flow that orchestrates the AI call.
-const generateInsightFlow = ai.defineFlow(
-  {
-    name: 'generateInsightFlow',
-    inputSchema: InsightInputSchema,
-    outputSchema: InsightOutputSchema,
-  },
-  async (input) => {
-    // The prompt expects ticks in chronological order, but our app provides them newest first.
-    const chronologicalTicks = [...input.ticks].reverse();
-
-    const {output} = await insightPrompt({
-      ...input,
-      ticks: chronologicalTicks,
-    });
+export function ClassicView({
+    price,
+    lastDigitTicks,
+    maxTicks,
+    handleMaxTicksChange,
+    handleMaxTicksBlur,
+    selectedMarket,
+    onMarketChange,
+    decimalPlaces,
+}: ClassicViewProps) {
+    const [tradeType, setTradeType] = React.useState('even-odd');
+    const [matchesDigit, setMatchesDigit] = React.useState(0);
+    const [overUnderDigit, setOverUnderDigit] = React.useState(5);
     
-    if (!output) {
-        throw new Error("The AI model did not return a valid output.");
-    }
+    // Even/Odd calculations
+    const evenCount = lastDigitTicks.filter(d => d % 2 === 0).length;
+    const oddCount = lastDigitTicks.length - evenCount;
+    const evenPercentage = lastDigitTicks.length > 0 ? (evenCount / lastDigitTicks.length) * 100 : 0;
+    const oddPercentage = lastDigitTicks.length > 0 ? (oddCount / lastDigitTicks.length) * 100 : 0;
+    const evenOddOutcomes = lastDigitTicks.map(digit => (digit % 2 === 0 ? 'E' : 'O'));
 
-    return output;
-  }
-);
+    // Matches/Differs calculations
+    const matchesCount = lastDigitTicks.filter(d => d === matchesDigit).length;
+    const differsCount = lastDigitTicks.length - matchesCount;
+    const matchesPercentage = lastDigitTicks.length > 0 ? (matchesCount / lastDigitTicks.length) * 100 : 0;
+    const differsPercentage = lastDigitTicks.length > 0 ? (differsCount / lastDigitTicks.length) * 100 : 0;
+    const matchesDiffersOutcomes = lastDigitTicks.map(digit => (digit === matchesDigit ? 'M' : 'D'));
 
-// Export a simple async function to be called from the client-side component.
-export async function generateStrategyInsight(input: InsightInput): Promise<InsightOutput> {
-  return generateInsightFlow(input);
+    // Over/Under calculations
+    const overCount = lastDigitTicks.filter(d => d > overUnderDigit).length;
+    const underCount = lastDigitTicks.filter(d => d < overUnderDigit).length;
+    const relevantOverUnderTicksCount = overCount + underCount;
+    const overPercentage = relevantOverUnderTicksCount > 0 ? (overCount / relevantOverUnderTicksCount) * 100 : 0;
+    const underPercentage = relevantOverUnderTicksCount > 0 ? (underCount / relevantOverUnderTicksCount) * 100 : 0;
+    const overUnderOutcomes = lastDigitTicks.map(digit => {
+        if (digit > overUnderDigit) return 'O';
+        if (digit < overUnderDigit) return 'U';
+        return 'E';
+    });
+
+
+    return (
+        <div className="space-y-6">
+             <Card>
+                <CardContent className="p-6 grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div>
+                        <Label htmlFor="classic-market-select">Synthetic Market</Label>
+                        <Select value={selectedMarket} onValueChange={onMarketChange}>
+                            <SelectTrigger id="classic-market-select">
+                                <SelectValue placeholder="Select Index" />
+                            </SelectTrigger>
+                            <SelectContent>
+                                {syntheticIndices.map((index) => (
+                                <SelectItem key={index.id} value={index.id}>
+                                    {index.name}
+                                </SelectItem>
+                                ))}
+                            </SelectContent>
+                        </Select>
+                    </div>
+                    <div>
+                        <Label htmlFor="classic-trade-type">Trade Type</Label>
+                        <Select value={tradeType} onValueChange={setTradeType}>
+                             <SelectTrigger id="classic-trade-type">
+                                <SelectValue placeholder="Select Trade Type" />
+                            </SelectTrigger>
+                            <SelectContent>
+                                <SelectItem value="even-odd">Even/Odd</SelectItem>
+                                <SelectItem value="matches-differs">Matches/Differs</SelectItem>
+                                <SelectItem value="over-under">Over/Under</SelectItem>
+                            </SelectContent>
+                        </Select>
+                    </div>
+                    <div>
+                        <Label htmlFor="max-ticks-classic">Number of Ticks to Analyze</Label>
+                        <Input
+                            id="max-ticks-classic"
+                            type="number"
+                            min="10"
+                            max="5000"
+                            value={maxTicks === 0 ? '' : maxTicks}
+                            onChange={handleMaxTicksChange}
+                            onBlur={handleMaxTicksBlur}
+                        />
+                    </div>
+                </CardContent>
+            </Card>
+
+            {tradeType === 'even-odd' && (
+                <>
+                    <Card>
+                        <CardContent className="p-6 flex items-center justify-between">
+                            <div>
+                                <p className="text-sm text-muted-foreground">CURRENT PRICE</p>
+                                <p className="text-4xl font-bold text-primary">{price.toFixed(decimalPlaces)}</p>
+                            </div>
+                            <div className="flex gap-8 text-center">
+                                <div>
+                                    <p className="text-muted-foreground">Even</p>
+                                    <p className="text-2xl font-bold">{evenCount}</p>
+                                </div>
+                                <div>
+                                    <p className="text-muted-foreground">Odd</p>
+                                    <p className="text-2xl font-bold">{oddCount}</p>
+                                </div>
+                            </div>
+                        </CardContent>
+                    </Card>
+
+                    <Card>
+                        <CardHeader><CardTitle className="text-base font-semibold flex items-center gap-2">
+                            <List className="h-5 w-5 text-muted-foreground" /> Even/Odd Pattern
+                        </CardTitle></CardHeader>
+                        <CardContent className="flex flex-wrap gap-2">
+                            {[...evenOddOutcomes.slice(0, 30)].reverse().map((o, i) => (
+                                <div key={i} className={cn("flex items-center justify-center w-8 h-8 rounded-full font-bold text-white", o === 'E' ? 'bg-blue-500' : 'bg-violet-500')}>
+                                    {o}
+                                </div>
+                            ))}
+                        </CardContent>
+                    </Card>
+
+                     <Card>
+                        <CardHeader><CardTitle className="text-base font-semibold flex items-center gap-2">
+                           <BarChartHorizontal className="h-5 w-5 text-muted-foreground" /> Probability Analysis
+                        </CardTitle></CardHeader>
+                        <CardContent className="space-y-4 p-6">
+                            <div>
+                                <div className="flex justify-between mb-1 text-sm font-medium">
+                                    <span>Even</span>
+                                </div>
+                                <div className="w-full bg-muted rounded-full h-8 overflow-hidden border">
+                                    <div className="bg-blue-500 h-full flex items-center justify-center text-white font-bold text-xs" style={{ width: `${evenPercentage}%` }}>
+                                        {evenPercentage.toFixed(1)}%
+                                    </div>
+                                </div>
+                            </div>
+                             <div>
+                                <div className="flex justify-between mb-1 text-sm font-medium">
+                                    <span>Odd</span>
+                                </div>
+                                <div className="w-full bg-muted rounded-full h-8 overflow-hidden border">
+                                     <div className="bg-violet-500 h-full flex items-center justify-center text-white font-bold text-xs" style={{ width: `${oddPercentage}%` }}>
+                                       {oddPercentage.toFixed(1)}%
+                                    </div>
+                                </div>
+                            </div>
+                        </CardContent>
+                    </Card>
+                </>
+            )}
+
+            {tradeType === 'matches-differs' && (
+                <>
+                    <Card>
+                         <CardContent className="p-6">
+                            <Label>Select a digit to analyze</Label>
+                            <div className="flex justify-center flex-wrap gap-2 mt-4">
+                                {Array.from({ length: 10 }, (_, i) => (
+                                    <Button
+                                    key={i}
+                                    variant={matchesDigit === i ? 'default' : 'outline'}
+                                    className={cn(
+                                        'w-12 h-12 rounded-lg text-lg font-bold',
+                                        matchesDigit === i ? 'bg-primary text-primary-foreground shadow-lg shadow-primary/30' : 'bg-card'
+                                    )}
+                                    onClick={() => setMatchesDigit(i)}
+                                    >
+                                    {i}
+                                    </Button>
+                                ))}
+                            </div>
+                        </CardContent>
+                    </Card>
+
+                    <Card>
+                        <CardContent className="p-6 flex items-center justify-between">
+                            <div>
+                                <p className="text-sm text-muted-foreground">CURRENT PRICE</p>
+                                <p className="text-4xl font-bold text-primary">{price.toFixed(decimalPlaces)}</p>
+                            </div>
+                            <div className="flex gap-8 text-center">
+                                <div>
+                                    <p className="text-muted-foreground">Matches</p>
+                                    <p className="text-2xl font-bold">{matchesCount}</p>
+                                </div>
+                                <div>
+                                    <p className="text-muted-foreground">Differs</p>
+                                    <p className="text-2xl font-bold">{differsCount}</p>
+                                </div>
+                            </div>
+                        </CardContent>
+                    </Card>
+
+                    <Card>
+                        <CardHeader><CardTitle className="text-base font-semibold flex items-center gap-2">
+                            <Hash className="h-5 w-5 text-muted-foreground" /> Matches/Differs Pattern
+                        </CardTitle></CardHeader>
+                        <CardContent className="flex flex-wrap gap-2">
+                            {[...matchesDiffersOutcomes.slice(0, 30)].reverse().map((o, i) => (
+                                <div key={i} className={cn("flex items-center justify-center w-8 h-8 rounded-full font-bold text-white", o === 'M' ? 'bg-cyan-500' : 'bg-slate-500')}>
+                                    {o}
+                                </div>
+                            ))}
+                        </CardContent>
+                    </Card>
+
+                    <Card>
+                        <CardHeader><CardTitle className="text-base font-semibold flex items-center gap-2">
+                           <BarChartHorizontal className="h-5 w-5 text-muted-foreground" /> Probability Analysis
+                        </CardTitle></CardHeader>
+                        <CardContent className="space-y-4 p-6">
+                            <div>
+                                <div className="flex justify-between mb-1 text-sm font-medium">
+                                    <span>Matches</span>
+                                </div>
+                                <div className="w-full bg-muted rounded-full h-8 overflow-hidden border">
+                                    <div className="bg-cyan-500 h-full flex items-center justify-center text-white font-bold text-xs" style={{ width: `${matchesPercentage}%` }}>
+                                        {matchesPercentage.toFixed(1)}%
+                                    </div>
+                                </div>
+                            </div>
+                             <div>
+                                <div className="flex justify-between mb-1 text-sm font-medium">
+                                    <span>Differs</span>
+                                </div>
+                                <div className="w-full bg-muted rounded-full h-8 overflow-hidden border">
+                                     <div className="bg-slate-500 h-full flex items-center justify-center text-white font-bold text-xs" style={{ width: `${differsPercentage}%` }}>
+                                       {differsPercentage.toFixed(1)}%
+                                    </div>
+                                </div>
+                            </div>
+                        </CardContent>
+                    </Card>
+                </>
+            )}
+
+            {tradeType === 'over-under' && (
+                <>
+                    <Card>
+                         <CardContent className="p-6">
+                            <Label>Select a digit to analyze</Label>
+                            <div className="flex justify-center flex-wrap gap-2 mt-4">
+                                {Array.from({ length: 10 }, (_, i) => (
+                                    <Button
+                                    key={i}
+                                    variant={overUnderDigit === i ? 'default' : 'outline'}
+                                    className={cn(
+                                        'w-12 h-12 rounded-lg text-lg font-bold',
+                                        overUnderDigit === i ? 'bg-primary text-primary-foreground shadow-lg shadow-primary/30' : 'bg-card'
+                                    )}
+                                    onClick={() => setOverUnderDigit(i)}
+                                    >
+                                    {i}
+                                    </Button>
+                                ))}
+                            </div>
+                        </CardContent>
+                    </Card>
+
+                    <Card>
+                        <CardContent className="p-6 flex items-center justify-between">
+                            <div>
+                                <p className="text-sm text-muted-foreground">CURRENT PRICE</p>
+                                <p className="text-4xl font-bold text-primary">{price.toFixed(decimalPlaces)}</p>
+                            </div>
+                            <div className="flex gap-8 text-center">
+                                <div>
+                                    <p className="text-muted-foreground">Over</p>
+                                    <p className="text-2xl font-bold">{overCount}</p>
+                                </div>
+                                <div>
+                                    <p className="text-muted-foreground">Under</p>
+                                    <p className="text-2xl font-bold">{underCount}</p>
+                                </div>
+                            </div>
+                        </CardContent>
+                    </Card>
+
+                    <Card>
+                        <CardHeader><CardTitle className="text-base font-semibold flex items-center gap-2">
+                           <div className="flex flex-col"><ArrowUp className="h-3 w-3"/><ArrowDown className="h-3 w-3"/></div> Over/Under Pattern
+                        </CardTitle></CardHeader>
+                        <CardContent className="flex flex-wrap gap-2">
+                            {[...overUnderOutcomes.slice(0, 30)].reverse().map((o, i) => (
+                                <div key={i} className={cn("flex items-center justify-center w-8 h-8 rounded-full font-bold text-white", o === 'O' ? 'bg-teal-500' : o === 'U' ? 'bg-indigo-500' : 'bg-slate-400')}>
+                                    {o}
+                                </div>
+                            ))}
+                        </CardContent>
+                    </Card>
+
+                    <Card>
+                        <CardHeader><CardTitle className="text-base font-semibold flex items-center gap-2">
+                           <BarChartHorizontal className="h-5 w-5 text-muted-foreground" /> Probability Analysis
+                        </CardTitle></CardHeader>
+                        <CardContent className="space-y-4 p-6">
+                            <div>
+                                <div className="flex justify-between mb-1 text-sm font-medium">
+                                    <span>Over</span>
+                                </div>
+                                <div className="w-full bg-muted rounded-full h-8 overflow-hidden border">
+                                    <div className="bg-teal-500 h-full flex items-center justify-center text-white font-bold text-xs" style={{ width: `${overPercentage}%` }}>
+                                        {overPercentage.toFixed(1)}%
+                                    </div>
+                                </div>
+                            </div>
+                             <div>
+                                <div className="flex justify-between mb-1 text-sm font-medium">
+                                    <span>Under</span>
+                                </div>
+                                <div className="w-full bg-muted rounded-full h-8 overflow-hidden border">
+                                     <div className="bg-indigo-500 h-full flex items-center justify-center text-white font-bold text-xs" style={{ width: `${underPercentage}%` }}>
+                                       {underPercentage.toFixed(1)}%
+                                    </div>
+                                </div>
+                            </div>
+                        </CardContent>
+                    </Card>
+                </>
+            )}
+        </div>
+    );
 }

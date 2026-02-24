@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Lightbulb, Bot, Sparkles, AlertTriangle, Loader } from 'lucide-react';
 import { HackerAnimation } from './hacker-animation';
 import { ScannerAnimationContent } from './scanner-animation-content';
-import { generateStrategyInsight, type InsightOutput } from '@/ai/flows/generate-strategy-insight';
+import { generateInsight, type InsightOutput } from '@/lib/insight-generator';
 import { syntheticIndices } from '@/lib/mock-data';
 import { Badge } from './ui/badge';
 import { Label } from './ui/label';
@@ -21,103 +21,47 @@ interface InsightViewProps {
     onMarketChange: (market: string) => void;
 }
 
-type AnalysisState = 'idle' | 'collecting' | 'analyzing' | 'complete' | 'error';
-
-function DataCollectionAnimation({ progress, tickCount, recentTicks }: { progress: number, tickCount: number, recentTicks: number[] }) {
-    return (
-        <Card>
-            <CardHeader>
-                <div className='flex items-center gap-3'>
-                    <Loader className="h-8 w-8 text-primary animate-spin"/>
-                    <div>
-                        <CardTitle className="text-2xl">Collecting Data</CardTitle>
-                        <CardDescription>Capturing the next 50 ticks for analysis.</CardDescription>
-                    </div>
-                </div>
-            </CardHeader>
-            <CardContent className="space-y-4">
-                <Progress value={progress} className="w-full" />
-                <p className="text-sm text-muted-foreground text-center">{tickCount} / 50 ticks collected</p>
-                <div className="mt-4 p-4 bg-muted rounded-md min-h-[60px]">
-                    <p className="text-xs font-semibold text-muted-foreground mb-2">CAPTURED DIGITS</p>
-                    <div className="flex flex-wrap gap-2">
-                        {recentTicks.map((digit, i) => (
-                            <div key={i} className="flex items-center justify-center w-7 h-7 rounded bg-background font-mono text-sm shadow-inner">
-                                {digit}
-                            </div>
-                        ))}
-                    </div>
-                </div>
-            </CardContent>
-        </Card>
-    )
-}
-
+type AnalysisState = 'idle' | 'analyzing' | 'complete' | 'error';
 
 export function InsightView({ price, decimalPlaces, lastDigitTicks, selectedMarket, onMarketChange }: InsightViewProps) {
     const [analysisState, setAnalysisState] = React.useState<AnalysisState>('idle');
-    const [collectedTicks, setCollectedTicks] = React.useState<number[]>([]);
     const [insight, setInsight] = React.useState<InsightOutput | null>(null);
     const [error, setError] = React.useState<string | null>(null);
 
     const marketName = syntheticIndices.find(m => m.id === selectedMarket)?.name || selectedMarket;
 
-    const runAnalysis = async (ticks: number[]) => {
-        setAnalysisState('analyzing');
-        try {
-            // The AI flow expects the market name and the ticks.
-            const result = await generateStrategyInsight({
-                marketName,
-                ticks, // Ticks are already newest first, which the flow handles.
-            });
-            setInsight(result);
-            setAnalysisState('complete');
-        } catch (e: any) {
-            console.error("AI Insight Error:", e);
-            setError(e.message || "An unexpected error occurred during AI analysis.");
-            setAnalysisState('error');
-        }
-    };
-
-    const handleStartAnalysis = () => {
+    const runAnalysis = () => {
         setInsight(null);
         setError(null);
-        setCollectedTicks([]);
-        setAnalysisState('collecting');
-    };
+        setAnalysisState('analyzing');
 
-    React.useEffect(() => {
-        if (analysisState !== 'collecting') {
-            return;
-        }
-
-        // Check if a new tick has arrived. `lastDigitTicks` is prepended, so [0] is the newest.
-        if (lastDigitTicks.length > 0 && (collectedTicks.length === 0 || lastDigitTicks[0] !== collectedTicks[0])) {
-            const newCollected = [lastDigitTicks[0], ...collectedTicks];
-            setCollectedTicks(newCollected);
-
-            if (newCollected.length >= 50) {
-                runAnalysis(newCollected);
+        // Simulate analysis time for better UX
+        setTimeout(() => {
+            if (lastDigitTicks.length < 50) {
+                setError("Not enough data to generate an insight. At least 50 ticks are required.");
+                setAnalysisState('error');
+                return;
             }
-        }
-    }, [lastDigitTicks, analysisState]); // Effect runs on each new tick from parent
 
+            try {
+                const result = generateInsight(lastDigitTicks.slice(0, 50));
+                setInsight(result);
+                setAnalysisState('complete');
+            } catch (e: any) {
+                console.error("Insight Generation Error:", e);
+                setError(e.message || "An unexpected error occurred during analysis.");
+                setAnalysisState('error');
+            }
+        }, 1500);
+    };
 
     const renderContent = () => {
         switch (analysisState) {
-            case 'collecting':
-                return (
-                    <DataCollectionAnimation
-                        progress={(collectedTicks.length / 50) * 100}
-                        tickCount={collectedTicks.length}
-                        recentTicks={[...collectedTicks].slice(0, 24).reverse()}
-                    />
-                );
             case 'analyzing':
             case 'complete':
             case 'error':
                  return (
-                    <HackerAnimation title={`AI Analysis Report - ${marketName}`}>
+                    <HackerAnimation title={`Analysis Report - ${marketName}`}>
                         {analysisState === 'analyzing' ? (
                             <ScannerAnimationContent />
                         ) : error ? (
@@ -162,7 +106,7 @@ export function InsightView({ price, decimalPlaces, lastDigitTicks, selectedMark
                     <Lightbulb className="h-8 w-8 text-primary" />
                     <div>
                         <CardTitle className="text-2xl">Strategy Insight</CardTitle>
-                        <CardDescription>Let a generative AI analyze the market and suggest a strategy.</CardDescription>
+                        <CardDescription>Let our scanner analyze the market and suggest a strategy.</CardDescription>
                     </div>
                 </div>
             </CardHeader>
@@ -171,7 +115,7 @@ export function InsightView({ price, decimalPlaces, lastDigitTicks, selectedMark
                     <Card>
                         <CardContent className="p-6">
                             <Label htmlFor="insight-market-select">Synthetic Market</Label>
-                            <Select value={selectedMarket} onValueChange={onMarketChange} disabled={analysisState === 'collecting' || analysisState === 'analyzing'}>
+                            <Select value={selectedMarket} onValueChange={onMarketChange} disabled={analysisState === 'analyzing'}>
                                 <SelectTrigger id="insight-market-select">
                                     <SelectValue placeholder="Select Index" />
                                 </SelectTrigger>
@@ -193,13 +137,8 @@ export function InsightView({ price, decimalPlaces, lastDigitTicks, selectedMark
 
 
                 <div className="text-center">
-                    <Button onClick={handleStartAnalysis} disabled={analysisState === 'collecting' || analysisState === 'analyzing'} size="lg">
-                        {analysisState === 'collecting' ? (
-                            <>
-                                <Loader className="mr-2 h-5 w-5 animate-spin" />
-                                Collecting Ticks...
-                            </>
-                        ) : analysisState === 'analyzing' ? (
+                    <Button onClick={runAnalysis} disabled={analysisState === 'analyzing'} size="lg">
+                        {analysisState === 'analyzing' ? (
                             <>
                                 <Bot className="mr-2 h-5 w-5 animate-spin" />
                                 Analyzing...
@@ -207,7 +146,7 @@ export function InsightView({ price, decimalPlaces, lastDigitTicks, selectedMark
                         ) : (
                             <>
                             <Sparkles className="mr-2 h-5 w-5" />
-                            Get AI Insight
+                            Get Insight
                             </>
                         )}
                     </Button>
