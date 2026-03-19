@@ -233,7 +233,7 @@ export function DigitFrequencyView({
                 ticks={lastDigitTicks} 
                 selectedDigit={selectedDigit}
                 onDigitSelect={setSelectedDigit}
-                showDetails={false}
+                selectedMarket={selectedMarket}
             />
 
             <Card>

@@ -14,6 +14,14 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '.
 import { cn } from '@/lib/utils';
 import { DigitFrequencyCircles } from './correlation-view';
 
+interface InsightViewProps {
+    price: number;
+    decimalPlaces: number;
+    lastDigitTicks: number[];
+    selectedMarket: string;
+    onMarketChange: (market: string) => void;
+}
+
 type AnalysisState = 'idle' | 'analyzing' | 'complete' | 'error';
 
 export function InsightView({ price, decimalPlaces, lastDigitTicks, selectedMarket, onMarketChange }: InsightViewProps) {
@@ -22,7 +30,9 @@ export function InsightView({ price, decimalPlaces, lastDigitTicks, selectedMark
     const [error, setError] = React.useState<string | null>(null);
     const [selectedDigit, setSelectedDigit] = React.useState<number | null>(null);
 
-    const marketName = syntheticIndices.find(m => m.id === selectedMarket)?.name || selectedMarket;
+    const marketName = React.useMemo(() => {
+        return syntheticIndices.find(m => m.id === selectedMarket)?.name || selectedMarket;
+    }, [selectedMarket]);
 
     const runAnalysis = () => {
         setInsight(null);
@@ -132,7 +142,7 @@ export function InsightView({ price, decimalPlaces, lastDigitTicks, selectedMark
                     ticks={lastDigitTicks} 
                     selectedDigit={selectedDigit}
                     onDigitSelect={setSelectedDigit}
-                    showDetails={false}
+                    selectedMarket={selectedMarket}
                 />
 
                 <div className="text-center">

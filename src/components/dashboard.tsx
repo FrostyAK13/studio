@@ -55,7 +55,8 @@ export function Dashboard() {
         };
 
         ws.onopen = () => {
-            ws.send(JSON.stringify({ "ticks_history": selectedMarket, "count": 100, "end": "latest", "style": "ticks", "subscribe": 1 }));
+            // Requesting 1000 ticks for high-precision statistics
+            ws.send(JSON.stringify({ "ticks_history": selectedMarket, "count": 1000, "end": "latest", "style": "ticks", "subscribe": 1 }));
         };
 
         ws.onmessage = (event) => {

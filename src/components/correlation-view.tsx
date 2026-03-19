@@ -8,6 +8,7 @@ import { syntheticIndices } from '@/lib/mock-data';
 import { cn } from '@/lib/utils';
 import { Progress } from '@/components/ui/progress';
 import { Badge } from '@/components/ui/badge';
+import { Info } from 'lucide-react';
 
 interface CorrelationViewProps {
     selectedMarket: string;
@@ -19,13 +20,17 @@ export const DigitFrequencyCircles = ({
     ticks, 
     selectedDigit, 
     onDigitSelect,
-    showDetails = false
+    selectedMarket
 }: { 
     ticks: number[], 
     selectedDigit: number | null, 
     onDigitSelect: (d: number) => void,
-    showDetails?: boolean
+    selectedMarket: string
 }) => {
+    const marketName = React.useMemo(() => {
+        return syntheticIndices.find(m => m.id === selectedMarket)?.name || selectedMarket;
+    }, [selectedMarket]);
+
     const { digitData, lastDigit } = React.useMemo(() => {
         const counts = Array(10).fill(0);
         ticks.forEach(d => counts[d]++);
@@ -44,11 +49,11 @@ export const DigitFrequencyCircles = ({
                 const rank = sorted.findIndex(s => s.index === item.index);
                 let colorClass = "text-muted-foreground/20";
                 
-                // Deriv-style ranking colors
-                if (rank === 0) colorClass = "text-emerald-400"; // Most (Green)
-                else if (rank === 1) colorClass = "text-cyan-400"; // 2nd Most (Blue)
-                else if (rank === 8) colorClass = "text-orange-400"; // 2nd Lowest (Orange)
-                else if (rank === 9) colorClass = "text-rose-400"; // Lowest (Red)
+                // Deriv-style ranking colors: Green (Most), Blue (2nd), Orange (2nd Low), Red (Low)
+                if (rank === 0) colorClass = "text-emerald-400";
+                else if (rank === 1) colorClass = "text-cyan-400";
+                else if (rank === 8) colorClass = "text-orange-400";
+                else if (rank === 9) colorClass = "text-rose-400";
 
                 return { ...item, colorClass };
             }),
@@ -65,7 +70,7 @@ export const DigitFrequencyCircles = ({
     }) => {
         const radius = 28;
         const circumference = 2 * Math.PI * radius;
-        // Linear scale where 25% frequency = 100% circle rotation (to match Deriv)
+        // Arc scaling: 25% frequency = 100% circle rotation
         const offset = circumference - (Math.min(percentage, 25) / 25) * circumference;
 
         return (
@@ -109,7 +114,7 @@ export const DigitFrequencyCircles = ({
                     </div>
                 </div>
                 {isLast && (
-                    <div className="absolute -bottom-1 w-0 h-0 border-l-[5px] border-l-transparent border-r-[5px] border-r-transparent border-b-[8px] border-b-primary animate-pulse" />
+                    <div className="absolute -bottom-1 w-0 h-0 border-l-[5px] border-l-transparent border-r-[5px] border-r-transparent border-b-[8px] border-b-cyan-500 animate-pulse" />
                 )}
             </div>
         );
@@ -117,6 +122,12 @@ export const DigitFrequencyCircles = ({
 
     return (
         <Card className="overflow-hidden border-none shadow-xl bg-card/40 backdrop-blur-md">
+            <div className="px-4 pt-4 pb-0">
+                <div className="flex items-center gap-2 bg-muted/20 px-3 py-1.5 rounded-md text-[10px] text-muted-foreground font-medium border border-white/5">
+                    <Info className="h-3 w-3 text-cyan-500" />
+                    <span>Last digit stats for latest {ticks.length} ticks for {marketName}</span>
+                </div>
+            </div>
              <CardHeader className="pb-1 pt-3 text-center">
                 <CardTitle className="text-[10px] font-bold uppercase tracking-[0.3em] flex items-center justify-center gap-2">
                     <div className="w-1.5 h-1.5 rounded-full bg-primary animate-pulse" />
@@ -282,7 +293,7 @@ export function CorrelationView({
                 ticks={lastDigitTicks} 
                 selectedDigit={selectedDigit}
                 onDigitSelect={setSelectedDigit}
-                showDetails={true}
+                selectedMarket={selectedMarket}
             />
 
             {selectedDigit !== null && (
