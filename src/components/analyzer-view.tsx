@@ -7,9 +7,9 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Input } from '@/components/ui/input';
 import { syntheticIndices } from '@/lib/mock-data';
 import { cn } from '@/lib/utils';
-import { ArrowDown, ArrowUp, BarChartHorizontal, Hash, List, TrendingUp, TrendingDown, Target, Zap } from 'lucide-react';
+import { ArrowDown, ArrowUp, BarChartHorizontal, Hash, List, TrendingUp, TrendingDown, Target, Zap, Activity } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { PieChart, Pie, Cell, Tooltip, Legend } from 'recharts';
+import { PieChart, Pie, Cell, Tooltip, ResponsiveContainer } from 'recharts';
 import { ChartContainer } from '@/components/ui/chart';
 
 interface AnalyzerViewProps {
@@ -112,6 +112,16 @@ export function AnalyzerView({
         return outcomes;
     }, [priceHistory]);
 
+    const activeChartData = React.useMemo(() => {
+        switch(tradeType) {
+            case 'even-odd': return evenOddChartData;
+            case 'matches-differs': return matchesDiffersChartData;
+            case 'over-under': return overUnderChartData;
+            case 'rise-fall': return riseFallChartData;
+            default: return evenOddChartData;
+        }
+    }, [tradeType, evenOddChartData, matchesDiffersChartData, overUnderChartData, riseFallChartData]);
+
     return (
         <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-700">
              <Card className="border-none shadow-2xl bg-card/60 backdrop-blur-xl overflow-hidden">
@@ -147,7 +157,7 @@ export function AnalyzerView({
                         </Select>
                     </div>
                     <div className="space-y-2">
-                        <Label className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground/80">(Ticks)</Label>
+                        <Label className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground/80">(TICKS)</Label>
                         <Input
                             type="number"
                             min="1"
@@ -196,11 +206,8 @@ export function AnalyzerView({
                             })()}
                         </div>
                         
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                            {(tradeType === 'even-odd' ? evenOddChartData : 
-                              tradeType === 'matches-differs' ? matchesDiffersChartData :
-                              tradeType === 'over-under' ? overUnderChartData :
-                              riseFallChartData).map((data, idx) => (
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            {activeChartData.map((data, idx) => (
                                 <div key={idx} className="bg-white/5 p-4 rounded-2xl border border-white/5 relative overflow-hidden group">
                                     <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity" style={{ backgroundColor: `${data.color}05` }} />
                                     <div className="flex items-center justify-between mb-2">
@@ -216,47 +223,54 @@ export function AnalyzerView({
                     </CardContent>
                 </Card>
 
-                <Card className="border-none shadow-2xl bg-card/40 backdrop-blur-xl overflow-hidden flex flex-col items-center justify-center p-6">
-                    <CardHeader className="text-center pb-2">
-                        <CardTitle className="text-xs font-black uppercase tracking-[0.4em]">DISTRIBUTION</CardTitle>
+                <Card className="border-none shadow-2xl bg-slate-950/90 backdrop-blur-xl overflow-hidden relative flex flex-col p-6 h-full min-h-[380px]">
+                    <div className="absolute top-0 left-0 w-full h-[1px] bg-gradient-to-r from-transparent via-cyan-400 to-transparent opacity-30" />
+                    <CardHeader className="text-center pb-0 px-0">
+                        <CardTitle className="text-[10px] font-black uppercase tracking-[0.5em] text-cyan-400/80">HUD DISTRIBUTION</CardTitle>
                     </CardHeader>
-                    <ChartContainer config={{}} className="w-full aspect-square">
-                        <PieChart>
-                            <Pie
-                                data={
-                                    tradeType === 'even-odd' ? evenOddChartData :
-                                    tradeType === 'matches-differs' ? matchesDiffersChartData :
-                                    tradeType === 'over-under' ? overUnderChartData :
-                                    riseFallChartData
-                                }
-                                dataKey="value"
-                                nameKey="name"
-                                cx="50%"
-                                cy="50%"
-                                innerRadius={60}
-                                outerRadius={90}
-                                stroke="none"
-                                labelLine={false}
-                            >
-                                {(tradeType === 'even-odd' ? evenOddChartData :
-                                    tradeType === 'matches-differs' ? matchesDiffersChartData :
-                                    tradeType === 'over-under' ? overUnderChartData :
-                                    riseFallChartData).map((entry, index) => (
-                                    <Cell key={`cell-${index}`} fill={entry.color} className="hover:opacity-80 transition-opacity" />
-                                ))}
-                            </Pie>
-                            <Tooltip content={() => null} />
-                        </PieChart>
-                    </ChartContainer>
-                    <div className="mt-4 grid grid-cols-2 gap-4 w-full">
-                         {(tradeType === 'even-odd' ? evenOddChartData : 
-                              tradeType === 'matches-differs' ? matchesDiffersChartData :
-                              tradeType === 'over-under' ? overUnderChartData :
-                              riseFallChartData).map((data, idx) => (
-                                <div key={idx} className="text-center">
-                                    <p className="text-[10px] font-black uppercase opacity-40">{data.name}</p>
-                                    <p className="text-lg font-black" style={{ color: data.color }}>{data.value.toFixed(1)}%</p>
-                                </div>
+                    
+                    <div className="flex-1 relative flex items-center justify-center py-4">
+                        <ChartContainer config={{}} className="w-full aspect-square max-w-[200px]">
+                            <PieChart>
+                                <Pie
+                                    data={activeChartData}
+                                    dataKey="value"
+                                    nameKey="name"
+                                    cx="50%"
+                                    cy="50%"
+                                    innerRadius={65}
+                                    outerRadius={85}
+                                    paddingAngle={4}
+                                    stroke="none"
+                                >
+                                    {activeChartData.map((entry, index) => (
+                                        <Cell 
+                                            key={`cell-${index}`} 
+                                            fill={entry.color} 
+                                            className="hover:opacity-80 transition-opacity drop-shadow-[0_0_8px_rgba(var(--primary),0.5)]" 
+                                        />
+                                    ))}
+                                </Pie>
+                                <Tooltip content={() => null} />
+                            </PieChart>
+                        </ChartContainer>
+                        
+                        <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
+                            <Activity className="h-5 w-5 text-cyan-400/40 mb-1 animate-pulse" />
+                            <span className="text-3xl font-black tracking-tighter tabular-nums text-white">
+                                {activeChartData[0]?.value.toFixed(0)}
+                                <span className="text-sm opacity-40 ml-0.5">%</span>
+                            </span>
+                            <span className="text-[8px] font-black uppercase tracking-widest text-muted-foreground/60">{activeChartData[0]?.name} FLOW</span>
+                        </div>
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-3 mt-auto">
+                         {activeChartData.map((data, idx) => (
+                            <div key={idx} className="text-center p-3 rounded-2xl bg-white/5 border border-white/5">
+                                <p className="text-[9px] font-black uppercase tracking-widest opacity-40 mb-1">{data.name}</p>
+                                <p className="text-xl font-black tabular-nums" style={{ color: data.color }}>{data.value.toFixed(1)}%</p>
+                            </div>
                         ))}
                     </div>
                 </Card>
