@@ -44,7 +44,7 @@ export const DigitFrequencyCircles = ({
                 const rank = sorted.findIndex(s => s.index === item.index);
                 let colorClass = "text-muted-foreground/20";
                 
-                // User custom ranking colors
+                // Deriv-style ranking colors
                 if (rank === 0) colorClass = "text-emerald-400"; // Most (Green)
                 else if (rank === 1) colorClass = "text-cyan-400"; // 2nd Most (Blue)
                 else if (rank === 8) colorClass = "text-orange-400"; // 2nd Lowest (Orange)
@@ -65,7 +65,7 @@ export const DigitFrequencyCircles = ({
     }) => {
         const radius = 28;
         const circumference = 2 * Math.PI * radius;
-        // Scale the arc: 25% percentage maps to a full 360 degree circle
+        // Linear scale where 25% frequency = 100% circle rotation (to match Deriv)
         const offset = circumference - (Math.min(percentage, 25) / 25) * circumference;
 
         return (
