@@ -133,7 +133,7 @@ export function DigitFrequencyView({
                         </Select>
                     </div>
                     <div>
-                        <Label htmlFor="max-ticks-frequency">Analysis Range (1-5000 Ticks)</Label>
+                        <Label htmlFor="max-ticks-frequency" className="uppercase tracking-widest text-[10px] font-bold text-muted-foreground">(TICKS)</Label>
                         <Input
                             id="max-ticks-frequency"
                             type="number"

@@ -121,11 +121,11 @@ export function AnalyzerView({
                         </Select>
                     </div>
                     <div>
-                        <Label htmlFor="max-ticks-analyzer">Number of Ticks to Analyze</Label>
+                        <Label htmlFor="max-ticks-analyzer" className="uppercase tracking-widest text-[10px] font-bold text-muted-foreground">(TICKS)</Label>
                         <Input
                             id="max-ticks-analyzer"
                             type="number"
-                            min="10"
+                            min="1"
                             max="5000"
                             value={maxTicks === 0 ? '' : maxTicks}
                             onChange={handleMaxTicksChange}
