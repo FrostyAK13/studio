@@ -7,11 +7,10 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Input } from '@/components/ui/input';
 import { syntheticIndices } from '@/lib/mock-data';
 import { cn } from '@/lib/utils';
-import { ArrowDown, ArrowUp, BarChartHorizontal, Hash, List, TrendingUp, TrendingDown } from 'lucide-react';
+import { ArrowDown, ArrowUp, BarChartHorizontal, Hash, List, TrendingUp, TrendingDown, Target, Zap } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { PieChart, Pie, Cell, Tooltip, Legend } from 'recharts';
 import { ChartContainer } from '@/components/ui/chart';
-
 
 interface AnalyzerViewProps {
     price: number;
@@ -40,50 +39,43 @@ export function AnalyzerView({
     const [matchesDigit, setMatchesDigit] = React.useState(0);
     const [overUnderDigit, setOverUnderDigit] = React.useState(5);
     
-    // 1. Even/Odd Data
     const evenOddChartData = React.useMemo(() => {
         const evenCount = lastDigitTicks.filter(d => d % 2 === 0).length;
         const oddCount = lastDigitTicks.length - evenCount;
-        const evenPercentage = lastDigitTicks.length > 0 ? (evenCount / lastDigitTicks.length) * 100 : 0;
-        const oddPercentage = lastDigitTicks.length > 0 ? (oddCount / lastDigitTicks.length) * 100 : 0;
+        const total = lastDigitTicks.length || 1;
         return [
-            { name: 'Even', value: evenPercentage, color: 'hsl(var(--chart-1))' },
-            { name: 'Odd', value: oddPercentage, color: 'hsl(var(--chart-3))' },
+            { name: 'Even', value: (evenCount / total) * 100, color: 'hsl(var(--chart-1))' },
+            { name: 'Odd', value: (oddCount / total) * 100, color: 'hsl(var(--chart-3))' },
         ];
     }, [lastDigitTicks]);
+
     const evenCount = lastDigitTicks.filter(d => d % 2 === 0).length;
     const oddCount = lastDigitTicks.length - evenCount;
     const evenOddOutcomes = lastDigitTicks.map(digit => (digit % 2 === 0 ? 'E' : 'O'));
 
-
-    // 2. Matches/Differs Data
     const matchesDiffersChartData = React.useMemo(() => {
         const matchesCount = lastDigitTicks.filter(d => d === matchesDigit).length;
-        const differsCount = lastDigitTicks.length - matchesCount;
-        const matchesPercentage = lastDigitTicks.length > 0 ? (matchesCount / lastDigitTicks.length) * 100 : 0;
-        const differsPercentage = lastDigitTicks.length > 0 ? (differsCount / lastDigitTicks.length) * 100 : 0;
-         return [
-            { name: 'Matches', value: matchesPercentage, color: 'hsl(var(--chart-2))' },
-            { name: 'Differs', value: differsPercentage, color: 'hsl(var(--chart-5))' },
+        const total = lastDigitTicks.length || 1;
+        return [
+            { name: 'Matches', value: (matchesCount / total) * 100, color: 'hsl(var(--chart-2))' },
+            { name: 'Differs', value: ((total - matchesCount) / total) * 100, color: 'hsl(var(--chart-5))' },
         ];
     }, [lastDigitTicks, matchesDigit]);
+
     const matchesCount = lastDigitTicks.filter(d => d === matchesDigit).length;
     const differsCount = lastDigitTicks.length - matchesCount;
     const matchesDiffersOutcomes = lastDigitTicks.map(digit => (digit === matchesDigit ? 'M' : 'D'));
 
-
-    // 3. Over/Under Data
     const overUnderChartData = React.useMemo(() => {
         const overCount = lastDigitTicks.filter(d => d > overUnderDigit).length;
         const underCount = lastDigitTicks.filter(d => d < overUnderDigit).length;
-        const relevantOverUnderTicksCount = overCount + underCount;
-        const overPercentage = relevantOverUnderTicksCount > 0 ? (overCount / relevantOverUnderTicksCount) * 100 : 0;
-        const underPercentage = relevantOverUnderTicksCount > 0 ? (underCount / relevantOverUnderTicksCount) * 100 : 0;
+        const relevantCount = (overCount + underCount) || 1;
         return [
-            { name: 'Over', value: overPercentage, color: 'hsl(var(--accent))' },
-            { name: 'Under', value: underPercentage, color: 'hsl(var(--destructive))' },
+            { name: 'Over', value: (overCount / relevantCount) * 100, color: 'hsl(var(--accent))' },
+            { name: 'Under', value: (underCount / relevantCount) * 100, color: 'hsl(var(--destructive))' },
         ];
     }, [lastDigitTicks, overUnderDigit]);
+
     const overCount = lastDigitTicks.filter(d => d > overUnderDigit).length;
     const underCount = lastDigitTicks.filter(d => d < overUnderDigit).length;
     const overUnderOutcomes = lastDigitTicks.map(digit => {
@@ -92,33 +84,23 @@ export function AnalyzerView({
         return 'E';
     });
 
-    // 4. Rise/Fall Data
     const riseFallChartData = React.useMemo(() => {
         if (priceHistory.length < 2) return [
             { name: 'Rise', value: 0, color: 'hsl(var(--accent))' },
             { name: 'Fall', value: 0, color: 'hsl(var(--destructive))' },
         ];
-
         let riseCount = 0;
         let fallCount = 0;
-        
         for (let i = 0; i < priceHistory.length - 1; i++) {
             if (priceHistory[i] > priceHistory[i+1]) riseCount++;
             else if (priceHistory[i] < priceHistory[i+1]) fallCount++;
         }
-
-        const total = riseCount + fallCount || 1;
-        const risePercentage = (riseCount / total) * 100;
-        const fallPercentage = (fallCount / total) * 100;
-
+        const total = (riseCount + fallCount) || 1;
         return [
-            { name: 'Rise', value: risePercentage, color: 'hsl(var(--accent))' },
-            { name: 'Fall', value: fallPercentage, color: 'hsl(var(--destructive))' },
+            { name: 'Rise', value: (riseCount / total) * 100, color: 'hsl(var(--accent))' },
+            { name: 'Fall', value: (fallCount / total) * 100, color: 'hsl(var(--destructive))' },
         ];
     }, [priceHistory]);
-
-    const riseCount = riseFallChartData[0].value; // Placeholder count logic needs raw values
-    const fallCount = riseFallChartData[1].value;
 
     const riseFallOutcomes = React.useMemo(() => {
         const outcomes: string[] = [];
@@ -131,16 +113,17 @@ export function AnalyzerView({
     }, [priceHistory]);
 
     return (
-        <div className="space-y-6">
-             <Card>
-                <CardContent className="p-6 grid grid-cols-1 md:grid-cols-3 gap-4">
-                    <div>
-                        <Label htmlFor="analyzer-market-select">Synthetic Market</Label>
+        <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-700">
+             <Card className="border-none shadow-2xl bg-card/60 backdrop-blur-xl overflow-hidden">
+                <div className="absolute top-0 left-0 w-full h-[1px] bg-gradient-to-r from-transparent via-primary/50 to-transparent" />
+                <CardContent className="p-8 grid grid-cols-1 md:grid-cols-3 gap-8">
+                    <div className="space-y-2">
+                        <Label className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground/80">Market Matrix</Label>
                         <Select value={selectedMarket} onValueChange={onMarketChange}>
-                            <SelectTrigger id="analyzer-market-select">
+                            <SelectTrigger className="h-12 bg-background/40 border-white/5 rounded-xl font-bold">
                                 <SelectValue placeholder="Select Index" />
                             </SelectTrigger>
-                            <SelectContent>
+                            <SelectContent className="rounded-xl border-white/10">
                                 {syntheticIndices.map((index) => (
                                 <SelectItem key={index.id} value={index.id}>
                                     {index.name}
@@ -149,283 +132,96 @@ export function AnalyzerView({
                             </SelectContent>
                         </Select>
                     </div>
-                    <div>
-                        <Label htmlFor="analyzer-trade-type">Trade Type</Label>
+                    <div className="space-y-2">
+                        <Label className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground/80">Algorithm Type</Label>
                         <Select value={tradeType} onValueChange={setTradeType}>
-                             <SelectTrigger id="analyzer-trade-type">
+                             <SelectTrigger className="h-12 bg-background/40 border-white/5 rounded-xl font-bold">
                                 <SelectValue placeholder="Select Trade Type" />
                             </SelectTrigger>
-                            <SelectContent>
-                                <SelectItem value="even-odd">Even/Odd</SelectItem>
-                                <SelectItem value="matches-differs">Matches/Differs</SelectItem>
-                                <SelectItem value="over-under">Over/Under</SelectItem>
-                                <SelectItem value="rise-fall">Rise/Fall</SelectItem>
+                            <SelectContent className="rounded-xl border-white/10">
+                                <SelectItem value="even-odd">Even / Odd</SelectItem>
+                                <SelectItem value="matches-differs">Matches / Differs</SelectItem>
+                                <SelectItem value="over-under">Over / Under</SelectItem>
+                                <SelectItem value="rise-fall">Rise / Fall</SelectItem>
                             </SelectContent>
                         </Select>
                     </div>
-                    <div>
-                        <Label htmlFor="max-ticks-analyzer" className="uppercase tracking-widest text-[10px] font-bold text-muted-foreground">(TICKS)</Label>
+                    <div className="space-y-2">
+                        <Label className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground/80">(Ticks)</Label>
                         <Input
-                            id="max-ticks-analyzer"
                             type="number"
                             min="1"
                             max="5000"
                             value={maxTicks === 0 ? '' : maxTicks}
                             onChange={handleMaxTicksChange}
                             onBlur={handleMaxTicksBlur}
+                            className="h-12 bg-background/40 border-white/5 rounded-xl font-black text-lg text-primary text-center"
                         />
                     </div>
                 </CardContent>
             </Card>
 
-            {/* SHARED CURRENT PRICE CARD */}
-            <Card>
-                <CardContent className="p-6 flex items-center justify-between">
-                    <div>
-                        <p className="text-sm text-muted-foreground">CURRENT PRICE</p>
-                        <p className="text-4xl font-bold text-primary">{price.toFixed(decimalPlaces)}</p>
-                    </div>
-                    <div className="flex gap-8 text-center">
-                        {tradeType === 'even-odd' && (
-                            <>
-                                <div><p className="text-muted-foreground">Even</p><p className="text-2xl font-bold">{evenCount}</p></div>
-                                <div><p className="text-muted-foreground">Odd</p><p className="text-2xl font-bold">{oddCount}</p></div>
-                            </>
-                        )}
-                        {tradeType === 'matches-differs' && (
-                            <>
-                                <div><p className="text-muted-foreground">Matches</p><p className="text-2xl font-bold">{matchesCount}</p></div>
-                                <div><p className="text-muted-foreground">Differs</p><p className="text-2xl font-bold">{differsCount}</p></div>
-                            </>
-                        )}
-                        {tradeType === 'over-under' && (
-                            <>
-                                <div><p className="text-muted-foreground">Over</p><p className="text-2xl font-bold">{overCount}</p></div>
-                                <div><p className="text-muted-foreground">Under</p><p className="text-2xl font-bold">{underCount}</p></div>
-                            </>
-                        )}
-                         {tradeType === 'rise-fall' && (
-                            <>
-                                <div><p className="text-muted-foreground">Rise</p><p className="text-2xl font-bold">{riseFallChartData[0].value.toFixed(1)}%</p></div>
-                                <div><p className="text-muted-foreground">Fall</p><p className="text-2xl font-bold">{riseFallChartData[1].value.toFixed(1)}%</p></div>
-                            </>
-                        )}
-                    </div>
-                </CardContent>
-            </Card>
-
-            {tradeType === 'even-odd' && (
-                <>
-                    <Card>
-                        <CardHeader><CardTitle className="text-base font-semibold flex items-center gap-2">
-                            <List className="h-5 w-5 text-muted-foreground" /> Even/Odd Pattern
-                        </CardTitle></CardHeader>
-                        <CardContent className="flex flex-wrap gap-2">
-                            {[...evenOddOutcomes.slice(0, 30)].reverse().map((o, i) => (
-                                <div key={i} className={cn("flex items-center justify-center w-8 h-8 rounded-full font-bold text-white", o === 'E' ? 'bg-chart-1' : 'bg-chart-3')}>
-                                    {o}
-                                </div>
-                            ))}
-                        </CardContent>
-                    </Card>
-
-                     <Card>
-                        <CardHeader><CardTitle className="text-base font-semibold flex items-center gap-2">
-                           <BarChartHorizontal className="h-5 w-5 text-muted-foreground" /> Probability Analysis
-                        </CardTitle></CardHeader>
-                        <CardContent className="space-y-4 p-6">
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                <Card className="lg:col-span-2 border-none shadow-2xl bg-slate-950/80 backdrop-blur-xl overflow-hidden relative">
+                    <div className="absolute top-0 left-0 w-full h-[2px] bg-gradient-to-r from-cyan-500 via-primary to-purple-500" />
+                    <CardHeader className="pb-2">
+                        <div className="flex items-center justify-between">
                             <div>
-                                <div className="flex justify-between mb-1 text-sm font-medium"><span>Even</span></div>
-                                <div className="w-full bg-muted rounded-full h-8 overflow-hidden border">
-                                    <div className="bg-chart-1 h-full flex items-center justify-center text-white font-bold text-xs" style={{ width: `${evenOddChartData[0].value}%` }}>{evenOddChartData[0].value.toFixed(1)}%</div>
-                                </div>
+                                <CardTitle className="text-xs font-black uppercase tracking-[0.4em] text-primary">Live Probabilities</CardTitle>
+                                <CardDescription className="text-[10px] font-bold uppercase text-muted-foreground mt-1">Real-time Sequence Analysis</CardDescription>
                             </div>
-                             <div>
-                                <div className="flex justify-between mb-1 text-sm font-medium"><span>Odd</span></div>
-                                <div className="w-full bg-muted rounded-full h-8 overflow-hidden border">
-                                     <div className="bg-chart-3 h-full flex items-center justify-center text-white font-bold text-xs" style={{ width: `${evenOddChartData[1].value}%` }}>{evenOddChartData[1].value.toFixed(1)}%</div>
-                                </div>
+                            <div className="text-right">
+                                <p className="text-[10px] font-black uppercase text-muted-foreground tracking-widest">Global Pivot</p>
+                                <p className="text-2xl font-black text-foreground tracking-tighter tabular-nums">{price.toFixed(decimalPlaces)}</p>
                             </div>
-                        </CardContent>
-                    </Card>
-                </>
-            )}
-
-            {tradeType === 'matches-differs' && (
-                <>
-                    <Card>
-                         <CardContent className="p-6">
-                            <Label>Select a digit to analyze</Label>
-                            <div className="flex justify-center flex-wrap gap-2 mt-4">
-                                {Array.from({ length: 10 }, (_, i) => (
-                                    <Button
-                                    key={i}
-                                    variant={matchesDigit === i ? 'default' : 'outline'}
-                                    className={cn(
-                                        'w-12 h-12 rounded-lg text-lg font-bold',
-                                        matchesDigit === i ? 'bg-primary text-primary-foreground shadow-lg shadow-primary/30' : 'bg-card'
-                                    )}
-                                    onClick={() => setMatchesDigit(i)}
-                                    >
-                                    {i}
-                                    </Button>
-                                ))}
-                            </div>
-                        </CardContent>
-                    </Card>
-
-                    <Card>
-                        <CardHeader><CardTitle className="text-base font-semibold flex items-center gap-2">
-                            <Hash className="h-5 w-5 text-muted-foreground" /> Matches/Differs Pattern
-                        </CardTitle></CardHeader>
-                        <CardContent className="flex flex-wrap gap-2">
-                            {[...matchesDiffersOutcomes.slice(0, 30)].reverse().map((o, i) => (
-                                <div key={i} className={cn("flex items-center justify-center w-8 h-8 rounded-full font-bold text-white", o === 'M' ? 'bg-chart-2' : 'bg-chart-5')}>
-                                    {o}
-                                </div>
-                            ))}
-                        </CardContent>
-                    </Card>
-
-                    <Card>
-                        <CardHeader><CardTitle className="text-base font-semibold flex items-center gap-2">
-                           <BarChartHorizontal className="h-5 w-5 text-muted-foreground" /> Probability Analysis
-                        </CardTitle></CardHeader>
-                        <CardContent className="space-y-4 p-6">
-                            <div>
-                                <div className="flex justify-between mb-1 text-sm font-medium"><span>Matches</span></div>
-                                <div className="w-full bg-muted rounded-full h-8 overflow-hidden border">
-                                    <div className="bg-chart-2 h-full flex items-center justify-center text-white font-bold text-xs" style={{ width: `${matchesDiffersChartData[0].value}%` }}>{matchesDiffersChartData[0].value.toFixed(1)}%</div>
-                                </div>
-                            </div>
-                             <div>
-                                <div className="flex justify-between mb-1 text-sm font-medium"><span>Differs</span></div>
-                                <div className="w-full bg-muted rounded-full h-8 overflow-hidden border">
-                                     <div className="bg-chart-5 h-full flex items-center justify-center text-white font-bold text-xs" style={{ width: `${matchesDiffersChartData[1].value}%` }}>{matchesDiffersChartData[1].value.toFixed(1)}%</div>
-                                </div>
-                            </div>
-                        </CardContent>
-                    </Card>
-                </>
-            )}
-
-            {tradeType === 'over-under' && (
-                <>
-                    <Card>
-                         <CardContent className="p-6">
-                            <Label>Select a digit to analyze</Label>
-                            <div className="flex justify-center flex-wrap gap-2 mt-4">
-                                {Array.from({ length: 10 }, (_, i) => (
-                                    <Button
-                                    key={i}
-                                    variant={overUnderDigit === i ? 'default' : 'outline'}
-                                    className={cn(
-                                        'w-12 h-12 rounded-lg text-lg font-bold',
-                                        overUnderDigit === i ? 'bg-primary text-primary-foreground shadow-lg shadow-primary/30' : 'bg-card'
-                                    )}
-                                    onClick={() => setOverUnderDigit(i)}
-                                    >
-                                    {i}
-                                    </Button>
-                                ))}
-                            </div>
-                        </CardContent>
-                    </Card>
-
-                    <Card>
-                        <CardHeader><CardTitle className="text-base font-semibold flex items-center gap-2">
-                           <div className="flex flex-col"><ArrowUp className="h-3 w-3"/><ArrowDown className="h-3 w-3"/></div> Over/Under Pattern
-                        </CardTitle></CardHeader>
-                        <CardContent className="flex flex-wrap gap-2">
-                            {[...overUnderOutcomes.slice(0, 30)].reverse().map((o, i) => (
-                                <div key={i} className={cn("flex items-center justify-center w-8 h-8 rounded-full font-bold text-white", o === 'O' ? 'bg-accent' : o === 'U' ? 'bg-destructive' : 'bg-slate-400')}>
-                                    {o}
-                                </div>
-                            ))}
-                        </CardContent>
-                    </Card>
-
-                    <Card>
-                        <CardHeader><CardTitle className="text-base font-semibold flex items-center gap-2">
-                           <BarChartHorizontal className="h-5 w-5 text-muted-foreground" /> Probability Analysis
-                        </CardTitle></CardHeader>
-                        <CardContent className="space-y-4 p-6">
-                            <div>
-                                <div className="flex justify-between mb-1 text-sm font-medium"><span>Over</span></div>
-                                <div className="w-full bg-muted rounded-full h-8 overflow-hidden border">
-                                    <div className="bg-accent h-full flex items-center justify-center text-accent-foreground font-bold text-xs" style={{ width: `${overUnderChartData[0].value}%` }}>{overUnderChartData[0].value.toFixed(1)}%</div>
-                                </div>
-                            </div>
-                             <div>
-                                <div className="flex justify-between mb-1 text-sm font-medium"><span>Under</span></div>
-                                <div className="w-full bg-muted rounded-full h-8 overflow-hidden border">
-                                     <div className="bg-destructive h-full flex items-center justify-center text-destructive-foreground font-bold text-xs" style={{ width: `${overUnderChartData[1].value}%` }}>{overUnderChartData[1].value.toFixed(1)}%</div>
-                                </div>
-                            </div>
-                        </CardContent>
-                    </Card>
-                </>
-            )}
-
-            {tradeType === 'rise-fall' && (
-                <>
-                    <Card>
-                        <CardHeader><CardTitle className="text-base font-semibold flex items-center gap-2">
-                            <div className="flex flex-col"><TrendingUp className="h-3 w-3"/><TrendingDown className="h-3 w-3"/></div> Rise/Fall Pattern
-                        </CardTitle></CardHeader>
-                        <CardContent className="flex flex-wrap gap-2">
-                            {[...riseFallOutcomes.slice(0, 30)].reverse().map((o, i) => (
-                                <div key={i} className={cn("flex items-center justify-center w-8 h-8 rounded-full font-bold text-white", o === 'R' ? 'bg-accent' : o === 'F' ? 'bg-destructive' : 'bg-slate-400')}>
-                                    {o}
-                                </div>
-                            ))}
-                        </CardContent>
-                    </Card>
-
-                    <Card>
-                        <CardHeader><CardTitle className="text-base font-semibold flex items-center gap-2">
-                           <BarChartHorizontal className="h-5 w-5 text-muted-foreground" /> Probability Analysis
-                        </CardTitle></CardHeader>
-                        <CardContent className="space-y-4 p-6">
-                            <div>
-                                <div className="flex justify-between mb-1 text-sm font-medium"><span>Rise</span></div>
-                                <div className="w-full bg-muted rounded-full h-8 overflow-hidden border">
-                                    <div className="bg-accent h-full flex items-center justify-center text-accent-foreground font-bold text-xs" style={{ width: `${riseFallChartData[0].value}%` }}>{riseFallChartData[0].value.toFixed(1)}%</div>
-                                </div>
-                            </div>
-                             <div>
-                                <div className="flex justify-between mb-1 text-sm font-medium"><span>Fall</span></div>
-                                <div className="w-full bg-muted rounded-full h-8 overflow-hidden border">
-                                     <div className="bg-destructive h-full flex items-center justify-center text-destructive-foreground font-bold text-xs" style={{ width: `${riseFallChartData[1].value}%` }}>{riseFallChartData[1].value.toFixed(1)}%</div>
-                                </div>
-                            </div>
-                        </CardContent>
-                    </Card>
-                </>
-            )}
-
-            <Card>
-                <CardHeader>
-                    <CardTitle className="text-base font-semibold">Probability Distribution</CardTitle>
-                    <CardDescription>Current Price: {price.toFixed(decimalPlaces)}</CardDescription>
-                </CardHeader>
-                <CardContent className="flex items-center justify-center p-0">
-                    <ChartContainer config={{}} className="mx-auto aspect-square h-[400px]">
-                        <PieChart>
-                            <Tooltip
-                                content={({ active, payload }) => {
-                                if (active && payload && payload.length) {
-                                    const data = payload[0].payload;
-                                    return (
-                                    <div className="min-w-[8rem] rounded-lg border bg-background p-2 text-sm shadow-sm">
-                                        <p className="font-bold text-foreground">{`${data.name}`}</p>
-                                        <p className="text-muted-foreground">{`Probability: ${data.value.toFixed(1)}%`}</p>
+                        </div>
+                    </CardHeader>
+                    <CardContent className="p-6">
+                        <div className="flex flex-wrap gap-2 mb-8 min-h-[48px]">
+                            {(() => {
+                                const outcomes = tradeType === 'even-odd' ? evenOddOutcomes : 
+                                               tradeType === 'matches-differs' ? matchesDiffersOutcomes :
+                                               tradeType === 'over-under' ? overUnderOutcomes :
+                                               riseFallOutcomes;
+                                return [...outcomes.slice(0, 24)].reverse().map((o, i) => (
+                                    <div key={i} className={cn(
+                                        "flex items-center justify-center w-10 h-10 rounded-xl font-black text-sm border border-white/5 shadow-lg",
+                                        (o === 'E' || o === 'M' || o === 'O' || o === 'R') 
+                                            ? 'bg-gradient-to-br from-primary to-blue-600 text-white' 
+                                            : 'bg-white/5 text-muted-foreground'
+                                    )}>
+                                        {o}
                                     </div>
-                                    );
-                                }
-                                return null;
-                                }}
-                            />
+                                ));
+                            })()}
+                        </div>
+                        
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            {(tradeType === 'even-odd' ? evenOddChartData : 
+                              tradeType === 'matches-differs' ? matchesDiffersChartData :
+                              tradeType === 'over-under' ? overUnderChartData :
+                              riseFallChartData).map((data, idx) => (
+                                <div key={idx} className="bg-white/5 p-4 rounded-2xl border border-white/5 relative overflow-hidden group">
+                                    <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity" style={{ backgroundColor: `${data.color}05` }} />
+                                    <div className="flex items-center justify-between mb-2">
+                                        <p className="text-[10px] font-black tracking-widest uppercase opacity-70" style={{ color: data.color }}>{data.name} RATIO</p>
+                                        <span className="text-2xl font-black tabular-nums">{data.value.toFixed(1)}%</span>
+                                    </div>
+                                    <div className="w-full bg-black/40 rounded-full h-3 overflow-hidden border border-white/5">
+                                        <div className="h-full transition-all duration-1000 ease-out shadow-[0_0_12px]" style={{ width: `${data.value}%`, backgroundColor: data.color, boxShadow: `0 0 12px ${data.color}40` }} />
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+                    </CardContent>
+                </Card>
+
+                <Card className="border-none shadow-2xl bg-card/40 backdrop-blur-xl overflow-hidden flex flex-col items-center justify-center p-6">
+                    <CardHeader className="text-center pb-2">
+                        <CardTitle className="text-xs font-black uppercase tracking-[0.4em]">DISTRIBUTION</CardTitle>
+                    </CardHeader>
+                    <ChartContainer config={{}} className="w-full aspect-square">
+                        <PieChart>
                             <Pie
                                 data={
                                     tradeType === 'even-odd' ? evenOddChartData :
@@ -437,51 +233,82 @@ export function AnalyzerView({
                                 nameKey="name"
                                 cx="50%"
                                 cy="50%"
-                                outerRadius={150}
+                                innerRadius={60}
+                                outerRadius={90}
+                                stroke="none"
                                 labelLine={false}
-                                label={({ cx, cy, midAngle, innerRadius, outerRadius, value}) => {
-                                    const RADIAN = Math.PI / 180
-                                    const radius = innerRadius + (outerRadius - innerRadius) * 0.6
-                                    const x = cx + radius * Math.cos(-midAngle * RADIAN)
-                                    const y = cy + radius * Math.sin(-midAngle * RADIAN)
-
-                                    if (value < 5) return null;
-
-                                    return (
-                                        <text x={x} y={y} fill="white" textAnchor="middle" dominantBaseline="central" className="text-base font-bold">
-                                            {`${value.toFixed(0)}%`}
-                                        </text>
-                                    )
-                                }}
                             >
                                 {(tradeType === 'even-odd' ? evenOddChartData :
                                     tradeType === 'matches-differs' ? matchesDiffersChartData :
                                     tradeType === 'over-under' ? overUnderChartData :
-                                    riseFallChartData).map((entry) => (
-                                    <Cell key={`cell-${entry.name}`} fill={entry.color} className="stroke-background hover:opacity-80" />
+                                    riseFallChartData).map((entry, index) => (
+                                    <Cell key={`cell-${index}`} fill={entry.color} className="hover:opacity-80 transition-opacity" />
                                 ))}
                             </Pie>
-                            <Legend content={({ payload }) => (
-                                <ul className="flex flex-wrap gap-x-4 gap-y-2 justify-center mt-4 text-sm">
-                                    {payload?.map((entry, index) => {
-                                        const currentData = tradeType === 'even-odd' ? evenOddChartData :
-                                                            tradeType === 'matches-differs' ? matchesDiffersChartData :
-                                                            tradeType === 'over-under' ? overUnderChartData :
-                                                            riseFallChartData;
-                                        return (
-                                            <li key={`item-${index}`} className="flex items-center gap-2">
-                                                <span className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: entry.color }} />
-                                                <span className="text-muted-foreground">{entry.value}:</span>
-                                                <span className="font-medium">{currentData[index].value.toFixed(1)}%</span>
-                                            </li>
-                                        );
-                                    })}
-                                </ul>
-                            )} />
+                            <Tooltip content={() => null} />
                         </PieChart>
                     </ChartContainer>
-                </CardContent>
-            </Card>
+                    <div className="mt-4 grid grid-cols-2 gap-4 w-full">
+                         {(tradeType === 'even-odd' ? evenOddChartData : 
+                              tradeType === 'matches-differs' ? matchesDiffersChartData :
+                              tradeType === 'over-under' ? overUnderChartData :
+                              riseFallChartData).map((data, idx) => (
+                                <div key={idx} className="text-center">
+                                    <p className="text-[10px] font-black uppercase opacity-40">{data.name}</p>
+                                    <p className="text-lg font-black" style={{ color: data.color }}>{data.value.toFixed(1)}%</p>
+                                </div>
+                        ))}
+                    </div>
+                </Card>
+            </div>
+
+            {tradeType === 'matches-differs' && (
+                <Card className="border-none shadow-2xl bg-slate-900/40 backdrop-blur-xl p-8 rounded-3xl">
+                    <div className="flex items-center gap-3 mb-6">
+                        <Hash className="h-5 w-5 text-primary" />
+                        <p className="text-xs font-black uppercase tracking-[0.2em]">Select Digit Target</p>
+                    </div>
+                    <div className="grid grid-cols-5 sm:grid-cols-10 gap-3">
+                        {Array.from({ length: 10 }, (_, i) => (
+                            <Button
+                                key={i}
+                                variant={matchesDigit === i ? 'default' : 'outline'}
+                                className={cn(
+                                    'h-14 rounded-2xl text-xl font-black transition-all duration-300',
+                                    matchesDigit === i ? 'bg-primary text-white shadow-xl shadow-primary/30 scale-110' : 'bg-background/40 border-white/5 hover:bg-white/10'
+                                )}
+                                onClick={() => setMatchesDigit(i)}
+                            >
+                                {i}
+                            </Button>
+                        ))}
+                    </div>
+                </Card>
+            )}
+
+            {tradeType === 'over-under' && (
+                <Card className="border-none shadow-2xl bg-slate-900/40 backdrop-blur-xl p-8 rounded-3xl">
+                     <div className="flex items-center gap-3 mb-6">
+                        <BarChartHorizontal className="h-5 w-5 text-accent" />
+                        <p className="text-xs font-black uppercase tracking-[0.2em]">Select Barrier Level</p>
+                    </div>
+                    <div className="grid grid-cols-5 sm:grid-cols-10 gap-3">
+                        {Array.from({ length: 10 }, (_, i) => (
+                            <Button
+                                key={i}
+                                variant={overUnderDigit === i ? 'default' : 'outline'}
+                                className={cn(
+                                    'h-14 rounded-2xl text-xl font-black transition-all duration-300',
+                                    overUnderDigit === i ? 'bg-accent text-white shadow-xl shadow-accent/30 scale-110' : 'bg-background/40 border-white/5 hover:bg-white/10'
+                                )}
+                                onClick={() => setOverUnderDigit(i)}
+                            >
+                                {i}
+                            </Button>
+                        ))}
+                    </div>
+                </Card>
+            )}
         </div>
     );
 }

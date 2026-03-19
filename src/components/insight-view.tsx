@@ -3,7 +3,7 @@
 import * as React from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Lightbulb, Bot, Sparkles, AlertTriangle } from 'lucide-react';
+import { Lightbulb, Bot, Sparkles, AlertTriangle, Target, Zap, ShieldCheck, Info } from 'lucide-react';
 import { HackerAnimation } from './hacker-animation';
 import { ScannerAnimationContent } from './scanner-animation-content';
 import { generateInsight, type InsightOutput } from '@/lib/insight-generator';
@@ -41,8 +41,8 @@ export function InsightView({ price, decimalPlaces, lastDigitTicks, selectedMark
         setAnalysisState('analyzing');
 
         setTimeout(() => {
-            if (lastDigitTicks.length < Math.min(maxTicks, 50)) {
-                setError(`Insufficient data. Need at least ${Math.min(maxTicks, 50)} ticks for the selected range.`);
+            if (lastDigitTicks.length < 50) {
+                setError(`Data sequence unstable. Minimum 50 ticks required for analysis.`);
                 setAnalysisState('error');
                 return;
             }
@@ -52,10 +52,10 @@ export function InsightView({ price, decimalPlaces, lastDigitTicks, selectedMark
                 setInsight(result);
                 setAnalysisState('complete');
             } catch (e: any) {
-                setError(e.message || "An unexpected error occurred during analysis.");
+                setError(e.message || "An unexpected error occurred during deep scan.");
                 setAnalysisState('error');
             }
-        }, 1500);
+        }, 2000);
     };
 
     const marketDirectionAnalysis = React.useMemo(() => {
@@ -81,33 +81,40 @@ export function InsightView({ price, decimalPlaces, lastDigitTicks, selectedMark
             case 'complete':
             case 'error':
                  return (
-                    <HackerAnimation title={`Analysis Report - ${marketName} (${lastDigitTicks.length} Ticks)`}>
+                    <HackerAnimation title={`SYSTEM REPORT: ${marketName.toUpperCase()} [${lastDigitTicks.length} TICKS]`}>
                         {analysisState === 'analyzing' ? (
                             <ScannerAnimationContent />
                         ) : error ? (
-                            <div className="text-left text-red-400 flex items-start gap-4">
-                                <AlertTriangle className="h-5 w-5 flex-shrink-0 mt-1"/>
+                            <div className="text-left text-red-400 flex items-start gap-4 p-4 bg-red-950/20 rounded-xl border border-red-500/20">
+                                <AlertTriangle className="h-6 w-6 flex-shrink-0 mt-1"/>
                                 <div>
-                                    <p className="font-bold text-lg">Analysis Failed</p>
-                                    <p>{error}</p>
+                                    <p className="font-black text-lg uppercase tracking-widest">Access Denied</p>
+                                    <p className="font-mono text-sm opacity-80">{error}</p>
                                 </div>
                             </div>
                         ) : insight ? (
-                            <div className="text-left space-y-4">
-                                <div>
-                                    <p className="font-bold text-green-300">// MARKET SUMMARY ({lastDigitTicks.length}-Tick Sample)</p>
-                                    <p className="text-base">{insight.summary}</p>
+                            <div className="text-left space-y-6">
+                                <div className="p-4 bg-white/5 rounded-xl border border-white/5">
+                                    <p className="font-black text-green-300 text-[10px] uppercase tracking-[0.3em] mb-2">// Market intelligence Summary</p>
+                                    <p className="text-base font-medium text-green-100/90 leading-relaxed">{insight.summary}</p>
                                 </div>
-                                <div>
-                                    <p className="font-bold text-green-300">// RECOMMENDATION</p>
-                                    <div className='flex items-center gap-3'>
-                                        <p className="text-base">Strategy:</p>
-                                        <Badge variant={insight.recommendedStrategy === 'None' ? 'destructive' : 'secondary'} className="text-base font-bold uppercase">{insight.recommendedStrategy}</Badge>
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                    <div className="p-4 bg-white/5 rounded-xl border border-white/5 relative overflow-hidden group">
+                                        <div className="absolute top-0 right-0 p-2 opacity-20 group-hover:opacity-100 transition-opacity"><Target className="h-10 w-10 text-primary" /></div>
+                                        <p className="font-black text-green-300 text-[10px] uppercase tracking-[0.3em] mb-2">// Recommended Protocol</p>
+                                        <Badge className="h-10 px-4 bg-primary text-white text-sm font-black uppercase rounded-lg shadow-lg shadow-primary/20">
+                                            {insight.recommendedStrategy}
+                                        </Badge>
+                                    </div>
+                                    <div className="p-4 bg-white/5 rounded-xl border border-white/5 relative overflow-hidden group">
+                                         <div className="absolute top-0 right-0 p-2 opacity-20 group-hover:opacity-100 transition-opacity"><ShieldCheck className="h-10 w-10 text-emerald-400" /></div>
+                                        <p className="font-black text-green-300 text-[10px] uppercase tracking-[0.3em] mb-2">// Risk Factor</p>
+                                        <p className="text-xl font-black text-white">OPTIMIZED</p>
                                     </div>
                                 </div>
-                                <div>
-                                    <p className="font-bold text-green-300">// REASONING</p>
-                                    <p className="text-base">{insight.reasoning}</p>
+                                <div className="p-4 bg-white/5 rounded-xl border border-white/5">
+                                    <p className="font-black text-green-300 text-[10px] uppercase tracking-[0.3em] mb-2">// Strategic Reasoning</p>
+                                    <p className="text-sm font-mono text-green-100/70 leading-relaxed">{insight.reasoning}</p>
                                 </div>
                             </div>
                         ) : null}
@@ -120,26 +127,35 @@ export function InsightView({ price, decimalPlaces, lastDigitTicks, selectedMark
     }
 
     return (
-        <Card>
-            <CardHeader>
-                <div className='flex items-center gap-3'>
-                    <Lightbulb className="h-8 w-8 text-primary" />
-                    <div>
-                        <CardTitle className="text-2xl uppercase">Strategy Insight</CardTitle>
-                        <CardDescription>High-accuracy analysis based on your selected {maxTicks}-tick range.</CardDescription>
+        <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-700">
+             <Card className="border-none shadow-2xl bg-card/60 backdrop-blur-xl overflow-hidden relative">
+                <div className="absolute top-0 left-0 w-full h-[1px] bg-gradient-to-r from-transparent via-primary/50 to-transparent" />
+                <CardHeader className="pb-6 pt-8">
+                    <div className='flex items-center gap-4 justify-between'>
+                        <div className="flex items-center gap-4">
+                            <div className="w-12 h-12 rounded-2xl bg-primary/10 flex items-center justify-center border border-primary/20 shadow-lg">
+                                <Lightbulb className="h-6 w-6 text-primary drop-shadow-[0_0_8px_rgba(var(--primary),0.5)]" />
+                            </div>
+                            <div>
+                                <CardTitle className="text-lg font-black uppercase tracking-[0.2em]">Strategy Intelligence</CardTitle>
+                                <CardDescription className="text-[10px] font-bold uppercase text-muted-foreground">High-Precision Matrix Analysis</CardDescription>
+                            </div>
+                        </div>
+                        <div className="text-right">
+                             <p className="text-[10px] font-black uppercase text-muted-foreground tracking-widest">Active Pivot</p>
+                             <p className="text-2xl font-black text-foreground tabular-nums">{price.toFixed(decimalPlaces)}</p>
+                        </div>
                     </div>
-                </div>
-            </CardHeader>
-            <CardContent className="space-y-6">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <Card>
-                        <CardContent className="p-6">
-                            <Label htmlFor="insight-market-select">Synthetic Market</Label>
+                </CardHeader>
+                <CardContent className="space-y-6">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div className="space-y-2">
+                            <Label className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground">Active Market</Label>
                             <Select value={selectedMarket} onValueChange={onMarketChange} disabled={analysisState === 'analyzing'}>
-                                <SelectTrigger id="insight-market-select">
+                                <SelectTrigger className="h-12 bg-background/40 border-white/5 rounded-xl font-bold">
                                     <SelectValue placeholder="Select Index" />
                                 </SelectTrigger>
-                                <SelectContent>
+                                <SelectContent className="rounded-xl border-white/10">
                                     {syntheticIndices.map((index) => (
                                     <SelectItem key={index.id} value={index.id}>
                                         {index.name}
@@ -147,68 +163,72 @@ export function InsightView({ price, decimalPlaces, lastDigitTicks, selectedMark
                                     ))}
                                 </SelectContent>
                             </Select>
-                        </CardContent>
-                    </Card>
-                    <div className="rounded-lg p-4 flex flex-col items-center justify-center bg-gradient-to-br from-blue-500 to-cyan-400 text-white">
-                        <span className="text-sm tracking-widest uppercase">Price</span>
-                        <span className="text-4xl font-bold">{price.toFixed(decimalPlaces)}</span>
+                        </div>
+                        <div className="space-y-2">
+                            <Label className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground">Sample window</Label>
+                            <div className="h-12 flex items-center justify-center bg-white/5 rounded-xl border border-white/5 px-6 font-black text-lg text-primary">
+                                {maxTicks} Ticks
+                            </div>
+                        </div>
                     </div>
-                </div>
 
-                <DigitFrequencyCircles 
-                    ticks={lastDigitTicks} 
-                    selectedDigit={selectedDigit}
-                    onDigitSelect={setSelectedDigit}
-                    selectedMarket={selectedMarket}
-                />
+                    <DigitFrequencyCircles 
+                        ticks={lastDigitTicks} 
+                        selectedDigit={selectedDigit}
+                        onDigitSelect={setSelectedDigit}
+                        selectedMarket={selectedMarket}
+                    />
 
-                {marketDirectionAnalysis && (
-                     <Card className="border-none bg-muted/10">
-                        <CardHeader className="pb-2">
-                            <CardTitle className="text-xs font-black tracking-widest uppercase opacity-60">Market Dominance Analysis ({lastDigitTicks.length} Ticks)</CardTitle>
-                        </CardHeader>
-                        <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                            <div className="space-y-2">
-                                <div className="flex justify-between text-[10px] font-bold uppercase">
-                                    <span>Under 5 (0-4)</span>
-                                    <span>{marketDirectionAnalysis.lower.toFixed(1)}%</span>
+                    {marketDirectionAnalysis && (
+                         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 p-6 rounded-3xl bg-white/5 border border-white/5">
+                            <div className="space-y-3">
+                                <div className="flex justify-between text-[10px] font-black uppercase tracking-widest text-muted-foreground">
+                                    <span>Under 5 Bias</span>
+                                    <span className="text-accent">{marketDirectionAnalysis.lower.toFixed(1)}%</span>
                                 </div>
-                                <div className="w-full bg-muted rounded-full h-2 overflow-hidden">
-                                    <div className="h-full transition-all duration-500" style={{ width: `${marketDirectionAnalysis.lower}%`, backgroundColor: marketDirectionAnalysis.lowerColor }}></div>
+                                <div className="w-full bg-black/40 rounded-full h-3 overflow-hidden border border-white/5">
+                                    <div className="h-full transition-all duration-1000 shadow-[0_0_8px_rgba(var(--accent),0.4)]" style={{ width: `${marketDirectionAnalysis.lower}%`, backgroundColor: marketDirectionAnalysis.lowerColor }}></div>
                                 </div>
                             </div>
-                            <div className="space-y-2">
-                                <div className="flex justify-between text-[10px] font-bold uppercase">
-                                    <span>Over 4 (5-9)</span>
-                                    <span>{marketDirectionAnalysis.higher.toFixed(1)}%</span>
+                            <div className="space-y-3">
+                                <div className="flex justify-between text-[10px] font-black uppercase tracking-widest text-muted-foreground">
+                                    <span>Over 4 Bias</span>
+                                    <span className="text-rose-500">{marketDirectionAnalysis.higher.toFixed(1)}%</span>
                                 </div>
-                                <div className="w-full bg-muted rounded-full h-2 overflow-hidden">
-                                    <div className="h-full transition-all duration-500" style={{ width: `${marketDirectionAnalysis.higher}%`, backgroundColor: marketDirectionAnalysis.higherColor }}></div>
+                                <div className="w-full bg-black/40 rounded-full h-3 overflow-hidden border border-white/5">
+                                    <div className="h-full transition-all duration-1000 shadow-[0_0_8px_rgba(var(--destructive),0.4)]" style={{ width: `${marketDirectionAnalysis.higher}%`, backgroundColor: marketDirectionAnalysis.higherColor }}></div>
                                 </div>
                             </div>
-                        </CardContent>
-                    </Card>
-                )}
+                        </div>
+                    )}
 
-                <div className="text-center">
-                    <Button onClick={runAnalysis} disabled={analysisState === 'analyzing'} size="lg" className="shadow-lg shadow-primary/20">
-                        {analysisState === 'analyzing' ? (
-                            <>
-                                <Bot className="mr-2 h-5 w-5 animate-spin" />
-                                ANALYZING...
-                            </>
-                        ) : (
-                            <>
-                            <Sparkles className="mr-2 h-5 w-5" />
-                            GET INSIGHT
-                            </>
-                        )}
-                    </Button>
-                </div>
-                
-                {renderContent()}
+                    <div className="text-center py-4">
+                        <Button 
+                            onClick={runAnalysis} 
+                            disabled={analysisState === 'analyzing'} 
+                            className={cn(
+                                "h-14 px-10 rounded-full font-black text-xs uppercase tracking-[0.2em] shadow-2xl transition-all active:scale-95",
+                                analysisState === 'analyzing' ? "bg-muted cursor-not-allowed" : "bg-primary hover:bg-primary/90"
+                            )}
+                        >
+                            {analysisState === 'analyzing' ? (
+                                <>
+                                    <Bot className="mr-3 h-5 w-5 animate-spin" />
+                                    Synchronizing...
+                                </>
+                            ) : (
+                                <>
+                                <Sparkles className="mr-3 h-5 w-5" />
+                                Initiate Deep Analysis
+                                </>
+                            )}
+                        </Button>
+                    </div>
+                    
+                    {renderContent()}
 
-            </CardContent>
-        </Card>
+                </CardContent>
+            </Card>
+        </div>
     );
 }

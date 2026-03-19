@@ -10,6 +10,7 @@ import { cn } from '@/lib/utils';
 import { Badge } from '@/components/ui/badge';
 import { RiseFallAnalysis } from './rise-fall-analysis';
 import { DigitFrequencyCircles } from './correlation-view';
+import { Target, Zap, TrendingUp, TrendingDown, Info } from 'lucide-react';
 
 interface DigitFrequencyViewProps {
     price: number;
@@ -36,34 +37,6 @@ export function DigitFrequencyView({
 }: DigitFrequencyViewProps) {
     const [selectedDigit, setSelectedDigit] = React.useState<number | null>(null);
 
-    const { highestDigit, lowestDigit } = React.useMemo(() => {
-        if (lastDigitTicks.length === 0) {
-            return { 
-                highestDigit: { digit: '-', count: 0 }, 
-                lowestDigit: { digit: '-', count: 0 }
-            };
-        }
-
-        const counts = Array(10).fill(0);
-        lastDigitTicks.forEach(digit => {
-            counts[digit]++;
-        });
-
-        let highest = { digit: 0, count: counts[0] };
-        let lowest = { digit: 0, count: counts[0] };
-
-        for (let i = 1; i < 10; i++) {
-            if (counts[i] > highest.count) {
-                highest = { digit: i, count: counts[i] };
-            }
-            if (counts[i] < lowest.count) {
-                lowest = { digit: i, count: counts[i] };
-            }
-        }
-        
-        return { highestDigit: highest, lowestDigit: lowest };
-    }, [lastDigitTicks]);
-    
     const marketDirectionAnalysis = React.useMemo(() => {
         const ticks = lastDigitTicks;
         if (ticks.length < 2) return null;
@@ -74,7 +47,7 @@ export function DigitFrequencyView({
         const oddPercentage = 100 - evenPercentage;
         
         let evenOddReversal: 'Even' | 'Odd' | 'None' = 'None';
-        if (ticks.length >= 5) {
+        if (ticks.length >= 10) {
             const lastFive = ticks.slice(0, 5).map(d => d % 2 === 0 ? 'E' : 'O');
             if (lastFive.every(o => o === 'E')) evenOddReversal = 'Odd';
             if (lastFive.every(o => o === 'O')) evenOddReversal = 'Even';
@@ -113,17 +86,20 @@ export function DigitFrequencyView({
         };
     }, [lastDigitTicks]);
 
+    const marketName = syntheticIndices.find(m => m.id === selectedMarket)?.name || selectedMarket;
+
     return (
-        <div className="space-y-6">
-            <Card>
-                <CardContent className="p-6 grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div>
-                        <Label htmlFor="freq-market-select">Synthetic Market</Label>
+        <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-700">
+            <Card className="border-none shadow-2xl bg-card/60 backdrop-blur-xl overflow-hidden relative">
+                <div className="absolute top-0 left-0 w-full h-[1px] bg-gradient-to-r from-transparent via-primary/50 to-transparent" />
+                <CardContent className="p-6 grid grid-cols-1 md:grid-cols-2 gap-8">
+                    <div className="space-y-2">
+                        <Label className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground">Market Selector</Label>
                         <Select value={selectedMarket} onValueChange={onMarketChange}>
-                            <SelectTrigger id="freq-market-select">
+                            <SelectTrigger className="h-12 bg-background/40 border-white/5 rounded-xl font-bold">
                                 <SelectValue placeholder="Select Index" />
                             </SelectTrigger>
-                            <SelectContent>
+                            <SelectContent className="rounded-xl border-white/10">
                                 {syntheticIndices.map((index) => (
                                 <SelectItem key={index.id} value={index.id}>
                                     {index.name}
@@ -132,16 +108,16 @@ export function DigitFrequencyView({
                             </SelectContent>
                         </Select>
                     </div>
-                    <div>
-                        <Label htmlFor="max-ticks-frequency" className="uppercase tracking-widest text-[10px] font-bold text-muted-foreground">(TICKS)</Label>
+                    <div className="space-y-2">
+                        <Label className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground">(Ticks)</Label>
                         <Input
-                            id="max-ticks-frequency"
                             type="number"
                             min="1"
                             max="5000"
                             value={maxTicks === 0 ? '' : maxTicks}
                             onChange={handleMaxTicksChange}
                             onBlur={handleMaxTicksBlur}
+                            className="h-12 bg-background/40 border-white/5 rounded-xl font-black text-lg text-primary text-center"
                         />
                     </div>
                 </CardContent>
@@ -154,121 +130,140 @@ export function DigitFrequencyView({
                 selectedMarket={selectedMarket}
             />
 
-            <Card>
-                <CardContent className="p-6 flex items-center justify-between">
-                    <div>
-                        <p className="text-sm text-muted-foreground">CURRENT PRICE</p>
-                        <p className="text-4xl font-bold text-primary">{price.toFixed(decimalPlaces)}</p>
-                    </div>
-                    <div className="flex gap-8 text-center">
-                        <div>
-                            <p className="text-muted-foreground">Highest Digit</p>
-                            <p className="text-2xl font-bold">{highestDigit.count}</p>
-                            <p className="text-sm text-muted-foreground">Digit {highestDigit.digit}</p>
+            <Card className="border-none shadow-2xl bg-slate-950/80 backdrop-blur-xl overflow-hidden relative">
+                 <div className="absolute top-0 left-0 w-full h-[2px] bg-gradient-to-r from-emerald-500 via-primary to-cyan-400" />
+                 <CardContent className="p-8 flex flex-col md:flex-row items-center justify-between gap-8">
+                    <div className="flex items-center gap-6">
+                        <div className="w-16 h-16 rounded-3xl bg-primary/10 flex items-center justify-center border border-primary/20 shadow-inner">
+                            <Zap className="h-8 w-8 text-primary drop-shadow-[0_0_8px_rgba(var(--primary),0.5)]" />
                         </div>
                         <div>
-                            <p className="text-muted-foreground">Lowest Digit</p>
-                            <p className="text-2xl font-bold">{lowestDigit.count}</p>
-                            <p className="text-sm text-muted-foreground">Digit {lowestDigit.digit}</p>
+                            <p className="text-[10px] font-black uppercase tracking-[0.4em] text-muted-foreground/60">Current Pivot</p>
+                            <p className="text-5xl font-black text-foreground tracking-tighter tabular-nums">
+                                {price.toFixed(decimalPlaces)}
+                            </p>
                         </div>
                     </div>
+                    
+                    {marketDirectionAnalysis && (
+                        <div className="flex gap-12 text-center bg-white/5 px-8 py-4 rounded-3xl border border-white/5">
+                            <div>
+                                <p className="text-[10px] font-black uppercase text-muted-foreground tracking-widest mb-1">Bullish Bias</p>
+                                <p className="text-3xl font-black text-emerald-400">{marketDirectionAnalysis.overUnder.higher.toFixed(1)}%</p>
+                            </div>
+                            <div className="w-[1px] h-12 bg-white/10" />
+                            <div>
+                                <p className="text-[10px] font-black uppercase text-muted-foreground tracking-widest mb-1">Bearish Bias</p>
+                                <p className="text-3xl font-black text-rose-500">{marketDirectionAnalysis.overUnder.lower.toFixed(1)}%</p>
+                            </div>
+                        </div>
+                    )}
                 </CardContent>
             </Card>
 
-            <Card>
-                <CardHeader>
-                    <CardTitle className="text-base font-semibold uppercase">Market Direction (Last {lastDigitTicks.length} Ticks)</CardTitle>
-                    <CardDescription>Dynamic range analysis based on your selection.</CardDescription>
+            <Card className="border-none shadow-2xl bg-card/40 backdrop-blur-md overflow-hidden">
+                <CardHeader className="text-center pb-2 border-b border-white/5">
+                    <CardTitle className="text-xs font-black uppercase tracking-[0.4em] flex items-center justify-center gap-3">
+                        <TrendingUp className="h-4 w-4 text-primary" />
+                        Market Intelligence Grid
+                        <TrendingDown className="h-4 w-4 text-primary" />
+                    </CardTitle>
                 </CardHeader>
-                <CardContent>
+                <CardContent className="p-8">
                     {!marketDirectionAnalysis ? (
-                        <p className="text-sm text-muted-foreground text-center py-4">Collecting data...</p>
+                        <div className="text-center py-12">
+                            <div className="animate-spin h-8 w-8 border-4 border-primary border-t-transparent rounded-full mx-auto mb-4" />
+                            <p className="text-sm font-black uppercase tracking-widest text-muted-foreground">Synchronizing Stream...</p>
+                        </div>
                     ) : (
-                        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                             <div className="p-4 border rounded-lg bg-card/30">
-                                <h4 className="font-bold text-xs uppercase tracking-widest mb-3 text-muted-foreground">Even / Odd</h4>
-                                <div className="space-y-3">
-                                    <div>
-                                        <div className="flex justify-between mb-1 text-[10px] font-bold uppercase">
-                                            <span>Even</span>
-                                            <span>{marketDirectionAnalysis.evenOdd.even.toFixed(1)}%</span>
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+                             {/* Even / Odd */}
+                             <div className="space-y-6 p-6 rounded-3xl bg-white/5 border border-white/5 hover:bg-white/10 transition-colors">
+                                <h4 className="font-black text-[10px] uppercase tracking-[0.3em] text-muted-foreground border-b border-white/5 pb-2 flex items-center gap-2">
+                                    <List className="h-3 w-3 text-chart-1" /> Even / Odd
+                                </h4>
+                                <div className="space-y-5">
+                                    <div className="space-y-2">
+                                        <div className="flex justify-between text-[11px] font-black uppercase">
+                                            <span>Even Flow</span>
+                                            <span className="text-chart-1">{marketDirectionAnalysis.evenOdd.even.toFixed(1)}%</span>
                                         </div>
-                                        <div className="w-full bg-muted rounded-full h-2 overflow-hidden">
-                                            <div className="h-full transition-all duration-500" style={{ width: `${marketDirectionAnalysis.evenOdd.even}%`, backgroundColor: marketDirectionAnalysis.evenOdd.evenColor }}></div>
-                                        </div>
-                                    </div>
-                                    <div>
-                                        <div className="flex justify-between mb-1 text-[10px] font-bold uppercase">
-                                            <span>Odd</span>
-                                            <span>{marketDirectionAnalysis.evenOdd.odd.toFixed(1)}%</span>
-                                        </div>
-                                        <div className="w-full bg-muted rounded-full h-2 overflow-hidden">
-                                            <div className="h-full transition-all duration-500" style={{ width: `${marketDirectionAnalysis.evenOdd.odd}%`, backgroundColor: marketDirectionAnalysis.evenOdd.oddColor }}></div>
+                                        <div className="w-full bg-black/40 rounded-full h-3 overflow-hidden border border-white/5">
+                                            <div className="h-full transition-all duration-700 shadow-[0_0_8px_rgba(var(--chart-1),0.4)]" style={{ width: `${marketDirectionAnalysis.evenOdd.even}%`, backgroundColor: marketDirectionAnalysis.evenOdd.evenColor }}></div>
                                         </div>
                                     </div>
-                                    <div className="pt-1">
-                                        <Badge variant={marketDirectionAnalysis.evenOdd.reversal !== 'None' ? 'destructive' : 'outline'} className="w-full justify-center text-[9px] font-black tracking-tighter">
-                                            REVERSAL: {marketDirectionAnalysis.evenOdd.reversal.toUpperCase()}
-                                        </Badge>
+                                    <div className="space-y-2">
+                                        <div className="flex justify-between text-[11px] font-black uppercase">
+                                            <span>Odd Flow</span>
+                                            <span className="text-chart-3">{marketDirectionAnalysis.evenOdd.odd.toFixed(1)}%</span>
+                                        </div>
+                                        <div className="w-full bg-black/40 rounded-full h-3 overflow-hidden border border-white/5">
+                                            <div className="h-full transition-all duration-700 shadow-[0_0_8px_rgba(var(--chart-3),0.4)]" style={{ width: `${marketDirectionAnalysis.evenOdd.odd}%`, backgroundColor: marketDirectionAnalysis.evenOdd.oddColor }}></div>
+                                        </div>
                                     </div>
+                                    <Badge variant={marketDirectionAnalysis.evenOdd.reversal !== 'None' ? 'destructive' : 'outline'} className="w-full h-8 justify-center text-[10px] font-black tracking-widest rounded-xl">
+                                        REVERSAL: {marketDirectionAnalysis.evenOdd.reversal.toUpperCase()}
+                                    </Badge>
                                 </div>
                             </div>
 
-                            <div className="p-4 border rounded-lg bg-card/30">
-                                <h4 className="font-bold text-xs uppercase tracking-widest mb-3 text-muted-foreground">Under 5 / Over 4</h4>
-                                <div className="space-y-3">
-                                    <div>
-                                        <div className="flex justify-between mb-1 text-[10px] font-bold uppercase">
+                            {/* Over / Under */}
+                            <div className="space-y-6 p-6 rounded-3xl bg-white/5 border border-white/5 hover:bg-white/10 transition-colors">
+                                <h4 className="font-black text-[10px] uppercase tracking-[0.3em] text-muted-foreground border-b border-white/5 pb-2 flex items-center gap-2">
+                                    <Target className="h-3 w-3 text-accent" /> Over 4 / Under 5
+                                </h4>
+                                <div className="space-y-5">
+                                    <div className="space-y-2">
+                                        <div className="flex justify-between text-[11px] font-black uppercase">
                                             <span>Under 5 (0-4)</span>
-                                            <span>{marketDirectionAnalysis.overUnder.lower.toFixed(1)}%</span>
+                                            <span className="text-accent">{marketDirectionAnalysis.overUnder.lower.toFixed(1)}%</span>
                                         </div>
-                                        <div className="w-full bg-muted rounded-full h-2 overflow-hidden">
-                                            <div className="h-full transition-all duration-500" style={{ width: `${marketDirectionAnalysis.overUnder.lower}%`, backgroundColor: marketDirectionAnalysis.overUnder.lowerColor }}></div>
+                                        <div className="w-full bg-black/40 rounded-full h-3 overflow-hidden border border-white/5">
+                                            <div className="h-full transition-all duration-700 shadow-[0_0_8px_rgba(var(--accent),0.4)]" style={{ width: `${marketDirectionAnalysis.overUnder.lower}%`, backgroundColor: marketDirectionAnalysis.overUnder.lowerColor }}></div>
                                         </div>
                                     </div>
-                                    <div>
-                                        <div className="flex justify-between mb-1 text-[10px] font-bold uppercase">
+                                    <div className="space-y-2">
+                                        <div className="flex justify-between text-[11px] font-black uppercase">
                                             <span>Over 4 (5-9)</span>
-                                            <span>{marketDirectionAnalysis.overUnder.higher.toFixed(1)}%</span>
+                                            <span className="text-rose-500">{marketDirectionAnalysis.overUnder.higher.toFixed(1)}%</span>
                                         </div>
-                                        <div className="w-full bg-muted rounded-full h-2 overflow-hidden">
-                                            <div className="h-full transition-all duration-500" style={{ width: `${marketDirectionAnalysis.overUnder.higher}%`, backgroundColor: marketDirectionAnalysis.overUnder.higherColor }}></div>
+                                        <div className="w-full bg-black/40 rounded-full h-3 overflow-hidden border border-white/5">
+                                            <div className="h-full transition-all duration-700 shadow-[0_0_8px_rgba(var(--destructive),0.4)]" style={{ width: `${marketDirectionAnalysis.overUnder.higher}%`, backgroundColor: marketDirectionAnalysis.overUnder.higherColor }}></div>
                                         </div>
                                     </div>
-                                     <div className="pt-1">
-                                        <Badge variant="outline" className="w-full justify-center text-[9px] font-black tracking-tighter">
-                                            {marketDirectionAnalysis.overUnder.lower > marketDirectionAnalysis.overUnder.higher ? 'BEARISH BIAS' : 'BULLISH BIAS'}
-                                        </Badge>
-                                    </div>
+                                    <Badge variant="outline" className="w-full h-8 justify-center text-[10px] font-black tracking-widest rounded-xl border-white/10">
+                                        {marketDirectionAnalysis.overUnder.lower > marketDirectionAnalysis.overUnder.higher ? 'BEARISH MOMENTUM' : 'BULLISH MOMENTUM'}
+                                    </Badge>
                                 </div>
                             </div>
 
-                            <div className="p-4 border rounded-lg bg-card/30">
-                                <h4 className="font-bold text-xs uppercase tracking-widest mb-3 text-muted-foreground">Match / Differ (Hot: {marketDirectionAnalysis.matchesDiffers.hottest})</h4>
-                                <div className="space-y-3">
-                                     <div>
-                                        <div className="flex justify-between mb-1 text-[10px] font-bold uppercase">
-                                            <span>Matches</span>
-                                            <span>{marketDirectionAnalysis.matchesDiffers.matches.toFixed(1)}%</span>
+                            {/* Match / Differ */}
+                            <div className="space-y-6 p-6 rounded-3xl bg-white/5 border border-white/5 hover:bg-white/10 transition-colors">
+                                <h4 className="font-black text-[10px] uppercase tracking-[0.3em] text-muted-foreground border-b border-white/5 pb-2 flex items-center gap-2">
+                                    <Hash className="h-3 w-3 text-chart-2" /> Match / Differ
+                                </h4>
+                                <div className="space-y-5">
+                                     <div className="space-y-2">
+                                        <div className="flex justify-between text-[11px] font-black uppercase">
+                                            <span>Matches (Digit {marketDirectionAnalysis.matchesDiffers.hottest})</span>
+                                            <span className="text-chart-2">{marketDirectionAnalysis.matchesDiffers.matches.toFixed(1)}%</span>
                                         </div>
-                                        <div className="w-full bg-muted rounded-full h-2 overflow-hidden">
-                                            <div className="h-full transition-all duration-500" style={{ width: `${marketDirectionAnalysis.matchesDiffers.matches}%`, backgroundColor: marketDirectionAnalysis.matchesDiffers.matchColor }}></div>
-                                        </div>
-                                    </div>
-                                    <div>
-                                        <div className="flex justify-between mb-1 text-[10px] font-bold uppercase">
-                                            <span>Differs</span>
-                                            <span>{marketDirectionAnalysis.matchesDiffers.differs.toFixed(1)}%</span>
-                                        </div>
-                                        <div className="w-full bg-muted rounded-full h-2 overflow-hidden">
-                                            <div className="h-full transition-all duration-500" style={{ width: `${marketDirectionAnalysis.matchesDiffers.differs}%`, backgroundColor: marketDirectionAnalysis.matchesDiffers.differColor }}></div>
+                                        <div className="w-full bg-black/40 rounded-full h-3 overflow-hidden border border-white/5">
+                                            <div className="h-full transition-all duration-700 shadow-[0_0_8px_rgba(var(--chart-2),0.4)]" style={{ width: `${marketDirectionAnalysis.matchesDiffers.matches}%`, backgroundColor: marketDirectionAnalysis.matchesDiffers.matchColor }}></div>
                                         </div>
                                     </div>
-                                    <div className="pt-1">
-                                        <Badge variant="outline" className="w-full justify-center text-[9px] font-black tracking-tighter">
-                                            SIGNAL: {marketDirectionAnalysis.matchesDiffers.matches > (100/Math.max(lastDigitTicks.length, 1) + 5) ? 'MATCH POTENTIAL' : 'NORMAL RANGE'}
-                                        </Badge>
+                                    <div className="space-y-2">
+                                        <div className="flex justify-between text-[11px] font-black uppercase">
+                                            <span>Differs Flow</span>
+                                            <span className="text-chart-5">{marketDirectionAnalysis.matchesDiffers.differs.toFixed(1)}%</span>
+                                        </div>
+                                        <div className="w-full bg-black/40 rounded-full h-3 overflow-hidden border border-white/5">
+                                            <div className="h-full transition-all duration-700 shadow-[0_0_8px_rgba(var(--chart-5),0.4)]" style={{ width: `${marketDirectionAnalysis.matchesDiffers.differs}%`, backgroundColor: marketDirectionAnalysis.matchesDiffers.differColor }}></div>
+                                        </div>
                                     </div>
+                                    <Badge variant="outline" className="w-full h-8 justify-center text-[10px] font-black tracking-widest rounded-xl border-white/10">
+                                        SIGNAL: {marketDirectionAnalysis.matchesDiffers.matches > 12 ? 'HIGH REPETITION' : 'NORMAL VARIANCE'}
+                                    </Badge>
                                 </div>
                             </div>
                         </div>
@@ -286,3 +281,9 @@ export function DigitFrequencyView({
         </div>
     );
 }
+
+const Hash = ({ className }: { className?: string }) => (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" className={className}>
+        <line x1="4" y1="9" x2="20" y2="9" /><line x1="4" y1="15" x2="20" y2="15" /><line x1="10" y1="3" x2="8" y2="21" /><line x1="16" y1="3" x2="14" y2="21" />
+    </svg>
+);
