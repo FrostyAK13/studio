@@ -20,51 +20,19 @@ export function Dashboard() {
     const [selectedMarket, setSelectedMarket] = React.useState(syntheticIndices[0].id);
     const [decimalPlaces, setDecimalPlaces] = React.useState(2);
     const [connectionStatus, setConnectionStatus] = React.useState<ConnectionStatusType>('connecting');
-
     const [tickTimestamps, setTickTimestamps] = React.useState<number[]>([]);
-    const [currentTps, setCurrentTps] = React.useState(0);
-    const [historicalTps, setHistoricalTps] = React.useState<{ time: string; tps: number }[]>([]);
-    const [highVolatilityDigits, setHighVolatilityDigits] = React.useState<number[]>([]);
-    const [lowVolatilityDigits, setLowVolatilityDigits] = React.useState<number[]>([]);
-    const HIGH_VOLATILITY_THRESHOLD = 5;
-    const LOW_VOLATILITY_THRESHOLD = 2;
 
     React.useEffect(() => {
-        // Truncate the arrays if maxTicks is reduced
         setLastDigitTicks(prev => prev.slice(0, maxTicks));
         setPriceHistory(prev => prev.slice(0, maxTicks));
         setTickTimestamps(prev => prev.slice(0, maxTicks));
     }, [maxTicks]);
-
-
-    React.useEffect(() => {
-        const tpsInterval = setInterval(() => {
-            const now = Date.now();
-            const oneSecondAgo = now - 1000;
-            const recentTicksCount = tickTimestamps.filter(t => t > oneSecondAgo).length;
-            setCurrentTps(recentTicksCount);
-
-            setHistoricalTps(prev => {
-                const newEntry = { 
-                    time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' }), 
-                    tps: recentTicksCount 
-                };
-                return [...prev, newEntry].slice(-60); // Keep last 60 seconds
-            });
-        }, 1000);
-
-        return () => clearInterval(tpsInterval);
-    }, [tickTimestamps]);
-
 
     React.useEffect(() => {
         setPrice(0);
         setLastDigitTicks([]);
         setPriceHistory([]);
         setTickTimestamps([]);
-        setHighVolatilityDigits([]);
-        setLowVolatilityDigits([]);
-        setHistoricalTps([]);
         setConnectionStatus('connecting');
 
         const ws = new WebSocket('wss://ws.binaryws.com/websockets/v3?app_id=84799');
@@ -78,11 +46,6 @@ export function Dashboard() {
             const newDigit = parseInt(priceString.slice(-1));
 
             if (!fromHistory) {
-                 if (currentTps > HIGH_VOLATILITY_THRESHOLD) {
-                    setHighVolatilityDigits(prev => [newDigit, ...prev].slice(0, 1000));
-                } else if (currentTps > 0 && currentTps < LOW_VOLATILITY_THRESHOLD) {
-                    setLowVolatilityDigits(prev => [newDigit, ...prev].slice(0, 1000));
-                }
                 setTickTimestamps(prev => [Date.now(), ...prev].slice(0, maxTicks));
             }
 
@@ -109,7 +72,7 @@ export function Dashboard() {
                     historyBuffer = data.history.prices.map((price: number, index: number) => ({
                         price: price,
                         time: data.history.times[index]
-                    })).reverse(); // Newest is first
+                    })).reverse();
                 }
             }
 
@@ -121,7 +84,6 @@ export function Dashboard() {
                         setDecimalPlaces(pipSize);
                         
                         if (historyBuffer) {
-                            // Process history first
                             for (const historicalTick of historyBuffer) {
                                 prependTickToState({ quote: historicalTick.price }, true);
                             }
@@ -136,9 +98,8 @@ export function Dashboard() {
         ws.onclose = () => {
             setConnectionStatus('disconnected');
         };
-        ws.onerror = (error) => {
+        ws.onerror = () => {
             setConnectionStatus('disconnected');
-            console.error('WebSocket error:', 'An error occurred with the WebSocket connection.');
         };
 
         return () => {
@@ -151,23 +112,19 @@ export function Dashboard() {
     const handleMaxTicksChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const value = e.target.value;
         if (value === '') {
-            setMaxTicks(0); // Temporarily set to 0 to allow empty input
+            setMaxTicks(0);
             return;
         }
 
         let numValue = parseInt(value, 10);
         if (!isNaN(numValue)) {
-            if (numValue > 5000) {
-                numValue = 5000;
-            }
+            if (numValue > 5000) numValue = 5000;
             setMaxTicks(numValue);
         }
     };
 
     const handleMaxTicksBlur = () => {
-        if (maxTicks < 10) {
-            setMaxTicks(10);
-        }
+        if (maxTicks < 10) setMaxTicks(10);
     };
 
   return (
@@ -251,13 +208,8 @@ export function Dashboard() {
             
             <TabsContent value="circles">
                 <CorrelationView
-                    currentTps={currentTps}
-                    historicalTps={historicalTps}
-                    highVolatilityDigits={highVolatilityDigits}
-                    lowVolatilityDigits={lowVolatilityDigits}
                     selectedMarket={selectedMarket}
                     onMarketChange={setSelectedMarket}
-                    tickTimestamps={tickTimestamps}
                     lastDigitTicks={lastDigitTicks}
                 />
             </TabsContent>

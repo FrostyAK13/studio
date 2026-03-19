@@ -1,24 +1,15 @@
 'use client';
 
 import * as React from 'react';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { syntheticIndices } from '@/lib/mock-data';
-import { Bar, BarChart, CartesianGrid, XAxis, YAxis, Tooltip } from 'recharts';
-import { ChartContainer } from '@/components/ui/chart';
-import { Zap } from 'lucide-react';
-import { TickPacingVisualizer } from './tick-pacing-visualizer';
 import { cn } from '@/lib/utils';
 
 interface CorrelationViewProps {
-    currentTps: number;
-    historicalTps: { time: string; tps: number }[];
-    highVolatilityDigits: number[];
-    lowVolatilityDigits: number[];
     selectedMarket: string;
     onMarketChange: (market: string) => void;
-    tickTimestamps: number[];
     lastDigitTicks: number[];
 }
 
@@ -28,14 +19,12 @@ const DigitFrequencyCircles = ({ ticks }: { ticks: number[] }) => {
         ticks.forEach(d => counts[d]++);
         const total = ticks.length || 1;
         
-        // Map to include index for sorting
         const mapped = counts.map((count, index) => ({
             index,
             count,
             percentage: (count / total) * 100
         }));
 
-        // Sort by count descending to find ranks
         const sorted = [...mapped].sort((a, b) => b.count - a.count);
 
         return {
@@ -45,8 +34,8 @@ const DigitFrequencyCircles = ({ ticks }: { ticks: number[] }) => {
                 
                 if (rank === 0) colorClass = "text-green-500"; // Most
                 else if (rank === 1) colorClass = "text-blue-500"; // 2nd Most
-                else if (rank === 8) colorClass = "text-orange-500"; // 2nd Lowest (9th place)
-                else if (rank === 9) colorClass = "text-red-500"; // Lowest (10th place)
+                else if (rank === 8) colorClass = "text-orange-500"; // 2nd Lowest
+                else if (rank === 9) colorClass = "text-red-500"; // Lowest
 
                 return { ...item, colorClass };
             }),
@@ -57,7 +46,6 @@ const DigitFrequencyCircles = ({ ticks }: { ticks: number[] }) => {
     const DigitCircle = ({ digit, percentage, colorClass, isLast }: { digit: number, percentage: number, colorClass: string, isLast: boolean }) => {
         const radius = 26;
         const circumference = 2 * Math.PI * radius;
-        // Scale arc relative to 20% max for visibility
         const offset = circumference - (Math.min(percentage, 20) / 20) * circumference;
 
         return (
@@ -108,7 +96,6 @@ const DigitFrequencyCircles = ({ ticks }: { ticks: number[] }) => {
             </CardHeader>
             <CardContent className="p-6">
                 <div className="space-y-4">
-                    {/* Row 1: 0 to 4 */}
                     <div className="grid grid-cols-5 gap-2 border-b border-white/5 pb-4">
                         {digitData.slice(0, 5).map((data) => (
                             <DigitCircle 
@@ -120,7 +107,6 @@ const DigitFrequencyCircles = ({ ticks }: { ticks: number[] }) => {
                             />
                         ))}
                     </div>
-                    {/* Row 2: 5 to 9 */}
                     <div className="grid grid-cols-5 gap-2 pt-4">
                         {digitData.slice(5, 10).map((data) => (
                             <DigitCircle 
@@ -139,16 +125,10 @@ const DigitFrequencyCircles = ({ ticks }: { ticks: number[] }) => {
 };
 
 export function CorrelationView({
-    currentTps,
-    historicalTps,
     selectedMarket,
     onMarketChange,
-    tickTimestamps,
     lastDigitTicks,
 }: CorrelationViewProps) {
-
-    const chartConfig = { tps: { label: "TPS", color: "hsl(var(--primary))" }};
-
     return (
         <div className="space-y-6">
             <Card className="border-none shadow-sm">
@@ -170,58 +150,6 @@ export function CorrelationView({
             </Card>
 
             <DigitFrequencyCircles ticks={lastDigitTicks} />
-
-            <Card className="border-none shadow-md overflow-hidden bg-card/50 backdrop-blur-sm">
-                <CardHeader>
-                    <CardTitle className="text-base font-bold uppercase tracking-wider">Market Volatility Pulse</CardTitle>
-                    <CardDescription>Measuring the velocity and frequency of incoming ticks.</CardDescription>
-                </CardHeader>
-                <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-8 p-6">
-                    <div className="flex flex-col items-center justify-center rounded-2xl bg-gradient-to-br from-primary/10 via-background to-accent/5 border border-primary/10 p-8 gap-3 shadow-inner">
-                        <div className="flex items-center gap-2 text-primary">
-                            <Zap className="h-5 w-5 fill-primary" />
-                            <span className="text-xs font-black tracking-[0.3em] uppercase">LIVE TICK SPEED</span>
-                        </div>
-                        <span className="text-8xl font-black text-primary tracking-tighter tabular-nums drop-shadow-[0_0_15px_rgba(var(--primary),0.2)]">
-                            {currentTps}
-                        </span>
-                        <span className="text-sm font-bold text-muted-foreground/80 uppercase tracking-widest">Ticks / Second</span>
-                    </div>
-
-                    <div className="flex flex-col">
-                        <h4 className="text-[10px] font-black uppercase tracking-[0.2em] text-center mb-6 text-muted-foreground/60">60-Second Volatility History</h4>
-                        <ChartContainer config={chartConfig} className="h-[200px] w-full">
-                            <BarChart data={historicalTps} margin={{ top: 0, right: 0, left: 0, bottom: 0 }}>
-                                <CartesianGrid vertical={false} strokeDasharray="3 3" opacity={0.1} />
-                                <XAxis dataKey="time" tick={{ fontSize: 9, fontWeight: 600 }} tickLine={false} axisLine={false} />
-                                <YAxis width={20} tick={{ fontSize: 9, fontWeight: 600 }} tickLine={false} axisLine={false} />
-                                <Tooltip
-                                    cursor={{ fill: 'hsl(var(--primary))', opacity: 0.05 }}
-                                    content={({ active, payload, label }) => {
-                                      if (active && payload && payload.length) {
-                                        return (
-                                          <div className="rounded-xl border bg-background/90 backdrop-blur-md p-3 text-sm shadow-2xl border-primary/20">
-                                            <p className="font-black text-xs uppercase tracking-wider mb-1 opacity-60">{label}</p>
-                                            <p className="text-lg font-black text-primary">{`${payload[0].value} TPS`}</p>
-                                          </div>
-                                        );
-                                      }
-                                      return null;
-                                    }}
-                                />
-                                <Bar 
-                                    dataKey="tps"
-                                    fill="hsl(var(--primary))"
-                                    radius={[4, 4, 0, 0]}
-                                    animationDuration={500}
-                                />
-                            </BarChart>
-                        </ChartContainer>
-                    </div>
-                </CardContent>
-            </Card>
-
-            <TickPacingVisualizer tickTimestamps={tickTimestamps} lastDigitTicks={lastDigitTicks} />
         </div>
     );
 }
