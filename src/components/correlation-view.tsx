@@ -105,7 +105,6 @@ const DigitFrequencyCircles = ({ ticks }: { ticks: number[] }) => {
                     <div className="w-2 h-2 rounded-full bg-primary animate-pulse" />
                     Real-Time Digit Ranks
                 </CardTitle>
-                <CardDescription>Ranked by frequency: Most (Green), 2nd (Blue), Lowest (Red), 2nd Low (Orange).</CardDescription>
             </CardHeader>
             <CardContent className="p-6">
                 <div className="space-y-4">
