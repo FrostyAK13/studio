@@ -1,4 +1,3 @@
-
 'use client';
 
 import * as React from 'react';
@@ -17,7 +16,7 @@ export function Dashboard() {
     const [price, setPrice] = React.useState(0);
     const [lastDigitTicks, setLastDigitTicks] = React.useState<number[]>([]);
     const [priceHistory, setPriceHistory] = React.useState<number[]>([]);
-    const [maxTicks, setMaxTicks] = React.useState(1000); // Strict baseline for 100% accuracy
+    const [maxTicks, setMaxTicks] = React.useState(1000); 
     const [selectedMarket, setSelectedMarket] = React.useState(syntheticIndices[0].id);
     const [decimalPlaces, setDecimalPlaces] = React.useState(2);
     const [connectionStatus, setConnectionStatus] = React.useState<ConnectionStatusType>('connecting');
@@ -35,30 +34,23 @@ export function Dashboard() {
         let pipSize: number | null = null;
         let historyBuffer: {time: number, price: number}[] | null = null;
 
-        const prependTickToState = (tick: { quote: number, time?: number }, fromHistory = false) => {
+        const prependTickToState = (tick: { quote: number, time?: number }) => {
             const newPrice = tick.quote;
-            
-            // Ensure pipSize is applied for correct digit extraction
             const currentPipSize = pipSize !== null ? pipSize : 2;
             const priceString = newPrice.toFixed(currentPipSize);
             const newDigit = parseInt(priceString.slice(-1));
 
-            if (fromHistory && tick.time) {
-                setTickTimestamps(prev => [tick.time!, ...prev].slice(0, 1000));
-            } else if (!fromHistory) {
-                setTickTimestamps(prev => [Date.now(), ...prev].slice(0, 1000));
-            }
-
+            setTickTimestamps(prev => [Date.now(), ...prev].slice(0, 5000));
             setPrice(newPrice);
-            setLastDigitTicks(prevTicks => [newDigit, ...prevTicks].slice(0, 1000));
-            setPriceHistory(prevPrices => [newPrice, ...prevPrices].slice(0, 1000));
+            setLastDigitTicks(prevTicks => [newDigit, ...prevTicks].slice(0, 5000));
+            setPriceHistory(prevPrices => [newPrice, ...prevPrices].slice(0, 5000));
         };
 
         ws.onopen = () => {
-            // Strictly request 1000 ticks history with subscription
+            // Request up to 5000 ticks to support maximum range
             ws.send(JSON.stringify({ 
                 "ticks_history": selectedMarket, 
-                "count": 1000, 
+                "count": 5000, 
                 "end": "latest", 
                 "style": "ticks", 
                 "subscribe": 1 
@@ -91,20 +83,19 @@ export function Dashboard() {
                         setDecimalPlaces(pipSize);
                         
                         if (historyBuffer) {
-                            // Process history as a block to populate the 1000-tick window
                             const digits = historyBuffer.map(h => parseInt(h.price.toFixed(pipSize!).slice(-1)));
                             const prices = historyBuffer.map(h => h.price);
                             const times = historyBuffer.map(h => h.time);
                             
-                            setLastDigitTicks(digits.slice(0, 1000));
-                            setPriceHistory(prices.slice(0, 1000));
-                            setTickTimestamps(times.slice(0, 1000));
+                            setLastDigitTicks(digits);
+                            setPriceHistory(prices);
+                            setTickTimestamps(times);
                             setPrice(prices[0]);
                             
                             historyBuffer = null;
                         }
                     }
-                    prependTickToState(data.tick, false);
+                    prependTickToState(data.tick);
                 }
             }
         };
@@ -117,7 +108,7 @@ export function Dashboard() {
              ws.close();
            }
         };
-    }, [selectedMarket]); // Only re-run when market changes
+    }, [selectedMarket]);
 
     const handleMaxTicksChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const value = e.target.value;
@@ -133,8 +124,12 @@ export function Dashboard() {
     };
 
     const handleMaxTicksBlur = () => {
-        if (maxTicks < 10) setMaxTicks(10);
+        if (maxTicks < 1) setMaxTicks(1);
     };
+
+    // Slice data based on current maxTicks for analysis
+    const analyzedDigits = lastDigitTicks.slice(0, maxTicks);
+    const analyzedPrices = priceHistory.slice(0, maxTicks);
 
   return (
     <div className="flex min-h-screen w-full flex-col bg-background font-sans">
@@ -167,8 +162,8 @@ export function Dashboard() {
             <TabsContent value="scanner">
                 <ScannerView 
                     price={price} 
-                    lastDigitTicks={lastDigitTicks}
-                    priceHistory={priceHistory}
+                    lastDigitTicks={analyzedDigits}
+                    priceHistory={analyzedPrices}
                     maxTicks={maxTicks}
                     handleMaxTicksChange={handleMaxTicksChange}
                     handleMaxTicksBlur={handleMaxTicksBlur}
@@ -181,7 +176,7 @@ export function Dashboard() {
             <TabsContent value="analyzer">
                 <AnalyzerView
                     price={price}
-                    lastDigitTicks={lastDigitTicks}
+                    lastDigitTicks={analyzedDigits}
                     maxTicks={maxTicks}
                     handleMaxTicksChange={handleMaxTicksChange}
                     handleMaxTicksBlur={handleMaxTicksBlur}
@@ -194,8 +189,8 @@ export function Dashboard() {
             <TabsContent value="frequency">
                 <DigitFrequencyView
                     price={price}
-                    lastDigitTicks={lastDigitTicks}
-                    priceHistory={priceHistory}
+                    lastDigitTicks={analyzedDigits}
+                    priceHistory={analyzedPrices}
                     maxTicks={maxTicks}
                     handleMaxTicksChange={handleMaxTicksChange}
                     handleMaxTicksBlur={handleMaxTicksBlur}
@@ -209,9 +204,10 @@ export function Dashboard() {
                 <InsightView
                     price={price}
                     decimalPlaces={decimalPlaces}
-                    lastDigitTicks={lastDigitTicks}
+                    lastDigitTicks={analyzedDigits}
                     selectedMarket={selectedMarket}
                     onMarketChange={setSelectedMarket}
+                    maxTicks={maxTicks}
                 />
             </TabsContent>
             
@@ -219,7 +215,7 @@ export function Dashboard() {
                 <CorrelationView
                     selectedMarket={selectedMarket}
                     onMarketChange={setSelectedMarket}
-                    lastDigitTicks={lastDigitTicks}
+                    lastDigitTicks={analyzedDigits}
                 />
             </TabsContent>
         </Tabs>

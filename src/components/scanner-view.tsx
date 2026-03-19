@@ -57,11 +57,11 @@ export function ScannerView({
                 </div>
                  <div className="flex flex-col items-center justify-center p-4 rounded-lg bg-card gap-3">
                     <div className="flex justify-between items-center w-full">
-                      <Label htmlFor="max-ticks-scanner" className="text-sm text-muted-foreground tracking-widest">TICKS</Label>
+                      <Label htmlFor="max-ticks-scanner" className="text-sm text-muted-foreground tracking-widest">RANGE (1-5000)</Label>
                       <Input
                         id="max-ticks-scanner"
                         type="number"
-                        min="10"
+                        min="1"
                         max="5000"
                         value={maxTicks === 0 ? '' : maxTicks}
                         onChange={handleMaxTicksChange}

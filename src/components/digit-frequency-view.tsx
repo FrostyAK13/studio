@@ -4,6 +4,7 @@ import * as React from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Input } from '@/components/ui/input';
 import { syntheticIndices } from '@/lib/mock-data';
 import { cn } from '@/lib/utils';
 import { Badge } from '@/components/ui/badge';
@@ -65,7 +66,7 @@ export function DigitFrequencyView({
     
     const marketDirectionAnalysis = React.useMemo(() => {
         const ticks = lastDigitTicks;
-        if (ticks.length < 10) return null;
+        if (ticks.length < 2) return null;
 
         const total = ticks.length;
         const evenCount = ticks.filter(d => d % 2 === 0).length;
@@ -132,10 +133,16 @@ export function DigitFrequencyView({
                         </Select>
                     </div>
                     <div>
-                        <Label className="text-muted-foreground">Analysis Baseline (Synchronized)</Label>
-                        <div className="h-10 flex items-center px-3 border rounded-md bg-muted/20 font-mono font-bold">
-                            1000 TICKS
-                        </div>
+                        <Label htmlFor="max-ticks-frequency">Analysis Range (1-5000 Ticks)</Label>
+                        <Input
+                            id="max-ticks-frequency"
+                            type="number"
+                            min="1"
+                            max="5000"
+                            value={maxTicks === 0 ? '' : maxTicks}
+                            onChange={handleMaxTicksChange}
+                            onBlur={handleMaxTicksBlur}
+                        />
                     </div>
                 </CardContent>
             </Card>
@@ -170,8 +177,8 @@ export function DigitFrequencyView({
 
             <Card>
                 <CardHeader>
-                    <CardTitle className="text-base font-semibold uppercase">Market Direction (Last 1000 Ticks)</CardTitle>
-                    <CardDescription>High-precision analysis of dominance and potential reversals.</CardDescription>
+                    <CardTitle className="text-base font-semibold uppercase">Market Direction (Last {lastDigitTicks.length} Ticks)</CardTitle>
+                    <CardDescription>Dynamic range analysis based on your selection.</CardDescription>
                 </CardHeader>
                 <CardContent>
                     {!marketDirectionAnalysis ? (
@@ -259,7 +266,7 @@ export function DigitFrequencyView({
                                     </div>
                                     <div className="pt-1">
                                         <Badge variant="outline" className="w-full justify-center text-[9px] font-black tracking-tighter">
-                                            SIGNAL: {marketDirectionAnalysis.matchesDiffers.matches > 11 ? 'MATCH POTENTIAL' : 'NORMAL RANGE'}
+                                            SIGNAL: {marketDirectionAnalysis.matchesDiffers.matches > (100/ticks.length + 5) ? 'MATCH POTENTIAL' : 'NORMAL RANGE'}
                                         </Badge>
                                     </div>
                                 </div>

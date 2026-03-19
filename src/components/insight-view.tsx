@@ -20,11 +20,12 @@ interface InsightViewProps {
     lastDigitTicks: number[];
     selectedMarket: string;
     onMarketChange: (market: string) => void;
+    maxTicks: number;
 }
 
 type AnalysisState = 'idle' | 'analyzing' | 'complete' | 'error';
 
-export function InsightView({ price, decimalPlaces, lastDigitTicks, selectedMarket, onMarketChange }: InsightViewProps) {
+export function InsightView({ price, decimalPlaces, lastDigitTicks, selectedMarket, onMarketChange, maxTicks }: InsightViewProps) {
     const [analysisState, setAnalysisState] = React.useState<AnalysisState>('idle');
     const [insight, setInsight] = React.useState<InsightOutput | null>(null);
     const [error, setError] = React.useState<string | null>(null);
@@ -39,10 +40,9 @@ export function InsightView({ price, decimalPlaces, lastDigitTicks, selectedMark
         setError(null);
         setAnalysisState('analyzing');
 
-        // Analysis baseline is now strictly 1000 ticks from the dashboard
         setTimeout(() => {
-            if (lastDigitTicks.length < 50) {
-                setError("Not enough data to generate an insight. Please wait for the 1000-tick buffer to populate.");
+            if (lastDigitTicks.length < Math.min(maxTicks, 50)) {
+                setError(`Insufficient data. Need at least ${Math.min(maxTicks, 50)} ticks for the selected range.`);
                 setAnalysisState('error');
                 return;
             }
@@ -52,7 +52,6 @@ export function InsightView({ price, decimalPlaces, lastDigitTicks, selectedMark
                 setInsight(result);
                 setAnalysisState('complete');
             } catch (e: any) {
-                console.error("Insight Generation Error:", e);
                 setError(e.message || "An unexpected error occurred during analysis.");
                 setAnalysisState('error');
             }
@@ -61,7 +60,7 @@ export function InsightView({ price, decimalPlaces, lastDigitTicks, selectedMark
 
     const marketDirectionAnalysis = React.useMemo(() => {
         const ticks = lastDigitTicks;
-        if (ticks.length < 10) return null;
+        if (ticks.length < 2) return null;
 
         const total = ticks.length;
         const lowerCount = ticks.filter(d => d <= 4).length;
@@ -82,7 +81,7 @@ export function InsightView({ price, decimalPlaces, lastDigitTicks, selectedMark
             case 'complete':
             case 'error':
                  return (
-                    <HackerAnimation title={`Analysis Report - ${marketName}`}>
+                    <HackerAnimation title={`Analysis Report - ${marketName} (${lastDigitTicks.length} Ticks)`}>
                         {analysisState === 'analyzing' ? (
                             <ScannerAnimationContent />
                         ) : error ? (
@@ -96,7 +95,7 @@ export function InsightView({ price, decimalPlaces, lastDigitTicks, selectedMark
                         ) : insight ? (
                             <div className="text-left space-y-4">
                                 <div>
-                                    <p className="font-bold text-green-300">// MARKET SUMMARY (High-Precision 1000-Tick Sample)</p>
+                                    <p className="font-bold text-green-300">// MARKET SUMMARY ({lastDigitTicks.length}-Tick Sample)</p>
                                     <p className="text-base">{insight.summary}</p>
                                 </div>
                                 <div>
@@ -127,7 +126,7 @@ export function InsightView({ price, decimalPlaces, lastDigitTicks, selectedMark
                     <Lightbulb className="h-8 w-8 text-primary" />
                     <div>
                         <CardTitle className="text-2xl uppercase">Strategy Insight</CardTitle>
-                        <CardDescription>High-accuracy analysis based on Deriv-standard 1000-tick samples.</CardDescription>
+                        <CardDescription>High-accuracy analysis based on your selected {maxTicks}-tick range.</CardDescription>
                     </div>
                 </div>
             </CardHeader>
@@ -166,7 +165,7 @@ export function InsightView({ price, decimalPlaces, lastDigitTicks, selectedMark
                 {marketDirectionAnalysis && (
                      <Card className="border-none bg-muted/10">
                         <CardHeader className="pb-2">
-                            <CardTitle className="text-xs font-black tracking-widest uppercase opacity-60">Market Dominance Analysis</CardTitle>
+                            <CardTitle className="text-xs font-black tracking-widest uppercase opacity-60">Market Dominance Analysis ({lastDigitTicks.length} Ticks)</CardTitle>
                         </CardHeader>
                         <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-6">
                             <div className="space-y-2">
