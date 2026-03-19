@@ -10,26 +10,34 @@ export function ConnectionStatus({ status }: ConnectionStatusProps) {
   const statusConfig = {
     connecting: {
       text: 'Connecting...',
-      className: 'bg-yellow-500',
+      colorClass: 'bg-amber-500',
+      shadowClass: 'shadow-amber-500/50',
     },
     streaming: {
       text: 'Streaming',
-      className: 'bg-green-500',
+      colorClass: 'bg-emerald-500',
+      shadowClass: 'shadow-emerald-500/50',
     },
     disconnected: {
-      text: 'Disconnected',
-      className: 'bg-red-500',
+      text: 'Offline',
+      colorClass: 'bg-rose-500',
+      shadowClass: 'shadow-rose-500/50',
     },
   };
 
-  const { text, className } = statusConfig[status];
+  const { text, colorClass, shadowClass } = statusConfig[status];
 
   return (
-    <div className="flex items-center gap-2">
-      <div className={cn("h-2.5 w-2.5 rounded-full", className)}>
-        {status === 'streaming' && <div className={cn("h-2.5 w-2.5 rounded-full animate-ping", className)} />}
+    <div className="flex items-center gap-3">
+      <div className="relative flex items-center justify-center">
+        <div className={cn("h-2.5 w-2.5 rounded-full transition-all duration-500", colorClass, "shadow-[0_0_8px]", shadowClass)} />
+        {status === 'streaming' && (
+            <div className={cn("absolute h-2.5 w-2.5 rounded-full animate-ping opacity-75", colorClass)} />
+        )}
       </div>
-      <span className="text-sm text-muted-foreground">{text}</span>
+      <span className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground/80">
+        {text}
+      </span>
     </div>
   );
 }

@@ -47,7 +47,6 @@ export function Dashboard() {
         };
 
         ws.onopen = () => {
-            // Request up to 5000 ticks to support maximum range
             ws.send(JSON.stringify({ 
                 "ticks_history": selectedMarket, 
                 "count": 5000, 
@@ -127,39 +126,64 @@ export function Dashboard() {
         if (maxTicks < 1) setMaxTicks(1);
     };
 
-    // Slice data based on current maxTicks for analysis
     const analyzedDigits = lastDigitTicks.slice(0, maxTicks);
     const analyzedPrices = priceHistory.slice(0, maxTicks);
 
   return (
-    <div className="flex min-h-screen w-full flex-col bg-background font-sans">
-      <header className="sticky top-0 z-30 flex h-16 items-center justify-between border-b bg-background/95 px-4 backdrop-blur md:px-6">
-        <div className="flex items-center gap-4">
-          <a
-            href="https://frostytraders.com"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="text-xl font-bold text-foreground transition-colors hover:text-primary"
-          >
-            frostytraders.com
-          </a>
-          <ConnectionStatus status={connectionStatus} />
-        </div>
-        <div>
-          <span className="font-semibold text-muted-foreground uppercase">Emporer Migosi</span>
+    <div className="flex min-h-screen w-full flex-col bg-background font-sans overflow-x-hidden">
+      {/* Redesigned Header: [1] frostytraders.com [2] EMPORER MIGOSI [3] Status */}
+      <header className="sticky top-0 z-50 flex h-20 items-center border-b bg-background/80 px-6 backdrop-blur-xl transition-all duration-300">
+        <div className="flex w-full items-center justify-between max-w-7xl mx-auto gap-4">
+          
+          {/* 1: Brand */}
+          <div className="flex-1">
+            <a
+              href="https://frostytraders.com"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-2xl font-black tracking-tighter text-primary drop-shadow-[0_0_15px_rgba(var(--primary),0.3)] transition-transform hover:scale-105"
+            >
+              frosty<span className="text-foreground">traders.com</span>
+            </a>
+          </div>
+
+          {/* 2: Identity (Centered) */}
+          <div className="hidden md:flex flex-1 justify-center">
+            <div className="relative group">
+                <div className="absolute -inset-1 bg-gradient-to-r from-primary/20 to-cyan-400/20 rounded-full blur opacity-25 group-hover:opacity-75 transition duration-1000 group-hover:duration-200"></div>
+                <div className="relative flex items-center px-6 py-2 bg-card border border-white/5 rounded-full shadow-2xl">
+                    <span className="text-sm font-black uppercase tracking-[0.4em] text-foreground/70 whitespace-nowrap">
+                        EMPORER MIGOSI
+                    </span>
+                </div>
+            </div>
+          </div>
+
+          {/* 3: Status (Right-aligned) */}
+          <div className="flex-1 flex justify-end">
+            <div className="flex items-center gap-3 px-4 py-2 bg-muted/30 rounded-full border border-white/5 backdrop-blur-sm shadow-inner">
+                <ConnectionStatus status={connectionStatus} />
+            </div>
+          </div>
         </div>
       </header>
-      <main className="flex-1 p-4 sm:p-6">
+
+      <main className="flex-1 p-4 sm:p-8">
         <Tabs defaultValue="scanner" className="w-full max-w-7xl mx-auto">
-            <TabsList className="grid w-full grid-cols-5 mb-6">
-                <TabsTrigger value="scanner">SCANNER</TabsTrigger>
-                <TabsTrigger value="analyzer">ANALYZER</TabsTrigger>
-                <TabsTrigger value="frequency">FREQUENCY</TabsTrigger>
-                <TabsTrigger value="insight">INSIGHT</TabsTrigger>
-                <TabsTrigger value="circles">CIRCLES</TabsTrigger>
+            {/* Redesigned Navigation Tabs: Pill-shaped and Unique */}
+            <TabsList className="flex items-center justify-center gap-2 bg-transparent h-auto p-0 mb-10 overflow-x-auto no-scrollbar pb-2">
+                {['scanner', 'analyzer', 'frequency', 'insight', 'circles'].map((tab) => (
+                    <TabsTrigger 
+                        key={tab} 
+                        value={tab}
+                        className="px-8 py-3 rounded-full border border-transparent data-[state=active]:border-primary/20 data-[state=active]:bg-primary/10 data-[state=active]:text-primary data-[state=active]:shadow-[0_0_20px_rgba(var(--primary),0.15)] text-muted-foreground font-black text-[10px] uppercase tracking-[0.2em] transition-all duration-300 hover:text-foreground hover:bg-muted/50"
+                    >
+                        {tab}
+                    </TabsTrigger>
+                ))}
             </TabsList>
 
-            <TabsContent value="scanner">
+            <TabsContent value="scanner" className="mt-0 animate-in fade-in zoom-in-95 duration-500">
                 <ScannerView 
                     price={price} 
                     lastDigitTicks={analyzedDigits}
@@ -173,7 +197,7 @@ export function Dashboard() {
                 />
             </TabsContent>
 
-            <TabsContent value="analyzer">
+            <TabsContent value="analyzer" className="mt-0 animate-in fade-in zoom-in-95 duration-500">
                 <AnalyzerView
                     price={price}
                     lastDigitTicks={analyzedDigits}
@@ -186,7 +210,7 @@ export function Dashboard() {
                 />
             </TabsContent>
 
-            <TabsContent value="frequency">
+            <TabsContent value="frequency" className="mt-0 animate-in fade-in zoom-in-95 duration-500">
                 <DigitFrequencyView
                     price={price}
                     lastDigitTicks={analyzedDigits}
@@ -200,7 +224,7 @@ export function Dashboard() {
                 />
             </TabsContent>
 
-             <TabsContent value="insight">
+             <TabsContent value="insight" className="mt-0 animate-in fade-in zoom-in-95 duration-500">
                 <InsightView
                     price={price}
                     decimalPlaces={decimalPlaces}
@@ -211,7 +235,7 @@ export function Dashboard() {
                 />
             </TabsContent>
             
-            <TabsContent value="circles">
+            <TabsContent value="circles" className="mt-0 animate-in fade-in zoom-in-95 duration-500">
                 <CorrelationView
                     selectedMarket={selectedMarket}
                     onMarketChange={setSelectedMarket}
