@@ -1,4 +1,3 @@
-
 'use client';
 
 import * as React from 'react';
@@ -60,6 +59,23 @@ export function InsightView({ price, decimalPlaces, lastDigitTicks, selectedMark
         }, 1500);
     };
 
+    const marketDirectionAnalysis = React.useMemo(() => {
+        const ticks = lastDigitTicks;
+        if (ticks.length < 10) return null;
+
+        const total = ticks.length;
+        const lowerCount = ticks.filter(d => d <= 4).length;
+        const lowerPercentage = (lowerCount / total) * 100;
+        const higherPercentage = 100 - lowerPercentage;
+        
+        return {
+            lower: lowerPercentage, 
+            higher: higherPercentage,
+            lowerColor: 'hsl(var(--accent))',
+            higherColor: 'hsl(var(--destructive))'
+        };
+    }, [lastDigitTicks]);
+
     const renderContent = () => {
         switch (analysisState) {
             case 'analyzing':
@@ -110,7 +126,7 @@ export function InsightView({ price, decimalPlaces, lastDigitTicks, selectedMark
                 <div className='flex items-center gap-3'>
                     <Lightbulb className="h-8 w-8 text-primary" />
                     <div>
-                        <CardTitle className="text-2xl">STRATEGY INSIGHT</CardTitle>
+                        <CardTitle className="text-2xl uppercase">Strategy Insight</CardTitle>
                         <CardDescription>High-accuracy analysis based on Deriv-standard 1000-tick samples.</CardDescription>
                     </div>
                 </div>
@@ -135,7 +151,7 @@ export function InsightView({ price, decimalPlaces, lastDigitTicks, selectedMark
                         </CardContent>
                     </Card>
                     <div className="rounded-lg p-4 flex flex-col items-center justify-center bg-gradient-to-br from-blue-500 to-cyan-400 text-white">
-                        <span className="text-sm tracking-widest">PRICE</span>
+                        <span className="text-sm tracking-widest uppercase">Price</span>
                         <span className="text-4xl font-bold">{price.toFixed(decimalPlaces)}</span>
                     </div>
                 </div>
@@ -146,6 +162,34 @@ export function InsightView({ price, decimalPlaces, lastDigitTicks, selectedMark
                     onDigitSelect={setSelectedDigit}
                     selectedMarket={selectedMarket}
                 />
+
+                {marketDirectionAnalysis && (
+                     <Card className="border-none bg-muted/10">
+                        <CardHeader className="pb-2">
+                            <CardTitle className="text-xs font-black tracking-widest uppercase opacity-60">Market Dominance Analysis</CardTitle>
+                        </CardHeader>
+                        <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <div className="space-y-2">
+                                <div className="flex justify-between text-[10px] font-bold uppercase">
+                                    <span>Under 5 (0-4)</span>
+                                    <span>{marketDirectionAnalysis.lower.toFixed(1)}%</span>
+                                </div>
+                                <div className="w-full bg-muted rounded-full h-2 overflow-hidden">
+                                    <div className="h-full transition-all duration-500" style={{ width: `${marketDirectionAnalysis.lower}%`, backgroundColor: marketDirectionAnalysis.lowerColor }}></div>
+                                </div>
+                            </div>
+                            <div className="space-y-2">
+                                <div className="flex justify-between text-[10px] font-bold uppercase">
+                                    <span>Over 4 (5-9)</span>
+                                    <span>{marketDirectionAnalysis.higher.toFixed(1)}%</span>
+                                </div>
+                                <div className="w-full bg-muted rounded-full h-2 overflow-hidden">
+                                    <div className="h-full transition-all duration-500" style={{ width: `${marketDirectionAnalysis.higher}%`, backgroundColor: marketDirectionAnalysis.higherColor }}></div>
+                                </div>
+                            </div>
+                        </CardContent>
+                    </Card>
+                )}
 
                 <div className="text-center">
                     <Button onClick={runAnalysis} disabled={analysisState === 'analyzing'} size="lg" className="shadow-lg shadow-primary/20">
