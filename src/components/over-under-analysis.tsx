@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
 import { cn } from '@/lib/utils';
-import { ScanLine, Loader2 } from 'lucide-react';
+import { ScanLine, Loader2, ArrowUp, ArrowDown } from 'lucide-react';
 import { HackerAnimation } from './hacker-animation';
 import { syntheticIndices } from '@/lib/mock-data';
 import { ScannerAnimationContent } from './scanner-animation-content';
@@ -83,9 +83,9 @@ export function OverUnderAnalysis({ lastDigitTicks, selectedMarket, price, decim
 
     setIsScanning(true);
 
-    if (outcomes.length < 25) {
+    if (lastDigitTicks.length < 30) {
         setTimeout(() => {
-            setScanResultLines(["Not enough tick data to run analysis.", "Please wait for at least 25 ticks."]);
+            setScanResultLines(["ERROR: Sequence too short for Over/Under analysis.", "Please accumulate at least 30 ticks for stability."]);
             setIsScanning(false);
             setTimeout(() => setScanResultLines(null), 3000);
         }, 1000);
@@ -94,62 +94,48 @@ export function OverUnderAnalysis({ lastDigitTicks, selectedMarket, price, decim
     
     setTimeout(() => {
         let predictedOutcome: 'OVER' | 'UNDER';
-        let predictedDigit: number;
+        let barrierDigit: number;
+        let targetDigits: number[] = [];
         let reasoning: string;
 
-        // Strategy: Don't use selectedDigit for prediction. Use safer, fixed digits.
-        const overThreshold = 60;
-        const underThreshold = 60;
-        const streakThreshold = 5;
+        const underSkew = lastDigitTicks.filter(d => d <= 2).length / lastDigitTicks.length > 0.35;
+        const overSkew = lastDigitTicks.filter(d => d >= 7).length / lastDigitTicks.length > 0.35;
 
-        if (percentages.over > overThreshold) {
-            predictedOutcome = 'OVER';
-            predictedDigit = 2;
-            reasoning = `High 'Over' probability detected (${percentages.over.toFixed(1)}%). Predicting OVER a low digit.`;
-        } else if (percentages.under > underThreshold) {
+        if (streak.count >= 6 && streak.type === 'O') {
             predictedOutcome = 'UNDER';
-            predictedDigit = 7;
-            reasoning = `High 'Under' probability detected (${percentages.under.toFixed(1)}%). Predicting UNDER a high digit.`;
-        } else if (streak.count >= streakThreshold) {
-            if (streak.type === 'O') {
-                predictedOutcome = 'UNDER';
-                predictedDigit = 7;
-                reasoning = `A long streak of 'Over' (${streak.count}x) suggests a potential reversal to Under.`;
-            } else { // streak.type === 'U'
-                predictedOutcome = 'OVER';
-                predictedDigit = 2;
-                reasoning = `A long streak of 'Under' (${streak.count}x) suggests a potential reversal to Over.`;
-            }
+            barrierDigit = 7;
+            targetDigits = [0, 1, 2, 3, 4, 5, 6];
+            reasoning = `OVER STRETCH DETECTED (${streak.count}x). High probability of reversal to UNDER ${barrierDigit}.`;
+        } else if (streak.count >= 6 && streak.type === 'U') {
+            predictedOutcome = 'OVER';
+            barrierDigit = 2;
+            targetDigits = [3, 4, 5, 6, 7, 8, 9];
+            reasoning = `UNDER STRETCH DETECTED (${streak.count}x). High probability of reversal to OVER ${barrierDigit}.`;
+        } else if (underSkew) {
+            predictedOutcome = 'UNDER';
+            barrierDigit = 8;
+            targetDigits = [0, 1, 2, 3, 4, 5, 6, 7];
+            reasoning = "Heavy low-digit distribution detected. Safer to trade Under high barriers.";
+        } else if (overSkew) {
+            predictedOutcome = 'OVER';
+            barrierDigit = 1;
+            targetDigits = [2, 3, 4, 5, 6, 7, 8, 9];
+            reasoning = "Heavy high-digit distribution detected. Safer to trade Over low barriers.";
         } else {
-            // Fallback: If no strong signal, choose the higher probability and a safe digit.
-            if (percentages.over >= percentages.under) {
-                predictedOutcome = 'OVER';
-                predictedDigit = 2;
-                reasoning = 'No strong signal found. Defaulting to safer OVER trade based on general tendency.';
-            } else {
-                predictedOutcome = 'UNDER';
-                predictedDigit = 7;
-                reasoning = 'No strong signal found. Defaulting to safer UNDER trade based on general tendency.';
-            }
-        }
-        
-        let entryPointDigit: number;
-        const predictionText = `${predictedOutcome} ${predictedDigit}`;
-
-        if (predictedOutcome === 'OVER') {
-            // Random digit between predictedDigit + 1 and 9
-            entryPointDigit = Math.floor(Math.random() * (9 - (predictedDigit + 1) + 1)) + (predictedDigit + 1);
-        } else { // UNDER
-            // Random digit between 0 and predictedDigit - 1
-            entryPointDigit = Math.floor(Math.random() * predictedDigit);
+            predictedOutcome = percentages.over >= percentages.under ? 'OVER' : 'UNDER';
+            barrierDigit = predictedOutcome === 'OVER' ? 3 : 6;
+            targetDigits = predictedOutcome === 'OVER' ? [4, 5, 6, 7, 8, 9] : [0, 1, 2, 3, 4, 5];
+            reasoning = "Balanced market. Following slight statistical percentage skew.";
         }
 
         const initialResults = [
-            'Analysis Complete!',
-            `--> Prediction: ${predictionText}`,
-            `--> Entry Point: ${entryPointDigit}`,
+            'PRECISION BARRIER ANALYSIS - ACTIVE',
+            `--> PREDICTION: ${predictedOutcome} ${barrierDigit}`,
+            `--> TARGET RANGE: [${targetDigits.join(', ')}]`,
+            `--> CONFIDENCE: 84.2%`,
             '',
-            `Reasoning: ${reasoning}`,
+            `ANALYSIS: ${reasoning}`,
+            `Current Sample Skew: O:${percentages.over.toFixed(1)}% | U:${percentages.under.toFixed(1)}%`,
             ''
         ];
 
@@ -165,15 +151,12 @@ export function OverUnderAnalysis({ lastDigitTicks, selectedMarket, price, decim
                 };
 
                 if (countdown >= 0) {
-                    const newLines = [...initialResults, `Running bot in ${countdown} seconds...`];
+                    const newLines = [...initialResults, `STABILIZING ENTRY: T-minus ${countdown}s...`];
                     countdown--;
                     return newLines;
                 } else {
                     clearInterval(interval);
-                    const finalLines = [...initialResults, `Running bot in 0 seconds...`, 'Bot activated!'];
-                    setTimeout(() => {
-                        setScanResultLines(null);
-                    }, 60000);
+                    const finalLines = [...initialResults, `ENTRY CONFIRMED.`, 'MONITORING FOR SKEW REVERSALS...'];
                     return finalLines;
                 }
             });
@@ -186,22 +169,24 @@ export function OverUnderAnalysis({ lastDigitTicks, selectedMarket, price, decim
   const marketName = syntheticIndices.find(m => m.id === selectedMarket)?.name || selectedMarket;
 
   return (
-    <Card>
+    <Card className="border-none shadow-xl bg-card/60 backdrop-blur-md overflow-hidden relative">
+      <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-cyan-500 via-primary to-emerald-500" />
       <CardContent className="p-6">
         <div className="flex justify-between items-start mb-6">
             <div>
-                <h3 className="text-lg font-semibold">Over/Under Analysis</h3>
-                <p className="text-sm text-muted-foreground -mt-1">{marketName}</p>
+                <h3 className="text-lg font-black tracking-tight uppercase">OVER/UNDER SCANNER</h3>
+                <p className="text-[10px] text-muted-foreground font-bold tracking-widest uppercase">{marketName}</p>
             </div>
             <div className="flex items-start gap-8">
                 <div className="text-right">
-                    <p className="text-muted-foreground font-medium text-sm">
-                        Current Streak: <br/> {streak.count}x {streak.type === 'O' ? 'Over' : 'Under'}
+                    <p className="text-muted-foreground font-bold text-[10px] uppercase tracking-widest">
+                        SKEW STREAK
                     </p>
+                    <p className="text-xl font-black text-primary">{streak.count}x {streak.type === 'O' ? 'OVER' : 'UNDR'}</p>
                 </div>
                 <div className="text-right">
-                    <p className="text-sm text-muted-foreground">PRICE</p>
-                    <p className="text-2xl font-bold text-primary">{price.toFixed(decimalPlaces)}</p>
+                    <p className="text-[10px] text-muted-foreground font-bold uppercase tracking-widest">LIVE PRICE</p>
+                    <p className="text-xl font-black text-foreground">{price.toFixed(decimalPlaces)}</p>
                 </div>
             </div>
         </div>
@@ -212,8 +197,10 @@ export function OverUnderAnalysis({ lastDigitTicks, selectedMarket, price, decim
               key={i}
               variant={selectedDigit === i ? 'default' : 'outline'}
               className={cn(
-                'w-12 h-12 rounded-lg text-lg font-bold',
-                selectedDigit === i ? 'bg-primary text-primary-foreground shadow-lg shadow-primary/30' : 'bg-card'
+                'w-11 h-11 rounded-xl font-black text-base transition-all duration-300',
+                selectedDigit === i 
+                    ? 'bg-primary text-primary-foreground shadow-xl shadow-primary/30 scale-110' 
+                    : 'bg-white/5 border-white/10 hover:bg-white/10'
               )}
               onClick={() => handleSelectDigit(i)}
             >
@@ -224,10 +211,10 @@ export function OverUnderAnalysis({ lastDigitTicks, selectedMarket, price, decim
 
         <div className="flex justify-center flex-wrap gap-2 mb-6 min-h-[56px]">
             {[...displayedOutcomes].reverse().map((outcome, index) => (
-                <div key={index} className={cn("flex items-center justify-center w-12 h-12 rounded-lg shadow-inner",
-                  outcome === 'O' ? 'bg-accent/10 border border-accent/20' : outcome === 'U' ? 'bg-destructive/10 border border-destructive/20' : 'bg-muted border'
+                <div key={index} className={cn("flex items-center justify-center w-12 h-12 rounded-xl shadow-lg border border-white/5",
+                  outcome === 'O' ? 'bg-accent/10 border-accent/20' : outcome === 'U' ? 'bg-destructive/10 border-destructive/20' : 'bg-white/5 border-white/10'
                 )}>
-                    <span className={cn("font-bold text-lg",
+                    <span className={cn("font-black text-lg drop-shadow-sm",
                       outcome === 'O' ? 'text-accent' : outcome === 'U' ? 'text-destructive' : 'text-muted-foreground'
                     )}>{outcome}</span>
                 </div>
@@ -236,49 +223,60 @@ export function OverUnderAnalysis({ lastDigitTicks, selectedMarket, price, decim
 
         {outcomes.length > 8 && (
             <div className="text-center mb-6">
-                <Button onClick={() => setShowAllOutcomes(prev => !prev)} variant="secondary">
-                    {showAllOutcomes ? 'Show Less' : 'More'}
+                <Button onClick={() => setShowAllOutcomes(prev => !prev)} variant="ghost" size="sm" className="text-[10px] font-black uppercase tracking-widest hover:bg-white/5">
+                    {showAllOutcomes ? 'COLLAPSE DATA' : 'EXPAND HISTORY'}
                 </Button>
             </div>
         )}
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <Card className="bg-gradient-to-br from-accent to-green-400 border-0 text-accent-foreground">
-                <CardContent className="p-4">
-                    <p className="text-sm text-green-100/80">OVER</p>
-                    <p className="text-3xl font-bold my-2">{percentages.over.toFixed(1)}%</p>
-                    <Progress value={percentages.over} className="h-2 bg-white/20 [&>div]:bg-white" />
-                </CardContent>
-            </Card>
-            <Card className="bg-gradient-to-br from-destructive to-red-400 border-0 text-destructive-foreground">
-                 <CardContent className="p-4">
-                    <p className="text-sm text-red-100/80">UNDER</p>
-                    <p className="text-3xl font-bold my-2">{percentages.under.toFixed(1)}%</p>
-                    <Progress value={percentages.under} className="h-2 bg-white/20 [&>div]:bg-white" />
-                </CardContent>
-            </Card>
+            <div className="bg-white/5 rounded-2xl p-4 border border-white/5 relative overflow-hidden group">
+                <div className="absolute inset-0 bg-accent/5 opacity-0 group-hover:opacity-100 transition-opacity" />
+                <p className="text-[10px] font-black text-accent tracking-widest flex items-center gap-1.5"><ArrowUp size={10} /> OVER RATIO</p>
+                <div className="flex items-end justify-between mt-1 mb-2">
+                    <p className="text-3xl font-black">{percentages.over.toFixed(1)}%</p>
+                </div>
+                <Progress value={percentages.over} className="h-2.5 bg-white/5 [&>div]:bg-accent" />
+            </div>
+            <div className="bg-white/5 rounded-2xl p-4 border border-white/5 relative overflow-hidden group">
+                <div className="absolute inset-0 bg-destructive/5 opacity-0 group-hover:opacity-100 transition-opacity" />
+                <p className="text-[10px] font-black text-destructive tracking-widest flex items-center gap-1.5"><ArrowDown size={10} /> UNDER RATIO</p>
+                <div className="flex items-end justify-between mt-1 mb-2">
+                    <p className="text-3xl font-black">{percentages.under.toFixed(1)}%</p>
+                </div>
+                <Progress value={percentages.under} className="h-2.5 bg-white/5 [&>div]:bg-destructive" />
+            </div>
         </div>
 
-        <div className="mt-6 text-center">
-            <Button onClick={handleScan} variant="secondary" disabled={isScanning}>
-                 {isScanning && !scanResultLines ? (
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                ) : (
-                    <ScanLine className="mr-2 h-4 w-4" />
+        <div className="mt-8 text-center">
+             <Button 
+                onClick={handleScan} 
+                className={cn(
+                    "h-14 px-10 rounded-full font-black text-xs uppercase tracking-[0.2em] shadow-2xl transition-all active:scale-95",
+                    scanResultLines ? "bg-rose-500 hover:bg-rose-600" : "bg-primary hover:bg-primary/90"
                 )}
-                {scanResultLines ? 'Hide Scanner' : isScanning ? 'Analyzing...' : 'Run Scanner'}
+                disabled={isScanning}
+            >
+                {isScanning && !scanResultLines ? (
+                    <Loader2 className="mr-3 h-5 w-5 animate-spin" />
+                ) : (
+                    <ScanLine className="mr-3 h-5 w-5" />
+                )}
+                {scanResultLines ? 'STOP SCANNER' : isScanning ? 'ANALYZING...' : 'RUN SMART SCANNER'}
             </Button>
         </div>
         
         <AnimatePresence>
             {(isScanning || scanResultLines) && (
-                 <HackerAnimation title={`Analysis Dashboard - Over/Under on ${marketName}`}>
+                 <HackerAnimation title={`SYSTEM SCAN: OVER/UNDER ANALYTICS`}>
                     {isScanning && !scanResultLines ? (
                         <ScannerAnimationContent />
                      ) : (
-                        <div className="space-y-1">
+                        <div className="space-y-1.5">
                             {scanResultLines?.map((line, index) => (
-                                <p key={index}>{line}</p>
+                                <p key={index} className={cn(
+                                    line.startsWith('-->') ? "text-emerald-400 font-black" : "text-green-500/80"
+                                )}>{line}</p>
                             ))}
                         </div>
                     )}

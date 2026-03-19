@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
 import { cn } from '@/lib/utils';
-import { ScanLine, Loader2 } from 'lucide-react';
+import { ScanLine, Loader2, Zap, Target } from 'lucide-react';
 import { HackerAnimation } from './hacker-animation';
 import { syntheticIndices } from '@/lib/mock-data';
 import { ScannerAnimationContent } from './scanner-animation-content';
@@ -76,9 +76,9 @@ export function MatchesDiffersAnalysis({ lastDigitTicks, selectedMarket, price, 
     
     setIsScanning(true);
 
-    if (outcomes.length < 10) {
+    if (lastDigitTicks.length < 25) {
         setTimeout(() => {
-            setScanResultLines(['Not enough data. Need at least 10 ticks.']);
+            setScanResultLines(['ERROR: Data sample insufficient.', 'Need minimum 25 ticks to calculate variance accurately.']);
             setIsScanning(false);
             setTimeout(() => setScanResultLines(null), 3000);
         }, 1000);
@@ -87,83 +87,67 @@ export function MatchesDiffersAnalysis({ lastDigitTicks, selectedMarket, price, 
 
     setTimeout(() => {
         let predictedOutcome: 'MATCH' | 'DIFFER';
-        let entryDigit: number;
-        let reasoning: string;
+        let targetDigits: number[] = [];
+        let riskMitigation: string = "";
 
-        // Strategy: Find the "hottest" digit for a potential MATCH trade.
         const digitCounts = Array(10).fill(0);
         lastDigitTicks.forEach(d => digitCounts[d]++);
-        
-        const digitPercentages = digitCounts.map(c => lastDigitTicks.length > 0 ? (c / lastDigitTicks.length) * 100 : 0);
+        const digitPercentages = digitCounts.map(c => (c / lastDigitTicks.length) * 100);
 
+        // Find hottest and coldest
         let hottestDigit = 0;
-        let highestPercentage = 0;
+        let coldestDigit = 0;
         digitPercentages.forEach((p, i) => {
-            if (p > highestPercentage) {
-                highestPercentage = p;
-                hottestDigit = i;
-            }
+            if (p > digitPercentages[hottestDigit]) hottestDigit = i;
+            if (p < digitPercentages[coldestDigit]) coldestDigit = i;
         });
 
-        const matchThreshold = 15; // A digit appearing >15% of the time is significant (baseline is 10%)
-        
-        if (highestPercentage > matchThreshold) {
+        const recentRepetition = lastDigitTicks.slice(0, 8).filter(d => d === hottestDigit).length >= 2;
+
+        if (recentRepetition && digitPercentages[hottestDigit] > 14) {
             predictedOutcome = 'MATCH';
-            entryDigit = hottestDigit;
-            reasoning = `High frequency of digit ${entryDigit} detected (${highestPercentage.toFixed(1)}%).`;
+            targetDigits = [hottestDigit];
+            riskMitigation = `HIGH FREQUENCY DETECTED for Digit ${hottestDigit}. Repeating cluster found in last 8 ticks.`;
         } else {
-            // Default to a DIFFER trade on the user's selected digit if no hot digit is found.
             predictedOutcome = 'DIFFER';
-            entryDigit = selectedDigit;
-            reasoning = `No strong MATCH signal found. Defaulting to a DIFFER trade on the analyzed digit.`;
+            targetDigits = [coldestDigit];
+            riskMitigation = `STABLE VARIANCE DETECTED. Digit ${coldestDigit} is coldest (${digitPercentages[coldestDigit].toFixed(1)}%). Lower risk for Differ trade.`;
         }
 
-      let entryPointDigitExample: number;
-      const predictionText = `${predictedOutcome} ${entryDigit}`;
+        const initialResults = [
+          'PATTERN RECOGNITION ENGINE - V4.0',
+          `--> STRATEGY: ${predictedOutcome === 'MATCH' ? 'MATCH' : 'DIFFER'}`,
+          `--> TARGET DIGIT: ${targetDigits[0]}`,
+          `--> SAFETY MARGIN: ${predictedOutcome === 'MATCH' ? 'MEDIUM' : 'HIGH'}`,
+          '',
+          `REASONING: ${riskMitigation}`,
+          `Hottest Digit: ${hottestDigit} (${digitPercentages[hottestDigit].toFixed(1)}%)`,
+          `Coldest Digit: ${coldestDigit} (${digitPercentages[coldestDigit].toFixed(1)}%)`,
+          ''
+        ];
 
-      if (predictedOutcome === 'MATCH') {
-        entryPointDigitExample = entryDigit;
-      } else { // DIFFER
-        do {
-          entryPointDigitExample = Math.floor(Math.random() * 10);
-        } while (entryPointDigitExample === entryDigit);
-      }
-      
-      const initialResults = [
-        'Analysis Complete!',
-        `--> Prediction: ${predictionText}`,
-        `--> Entry Point: ${entryPointDigitExample}`,
-        '',
-        `Reasoning: ${reasoning}`,
-        `Analyzed Frequency for Digit ${entryDigit}: ${digitPercentages[entryDigit].toFixed(2)}%`,
-        ''
-      ];
+        setScanResultLines(initialResults);
+        setIsScanning(false);
+        
+        let countdown = 5;
+        const interval = setInterval(() => {
+          setScanResultLines(prevLines => {
+              if (!prevLines) {
+                  clearInterval(interval);
+                  return null;
+              }
 
-      setScanResultLines(initialResults);
-      setIsScanning(false);
-      
-      let countdown = 5;
-      const interval = setInterval(() => {
-        setScanResultLines(prevLines => {
-            if (!prevLines) {
-                clearInterval(interval);
-                return null;
-            }
-
-            if (countdown >= 0) {
-                const newLines = [...initialResults, `Running bot in ${countdown} seconds...`];
-                countdown--;
-                return newLines;
-            } else {
-                clearInterval(interval);
-                const finalLines = [...initialResults, `Running bot in 0 seconds...`, 'Bot activated!'];
-                setTimeout(() => {
-                    setScanResultLines(null);
-                }, 60000);
-                return finalLines;
-            }
-        });
-      }, 1000);
+              if (countdown >= 0) {
+                  const newLines = [...initialResults, `BUFFERING ENTRY: T-minus ${countdown}s...`];
+                  countdown--;
+                  return newLines;
+              } else {
+                  clearInterval(interval);
+                  const finalLines = [...initialResults, `ENTRY EXECUTED.`, 'MONITORING FOR REPETITION ANOMALIES...'];
+                  return finalLines;
+              }
+          });
+        }, 1000);
     }, 2500);
   };
 
@@ -171,22 +155,22 @@ export function MatchesDiffersAnalysis({ lastDigitTicks, selectedMarket, price, 
   const marketName = syntheticIndices.find(m => m.id === selectedMarket)?.name || selectedMarket;
 
   return (
-    <Card>
+    <Card className="border-none shadow-xl bg-card/60 backdrop-blur-md overflow-hidden relative">
+      <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-emerald-500 via-chart-2 to-blue-500" />
       <CardContent className="p-6">
         <div className="flex justify-between items-start mb-6">
             <div>
-                <h3 className="text-lg font-semibold">Matches/Differs Analysis</h3>
-                <p className="text-sm text-muted-foreground -mt-1">{marketName}</p>
+                <h3 className="text-lg font-black tracking-tight uppercase">MATCHES/DIFFERS SCANNER</h3>
+                <p className="text-[10px] text-muted-foreground font-bold tracking-widest uppercase">{marketName}</p>
             </div>
             <div className="flex items-start gap-8">
                 <div className="text-right">
-                    <p className="text-muted-foreground font-medium text-sm">
-                        Current Streak: <br /> {streak.count}x {streak.type === 'M' ? 'Match' : 'Differ'}
-                    </p>
+                    <p className="text-muted-foreground font-bold text-[10px] uppercase tracking-widest">VARIANCE STREAK</p>
+                    <p className="text-xl font-black text-primary">{streak.count}x {streak.type === 'M' ? 'MTCH' : 'DIFR'}</p>
                 </div>
                 <div className="text-right">
-                    <p className="text-sm text-muted-foreground">PRICE</p>
-                    <p className="text-2xl font-bold text-primary">{price.toFixed(decimalPlaces)}</p>
+                    <p className="text-[10px] text-muted-foreground font-bold uppercase tracking-widest">LIVE PRICE</p>
+                    <p className="text-xl font-black text-foreground">{price.toFixed(decimalPlaces)}</p>
                 </div>
             </div>
         </div>
@@ -197,8 +181,10 @@ export function MatchesDiffersAnalysis({ lastDigitTicks, selectedMarket, price, 
               key={i}
               variant={selectedDigit === i ? 'default' : 'outline'}
               className={cn(
-                'w-12 h-12 rounded-lg text-lg font-bold',
-                selectedDigit === i ? 'bg-primary text-primary-foreground shadow-lg shadow-primary/30' : 'bg-card'
+                'w-11 h-11 rounded-xl font-black text-base transition-all duration-300',
+                selectedDigit === i 
+                    ? 'bg-primary text-primary-foreground shadow-xl shadow-primary/30 scale-110' 
+                    : 'bg-white/5 border-white/10 hover:bg-white/10'
               )}
               onClick={() => handleSelectDigit(i)}
             >
@@ -209,57 +195,70 @@ export function MatchesDiffersAnalysis({ lastDigitTicks, selectedMarket, price, 
 
         <div className="flex justify-center flex-wrap gap-2 mb-6 min-h-[56px]">
             {[...displayedOutcomes].reverse().map((outcome, index) => (
-                <div key={index} className="flex items-center justify-center w-12 h-12 bg-card rounded-lg border border-border shadow-inner">
-                    <span className="font-bold text-foreground text-lg">{outcome}</span>
+                <div key={index} className="flex items-center justify-center w-12 h-12 bg-white/5 rounded-xl border border-white/10 shadow-inner">
+                    <span className="font-black text-lg text-foreground">{outcome}</span>
                 </div>
             ))}
         </div>
 
         {outcomes.length > 8 && (
             <div className="text-center mb-6">
-                <Button onClick={() => setShowAllOutcomes(prev => !prev)} variant="secondary">
-                    {showAllOutcomes ? 'Show Less' : 'More'}
+                 <Button onClick={() => setShowAllOutcomes(prev => !prev)} variant="ghost" size="sm" className="text-[10px] font-black uppercase tracking-widest hover:bg-white/5">
+                    {showAllOutcomes ? 'COLLAPSE DATA' : 'EXPAND HISTORY'}
                 </Button>
             </div>
         )}
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <Card className="bg-gradient-to-br from-chart-2 to-emerald-400 border-0 text-white">
-                <CardContent className="p-4">
-                    <p className="text-sm text-blue-100/80">MATCHES</p>
-                    <p className="text-3xl font-bold my-2">{percentages.matches.toFixed(1)}%</p>
-                    <Progress value={percentages.matches} className="h-2 bg-white/20 [&>div]:bg-white" />
-                </CardContent>
-            </Card>
-            <Card className="bg-gradient-to-br from-chart-5 to-amber-400 border-0 text-white">
-                 <CardContent className="p-4">
-                    <p className="text-sm text-slate-700/80">DIFFERS</p>
-                    <p className="text-3xl font-bold my-2">{percentages.differs.toFixed(1)}%</p>
-                    <Progress value={percentages.differs} className="h-2 bg-white/20 [&>div]:bg-white" />
-                </CardContent>
-            </Card>
+            <div className="bg-white/5 rounded-2xl p-4 border border-white/5 relative overflow-hidden group">
+                <div className="absolute inset-0 bg-chart-2/5 opacity-0 group-hover:opacity-100 transition-opacity" />
+                <p className="text-[10px] font-black text-chart-2 tracking-widest">MATCHES RATIO</p>
+                <div className="flex items-end justify-between mt-1 mb-2">
+                    <p className="text-3xl font-black">{percentages.matches.toFixed(1)}%</p>
+                    <div className="p-1.5 bg-chart-2/20 rounded-lg"><Zap className="h-4 w-4 text-chart-2" /></div>
+                </div>
+                <Progress value={percentages.matches} className="h-2.5 bg-white/5 [&>div]:bg-chart-2" />
+            </div>
+            <div className="bg-white/5 rounded-2xl p-4 border border-white/5 relative overflow-hidden group">
+                <div className="absolute inset-0 bg-chart-5/5 opacity-0 group-hover:opacity-100 transition-opacity" />
+                <p className="text-[10px] font-black text-chart-5 tracking-widest">DIFFERS RATIO</p>
+                <div className="flex items-end justify-between mt-1 mb-2">
+                    <p className="text-3xl font-black">{percentages.differs.toFixed(1)}%</p>
+                    <div className="p-1.5 bg-chart-5/20 rounded-lg"><Target className="h-4 w-4 text-chart-5" /></div>
+                </div>
+                <Progress value={percentages.differs} className="h-2.5 bg-white/5 [&>div]:bg-chart-5" />
+            </div>
         </div>
 
-        <div className="mt-6 text-center">
-            <Button onClick={handleScan} variant="secondary" disabled={isScanning}>
-                {isScanning && !scanResultLines ? (
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                ) : (
-                    <ScanLine className="mr-2 h-4 w-4" />
+        <div className="mt-8 text-center">
+             <Button 
+                onClick={handleScan} 
+                className={cn(
+                    "h-14 px-10 rounded-full font-black text-xs uppercase tracking-[0.2em] shadow-2xl transition-all active:scale-95",
+                    scanResultLines ? "bg-rose-500 hover:bg-rose-600" : "bg-primary hover:bg-primary/90"
                 )}
-                {scanResultLines ? 'Hide Scanner' : isScanning ? 'Analyzing...' : 'Run Scanner'}
+                disabled={isScanning}
+            >
+                {isScanning && !scanResultLines ? (
+                    <Loader2 className="mr-3 h-5 w-5 animate-spin" />
+                ) : (
+                    <ScanLine className="mr-3 h-5 w-5" />
+                )}
+                {scanResultLines ? 'STOP SCANNER' : isScanning ? 'ANALYZING...' : 'RUN SMART SCANNER'}
             </Button>
         </div>
         
         <AnimatePresence>
             {(isScanning || scanResultLines) && (
-                <HackerAnimation title={`Analysis Dashboard - Matches & Differs on ${marketName}`}>
+                <HackerAnimation title={`SYSTEM SCAN: MATCHES/DIFFERS ANALYTICS`}>
                     {isScanning && !scanResultLines ? (
                         <ScannerAnimationContent />
                     ) : (
-                        <div className="space-y-1">
+                        <div className="space-y-1.5">
                             {scanResultLines?.map((line, index) => (
-                                <p key={index}>{line}</p>
+                                <p key={index} className={cn(
+                                    line.startsWith('-->') ? "text-emerald-400 font-black" : "text-green-500/80"
+                                )}>{line}</p>
                             ))}
                         </div>
                     )}
