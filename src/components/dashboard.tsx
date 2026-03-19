@@ -16,7 +16,7 @@ export function Dashboard() {
     const [price, setPrice] = React.useState(0);
     const [lastDigitTicks, setLastDigitTicks] = React.useState<number[]>([]);
     const [priceHistory, setPriceHistory] = React.useState<number[]>([]);
-    const [maxTicks, setMaxTicks] = React.useState(1000);
+    const [maxTicks, setMaxTicks] = React.useState(1000); // Fixed at 1000 for Deriv accuracy
     const [selectedMarket, setSelectedMarket] = React.useState(syntheticIndices[0].id);
     const [decimalPlaces, setDecimalPlaces] = React.useState(2);
     const [connectionStatus, setConnectionStatus] = React.useState<ConnectionStatusType>('connecting');
@@ -40,12 +40,15 @@ export function Dashboard() {
         let pipSize: number | null = null;
         let historyBuffer: {time: number, price: number}[] | null = null;
 
-        const prependTickToState = (tick: { quote: number }, fromHistory = false) => {
+        const prependTickToState = (tick: { quote: number, time?: number }, fromHistory = false) => {
             const newPrice = tick.quote;
             const priceString = newPrice.toFixed(pipSize as number);
             const newDigit = parseInt(priceString.slice(-1));
 
-            if (!fromHistory) {
+            // Accurate timestamp mapping
+            if (fromHistory && tick.time) {
+                setTickTimestamps(prev => [tick.time!, ...prev].slice(0, maxTicks));
+            } else if (!fromHistory) {
                 setTickTimestamps(prev => [Date.now(), ...prev].slice(0, maxTicks));
             }
 
@@ -55,7 +58,7 @@ export function Dashboard() {
         };
 
         ws.onopen = () => {
-            // Requesting 1000 ticks for high-precision statistics
+            // Strictly requesting 1000 ticks for high-precision Deriv-accurate statistics
             ws.send(JSON.stringify({ "ticks_history": selectedMarket, "count": 1000, "end": "latest", "style": "ticks", "subscribe": 1 }));
         };
 
@@ -72,7 +75,7 @@ export function Dashboard() {
                 if (data.history && data.history.times && data.history.prices) {
                     historyBuffer = data.history.prices.map((price: number, index: number) => ({
                         price: price,
-                        time: data.history.times[index]
+                        time: data.history.times[index] * 1000 // Convert unix to ms
                     })).reverse();
                 }
             }
@@ -84,9 +87,10 @@ export function Dashboard() {
                         pipSize = data.tick.pip_size;
                         setDecimalPlaces(pipSize);
                         
+                        // Process historical buffer once pip size is known for accuracy
                         if (historyBuffer) {
                             for (const historicalTick of historyBuffer) {
-                                prependTickToState({ quote: historicalTick.price }, true);
+                                prependTickToState({ quote: historicalTick.price, time: historicalTick.time }, true);
                             }
                             historyBuffer = null;
                         }

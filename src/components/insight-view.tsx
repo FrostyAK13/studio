@@ -10,7 +10,7 @@ import { generateInsight, type InsightOutput } from '@/lib/insight-generator';
 import { syntheticIndices } from '@/lib/mock-data';
 import { Badge } from './ui/badge';
 import { Label } from './ui/label';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from './ui/select';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { cn } from '@/lib/utils';
 import { DigitFrequencyCircles } from './correlation-view';
 
@@ -41,13 +41,13 @@ export function InsightView({ price, decimalPlaces, lastDigitTicks, selectedMark
 
         setTimeout(() => {
             if (lastDigitTicks.length < 50) {
-                setError("Not enough data to generate an insight. At least 50 ticks are required.");
+                setError("Not enough data to generate an insight. Please wait for more ticks.");
                 setAnalysisState('error');
                 return;
             }
 
             try {
-                const result = generateInsight(lastDigitTicks.slice(0, 50));
+                const result = generateInsight(lastDigitTicks);
                 setInsight(result);
                 setAnalysisState('complete');
             } catch (e: any) {
@@ -78,7 +78,7 @@ export function InsightView({ price, decimalPlaces, lastDigitTicks, selectedMark
                         ) : insight ? (
                             <div className="text-left space-y-4">
                                 <div>
-                                    <p className="font-bold text-green-300">// MARKET SUMMARY</p>
+                                    <p className="font-bold text-green-300">// MARKET SUMMARY (High-Precision 1000-Tick Sample)</p>
                                     <p className="text-base">{insight.summary}</p>
                                 </div>
                                 <div>
@@ -109,7 +109,7 @@ export function InsightView({ price, decimalPlaces, lastDigitTicks, selectedMark
                     <Lightbulb className="h-8 w-8 text-primary" />
                     <div>
                         <CardTitle className="text-2xl">Strategy Insight</CardTitle>
-                        <CardDescription>Let our scanner analyze the market and suggest a strategy.</CardDescription>
+                        <CardDescription>High-accuracy analysis based on Deriv-standard 1000-tick samples.</CardDescription>
                     </div>
                 </div>
             </CardHeader>

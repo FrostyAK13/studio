@@ -77,7 +77,8 @@ export function DigitFrequencyView({
     }, [lastDigitTicks]);
     
     const marketDirectionAnalysis = React.useMemo(() => {
-        const ticks = lastDigitTicks.slice(0, 50);
+        // High-accuracy analysis using full history window
+        const ticks = lastDigitTicks;
         if (ticks.length < 10) {
             return null;
         }
@@ -215,7 +216,7 @@ export function DigitFrequencyView({
                         </Select>
                     </div>
                     <div>
-                        <Label htmlFor="max-ticks-freq">Number of Ticks to Analyze</Label>
+                        <Label htmlFor="max-ticks-freq">Analysis Window (Accuracy Baseline)</Label>
                         <Input
                             id="max-ticks-freq"
                             type="number"
@@ -272,7 +273,7 @@ export function DigitFrequencyView({
 
             <Card>
                 <CardHeader>
-                    <CardTitle className="text-base font-semibold">Probability Analysis</CardTitle>
+                    <CardTitle className="text-base font-semibold">Probability Analysis ({maxTicks} Ticks)</CardTitle>
                 </CardHeader>
                 <CardContent className="flex items-center justify-center">
                     <ChartContainer config={chartConfig} className="mx-auto aspect-square h-[450px]">
@@ -358,14 +359,14 @@ export function DigitFrequencyView({
                 <CardHeader>
                     <CardTitle className="text-base font-semibold flex items-center gap-2">
                         <Compass className="h-5 w-5 text-muted-foreground" />
-                        Market Direction (Last 50 Ticks)
+                        Market Direction (Last {maxTicks} Ticks)
                     </CardTitle>
-                    <CardDescription>Analysis of dominance and potential reversals.</CardDescription>
+                    <CardDescription>High-precision analysis of dominance and potential reversals.</CardDescription>
                 </CardHeader>
                 <CardContent>
                     {!marketDirectionAnalysis ? (
                         <p className="text-sm text-muted-foreground text-center py-4">
-                            Collecting more data for analysis... (needs at least 10 ticks)
+                            Collecting data for high-accuracy analysis...
                         </p>
                     ) : (
                         <div className="space-y-4">
