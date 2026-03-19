@@ -15,14 +15,16 @@ interface CorrelationViewProps {
     lastDigitTicks: number[];
 }
 
-const DigitFrequencyCircles = ({ 
+export const DigitFrequencyCircles = ({ 
     ticks, 
     selectedDigit, 
-    onDigitSelect 
+    onDigitSelect,
+    showDetails = false
 }: { 
     ticks: number[], 
     selectedDigit: number | null, 
-    onDigitSelect: (d: number) => void 
+    onDigitSelect: (d: number) => void,
+    showDetails?: boolean
 }) => {
     const { digitData, lastDigit } = React.useMemo(() => {
         const counts = Array(10).fill(0);
@@ -42,6 +44,7 @@ const DigitFrequencyCircles = ({
                 const rank = sorted.findIndex(s => s.index === item.index);
                 let colorClass = "text-muted-foreground/20";
                 
+                // User custom ranking colors
                 if (rank === 0) colorClass = "text-emerald-400"; // Most (Green)
                 else if (rank === 1) colorClass = "text-cyan-400"; // 2nd Most (Blue)
                 else if (rank === 8) colorClass = "text-orange-400"; // 2nd Lowest (Orange)
@@ -62,21 +65,22 @@ const DigitFrequencyCircles = ({
     }) => {
         const radius = 28;
         const circumference = 2 * Math.PI * radius;
+        // Scale the arc: 25% percentage maps to a full 360 degree circle
         const offset = circumference - (Math.min(percentage, 25) / 25) * circumference;
 
         return (
             <div 
                 className={cn(
-                    "flex flex-col items-center relative cursor-pointer transition-all duration-300",
+                    "flex flex-col items-center relative cursor-pointer transition-all duration-300 px-1 py-2",
                     isSelected && "bg-primary/10 rounded-xl ring-1 ring-primary/30"
                 )}
                 onClick={() => onDigitSelect(digit)}
             >
-                <div className="relative w-20 h-20 flex items-center justify-center">
+                <div className="relative w-16 h-16 sm:w-20 sm:h-20 flex items-center justify-center">
                     <svg className="absolute inset-0 w-full h-full -rotate-90">
                         <circle
-                            cx="40"
-                            cy="40"
+                            cx="50%"
+                            cy="50%"
                             r={radius}
                             stroke="currentColor"
                             strokeWidth="3"
@@ -84,8 +88,8 @@ const DigitFrequencyCircles = ({
                             className="text-muted-foreground/5"
                         />
                         <circle
-                            cx="40"
-                            cy="40"
+                            cx="50%"
+                            cy="50%"
                             r={radius}
                             stroke="currentColor"
                             strokeWidth="5"
@@ -98,14 +102,14 @@ const DigitFrequencyCircles = ({
                     </svg>
                     <div className="flex flex-col items-center justify-center z-10">
                         <span className={cn(
-                            "text-3xl font-black leading-none transition-colors",
+                            "text-2xl sm:text-3xl font-black leading-none transition-colors",
                             isSelected ? "text-primary" : "text-foreground"
                         )}>{digit}</span>
                         <span className="text-[9px] font-bold text-muted-foreground mt-0.5">{percentage.toFixed(1)}%</span>
                     </div>
                 </div>
                 {isLast && (
-                    <div className="absolute -bottom-0.5 w-0 h-0 border-l-[4px] border-l-transparent border-r-[4px] border-r-transparent border-b-[8px] border-b-primary animate-bounce" />
+                    <div className="absolute -bottom-1 w-0 h-0 border-l-[5px] border-l-transparent border-r-[5px] border-r-transparent border-b-[8px] border-b-primary animate-pulse" />
                 )}
             </div>
         );
@@ -114,14 +118,14 @@ const DigitFrequencyCircles = ({
     return (
         <Card className="overflow-hidden border-none shadow-xl bg-card/40 backdrop-blur-md">
              <CardHeader className="pb-1 pt-3 text-center">
-                <CardTitle className="text-xs font-bold uppercase tracking-[0.3em] flex items-center justify-center gap-2">
+                <CardTitle className="text-[10px] font-bold uppercase tracking-[0.3em] flex items-center justify-center gap-2">
                     <div className="w-1.5 h-1.5 rounded-full bg-primary animate-pulse" />
                     DIGIT PERCENTAGE
                 </CardTitle>
             </CardHeader>
             <CardContent className="p-2">
                 <div className="space-y-0.5">
-                    <div className="grid grid-cols-5 gap-1 border-b border-white/5 pb-1">
+                    <div className="grid grid-cols-5 gap-0.5 border-b border-white/5 pb-1">
                         {digitData.slice(0, 5).map((data) => (
                             <DigitCircle 
                                 key={data.index} 
@@ -133,7 +137,7 @@ const DigitFrequencyCircles = ({
                             />
                         ))}
                     </div>
-                    <div className="grid grid-cols-5 gap-1 pt-1">
+                    <div className="grid grid-cols-5 gap-0.5 pt-1">
                         {digitData.slice(5, 10).map((data) => (
                             <DigitCircle 
                                 key={data.index} 
@@ -191,7 +195,6 @@ const DigitDetailPanel = ({ digit, ticks }: { digit: number, ticks: number[] }) 
                 </CardHeader>
                 <CardContent className="p-4 pt-2">
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                        {/* Match vs Differs */}
                         <div className="space-y-3">
                             <div className="flex justify-between items-end border-b border-white/5 pb-1">
                                 <h4 className="text-[9px] font-black uppercase tracking-[0.2em] text-muted-foreground">Matching Frequency</h4>
@@ -217,7 +220,6 @@ const DigitDetailPanel = ({ digit, ticks }: { digit: number, ticks: number[] }) 
                             </div>
                         </div>
 
-                        {/* Over vs Under */}
                         <div className="space-y-3">
                             <div className="flex justify-between items-end border-b border-white/5 pb-1">
                                 <h4 className="text-[9px] font-black uppercase tracking-[0.2em] text-muted-foreground">Relative Distribution</h4>
@@ -280,6 +282,7 @@ export function CorrelationView({
                 ticks={lastDigitTicks} 
                 selectedDigit={selectedDigit}
                 onDigitSelect={setSelectedDigit}
+                showDetails={true}
             />
 
             {selectedDigit !== null && (

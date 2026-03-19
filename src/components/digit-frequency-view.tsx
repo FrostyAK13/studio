@@ -12,6 +12,7 @@ import { ChartContainer } from '@/components/ui/chart';
 import { Badge } from '@/components/ui/badge';
 import { Compass } from 'lucide-react';
 import { RiseFallAnalysis } from './rise-fall-analysis';
+import { DigitFrequencyCircles } from './correlation-view';
 
 interface DigitFrequencyViewProps {
     price: number;
@@ -26,142 +27,6 @@ interface DigitFrequencyViewProps {
 }
 
 const digitColors = Array.from({ length: 10 }, (_, i) => `hsl(var(--chart-${i + 1}))`);
-
-const DigitFrequencyCircles = ({ 
-    ticks, 
-    selectedDigit, 
-    onDigitSelect 
-}: { 
-    ticks: number[], 
-    selectedDigit: number | null, 
-    onDigitSelect: (d: number) => void 
-}) => {
-    const { digitData, lastDigit } = React.useMemo(() => {
-        const counts = Array(10).fill(0);
-        ticks.forEach(d => counts[d]++);
-        const total = ticks.length || 1;
-        
-        const mapped = counts.map((count, index) => ({
-            index,
-            count,
-            percentage: (count / total) * 100
-        }));
-
-        const sorted = [...mapped].sort((a, b) => b.count - a.count);
-
-        return {
-            digitData: mapped.map(item => {
-                const rank = sorted.findIndex(s => s.index === item.index);
-                let colorClass = "text-muted-foreground/20";
-                
-                if (rank === 0) colorClass = "text-emerald-400"; // Most (Green)
-                else if (rank === 1) colorClass = "text-cyan-400"; // 2nd Most (Blue)
-                else if (rank === 8) colorClass = "text-orange-400"; // 2nd Lowest (Orange)
-                else if (rank === 9) colorClass = "text-rose-400"; // Lowest (Red)
-
-                return { ...item, colorClass };
-            }),
-            lastDigit: ticks.length > 0 ? ticks[0] : null
-        };
-    }, [ticks]);
-
-    const DigitCircle = ({ digit, percentage, colorClass, isLast, isSelected }: { 
-        digit: number, 
-        percentage: number, 
-        colorClass: string, 
-        isLast: boolean,
-        isSelected: boolean 
-    }) => {
-        const radius = 28;
-        const circumference = 2 * Math.PI * radius;
-        const offset = circumference - (Math.min(percentage, 25) / 25) * circumference;
-
-        return (
-            <div 
-                className={cn(
-                    "flex flex-col items-center relative cursor-pointer transition-all duration-300",
-                    isSelected && "bg-primary/10 rounded-xl ring-1 ring-primary/30"
-                )}
-                onClick={() => onDigitSelect(digit)}
-            >
-                <div className="relative w-20 h-20 flex items-center justify-center">
-                    <svg className="absolute inset-0 w-full h-full -rotate-90">
-                        <circle
-                            cx="40"
-                            cy="40"
-                            r={radius}
-                            stroke="currentColor"
-                            strokeWidth="3"
-                            fill="transparent"
-                            className="text-muted-foreground/5"
-                        />
-                        <circle
-                            cx="40"
-                            cy="40"
-                            r={radius}
-                            stroke="currentColor"
-                            strokeWidth="5"
-                            fill="transparent"
-                            strokeDasharray={circumference}
-                            strokeDashoffset={offset}
-                            strokeLinecap="round"
-                            className={cn("transition-all duration-1000 ease-in-out", colorClass)}
-                        />
-                    </svg>
-                    <div className="flex flex-col items-center justify-center z-10">
-                        <span className={cn(
-                            "text-3xl font-black leading-none transition-colors",
-                            isSelected ? "text-primary" : "text-foreground"
-                        )}>{digit}</span>
-                        <span className="text-[9px] font-bold text-muted-foreground mt-0.5">{percentage.toFixed(1)}%</span>
-                    </div>
-                </div>
-                {isLast && (
-                    <div className="absolute -bottom-0.5 w-0 h-0 border-l-[4px] border-l-transparent border-r-[4px] border-r-transparent border-b-[8px] border-b-primary animate-bounce" />
-                )}
-            </div>
-        );
-    };
-
-    return (
-        <Card className="overflow-hidden border-none shadow-xl bg-card/40 backdrop-blur-md">
-             <CardHeader className="pb-1 pt-3 text-center">
-                <CardTitle className="text-xs font-bold uppercase tracking-[0.3em] flex items-center justify-center gap-2">
-                    <div className="w-1.5 h-1.5 rounded-full bg-primary animate-pulse" />
-                    DIGIT PERCENTAGE
-                </CardTitle>
-            </CardHeader>
-            <CardContent className="p-2">
-                <div className="space-y-0.5">
-                    <div className="grid grid-cols-5 gap-1 border-b border-white/5 pb-1">
-                        {digitData.slice(0, 5).map((data) => (
-                            <DigitCircle 
-                                key={data.index} 
-                                digit={data.index} 
-                                percentage={data.percentage} 
-                                colorClass={data.colorClass} 
-                                isLast={lastDigit === data.index}
-                                isSelected={selectedDigit === data.index}
-                            />
-                        ))}
-                    </div>
-                    <div className="grid grid-cols-5 gap-1 pt-1">
-                        {digitData.slice(5, 10).map((data) => (
-                            <DigitCircle 
-                                key={data.index} 
-                                digit={data.index} 
-                                percentage={data.percentage} 
-                                colorClass={data.colorClass} 
-                                isLast={lastDigit === data.index}
-                                isSelected={selectedDigit === data.index}
-                            />
-                        ))}
-                    </div>
-                </div>
-            </CardContent>
-        </Card>
-    );
-};
 
 export function DigitFrequencyView({
     price,
@@ -217,7 +82,6 @@ export function DigitFrequencyView({
             return null;
         }
 
-        // Even/Odd
         const evenCount = ticks.filter(d => d % 2 === 0).length;
         const evenPercentage = (evenCount / ticks.length) * 100;
         const oddPercentage = 100 - evenPercentage;
@@ -233,7 +97,6 @@ export function DigitFrequencyView({
             { name: 'Odd', value: oddPercentage, fill: 'hsl(var(--chart-3))' },
         ];
 
-        // Matches/Differs
         const counts = Array(10).fill(0);
         ticks.forEach(digit => { counts[digit]++; });
         const hottestDigit = counts.reduce((maxIndex, p, i, arr) => p > arr[maxIndex] ? i : maxIndex, 0);
@@ -246,8 +109,6 @@ export function DigitFrequencyView({
             { name: 'Differs', value: differsPercentage, fill: 'hsl(var(--chart-5))' },
         ];
 
-
-        // Over/Under
         const lowerClusterCount = ticks.filter(d => d <= 4).length;
         const higherClusterCount = ticks.length - lowerClusterCount;
         const lowerPercentage = (lowerClusterCount / ticks.length) * 100;
@@ -264,7 +125,6 @@ export function DigitFrequencyView({
             { name: 'Higher (5-9)', value: higherPercentage, fill: 'hsl(var(--destructive))' },
         ];
 
-        // Over Cluster (0-2 vs 3-9)
         const overClusterLowCount = ticks.filter(d => d <= 2).length;
         const overClusterHighCount = ticks.length - overClusterLowCount;
         const overClusterLowPercentage = (overClusterLowCount / ticks.length) * 100;
@@ -274,7 +134,6 @@ export function DigitFrequencyView({
             { name: 'High (3-9)', value: overClusterHighPercentage, fill: 'hsl(var(--destructive))' },
         ];
 
-        // Under Cluster (0-6 vs 7-9)
         const underClusterLowCount = ticks.filter(d => d <= 6).length;
         const underClusterHighCount = ticks.length - underClusterLowCount;
         const underClusterLowPercentage = (underClusterLowCount / ticks.length) * 100;
@@ -283,7 +142,6 @@ export function DigitFrequencyView({
             { name: 'Low (0-6)', value: underClusterLowPercentage, fill: 'hsl(var(--chart-1))' },
             { name: 'High (7-9)', value: underClusterHighPercentage, fill: 'hsl(var(--destructive))' },
         ];
-
 
         return {
             evenOdd: {
@@ -375,6 +233,7 @@ export function DigitFrequencyView({
                 ticks={lastDigitTicks} 
                 selectedDigit={selectedDigit}
                 onDigitSelect={setSelectedDigit}
+                showDetails={false}
             />
 
             <Card>
