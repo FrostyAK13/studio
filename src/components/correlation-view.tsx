@@ -23,79 +23,116 @@ interface CorrelationViewProps {
 }
 
 const DigitFrequencyCircles = ({ ticks }: { ticks: number[] }) => {
-    const { percentages, lastDigit } = React.useMemo(() => {
+    const { digitData, lastDigit } = React.useMemo(() => {
         const counts = Array(10).fill(0);
         ticks.forEach(d => counts[d]++);
         const total = ticks.length || 1;
+        
+        // Map to include index for sorting
+        const mapped = counts.map((count, index) => ({
+            index,
+            count,
+            percentage: (count / total) * 100
+        }));
+
+        // Sort by count descending to find ranks
+        const sorted = [...mapped].sort((a, b) => b.count - a.count);
+
         return {
-            percentages: counts.map(c => (c / total) * 100),
-            lastDigit: ticks.length > 0 ? ticks[0] : null // newest digit is at index 0
+            digitData: mapped.map(item => {
+                const rank = sorted.findIndex(s => s.index === item.index);
+                let colorClass = "text-muted-foreground/40";
+                
+                if (rank === 0) colorClass = "text-green-500"; // Most
+                else if (rank === 1) colorClass = "text-blue-500"; // 2nd Most
+                else if (rank === 8) colorClass = "text-orange-500"; // 2nd Lowest (9th place)
+                else if (rank === 9) colorClass = "text-red-500"; // Lowest (10th place)
+
+                return { ...item, colorClass };
+            }),
+            lastDigit: ticks.length > 0 ? ticks[0] : null
         };
     }, [ticks]);
 
+    const DigitCircle = ({ digit, percentage, colorClass, isLast }: { digit: number, percentage: number, colorClass: string, isLast: boolean }) => {
+        const radius = 26;
+        const circumference = 2 * Math.PI * radius;
+        // Scale arc relative to 20% max for visibility
+        const offset = circumference - (Math.min(percentage, 20) / 20) * circumference;
+
+        return (
+            <div className="flex flex-col items-center relative py-4">
+                <div className="relative w-20 h-20 flex items-center justify-center">
+                    <svg className="absolute inset-0 w-full h-full -rotate-90">
+                        <circle
+                            cx="40"
+                            cy="40"
+                            r={radius}
+                            stroke="currentColor"
+                            strokeWidth="4"
+                            fill="transparent"
+                            className="text-muted-foreground/10"
+                        />
+                        <circle
+                            cx="40"
+                            cy="40"
+                            r={radius}
+                            stroke="currentColor"
+                            strokeWidth="5"
+                            fill="transparent"
+                            strokeDasharray={circumference}
+                            strokeDashoffset={offset}
+                            strokeLinecap="round"
+                            className={cn("transition-all duration-1000 ease-in-out", colorClass)}
+                        />
+                    </svg>
+                    <div className="flex flex-col items-center justify-center z-10">
+                        <span className="text-xl font-black leading-tight">{digit}</span>
+                        <span className="text-[10px] font-bold text-muted-foreground">{percentage.toFixed(1)}%</span>
+                    </div>
+                </div>
+                {isLast && (
+                    <div className="absolute -bottom-1 w-0 h-0 border-l-[7px] border-l-transparent border-r-[7px] border-r-transparent border-b-[10px] border-b-primary drop-shadow-[0_0_8px_rgba(var(--primary),0.5)]" />
+                )}
+            </div>
+        );
+    };
+
     return (
         <Card className="overflow-hidden border-none shadow-md bg-card/50 backdrop-blur-sm">
-             <CardHeader className="pb-2">
-                <CardTitle className="text-base font-bold flex items-center gap-2">
+             <CardHeader className="pb-2 text-center">
+                <CardTitle className="text-base font-bold uppercase tracking-widest flex items-center justify-center gap-2">
                     <div className="w-2 h-2 rounded-full bg-primary animate-pulse" />
-                    Digit Probability Distribution
+                    Real-Time Digit Ranks
                 </CardTitle>
-                <CardDescription>Real-time frequency tracking for all digits (0-9).</CardDescription>
+                <CardDescription>Ranked by frequency: Most (Green), 2nd (Blue), Lowest (Red), 2nd Low (Orange).</CardDescription>
             </CardHeader>
             <CardContent className="p-6">
-                <div className="flex justify-between items-center overflow-x-auto pb-6 pt-4 gap-4 no-scrollbar">
-                    {percentages.map((pct, i) => {
-                        const isLast = lastDigit === i;
-                        // Color logic: High (Accent), Low (Destructive), Neutral (Muted)
-                        let strokeColor = "text-muted-foreground/20";
-                        let progressColor = "text-muted-foreground/40";
-                        
-                        if (pct > 12) progressColor = "text-accent";
-                        if (pct < 8) progressColor = "text-destructive";
-
-                        const radius = 26;
-                        const circumference = 2 * Math.PI * radius;
-                        // We scale the progress arc relative to 20% (double the expected average) 
-                        // to make small variations more visually apparent as requested.
-                        const offset = circumference - (Math.min(pct, 20) / 20) * circumference;
-
-                        return (
-                            <div key={i} className="flex flex-col items-center min-w-[70px] relative">
-                                <div className="relative w-20 h-20 flex items-center justify-center">
-                                    <svg className="absolute inset-0 w-full h-full -rotate-90">
-                                        <circle
-                                            cx="40"
-                                            cy="40"
-                                            r={radius}
-                                            stroke="currentColor"
-                                            strokeWidth="4"
-                                            fill="transparent"
-                                            className={strokeColor}
-                                        />
-                                        <circle
-                                            cx="40"
-                                            cy="40"
-                                            r={radius}
-                                            stroke="currentColor"
-                                            strokeWidth="5"
-                                            fill="transparent"
-                                            strokeDasharray={circumference}
-                                            strokeDashoffset={offset}
-                                            strokeLinecap="round"
-                                            className={cn("transition-all duration-1000 ease-in-out", progressColor)}
-                                        />
-                                    </svg>
-                                    <div className="flex flex-col items-center justify-center z-10">
-                                        <span className="text-xl font-black leading-tight">{i}</span>
-                                        <span className="text-[10px] font-bold text-muted-foreground">{pct.toFixed(1)}%</span>
-                                    </div>
-                                </div>
-                                {isLast && (
-                                    <div className="absolute -bottom-1 w-0 h-0 border-l-[7px] border-l-transparent border-r-[7px] border-r-transparent border-b-[10px] border-b-primary drop-shadow-[0_0_8px_rgba(var(--primary),0.5)]" />
-                                )}
-                            </div>
-                        );
-                    })}
+                <div className="space-y-4">
+                    {/* Row 1: 0 to 4 */}
+                    <div className="grid grid-cols-5 gap-2 border-b border-white/5 pb-4">
+                        {digitData.slice(0, 5).map((data) => (
+                            <DigitCircle 
+                                key={data.index} 
+                                digit={data.index} 
+                                percentage={data.percentage} 
+                                colorClass={data.colorClass} 
+                                isLast={lastDigit === data.index}
+                            />
+                        ))}
+                    </div>
+                    {/* Row 2: 5 to 9 */}
+                    <div className="grid grid-cols-5 gap-2 pt-4">
+                        {digitData.slice(5, 10).map((data) => (
+                            <DigitCircle 
+                                key={data.index} 
+                                digit={data.index} 
+                                percentage={data.percentage} 
+                                colorClass={data.colorClass} 
+                                isLast={lastDigit === data.index}
+                            />
+                        ))}
+                    </div>
                 </div>
             </CardContent>
         </Card>

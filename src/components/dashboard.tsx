@@ -195,7 +195,7 @@ export function Dashboard() {
                 <TabsTrigger value="analyzer">Analyzer</TabsTrigger>
                 <TabsTrigger value="frequency">Frequency</TabsTrigger>
                 <TabsTrigger value="insight">Insight</TabsTrigger>
-                <TabsTrigger value="correlation">Correlation</TabsTrigger>
+                <TabsTrigger value="circles">CIRCLES</TabsTrigger>
             </TabsList>
 
             <TabsContent value="scanner">
@@ -249,7 +249,7 @@ export function Dashboard() {
                 />
             </TabsContent>
             
-            <TabsContent value="correlation">
+            <TabsContent value="circles">
                 <CorrelationView
                     currentTps={currentTps}
                     historicalTps={historicalTps}
