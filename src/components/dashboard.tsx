@@ -131,11 +131,9 @@ export function Dashboard() {
 
   return (
     <div className="flex min-h-screen w-full flex-col bg-background font-sans overflow-x-hidden">
-      {/* Redesigned Header: [1] frostytraders.com [2] EMPORER MIGOSI [3] Status */}
       <header className="sticky top-0 z-50 flex h-20 items-center border-b bg-background/80 px-6 backdrop-blur-xl transition-all duration-300">
         <div className="flex w-full items-center justify-between max-w-7xl mx-auto gap-4">
           
-          {/* 1: Brand */}
           <div className="flex-1">
             <a
               href="https://frostytraders.com"
@@ -147,7 +145,6 @@ export function Dashboard() {
             </a>
           </div>
 
-          {/* 2: Identity (Centered) */}
           <div className="hidden md:flex flex-1 justify-center">
             <div className="relative group">
                 <div className="absolute -inset-1 bg-gradient-to-r from-primary/20 to-cyan-400/20 rounded-full blur opacity-25 group-hover:opacity-75 transition duration-1000 group-hover:duration-200"></div>
@@ -159,7 +156,6 @@ export function Dashboard() {
             </div>
           </div>
 
-          {/* 3: Status (Right-aligned) */}
           <div className="flex-1 flex justify-end">
             <div className="flex items-center gap-3 px-4 py-2 bg-muted/30 rounded-full border border-white/5 backdrop-blur-sm shadow-inner">
                 <ConnectionStatus status={connectionStatus} />
@@ -170,7 +166,6 @@ export function Dashboard() {
 
       <main className="flex-1 p-4 sm:p-8">
         <Tabs defaultValue="scanner" className="w-full max-w-7xl mx-auto">
-            {/* Redesigned Navigation Tabs: Pill-shaped and Unique */}
             <TabsList className="flex items-center justify-center gap-2 bg-transparent h-auto p-0 mb-10 overflow-x-auto no-scrollbar pb-2">
                 {['scanner', 'analyzer', 'frequency', 'insight', 'circles'].map((tab) => (
                     <TabsTrigger 
@@ -201,6 +196,7 @@ export function Dashboard() {
                 <AnalyzerView
                     price={price}
                     lastDigitTicks={analyzedDigits}
+                    priceHistory={analyzedPrices}
                     maxTicks={maxTicks}
                     handleMaxTicksChange={handleMaxTicksChange}
                     handleMaxTicksBlur={handleMaxTicksBlur}
