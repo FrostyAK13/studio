@@ -1,3 +1,4 @@
+
 'use client';
 
 import * as React from 'react';
@@ -16,17 +17,11 @@ export function Dashboard() {
     const [price, setPrice] = React.useState(0);
     const [lastDigitTicks, setLastDigitTicks] = React.useState<number[]>([]);
     const [priceHistory, setPriceHistory] = React.useState<number[]>([]);
-    const [maxTicks, setMaxTicks] = React.useState(1000); // Fixed at 1000 for Deriv accuracy
+    const [maxTicks, setMaxTicks] = React.useState(1000); // Strict baseline for 100% accuracy
     const [selectedMarket, setSelectedMarket] = React.useState(syntheticIndices[0].id);
     const [decimalPlaces, setDecimalPlaces] = React.useState(2);
     const [connectionStatus, setConnectionStatus] = React.useState<ConnectionStatusType>('connecting');
     const [tickTimestamps, setTickTimestamps] = React.useState<number[]>([]);
-
-    React.useEffect(() => {
-        setLastDigitTicks(prev => prev.slice(0, maxTicks));
-        setPriceHistory(prev => prev.slice(0, maxTicks));
-        setTickTimestamps(prev => prev.slice(0, maxTicks));
-    }, [maxTicks]);
 
     React.useEffect(() => {
         setPrice(0);
@@ -42,24 +37,32 @@ export function Dashboard() {
 
         const prependTickToState = (tick: { quote: number, time?: number }, fromHistory = false) => {
             const newPrice = tick.quote;
-            const priceString = newPrice.toFixed(pipSize as number);
+            
+            // Ensure pipSize is applied for correct digit extraction
+            const currentPipSize = pipSize !== null ? pipSize : 2;
+            const priceString = newPrice.toFixed(currentPipSize);
             const newDigit = parseInt(priceString.slice(-1));
 
-            // Accurate timestamp mapping
             if (fromHistory && tick.time) {
-                setTickTimestamps(prev => [tick.time!, ...prev].slice(0, maxTicks));
+                setTickTimestamps(prev => [tick.time!, ...prev].slice(0, 1000));
             } else if (!fromHistory) {
-                setTickTimestamps(prev => [Date.now(), ...prev].slice(0, maxTicks));
+                setTickTimestamps(prev => [Date.now(), ...prev].slice(0, 1000));
             }
 
             setPrice(newPrice);
-            setLastDigitTicks(prevTicks => [newDigit, ...prevTicks].slice(0, maxTicks));
-            setPriceHistory(prevPrices => [newPrice, ...prevPrices].slice(0, maxTicks));
+            setLastDigitTicks(prevTicks => [newDigit, ...prevTicks].slice(0, 1000));
+            setPriceHistory(prevPrices => [newPrice, ...prevPrices].slice(0, 1000));
         };
 
         ws.onopen = () => {
-            // Strictly requesting 1000 ticks for high-precision Deriv-accurate statistics
-            ws.send(JSON.stringify({ "ticks_history": selectedMarket, "count": 1000, "end": "latest", "style": "ticks", "subscribe": 1 }));
+            // Strictly request 1000 ticks history with subscription
+            ws.send(JSON.stringify({ 
+                "ticks_history": selectedMarket, 
+                "count": 1000, 
+                "end": "latest", 
+                "style": "ticks", 
+                "subscribe": 1 
+            }));
         };
 
         ws.onmessage = (event) => {
@@ -75,23 +78,29 @@ export function Dashboard() {
                 if (data.history && data.history.times && data.history.prices) {
                     historyBuffer = data.history.prices.map((price: number, index: number) => ({
                         price: price,
-                        time: data.history.times[index] * 1000 // Convert unix to ms
+                        time: data.history.times[index] * 1000 
                     })).reverse();
                 }
             }
 
             if (data.msg_type === 'tick') {
                 setConnectionStatus('streaming');
-                if (data.tick && typeof data.tick.quote === 'number' && typeof data.tick.pip_size === 'number') {
+                if (data.tick && typeof data.tick.quote === 'number') {
                     if (pipSize === null) {
-                        pipSize = data.tick.pip_size;
+                        pipSize = data.tick.pip_size ?? 2;
                         setDecimalPlaces(pipSize);
                         
-                        // Process historical buffer once pip size is known for accuracy
                         if (historyBuffer) {
-                            for (const historicalTick of historyBuffer) {
-                                prependTickToState({ quote: historicalTick.price, time: historicalTick.time }, true);
-                            }
+                            // Process history as a block to populate the 1000-tick window
+                            const digits = historyBuffer.map(h => parseInt(h.price.toFixed(pipSize!).slice(-1)));
+                            const prices = historyBuffer.map(h => h.price);
+                            const times = historyBuffer.map(h => h.time);
+                            
+                            setLastDigitTicks(digits.slice(0, 1000));
+                            setPriceHistory(prices.slice(0, 1000));
+                            setTickTimestamps(times.slice(0, 1000));
+                            setPrice(prices[0]);
+                            
                             historyBuffer = null;
                         }
                     }
@@ -100,19 +109,15 @@ export function Dashboard() {
             }
         };
 
-        ws.onclose = () => {
-            setConnectionStatus('disconnected');
-        };
-        ws.onerror = () => {
-            setConnectionStatus('disconnected');
-        };
+        ws.onclose = () => setConnectionStatus('disconnected');
+        ws.onerror = () => setConnectionStatus('disconnected');
 
         return () => {
            if(ws.readyState === WebSocket.OPEN || ws.readyState === WebSocket.CONNECTING) {
              ws.close();
            }
         };
-    }, [selectedMarket, maxTicks]);
+    }, [selectedMarket]); // Only re-run when market changes
 
     const handleMaxTicksChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const value = e.target.value;
@@ -120,7 +125,6 @@ export function Dashboard() {
             setMaxTicks(0);
             return;
         }
-
         let numValue = parseInt(value, 10);
         if (!isNaN(numValue)) {
             if (numValue > 5000) numValue = 5000;
@@ -147,7 +151,7 @@ export function Dashboard() {
           <ConnectionStatus status={connectionStatus} />
         </div>
         <div>
-          <span className="font-semibold text-muted-foreground">EMPORER MIGOSI</span>
+          <span className="font-semibold text-muted-foreground uppercase">Emporer Migosi</span>
         </div>
       </header>
       <main className="flex-1 p-4 sm:p-6">

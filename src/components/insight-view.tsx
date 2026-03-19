@@ -1,3 +1,4 @@
+
 'use client';
 
 import * as React from 'react';
@@ -8,8 +9,8 @@ import { HackerAnimation } from './hacker-animation';
 import { ScannerAnimationContent } from './scanner-animation-content';
 import { generateInsight, type InsightOutput } from '@/lib/insight-generator';
 import { syntheticIndices } from '@/lib/mock-data';
-import { Badge } from './ui/badge';
-import { Label } from './ui/label';
+import { Badge } from '@/components/ui/badge';
+import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { cn } from '@/lib/utils';
 import { DigitFrequencyCircles } from './correlation-view';
@@ -39,9 +40,10 @@ export function InsightView({ price, decimalPlaces, lastDigitTicks, selectedMark
         setError(null);
         setAnalysisState('analyzing');
 
+        // Analysis baseline is now strictly 1000 ticks from the dashboard
         setTimeout(() => {
             if (lastDigitTicks.length < 50) {
-                setError("Not enough data to generate an insight. Please wait for more ticks.");
+                setError("Not enough data to generate an insight. Please wait for the 1000-tick buffer to populate.");
                 setAnalysisState('error');
                 return;
             }
@@ -85,7 +87,7 @@ export function InsightView({ price, decimalPlaces, lastDigitTicks, selectedMark
                                     <p className="font-bold text-green-300">// RECOMMENDATION</p>
                                     <div className='flex items-center gap-3'>
                                         <p className="text-base">Strategy:</p>
-                                        <Badge variant={insight.recommendedStrategy === 'None' ? 'destructive' : 'secondary'} className="text-base font-bold">{insight.recommendedStrategy}</Badge>
+                                        <Badge variant={insight.recommendedStrategy === 'None' ? 'destructive' : 'secondary'} className="text-base font-bold uppercase">{insight.recommendedStrategy}</Badge>
                                     </div>
                                 </div>
                                 <div>
@@ -108,7 +110,7 @@ export function InsightView({ price, decimalPlaces, lastDigitTicks, selectedMark
                 <div className='flex items-center gap-3'>
                     <Lightbulb className="h-8 w-8 text-primary" />
                     <div>
-                        <CardTitle className="text-2xl">Strategy Insight</CardTitle>
+                        <CardTitle className="text-2xl">STRATEGY INSIGHT</CardTitle>
                         <CardDescription>High-accuracy analysis based on Deriv-standard 1000-tick samples.</CardDescription>
                     </div>
                 </div>
@@ -150,12 +152,12 @@ export function InsightView({ price, decimalPlaces, lastDigitTicks, selectedMark
                         {analysisState === 'analyzing' ? (
                             <>
                                 <Bot className="mr-2 h-5 w-5 animate-spin" />
-                                Analyzing...
+                                ANALYZING...
                             </>
                         ) : (
                             <>
                             <Sparkles className="mr-2 h-5 w-5" />
-                            Get Insight
+                            GET INSIGHT
                             </>
                         )}
                     </Button>
