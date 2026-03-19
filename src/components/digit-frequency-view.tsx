@@ -266,7 +266,7 @@ export function DigitFrequencyView({
                                     </div>
                                     <div className="pt-1">
                                         <Badge variant="outline" className="w-full justify-center text-[9px] font-black tracking-tighter">
-                                            SIGNAL: {marketDirectionAnalysis.matchesDiffers.matches > (100/ticks.length + 5) ? 'MATCH POTENTIAL' : 'NORMAL RANGE'}
+                                            SIGNAL: {marketDirectionAnalysis.matchesDiffers.matches > (100/Math.max(lastDigitTicks.length, 1) + 5) ? 'MATCH POTENTIAL' : 'NORMAL RANGE'}
                                         </Badge>
                                     </div>
                                 </div>
