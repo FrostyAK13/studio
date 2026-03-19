@@ -148,10 +148,10 @@ export function Dashboard() {
       <main className="flex-1 p-4 sm:p-6">
         <Tabs defaultValue="scanner" className="w-full max-w-7xl mx-auto">
             <TabsList className="grid w-full grid-cols-5 mb-6">
-                <TabsTrigger value="scanner">Scanner</TabsTrigger>
-                <TabsTrigger value="analyzer">Analyzer</TabsTrigger>
-                <TabsTrigger value="frequency">Frequency</TabsTrigger>
-                <TabsTrigger value="insight">Insight</TabsTrigger>
+                <TabsTrigger value="scanner">SCANNER</TabsTrigger>
+                <TabsTrigger value="analyzer">ANALYZER</TabsTrigger>
+                <TabsTrigger value="frequency">FREQUENCY</TabsTrigger>
+                <TabsTrigger value="insight">INSIGHT</TabsTrigger>
                 <TabsTrigger value="circles">CIRCLES</TabsTrigger>
             </TabsList>
 
