@@ -10,7 +10,7 @@ import { cn } from '@/lib/utils';
 import { Badge } from '@/components/ui/badge';
 import { RiseFallAnalysis } from './rise-fall-analysis';
 import { DigitFrequencyCircles } from './correlation-view';
-import { Target, Zap, TrendingUp, TrendingDown, Info } from 'lucide-react';
+import { Target, Zap, TrendingUp, TrendingDown, Info, List } from 'lucide-react';
 
 interface DigitFrequencyViewProps {
     price: number;
@@ -201,9 +201,11 @@ export function DigitFrequencyView({
                                             <div className="h-full transition-all duration-700 shadow-[0_0_8px_rgba(var(--chart-3),0.4)]" style={{ width: `${marketDirectionAnalysis.evenOdd.odd}%`, backgroundColor: marketDirectionAnalysis.evenOdd.oddColor }}></div>
                                         </div>
                                     </div>
-                                    <Badge variant={marketDirectionAnalysis.evenOdd.reversal !== 'None' ? 'destructive' : 'outline'} className="w-full h-8 justify-center text-[10px] font-black tracking-widest rounded-xl">
-                                        REVERSAL: {marketDirectionAnalysis.evenOdd.reversal.toUpperCase()}
-                                    </Badge>
+                                    <div className="pt-1">
+                                        <Badge variant={marketDirectionAnalysis.evenOdd.reversal !== 'None' ? 'destructive' : 'outline'} className="w-full justify-center text-[10px] font-black tracking-widest rounded-xl">
+                                            REVERSAL: {marketDirectionAnalysis.evenOdd.reversal.toUpperCase()}
+                                        </Badge>
+                                    </div>
                                 </div>
                             </div>
 
@@ -231,9 +233,11 @@ export function DigitFrequencyView({
                                             <div className="h-full transition-all duration-700 shadow-[0_0_8px_rgba(var(--destructive),0.4)]" style={{ width: `${marketDirectionAnalysis.overUnder.higher}%`, backgroundColor: marketDirectionAnalysis.overUnder.higherColor }}></div>
                                         </div>
                                     </div>
-                                    <Badge variant="outline" className="w-full h-8 justify-center text-[10px] font-black tracking-widest rounded-xl border-white/10">
-                                        {marketDirectionAnalysis.overUnder.lower > marketDirectionAnalysis.overUnder.higher ? 'BEARISH MOMENTUM' : 'BULLISH MOMENTUM'}
-                                    </Badge>
+                                    <div className="pt-1">
+                                        <Badge variant="outline" className="w-full justify-center text-[10px] font-black tracking-widest rounded-xl border-white/10">
+                                            {marketDirectionAnalysis.overUnder.lower > marketDirectionAnalysis.overUnder.higher ? 'BEARISH MOMENTUM' : 'BULLISH MOMENTUM'}
+                                        </Badge>
+                                    </div>
                                 </div>
                             </div>
 
@@ -261,9 +265,11 @@ export function DigitFrequencyView({
                                             <div className="h-full transition-all duration-700 shadow-[0_0_8px_rgba(var(--chart-5),0.4)]" style={{ width: `${marketDirectionAnalysis.matchesDiffers.differs}%`, backgroundColor: marketDirectionAnalysis.matchesDiffers.differColor }}></div>
                                         </div>
                                     </div>
-                                    <Badge variant="outline" className="w-full h-8 justify-center text-[10px] font-black tracking-widest rounded-xl border-white/10">
-                                        SIGNAL: {marketDirectionAnalysis.matchesDiffers.matches > 12 ? 'HIGH REPETITION' : 'NORMAL VARIANCE'}
-                                    </Badge>
+                                    <div className="pt-1">
+                                        <Badge variant="outline" className="w-full justify-center text-[10px] font-black tracking-widest rounded-xl border-white/10">
+                                            SIGNAL: {marketDirectionAnalysis.matchesDiffers.matches > 12 ? 'HIGH REPETITION' : 'NORMAL VARIANCE'}
+                                        </Badge>
+                                    </div>
                                 </div>
                             </div>
                         </div>
