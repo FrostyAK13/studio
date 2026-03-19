@@ -72,7 +72,7 @@ export function EvenOddAnalysis({ lastDigitTicks, selectedMarket, price, decimal
     
     setIsScanning(true);
 
-    if (outcomes.length < 15) {
+    if (lastDigitTicks.length < 15) {
         setTimeout(() => {
             setScanResultLines(['ERROR: Insufficient data sequence.', 'Minimum 15 ticks required for safe analysis.']);
             setIsScanning(false);
@@ -82,44 +82,40 @@ export function EvenOddAnalysis({ lastDigitTicks, selectedMarket, price, decimal
     }
 
     setTimeout(() => {
+        const recentTicks = lastDigitTicks.slice(0, 10);
+        const tickSeq = [...recentTicks].reverse().join(',');
         let predictedOutcome: Outcome;
         let possibleDigits: number[] = [];
-        let riskMitigation = "";
+        let triggerDigit: number;
+        let strategy = "";
 
-        // Advanced Logic: Look for streaks and clusters
         const recentCluster = outcomes.slice(0, 5);
         const evenCountRecent = recentCluster.filter(o => o === 'E').length;
 
+        // Logic to determine trigger digit (the digit that likely precedes the outcome)
+        triggerDigit = recentTicks[0]; 
+
         if (streak.count >= 6) {
-            // Reversal Strategy (Loss Minimization)
             predictedOutcome = streak.type === 'E' ? 'O' : 'E';
-            riskMitigation = `REVERSAL detected after ${streak.count}x streak. High probability of bounce.`;
+            strategy = `REVERSAL: Sequence [${tickSeq}] shows ${streak.count}x ${streak.type === 'E' ? 'Even' : 'Odd'} exhaustion. Trigger digit ${triggerDigit} confirms peak variance.`;
         } else if (evenCountRecent >= 4) {
             predictedOutcome = 'E';
-            riskMitigation = "Momentum cluster detected. Following short-term trend.";
-        } else if (evenCountRecent <= 1) {
-            predictedOutcome = 'O';
-            riskMitigation = "Momentum cluster detected. Following short-term trend.";
+            strategy = `MOMENTUM: Cluster [${tickSeq.split(',').slice(-5).join(',')}] is heavily Even biased. Following flow after trigger ${triggerDigit}.`;
         } else {
             predictedOutcome = percentages.even >= percentages.odd ? 'E' : 'O';
-            riskMitigation = "Standard probability skew detected. Maintaining neutral stance.";
+            strategy = `PROBABILITY: Global distribution [E:${percentages.even.toFixed(1)}%] favors ${predictedOutcome === 'E' ? 'Even' : 'Odd'}. Trigger ${triggerDigit} is the entry pivot.`;
         }
         
-        if (predictedOutcome === 'E') {
-            possibleDigits = [0, 2, 4, 6, 8];
-        } else {
-            possibleDigits = [1, 3, 5, 7, 9];
-        }
+        possibleDigits = predictedOutcome === 'E' ? [0, 2, 4, 6, 8] : [1, 3, 5, 7, 9];
 
         const initialResults = [
           'ANALYSIS COMPLETE - HIGH ACCURACY MODE',
-          `--> PREDICTION: ${predictedOutcome === 'E' ? 'EVEN' : 'ODD'}`,
-          `--> ENTRY POINT: NEXT TICK`,
-          `--> TARGET DIGITS: [${possibleDigits.join(', ')}]`,
+          `--> ENTRY TRIGGER: WATCH FOR DIGIT ${triggerDigit}`,
+          `--> PREDICTED OUTCOME: ${predictedOutcome === 'E' ? 'EVEN' : 'ODD'}`,
+          `--> TARGET RANGE: [${possibleDigits.join(', ')}]`,
           '',
-          `STRATEGY: ${riskMitigation}`,
-          `STATISTICS: E:${percentages.even.toFixed(1)}% | O:${percentages.odd.toFixed(1)}%`,
-          `STREAK: ${streak.count}x ${streak.type === 'E' ? 'Even' : 'Odd'}`,
+          `STRATEGY REASONING: ${strategy}`,
+          `SEQUENCE ANALYZED: [${tickSeq}]`,
           ''
         ];
 
@@ -140,7 +136,7 @@ export function EvenOddAnalysis({ lastDigitTicks, selectedMarket, price, decimal
                   return newLines;
               } else {
                   clearInterval(interval);
-                  const finalLines = [...initialResults, `SIGNAL ACTIVE: Entry confirmed.`, 'MONITORING FOR LOSS MITIGATION...'];
+                  const finalLines = [...initialResults, `SIGNAL ACTIVE: Entry confirmed at Trigger ${triggerDigit}.`, 'MONITORING FOR LOSS MITIGATION...'];
                   return finalLines;
               }
           });

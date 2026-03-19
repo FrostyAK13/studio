@@ -93,49 +93,52 @@ export function OverUnderAnalysis({ lastDigitTicks, selectedMarket, price, decim
     }
     
     setTimeout(() => {
+        const recentTicks = lastDigitTicks.slice(0, 10);
+        const tickSeq = [...recentTicks].reverse().join(',');
         let predictedOutcome: 'OVER' | 'UNDER';
         let barrierDigit: number;
         let targetDigits: number[] = [];
         let reasoning: string;
+        let triggerDigit: number = recentTicks[0];
 
-        const underSkew = lastDigitTicks.filter(d => d <= 2).length / lastDigitTicks.length > 0.35;
-        const overSkew = lastDigitTicks.filter(d => d >= 7).length / lastDigitTicks.length > 0.35;
+        const highDigitCount = recentTicks.filter(d => d >= 7).length;
+        const lowDigitCount = recentTicks.filter(d => d <= 2).length;
 
         if (streak.count >= 6 && streak.type === 'O') {
             predictedOutcome = 'UNDER';
             barrierDigit = 7;
             targetDigits = [0, 1, 2, 3, 4, 5, 6];
-            reasoning = `OVER STRETCH DETECTED (${streak.count}x). High probability of reversal to UNDER ${barrierDigit}.`;
+            reasoning = `REVERSAL: Sequence [${tickSeq}] over-saturated with high digits. Trigger ${triggerDigit} marks peak; trade UNDER ${barrierDigit}.`;
         } else if (streak.count >= 6 && streak.type === 'U') {
             predictedOutcome = 'OVER';
             barrierDigit = 2;
             targetDigits = [3, 4, 5, 6, 7, 8, 9];
-            reasoning = `UNDER STRETCH DETECTED (${streak.count}x). High probability of reversal to OVER ${barrierDigit}.`;
-        } else if (underSkew) {
-            predictedOutcome = 'UNDER';
-            barrierDigit = 8;
-            targetDigits = [0, 1, 2, 3, 4, 5, 6, 7];
-            reasoning = "Heavy low-digit distribution detected. Safer to trade Under high barriers.";
-        } else if (overSkew) {
+            reasoning = `REVERSAL: Sequence [${tickSeq}] shows under-digit exhaustion. Trigger ${triggerDigit} marks bottom; trade OVER ${barrierDigit}.`;
+        } else if (highDigitCount >= 4) {
             predictedOutcome = 'OVER';
-            barrierDigit = 1;
-            targetDigits = [2, 3, 4, 5, 6, 7, 8, 9];
-            reasoning = "Heavy high-digit distribution detected. Safer to trade Over low barriers.";
+            barrierDigit = 3;
+            targetDigits = [4, 5, 6, 7, 8, 9];
+            reasoning = `SKEW: Sequence [${tickSeq}] shows high digit dominance (${highDigitCount}/10). Trigger ${triggerDigit} follows bullish trend OVER ${barrierDigit}.`;
+        } else if (lowDigitCount >= 4) {
+            predictedOutcome = 'UNDER';
+            barrierDigit = 6;
+            targetDigits = [0, 1, 2, 3, 4, 5];
+            reasoning = `SKEW: Sequence [${tickSeq}] shows low digit dominance (${lowDigitCount}/10). Trigger ${triggerDigit} follows bearish trend UNDER ${barrierDigit}.`;
         } else {
             predictedOutcome = percentages.over >= percentages.under ? 'OVER' : 'UNDER';
             barrierDigit = predictedOutcome === 'OVER' ? 3 : 6;
             targetDigits = predictedOutcome === 'OVER' ? [4, 5, 6, 7, 8, 9] : [0, 1, 2, 3, 4, 5];
-            reasoning = "Balanced market. Following slight statistical percentage skew.";
+            reasoning = `STABILITY: Distribution favored. Trigger ${triggerDigit} is pivot for ${predictedOutcome} ${barrierDigit}.`;
         }
 
         const initialResults = [
             'PRECISION BARRIER ANALYSIS - ACTIVE',
+            `--> ENTRY TRIGGER: WATCH FOR DIGIT ${triggerDigit}`,
             `--> PREDICTION: ${predictedOutcome} ${barrierDigit}`,
             `--> TARGET RANGE: [${targetDigits.join(', ')}]`,
-            `--> CONFIDENCE: 84.2%`,
             '',
-            `ANALYSIS: ${reasoning}`,
-            `Current Sample Skew: O:${percentages.over.toFixed(1)}% | U:${percentages.under.toFixed(1)}%`,
+            `NUMERICAL REASONING: ${reasoning}`,
+            `ANALYZED SEQUENCE: [${tickSeq}]`,
             ''
         ];
 
@@ -156,7 +159,7 @@ export function OverUnderAnalysis({ lastDigitTicks, selectedMarket, price, decim
                     return newLines;
                 } else {
                     clearInterval(interval);
-                    const finalLines = [...initialResults, `ENTRY CONFIRMED.`, 'MONITORING FOR SKEW REVERSALS...'];
+                    const finalLines = [...initialResults, `ENTRY CONFIRMED at Trigger ${triggerDigit}.`, 'MONITORING FOR SKEW REVERSALS...'];
                     return finalLines;
                 }
             });

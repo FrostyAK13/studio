@@ -86,15 +86,17 @@ export function MatchesDiffersAnalysis({ lastDigitTicks, selectedMarket, price, 
     }
 
     setTimeout(() => {
+        const recentTicks = lastDigitTicks.slice(0, 10);
+        const tickSeq = [...recentTicks].reverse().join(',');
         let predictedOutcome: 'MATCH' | 'DIFFER';
         let targetDigits: number[] = [];
-        let riskMitigation: string = "";
+        let triggerDigit: number = recentTicks[0];
+        let strategyReasoning = "";
 
         const digitCounts = Array(10).fill(0);
         lastDigitTicks.forEach(d => digitCounts[d]++);
         const digitPercentages = digitCounts.map(c => (c / lastDigitTicks.length) * 100);
 
-        // Find hottest and coldest
         let hottestDigit = 0;
         let coldestDigit = 0;
         digitPercentages.forEach((p, i) => {
@@ -107,22 +109,21 @@ export function MatchesDiffersAnalysis({ lastDigitTicks, selectedMarket, price, 
         if (recentRepetition && digitPercentages[hottestDigit] > 14) {
             predictedOutcome = 'MATCH';
             targetDigits = [hottestDigit];
-            riskMitigation = `HIGH FREQUENCY DETECTED for Digit ${hottestDigit}. Repeating cluster found in last 8 ticks.`;
+            strategyReasoning = `PATTERN: Digit ${hottestDigit} appeared frequently in sequence [${tickSeq}]. Trigger ${triggerDigit} likely leads to repetition of ${hottestDigit}.`;
         } else {
             predictedOutcome = 'DIFFER';
             targetDigits = [coldestDigit];
-            riskMitigation = `STABLE VARIANCE DETECTED. Digit ${coldestDigit} is coldest (${digitPercentages[coldestDigit].toFixed(1)}%). Lower risk for Differ trade.`;
+            strategyReasoning = `VARIANCE: Digit ${coldestDigit} is highly cold in [${tickSeq}]. Using trigger ${triggerDigit} to enter Differ trade with high safety margin.`;
         }
 
         const initialResults = [
           'PATTERN RECOGNITION ENGINE - V4.0',
-          `--> STRATEGY: ${predictedOutcome === 'MATCH' ? 'MATCH' : 'DIFFER'}`,
+          `--> ENTRY TRIGGER: WAIT FOR DIGIT ${triggerDigit}`,
+          `--> STRATEGY: ${predictedOutcome}`,
           `--> TARGET DIGIT: ${targetDigits[0]}`,
-          `--> SAFETY MARGIN: ${predictedOutcome === 'MATCH' ? 'MEDIUM' : 'HIGH'}`,
           '',
-          `REASONING: ${riskMitigation}`,
-          `Hottest Digit: ${hottestDigit} (${digitPercentages[hottestDigit].toFixed(1)}%)`,
-          `Coldest Digit: ${coldestDigit} (${digitPercentages[coldestDigit].toFixed(1)}%)`,
+          `NUMERICAL REASONING: ${strategyReasoning}`,
+          `ANALYZED FLOW: [${tickSeq}]`,
           ''
         ];
 
@@ -143,7 +144,7 @@ export function MatchesDiffersAnalysis({ lastDigitTicks, selectedMarket, price, 
                   return newLines;
               } else {
                   clearInterval(interval);
-                  const finalLines = [...initialResults, `ENTRY EXECUTED.`, 'MONITORING FOR REPETITION ANOMALIES...'];
+                  const finalLines = [...initialResults, `ENTRY EXECUTED at Trigger ${triggerDigit}.`, 'MONITORING FOR REPETITION ANOMALIES...'];
                   return finalLines;
               }
           });
