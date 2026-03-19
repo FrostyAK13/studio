@@ -8,7 +8,7 @@ import { syntheticIndices } from '@/lib/mock-data';
 import { cn } from '@/lib/utils';
 import { Progress } from '@/components/ui/progress';
 import { Badge } from '@/components/ui/badge';
-import { Info } from 'lucide-react';
+import { Info, Target, Zap } from 'lucide-react';
 
 interface CorrelationViewProps {
     selectedMarket: string;
@@ -49,11 +49,10 @@ export const DigitFrequencyCircles = ({
                 const rank = sorted.findIndex(s => s.index === item.index);
                 let colorClass = "text-muted-foreground/20";
                 
-                // Deriv-style ranking colors: Green (Most), Blue (2nd), Orange (2nd Low), Red (Low)
                 if (rank === 0) colorClass = "text-emerald-400";
                 else if (rank === 1) colorClass = "text-cyan-400";
                 else if (rank === 8) colorClass = "text-orange-400";
-                else if (rank === 9) colorClass = "text-rose-400";
+                else if (rank === 9) colorClass = "text-rose-500";
 
                 return { ...item, colorClass };
             }),
@@ -70,14 +69,13 @@ export const DigitFrequencyCircles = ({
     }) => {
         const radius = 28;
         const circumference = 2 * Math.PI * radius;
-        // Arc scaling: 25% frequency = 100% circle rotation
         const offset = circumference - (Math.min(percentage, 25) / 25) * circumference;
 
         return (
             <div 
                 className={cn(
-                    "flex flex-col items-center relative cursor-pointer transition-all duration-300 px-1 py-2",
-                    isSelected && "bg-primary/10 rounded-xl ring-1 ring-primary/30"
+                    "flex flex-col items-center relative cursor-pointer transition-all duration-300 px-1 py-1",
+                    isSelected && "bg-primary/20 rounded-xl ring-2 ring-primary/40 scale-105 z-20"
                 )}
                 onClick={() => onDigitSelect(digit)}
             >
@@ -88,55 +86,55 @@ export const DigitFrequencyCircles = ({
                             cy="50%"
                             r={radius}
                             stroke="currentColor"
-                            strokeWidth="3"
+                            strokeWidth="4"
                             fill="transparent"
-                            className="text-muted-foreground/5"
+                            className="text-muted-foreground/10"
                         />
                         <circle
                             cx="50%"
                             cy="50%"
                             r={radius}
                             stroke="currentColor"
-                            strokeWidth="5"
+                            strokeWidth="6"
                             fill="transparent"
                             strokeDasharray={circumference}
                             strokeDashoffset={offset}
                             strokeLinecap="round"
-                            className={cn("transition-all duration-1000 ease-in-out", colorClass)}
+                            className={cn("transition-all duration-700 ease-out", colorClass)}
                         />
                     </svg>
                     <div className="flex flex-col items-center justify-center z-10">
                         <span className={cn(
-                            "text-2xl sm:text-3xl font-black leading-none transition-colors",
-                            isSelected ? "text-primary" : "text-foreground"
+                            "text-3xl sm:text-4xl font-black leading-none tracking-tighter transition-colors",
+                            isSelected ? "text-primary drop-shadow-[0_0_8px_rgba(var(--primary),0.5)]" : "text-foreground"
                         )}>{digit}</span>
-                        <span className="text-[9px] font-bold text-muted-foreground mt-0.5">{percentage.toFixed(1)}%</span>
+                        <span className="text-[10px] font-black text-muted-foreground mt-0.5">{percentage.toFixed(1)}%</span>
                     </div>
                 </div>
                 {isLast && (
-                    <div className="absolute -bottom-1 w-0 h-0 border-l-[5px] border-l-transparent border-r-[5px] border-r-transparent border-b-[8px] border-b-cyan-500 animate-pulse" />
+                    <div className="absolute -bottom-1 w-0 h-0 border-l-[6px] border-l-transparent border-r-[6px] border-r-transparent border-b-[10px] border-b-cyan-400 animate-bounce" />
                 )}
             </div>
         );
     };
 
     return (
-        <Card className="overflow-hidden border-none shadow-xl bg-card/40 backdrop-blur-md">
-            <div className="px-4 pt-4 pb-0">
-                <div className="flex items-center gap-2 bg-muted/20 px-3 py-1.5 rounded-md text-[10px] text-muted-foreground font-medium border border-white/5">
-                    <Info className="h-3 w-3 text-cyan-500" />
-                    <span>Last digit stats for latest {ticks.length} ticks for {marketName}</span>
+        <Card className="overflow-hidden border-none shadow-2xl bg-card/40 backdrop-blur-xl">
+            <div className="px-4 pt-4">
+                <div className="flex items-center gap-2 bg-muted/30 px-3 py-2 rounded-lg text-[10px] text-muted-foreground font-bold border border-white/5 uppercase tracking-wider">
+                    <Info className="h-3.5 w-3.5 text-cyan-400" />
+                    <span>Sample Size: {ticks.length} Ticks • Market: {marketName}</span>
                 </div>
             </div>
-             <CardHeader className="pb-1 pt-3 text-center">
-                <CardTitle className="text-[10px] font-bold uppercase tracking-[0.3em] flex items-center justify-center gap-2">
-                    <div className="w-1.5 h-1.5 rounded-full bg-primary animate-pulse" />
+             <CardHeader className="pb-2 pt-4 text-center">
+                <CardTitle className="text-xs font-black uppercase tracking-[0.4em] flex items-center justify-center gap-3">
+                    <div className="w-2 h-2 rounded-full bg-primary animate-pulse shadow-[0_0_8px_rgba(var(--primary),0.8)]" />
                     DIGIT PERCENTAGE
                 </CardTitle>
             </CardHeader>
-            <CardContent className="p-2">
-                <div className="space-y-0.5">
-                    <div className="grid grid-cols-5 gap-0.5 border-b border-white/5 pb-1">
+            <CardContent className="p-3">
+                <div className="space-y-1">
+                    <div className="grid grid-cols-5 gap-1 border-b border-white/10 pb-2">
                         {digitData.slice(0, 5).map((data) => (
                             <DigitCircle 
                                 key={data.index} 
@@ -148,7 +146,7 @@ export const DigitFrequencyCircles = ({
                             />
                         ))}
                     </div>
-                    <div className="grid grid-cols-5 gap-0.5 pt-1">
+                    <div className="grid grid-cols-5 gap-1 pt-2">
                         {digitData.slice(5, 10).map((data) => (
                             <DigitCircle 
                                 key={data.index} 
@@ -190,68 +188,75 @@ const DigitDetailPanel = ({ digit, ticks }: { digit: number, ticks: number[] }) 
     }, [digit, ticks]);
 
     return (
-        <div className="mt-4 animate-in fade-in slide-in-from-top-4 duration-500">
-            <Card className="border-none bg-indigo-950/20 backdrop-blur-xl shadow-2xl overflow-hidden relative border-t border-cyan-500/20">
-                <div className="absolute top-0 left-0 w-full h-[2px] bg-gradient-to-r from-cyan-500 via-emerald-500 to-cyan-500 opacity-50" />
-                <CardHeader className="pb-2 pt-4">
+        <div className="mt-4 animate-in fade-in zoom-in-95 duration-300">
+            <Card className="border-none bg-slate-950 shadow-[0_20px_50px_rgba(0,0,0,0.5)] overflow-hidden relative border-t-2 border-primary/50">
+                <div className="absolute top-0 left-0 w-full h-[3px] bg-gradient-to-r from-cyan-500 via-primary to-emerald-500" />
+                <CardHeader className="pb-4 pt-6">
                     <div className="flex items-center justify-between">
-                        <div>
-                            <CardTitle className="text-lg font-black text-cyan-400">DIGIT {digit} INSIGHTS</CardTitle>
-                            <CardDescription className="text-cyan-100/40 uppercase tracking-widest text-[10px] font-bold">Midpoint Strategy Matrix</CardDescription>
+                        <div className="flex items-center gap-3">
+                            <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center border border-primary/20">
+                                <Target className="h-5 w-5 text-primary" />
+                            </div>
+                            <div>
+                                <CardTitle className="text-xl font-black text-white tracking-tight">DIGIT {digit} INSIGHTS</CardTitle>
+                                <CardDescription className="text-primary/60 uppercase tracking-[0.2em] text-[10px] font-black">Midpoint Strategy Matrix</CardDescription>
+                            </div>
                         </div>
-                        <Badge variant="outline" className="border-cyan-500/30 text-cyan-400 bg-cyan-950/50 px-2 py-0.5 font-bold tracking-tighter text-[10px]">
-                            {stats.totalTicks} TICKS
+                        <Badge className="bg-primary/20 text-primary border-primary/30 font-black px-3 py-1 text-xs">
+                            {stats.totalTicks} ANALYZED
                         </Badge>
                     </div>
                 </CardHeader>
-                <CardContent className="p-4 pt-2">
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                        <div className="space-y-3">
-                            <div className="flex justify-between items-end border-b border-white/5 pb-1">
-                                <h4 className="text-[9px] font-black uppercase tracking-[0.2em] text-muted-foreground">Matching Frequency</h4>
-                                <div className="text-right flex flex-col">
-                                    <span className="text-2xl font-black text-emerald-400 leading-none">{stats.matches.toFixed(1)}%</span>
-                                </div>
+                <CardContent className="px-6 pb-8 pt-0">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                        {/* MATCHES VS DIFFERS */}
+                        <div className="space-y-5 p-4 rounded-xl bg-white/5 border border-white/5">
+                            <div className="flex justify-between items-end border-b border-white/10 pb-2">
+                                <h4 className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground flex items-center gap-2">
+                                    <Zap className="h-3 w-3 text-emerald-400" /> Accuracy Profile
+                                </h4>
+                                <span className="text-3xl font-black text-emerald-400 tabular-nums">{stats.matches.toFixed(1)}%</span>
                             </div>
-                            <div className="space-y-3">
-                                <div className="space-y-1.5">
-                                    <div className="flex justify-between text-[9px] font-black uppercase tracking-widest">
+                            <div className="space-y-4">
+                                <div className="space-y-2">
+                                    <div className="flex justify-between text-[11px] font-black uppercase tracking-widest">
                                         <span className="text-emerald-300">Matches {digit}</span>
-                                        <span className="text-emerald-400">{stats.matchesCount}</span>
+                                        <span className="text-emerald-400 tabular-nums">{stats.matchesCount}</span>
                                     </div>
-                                    <Progress value={stats.matches} className="h-2.5 bg-emerald-950/30 [&>div]:bg-gradient-to-r [&>div]:from-emerald-600 [&>div]:to-emerald-400" />
+                                    <Progress value={stats.matches} className="h-3.5 bg-emerald-950/40 [&>div]:bg-gradient-to-r [&>div]:from-emerald-600 [&>div]:to-emerald-400 shadow-[0_0_10px_rgba(16,185,129,0.3)]" />
                                 </div>
-                                <div className="space-y-1.5">
-                                    <div className="flex justify-between text-[9px] font-black uppercase tracking-widest">
-                                        <span className="text-rose-300">All Differs</span>
-                                        <span className="text-rose-400">{stats.differsCount}</span>
+                                <div className="space-y-2">
+                                    <div className="flex justify-between text-[11px] font-black uppercase tracking-widest">
+                                        <span className="text-rose-300">Differs Result</span>
+                                        <span className="text-rose-400 tabular-nums">{stats.differsCount}</span>
                                     </div>
-                                    <Progress value={stats.differs} className="h-2.5 bg-rose-950/30 [&>div]:bg-gradient-to-r [&>div]:from-rose-600 [&>div]:to-rose-400" />
+                                    <Progress value={stats.differs} className="h-3.5 bg-rose-950/40 [&>div]:bg-gradient-to-r [&>div]:from-rose-600 [&>div]:to-rose-400 shadow-[0_0_10px_rgba(244,63,94,0.3)]" />
                                 </div>
                             </div>
                         </div>
 
-                        <div className="space-y-3">
-                            <div className="flex justify-between items-end border-b border-white/5 pb-1">
-                                <h4 className="text-[9px] font-black uppercase tracking-[0.2em] text-muted-foreground">Relative Distribution</h4>
-                                <div className="text-right flex flex-col">
-                                    <span className="text-2xl font-black text-cyan-400 leading-none">{stats.over.toFixed(1)}%</span>
-                                </div>
+                        {/* OVER VS UNDER */}
+                        <div className="space-y-5 p-4 rounded-xl bg-white/5 border border-white/5">
+                            <div className="flex justify-between items-end border-b border-white/10 pb-2">
+                                <h4 className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground flex items-center gap-2">
+                                    <Target className="h-3 w-3 text-cyan-400" /> Relative Skew
+                                </h4>
+                                <span className="text-3xl font-black text-cyan-400 tabular-nums">{stats.over.toFixed(1)}%</span>
                             </div>
-                            <div className="space-y-3">
-                                <div className="space-y-1.5">
-                                    <div className="flex justify-between text-[9px] font-black uppercase tracking-widest">
+                            <div className="space-y-4">
+                                <div className="space-y-2">
+                                    <div className="flex justify-between text-[11px] font-black uppercase tracking-widest">
                                         <span className="text-cyan-300">Over {digit}</span>
-                                        <span className="text-cyan-400">{stats.overCount}</span>
+                                        <span className="text-cyan-400 tabular-nums">{stats.overCount}</span>
                                     </div>
-                                    <Progress value={stats.over} className="h-2.5 bg-cyan-950/30 [&>div]:bg-gradient-to-r [&>div]:from-cyan-600 [&>div]:to-cyan-400" />
+                                    <Progress value={stats.over} className="h-3.5 bg-cyan-950/40 [&>div]:bg-gradient-to-r [&>div]:from-cyan-600 [&>div]:to-cyan-400 shadow-[0_0_10px_rgba(6,182,212,0.3)]" />
                                 </div>
-                                <div className="space-y-1.5">
-                                    <div className="flex justify-between text-[9px] font-black uppercase tracking-widest">
+                                <div className="space-y-2">
+                                    <div className="flex justify-between text-[11px] font-black uppercase tracking-widest">
                                         <span className="text-orange-300">Under {digit}</span>
-                                        <span className="text-orange-400">{stats.underCount}</span>
+                                        <span className="text-orange-400 tabular-nums">{stats.underCount}</span>
                                     </div>
-                                    <Progress value={stats.under} className="h-2.5 bg-orange-950/30 [&>div]:bg-gradient-to-r [&>div]:from-orange-600 [&>div]:to-orange-400" />
+                                    <Progress value={stats.under} className="h-3.5 bg-orange-950/40 [&>div]:bg-gradient-to-r [&>div]:from-orange-600 [&>div]:to-orange-400 shadow-[0_0_10px_rgba(249,115,22,0.3)]" />
                                 </div>
                             </div>
                         </div>
@@ -270,15 +275,15 @@ export function CorrelationView({
     const [selectedDigit, setSelectedDigit] = React.useState<number | null>(null);
 
     return (
-        <div className="space-y-3">
-            <Card className="border-none shadow-sm bg-card/50">
-                <CardContent className="p-3">
-                    <Label htmlFor="circles-market-select" className="text-[9px] font-bold uppercase tracking-widest text-muted-foreground">Active Market</Label>
+        <div className="space-y-4">
+            <Card className="border-none shadow-xl bg-card/60 backdrop-blur-md">
+                <CardContent className="p-4">
+                    <Label htmlFor="circles-market-select" className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground ml-1">Configuration Market</Label>
                     <Select value={selectedMarket} onValueChange={onMarketChange}>
-                        <SelectTrigger id="circles-market-select" className="mt-1 h-9 text-sm font-semibold bg-background/50 border-none shadow-inner">
+                        <SelectTrigger id="circles-market-select" className="mt-2 h-11 text-base font-bold bg-background/50 border-white/5 shadow-inner rounded-xl">
                             <SelectValue placeholder="Select Index" />
                         </SelectTrigger>
-                        <SelectContent>
+                        <SelectContent className="rounded-xl border-white/10">
                             {syntheticIndices.map((index) => (
                             <SelectItem key={index.id} value={index.id}>
                                 {index.name}
