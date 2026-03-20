@@ -239,6 +239,8 @@ export function Dashboard() {
                         selectedMarket={selectedMarket}
                         onMarketChange={setSelectedMarket}
                         lastDigitTicks={analyzedDigits}
+                        price={price}
+                        decimalPlaces={decimalPlaces}
                     />
                 </TabsContent>
             </Tabs>

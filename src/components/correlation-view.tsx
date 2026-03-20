@@ -14,6 +14,8 @@ interface CorrelationViewProps {
     selectedMarket: string;
     onMarketChange: (market: string) => void;
     lastDigitTicks: number[];
+    price: number;
+    decimalPlaces: number;
 }
 
 export const DigitFrequencyCircles = ({ 
@@ -360,6 +362,8 @@ export function CorrelationView({
     selectedMarket,
     onMarketChange,
     lastDigitTicks,
+    price,
+    decimalPlaces,
 }: CorrelationViewProps) {
     const [selectedDigit, setSelectedDigit] = React.useState<number | null>(null);
 
@@ -367,7 +371,7 @@ export function CorrelationView({
         <div className="space-y-16 animate-in fade-in slide-in-from-bottom-20 duration-1000 pb-32">
             <Card className="border-none shadow-[0_30px_90px_rgba(0,0,0,0.7)] bg-slate-900/40 backdrop-blur-[80px] overflow-hidden relative rounded-[4rem]">
                 <div className="absolute top-0 left-0 w-full h-[2px] bg-gradient-to-r from-transparent via-primary/60 to-transparent" />
-                <CardContent className="p-10 sm:p-14 grid grid-cols-1 md:grid-cols-2 gap-10 sm:gap-24 items-center">
+                <CardContent className="p-10 sm:p-14 grid grid-cols-1 md:grid-cols-3 gap-8 sm:gap-12 items-center">
                     <div className="space-y-6">
                         <Label className="text-[14px] font-black uppercase tracking-[0.7em] text-primary ml-2">MARKET VECTOR SELECT</Label>
                         <Select value={selectedMarket} onValueChange={onMarketChange}>
@@ -382,6 +386,16 @@ export function CorrelationView({
                                 ))}
                             </SelectContent>
                         </Select>
+                    </div>
+                    <div className="space-y-6">
+                        <Label className="text-[14px] font-black uppercase tracking-[0.7em] text-primary ml-2">LIVE DATA PIVOT</Label>
+                        <div className="h-20 bg-gradient-to-br from-primary to-blue-700 rounded-[2.5rem] flex items-center justify-center shadow-[0_15px_35px_rgba(var(--primary),0.3)] relative group">
+                             <div className="absolute -inset-1 bg-white/10 rounded-[2.5rem] blur opacity-0 group-hover:opacity-100 transition-opacity" />
+                             <span className="text-4xl font-black tabular-nums text-white drop-shadow-[0_0_12px_rgba(255,255,255,0.4)] relative">
+                                {price.toFixed(decimalPlaces)}
+                             </span>
+                             <div className="absolute -bottom-2 right-8 bg-black/60 px-3 py-1 rounded-full border border-white/10 text-[8px] font-black text-cyan-400 animate-pulse uppercase tracking-[0.2em]">Live Flux</div>
+                        </div>
                     </div>
                     <div className="space-y-6">
                         <Label className="text-[14px] font-black uppercase tracking-[0.7em] text-primary ml-2">NEXUS DATA HORIZON</Label>
