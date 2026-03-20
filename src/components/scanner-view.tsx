@@ -122,7 +122,7 @@ export function ScannerView({
                     <div className="h-8 sm:h-12 w-1 sm:w-1.5 bg-primary rounded-full shadow-[0_0_15px_rgba(var(--primary),1)]" />
                     <div>
                         <h2 className="text-lg sm:text-2xl font-black uppercase tracking-[0.3em] sm:tracking-[0.6em] text-white leading-tight">TECHNICAL PROTOCOLS</h2>
-                        <p className="text-[8px] sm:text-[10px] font-black uppercase tracking-[0.3em] sm:tracking-[0.4em] text-primary/60 mt-1 sm:mt-2">Active Strategic Surveillance Matrices</p>
+                        <p className="text-[8px] sm:text-[10px] font-black uppercase tracking-[0.3em] sm:tracking-[0.4em] text-primary/60 mt-1 sm:mt-2">Active Strategic Surveillance Protocols</p>
                     </div>
                 </div>
 

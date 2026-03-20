@@ -77,7 +77,7 @@ const DigitHeatCard = ({ digit, ticks, isSelected, isLatest, onSelect }: {
         <div 
             onClick={() => onSelect(digit)}
             className={cn(
-                "relative group cursor-pointer transition-all duration-500 rounded-[1rem] sm:rounded-[2rem] border p-3 sm:p-5 flex flex-col justify-between h-40 sm:h-64 overflow-hidden backdrop-blur-xl",
+                "relative group cursor-pointer transition-all duration-500 rounded-[0.75rem] sm:rounded-[2rem] border p-2 sm:p-5 flex flex-col justify-between h-28 sm:h-64 overflow-hidden backdrop-blur-xl",
                 stats.bgClass,
                 stats.glowClass || "border-white/5",
                 isSelected ? "ring-2 ring-primary scale-105 z-20 shadow-[0_0_40px_rgba(var(--primary),0.2)] bg-primary/20" : "hover:scale-[1.02] hover:bg-white/10"
@@ -102,56 +102,56 @@ const DigitHeatCard = ({ digit, ticks, isSelected, isLatest, onSelect }: {
                 </motion.div>
             )}
 
-            <div className="absolute top-0 right-0 p-2 sm:p-4 opacity-30 group-hover:opacity-50 transition-opacity">
-                <Hash className={cn("w-12 h-12 sm:w-24 sm:h-24", stats.colorClass)} />
+            <div className="absolute top-0 right-0 p-1 sm:p-4 opacity-20 sm:opacity-30 group-hover:opacity-50 transition-opacity">
+                <Hash className={cn("w-8 h-8 sm:w-24 sm:h-24", stats.colorClass)} />
             </div>
 
             <div className="flex justify-between items-start relative z-10">
                 <div className="relative">
                     <span className={cn(
-                        "text-5xl sm:text-7xl md:text-8xl font-black tracking-tighter leading-none select-none drop-shadow-2xl transition-all duration-500",
+                        "text-2xl sm:text-7xl md:text-8xl font-black tracking-tighter leading-none select-none drop-shadow-2xl transition-all duration-500",
                         isSelected ? "text-white scale-110" : stats.colorClass
                     )}>
                         {digit}
                     </span>
                     {Math.abs(stats.velocity) > 2 && (
                         <div className={cn(
-                            "absolute -top-1 -right-6 sm:-right-12 flex items-center gap-0.5 font-black text-[7px] sm:text-[10px] uppercase tracking-widest px-2 py-0.5 rounded-full shadow-lg z-20",
+                            "absolute -top-1 -right-4 sm:-right-12 flex items-center gap-0.5 font-black text-[5px] sm:text-[10px] uppercase tracking-widest px-1 sm:px-2 py-0.5 rounded-full shadow-lg z-20",
                             stats.velocity > 0 ? "bg-emerald-500 text-white" : "bg-rose-500 text-white"
                         )}>
-                            {stats.velocity > 0 ? <TrendingUp size={10} /> : <TrendingDown size={10} />}
+                            {stats.velocity > 0 ? <TrendingUp size={8} /> : <TrendingDown size={8} />}
                             {stats.velocity > 0 ? 'HEAT' : 'COLD'}
                         </div>
                     )}
                 </div>
                 <div className="text-right">
                     <Badge className={cn(
-                        "text-[7px] sm:text-[11px] font-black tracking-widest mb-1 sm:mb-3 px-2 sm:px-4 py-0.5 border-none",
+                        "text-[5px] sm:text-[11px] font-black tracking-widest mb-0.5 sm:mb-3 px-1 sm:px-4 py-0 border-none",
                         stats.colorClass.replace('text-', 'bg-').replace('400', '500').replace('500', '600') + "/20",
                         stats.colorClass
                     )}>
                         {stats.rating}
                     </Badge>
-                    <p className={cn("text-lg sm:text-3xl font-black tabular-nums tracking-tighter", stats.colorClass)}>
+                    <p className={cn("text-[10px] sm:text-3xl font-black tabular-nums tracking-tighter", stats.colorClass)}>
                         {stats.freq.toFixed(1)}%
                     </p>
                 </div>
             </div>
 
-            <div className="space-y-1 sm:space-y-3 relative z-10">
-                <div className="flex items-center gap-1.5 opacity-60">
-                    <Timer className="h-3 w-3 sm:h-5 sm:w-5" />
-                    <span className="text-[7px] sm:text-[11px] font-black uppercase tracking-widest text-foreground">TICKS SINCE LAST</span>
+            <div className="space-y-0.5 sm:space-y-3 relative z-10">
+                <div className="flex items-center gap-1 opacity-60">
+                    <Timer className="h-2 w-2 sm:h-5 sm:w-5" />
+                    <span className="text-[5px] sm:text-[11px] font-black uppercase tracking-widest text-foreground">SINCE LAST</span>
                 </div>
-                <div className="flex items-baseline gap-1.5 sm:gap-3">
-                    <span className="text-3xl sm:text-5xl md:text-6xl font-black text-foreground tabular-nums tracking-tighter drop-shadow-xl">
+                <div className="flex items-baseline gap-1 sm:gap-3">
+                    <span className="text-sm sm:text-5xl md:text-6xl font-black text-foreground tabular-nums tracking-tighter drop-shadow-xl">
                         {stats.tsl}
                     </span>
-                    <span className="text-[8px] sm:text-[14px] font-black text-muted-foreground uppercase tracking-widest opacity-80">STREAK</span>
+                    <span className="text-[6px] sm:text-[14px] font-black text-muted-foreground uppercase tracking-widest opacity-80">STREAK</span>
                 </div>
             </div>
 
-            <div className="absolute bottom-0 left-0 w-full h-2 bg-black/20 overflow-hidden">
+            <div className="absolute bottom-0 left-0 w-full h-1 sm:h-2 bg-black/20 overflow-hidden">
                 <div 
                     className={cn("h-full transition-all duration-1000 ease-out", stats.colorClass.replace('text-', 'bg-'))} 
                     style={{ 
@@ -352,7 +352,7 @@ export function DigitFrequencyView({
                     </Badge>
                 </div>
 
-                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3 sm:gap-6 px-2">
+                <div className="grid grid-cols-5 gap-1.5 sm:gap-6 px-1 sm:px-2">
                     {Array.from({ length: 10 }, (_, i) => (
                         <DigitHeatCard 
                             key={i} 
