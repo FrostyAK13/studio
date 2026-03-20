@@ -8,7 +8,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Input } from '@/components/ui/input';
 import { syntheticIndices } from '@/lib/mock-data';
 import { cn } from '@/lib/utils';
-import { ArrowDown, ArrowUp, BarChartHorizontal, Hash, List, TrendingUp, TrendingDown, Target, Zap, Activity, Cpu, Layers, Fingerprint, Network } from 'lucide-react';
+import { ArrowDown, ArrowUp, BarChartHorizontal, Hash, List, TrendingUp, TrendingDown, Target, Zap, Activity, Cpu, Layers, Fingerprint, Network, Boxes, SignalHigh } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { PieChart, Pie, Cell, Tooltip, ResponsiveContainer } from 'recharts';
 import { ChartContainer } from '@/components/ui/chart';
@@ -41,16 +41,15 @@ export function AnalyzerView({
     const [matchesDigit, setMatchesDigit] = React.useState(0);
     const [overUnderDigit, setOverUnderDigit] = React.useState(5);
 
-    // Color Constants for HUD Clarity
     const COLORS = {
-        EVEN: 'hsl(var(--chart-1))',       // Blue
-        ODD: 'hsl(var(--chart-3))',        // Rose
-        MATCH: 'hsl(var(--chart-2))',      // Cyan/Emerald
-        DIFFER: 'hsl(var(--chart-5))',     // Orange
-        OVER: 'hsl(var(--chart-2))',       // Cyan
-        UNDER: 'hsl(var(--chart-3))',      // Rose/Red
-        RISE: 'hsl(var(--chart-2))',       // Cyan
-        FALL: 'hsl(var(--chart-3))',       // Rose
+        EVEN: 'hsl(var(--chart-1))',       
+        ODD: 'hsl(var(--chart-3))',        
+        MATCH: 'hsl(var(--chart-2))',      
+        DIFFER: 'hsl(var(--chart-5))',     
+        OVER: 'hsl(var(--chart-2))',       
+        UNDER: 'hsl(var(--chart-3))',      
+        RISE: 'hsl(var(--chart-2))',       
+        FALL: 'hsl(var(--chart-3))',       
         NEUTRAL: 'rgba(255, 255, 255, 0.1)'
     };
     
@@ -131,12 +130,14 @@ export function AnalyzerView({
         return slice.map((digit, i) => {
             let color = 'bg-white/5';
             let label = digit.toString();
+            let isAnomaly = false;
 
             if (tradeType === 'even-odd') {
                 color = digit % 2 === 0 ? 'bg-primary shadow-[0_0_15px_rgba(var(--primary),0.5)]' : 'bg-rose-500 shadow-[0_0_15px_rgba(244,63,94,0.5)]';
             } else if (tradeType === 'matches-differs') {
                 const isMatch = digit === matchesDigit;
                 color = isMatch ? 'bg-emerald-500 shadow-[0_0_20px_rgba(16,185,129,0.7)] scale-110 z-10' : 'bg-orange-500/10 text-orange-400 border-orange-500/20';
+                if (isMatch) isAnomaly = true;
             } else if (tradeType === 'over-under') {
                 if (digit > overUnderDigit) color = 'bg-cyan-500 shadow-[0_0_20px_rgba(6,182,212,0.7)] scale-110 z-10';
                 else if (digit < overUnderDigit) color = 'bg-rose-500 shadow-[0_0_20px_rgba(244,63,94,0.7)] scale-110 z-10';
@@ -159,9 +160,10 @@ export function AnalyzerView({
                 <div key={i} className={cn(
                     "flex items-center justify-center w-12 h-12 rounded-2xl font-black text-lg border transition-all duration-500 shrink-0",
                     color,
-                    "border-white/5 shadow-2xl"
+                    "border-white/5 shadow-2xl relative"
                 )}>
                     {label}
+                    {isAnomaly && <div className="absolute -top-1 -right-1 w-3 h-3 bg-white rounded-full animate-ping" />}
                 </div>
             );
         });
@@ -324,20 +326,18 @@ export function AnalyzerView({
                         </div>
                     </Card>
 
-                    {patternIntelligence.repeat !== null && (
-                         <Card className="border-none bg-emerald-500/10 border border-emerald-500/20 p-8 rounded-[3rem] flex items-center justify-between shadow-[0_20px_60px_rgba(16,185,129,0.2)] animate-pulse">
-                            <div className="flex items-center gap-6">
-                                <div className="p-4 bg-emerald-500/20 rounded-[1.5rem]">
-                                    <Cpu className="h-8 w-8 text-emerald-400" />
-                                </div>
-                                <div>
-                                    <p className="text-[10px] font-black text-emerald-400 uppercase tracking-widest">PATTERN ANOMALY DETECTED</p>
-                                    <p className="text-2xl font-black text-white">REPETITION AT {patternIntelligence.repeat}</p>
-                                </div>
+                    <Card className="border-none bg-slate-950/80 border border-white/5 p-8 rounded-[3rem] flex items-center justify-between shadow-2xl">
+                        <div className="flex items-center gap-6">
+                            <div className="p-4 bg-primary/10 rounded-[1.5rem]">
+                                <Boxes className="h-8 w-8 text-primary" />
                             </div>
-                            <Badge className="bg-emerald-500 text-white font-black px-6 py-2 rounded-xl text-[12px] uppercase">INTENSE</Badge>
-                         </Card>
-                    )}
+                            <div>
+                                <p className="text-[10px] font-black text-primary uppercase tracking-widest">PATTERN RECURSION</p>
+                                <p className="text-2xl font-black text-white">{patternIntelligence.repeat !== null ? `REPETITION: ${patternIntelligence.repeat}` : 'SCANNING...'}</p>
+                            </div>
+                        </div>
+                        <SignalHigh className={cn("h-8 w-8", patternIntelligence.intensity > 50 ? "text-emerald-400" : "text-primary/40")} />
+                    </Card>
                 </div>
             </div>
 

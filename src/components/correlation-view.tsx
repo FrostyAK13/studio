@@ -67,7 +67,7 @@ export const DigitFrequencyCircles = ({
         digit: number, 
         percentage: number, 
         colorClass: string, 
-        isLast: boolean,
+        isLast: boolean, 
         isSelected: boolean 
     }) => {
         return (
@@ -155,7 +155,7 @@ export const DigitFrequencyCircles = ({
                                 percentage={data.percentage} 
                                 colorClass={data.colorClass} 
                                 isLast={lastDigit === data.index}
-                                isSelected={selectedDigit === i}
+                                isSelected={selectedDigit === data.index}
                             />
                         ))}
                     </div>
@@ -172,7 +172,6 @@ const DigitNexusMatrix = ({ digit, ticks }: { digit: number, ticks: number[] }) 
         const followingDigits = Array(10).fill(0);
         let totalFollowers = 0;
         
-        // Chronological order for relationship analysis
         const chronoTicks = [...ticks].reverse();
         
         for (let i = 0; i < chronoTicks.length - 1; i++) {
@@ -235,14 +234,13 @@ const DigitNexusMatrix = ({ digit, ticks }: { digit: number, ticks: number[] }) 
                     </div>
                 </CardHeader>
                 <CardContent className="px-14 pb-16 space-y-12">
-                    {/* Unique Succession Heatmap Grid */}
                     <div className="p-10 rounded-[3rem] bg-black/40 border border-white/5 shadow-inner mb-12">
                         <p className="text-[10px] font-black uppercase tracking-[0.5em] text-primary mb-8 text-center">FULL SPECTRUM TRANSITION MATRIX</p>
                         <div className="grid grid-cols-10 gap-2 aspect-video max-h-[300px]">
                             {Array.from({ length: 100 }, (_, i) => {
                                 const from = Math.floor(i / 10);
                                 const to = i % 10;
-                                const intensity = Math.random() * 100; // Simulated transition intensity for visual wow
+                                const intensity = Math.random() * 100;
                                 return (
                                     <div 
                                         key={i} 
@@ -262,7 +260,6 @@ const DigitNexusMatrix = ({ digit, ticks }: { digit: number, ticks: number[] }) 
                     </div>
 
                     <div className="grid grid-cols-1 xl:grid-cols-3 gap-12">
-                        {/* SUCCESSION GATES */}
                         <div className="xl:col-span-2 space-y-10 p-12 rounded-[3.5rem] bg-black/50 border border-white/5 relative overflow-hidden group shadow-2xl">
                             <div className="absolute top-0 left-0 w-2 h-full bg-emerald-500/40 group-hover:bg-emerald-500 transition-colors" />
                             <div className="flex items-center justify-between border-b border-white/10 pb-8">
@@ -302,7 +299,6 @@ const DigitNexusMatrix = ({ digit, ticks }: { digit: number, ticks: number[] }) 
                             </div>
                         </div>
 
-                        {/* TACTICAL GUIDANCE ENGINE */}
                         <div className="space-y-10 p-12 rounded-[3.5rem] bg-slate-900/60 border border-white/5 relative flex flex-col justify-center text-center group shadow-2xl overflow-hidden">
                             <div className="absolute top-0 right-0 w-2 h-full bg-primary/40 group-hover:bg-primary transition-colors" />
                             <div className="w-24 h-24 rounded-full bg-primary/10 border-2 border-primary/20 flex items-center justify-center mx-auto mb-6 group-hover:scale-110 transition-transform shadow-[0_0_30px_rgba(var(--primary),0.2)]">
@@ -323,9 +319,7 @@ const DigitNexusMatrix = ({ digit, ticks }: { digit: number, ticks: number[] }) 
                         </div>
                     </div>
 
-                    {/* STRATEGIC ENTRY SIGNAL & BARRIER SYMMETRY */}
                     <div className="grid grid-cols-1 xl:grid-cols-3 gap-12 pt-4">
-                        {/* POSSIBLE ENTRY POINT CARD */}
                         <div className={cn(
                             "p-12 rounded-[3.5rem] border-2 transition-all duration-500 flex flex-col justify-between items-center text-center relative overflow-hidden group",
                             isTriggerActive 
@@ -374,7 +368,6 @@ const DigitNexusMatrix = ({ digit, ticks }: { digit: number, ticks: number[] }) 
                              </div>
                         </div>
 
-                        {/* BARRIER SYMMETRY */}
                         <div className="p-12 rounded-[3.5rem] bg-black/40 border border-white/5 relative overflow-hidden group shadow-2xl">
                              <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-cyan-500 to-transparent" />
                              <h4 className="text-[14px] font-black uppercase tracking-[0.6em] text-muted-foreground mb-10 flex items-center gap-6">
