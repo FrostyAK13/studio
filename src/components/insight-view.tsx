@@ -3,10 +3,10 @@
 import * as React from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Lightbulb, Bot, Sparkles, AlertTriangle, Target, Zap, ShieldCheck, Info, Activity, ArrowUp, ArrowDown, TrendingUp, TrendingDown, ChevronRight } from 'lucide-react';
+import { Bot, Sparkles, AlertTriangle, Target, Zap, ShieldCheck, Info, Activity, ArrowUp, ArrowDown, TrendingUp, TrendingDown, Layers, Crosshair } from 'lucide-react';
 import { HackerAnimation } from './hacker-animation';
 import { ScannerAnimationContent } from './scanner-animation-content';
-import { generateInsight, type InsightOutput } from '@/lib/insight-generator';
+import { generateInsight, type MultiProtocolOutput, type ProtocolInsight } from '@/lib/insight-generator';
 import { syntheticIndices } from '@/lib/mock-data';
 import { Badge } from '@/components/ui/badge';
 import { Label } from '@/components/ui/label';
@@ -28,7 +28,7 @@ type AnalysisState = 'idle' | 'analyzing' | 'complete' | 'error';
 
 export function InsightView({ price, decimalPlaces, lastDigitTicks, priceHistory, selectedMarket, onMarketChange, maxTicks }: InsightViewProps) {
     const [analysisState, setAnalysisState] = React.useState<AnalysisState>('idle');
-    const [insight, setInsight] = React.useState<InsightOutput | null>(null);
+    const [multiInsight, setMultiInsight] = React.useState<MultiProtocolOutput | null>(null);
     const [error, setError] = React.useState<string | null>(null);
     const [selectedDigit, setSelectedDigit] = React.useState<number | null>(null);
 
@@ -37,21 +37,20 @@ export function InsightView({ price, decimalPlaces, lastDigitTicks, priceHistory
     }, [selectedMarket]);
 
     const runAnalysis = () => {
-        setInsight(null);
+        setMultiInsight(null);
         setError(null);
         setAnalysisState('analyzing');
 
         setTimeout(() => {
-            if (lastDigitTicks.length < 50) {
+            if (lastDigitTicks.length < 50 || priceHistory.length < 50) {
                 setError(`Data sequence unstable. Minimum 50 ticks required for deep protocol analysis.`);
                 setAnalysisState('error');
                 return;
             }
 
             try {
-                // Pass both ticks and price history for full multi-protocol insight
                 const result = generateInsight(lastDigitTicks, priceHistory);
-                setInsight(result);
+                setMultiInsight(result);
                 setAnalysisState('complete');
             } catch (e: any) {
                 setError(e.message || "An unexpected error occurred during deep scan.");
@@ -61,12 +60,54 @@ export function InsightView({ price, decimalPlaces, lastDigitTicks, priceHistory
     };
 
     const DirectionalIcon = ({ direction }: { direction: string }) => {
-        const isUp = direction.includes('RISE') || direction.includes('OVER') || direction.includes('EVEN');
+        const isUp = direction.includes('RISE') || direction.includes('OVER') || direction.includes('EVEN') || direction.includes('MATCH');
         const isDown = direction.includes('FALL') || direction.includes('UNDER') || direction.includes('ODD');
         
         if (isUp) return <TrendingUp className="h-10 w-10 text-emerald-400 drop-shadow-[0_0_12px_rgba(52,211,153,0.6)]" />;
         if (isDown) return <TrendingDown className="h-10 w-10 text-rose-500 drop-shadow-[0_0_12px_rgba(244,63,94,0.6)]" />;
-        return <Target className="h-10 w-10 text-primary drop-shadow-[0_0_12px_rgba(var(--primary),0.6)]" />;
+        return <Crosshair className="h-10 w-10 text-primary drop-shadow-[0_0_12px_rgba(var(--primary),0.6)]" />;
+    };
+
+    const ProtocolCard = ({ insight }: { insight: ProtocolInsight }) => {
+        const isPositive = insight.direction.includes('RISE') || insight.direction.includes('OVER') || insight.direction.includes('EVEN') || insight.direction.includes('MATCH');
+        
+        return (
+            <div className="p-8 bg-black/40 rounded-[2.5rem] border border-white/5 relative overflow-hidden group shadow-2xl transition-all hover:bg-black/60 hover:border-primary/20">
+                <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-100 transition-opacity">
+                    <DirectionalIcon direction={insight.direction} />
+                </div>
+                
+                <p className="font-black text-primary text-[10px] uppercase tracking-[0.4em] mb-6 flex items-center gap-2">
+                    <Zap className="h-3 w-3" /> // PROTOCOL: {insight.strategy.toUpperCase()}
+                </p>
+
+                <div className="space-y-6">
+                    <div>
+                        <Badge className={cn(
+                            "h-10 px-6 border-none text-[10px] font-black uppercase rounded-xl tracking-[0.2em] mb-4",
+                            isPositive ? "bg-emerald-500/10 text-emerald-400" : "bg-rose-500/10 text-rose-400"
+                        )}>
+                            {insight.summary}
+                        </Badge>
+                        <div className="flex items-center gap-4">
+                            <span className="text-4xl font-black text-white tracking-tighter drop-shadow-lg">{insight.direction}</span>
+                            {isPositive ? <ArrowUp className="h-6 w-6 text-emerald-400 animate-pulse" /> : <ArrowDown className="h-6 w-6 text-rose-500 animate-pulse" />}
+                        </div>
+                    </div>
+
+                    <div className="flex items-baseline gap-2">
+                         <span className="text-3xl font-black text-emerald-400 tabular-nums tracking-tighter">
+                            {insight.confidence.toFixed(1)}%
+                        </span>
+                        <p className="text-[8px] font-black text-muted-foreground uppercase tracking-widest">CONFIDENCE</p>
+                    </div>
+
+                    <div className="pt-4 border-t border-white/5">
+                        <p className="text-[10px] font-mono text-white/50 leading-relaxed italic">"{insight.reasoning}"</p>
+                    </div>
+                </div>
+            </div>
+        );
     };
 
     const renderContent = () => {
@@ -75,7 +116,7 @@ export function InsightView({ price, decimalPlaces, lastDigitTicks, priceHistory
             case 'complete':
             case 'error':
                  return (
-                    <HackerAnimation title={`INTELLIGENCE REPORT: ${marketName.toUpperCase()} VECTOR SCAN`}>
+                    <HackerAnimation title={`INTELLIGENCE REPORT: ${marketName.toUpperCase()} MULTI-VECTOR SCAN`}>
                         {analysisState === 'analyzing' ? (
                             <ScannerAnimationContent />
                         ) : error ? (
@@ -86,50 +127,19 @@ export function InsightView({ price, decimalPlaces, lastDigitTicks, priceHistory
                                     <p className="font-mono text-sm opacity-80 mt-2">{error}</p>
                                 </div>
                             </div>
-                        ) : insight ? (
+                        ) : multiInsight ? (
                             <div className="text-left space-y-8 animate-in fade-in duration-700">
                                 <div className="p-6 bg-white/5 rounded-[2rem] border border-white/10 shadow-inner">
                                     <p className="font-black text-primary text-[11px] uppercase tracking-[0.4em] mb-4 flex items-center gap-2">
-                                        <Info className="h-4 w-4" /> // MARKET SYNOPSIS
+                                        <Layers className="h-4 w-4" /> // GLOBAL STRATEGY SYNOPSIS
                                     </p>
-                                    <p className="text-lg font-medium text-white/90 leading-relaxed italic">"{insight.summary}"</p>
+                                    <p className="text-lg font-medium text-white/90 leading-relaxed italic">"{multiInsight.globalSummary}"</p>
                                 </div>
 
-                                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                    <div className="p-8 bg-black/40 rounded-[2.5rem] border border-primary/20 relative overflow-hidden group shadow-2xl">
-                                        <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-100 transition-opacity">
-                                            <DirectionalIcon direction={insight.direction} />
-                                        </div>
-                                        <p className="font-black text-primary text-[10px] uppercase tracking-[0.4em] mb-6">// TARGET PROTOCOL</p>
-                                        <div className="flex flex-col gap-4">
-                                            <Badge className="h-12 w-fit px-6 bg-primary/20 text-primary border-primary/40 text-sm font-black uppercase rounded-xl tracking-[0.2em]">
-                                                {insight.recommendedStrategy}
-                                            </Badge>
-                                            <div className="flex items-center gap-4">
-                                                <span className="text-5xl font-black text-white tracking-tighter drop-shadow-lg">{insight.direction}</span>
-                                                {insight.direction.includes('RISE') || insight.direction.includes('OVER') ? <ArrowUp className="h-8 w-8 text-emerald-400 animate-bounce" /> : <ArrowDown className="h-8 w-8 text-rose-500 animate-bounce" />}
-                                            </div>
-                                        </div>
-                                    </div>
-
-                                    <div className="p-8 bg-black/40 rounded-[2.5rem] border border-emerald-500/20 relative overflow-hidden group shadow-2xl">
-                                         <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-100 transition-opacity">
-                                             <ShieldCheck className="h-10 w-10 text-emerald-400" />
-                                         </div>
-                                        <p className="font-black text-emerald-400 text-[10px] uppercase tracking-[0.4em] mb-6">// PROBABILITY CONFIDENCE</p>
-                                        <div className="flex flex-col gap-2">
-                                            <span className="text-6xl font-black text-emerald-400 tabular-nums tracking-tighter drop-shadow-[0_0_20px_rgba(52,211,153,0.4)]">
-                                                {insight.confidence.toFixed(1)}%
-                                            </span>
-                                            <p className="text-[10px] font-black text-emerald-400/60 uppercase tracking-widest">OPTIMIZED ENTRY POINT</p>
-                                        </div>
-                                    </div>
-                                </div>
-
-                                <div className="p-8 bg-white/5 rounded-[2.5rem] border border-white/5 relative overflow-hidden group">
-                                    <div className="absolute left-0 top-0 h-full w-1.5 bg-primary/40 group-hover:bg-primary transition-colors" />
-                                    <p className="font-black text-primary/70 text-[10px] uppercase tracking-[0.5em] mb-4">// STRATEGIC LOGIC MATRIX</p>
-                                    <p className="text-sm font-mono text-white/70 leading-relaxed whitespace-pre-wrap">{insight.reasoning}</p>
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                                    {multiInsight.protocols.map((p, idx) => (
+                                        <ProtocolCard key={idx} insight={p} />
+                                    ))}
                                 </div>
                             </div>
                         ) : null}
@@ -142,7 +152,7 @@ export function InsightView({ price, decimalPlaces, lastDigitTicks, priceHistory
     }
 
     return (
-        <div className="space-y-12 animate-in fade-in slide-in-from-bottom-12 duration-1000">
+        <div className="space-y-12 animate-in fade-in slide-in-from-bottom-12 duration-1000 pb-20">
              <Card className="border-none shadow-[0_30px_90px_rgba(0,0,0,0.7)] bg-slate-900/40 backdrop-blur-[60px] overflow-hidden relative rounded-[3rem]">
                 <div className="absolute top-0 left-0 w-full h-[2px] bg-gradient-to-r from-transparent via-primary/60 to-transparent" />
                 <CardContent className="p-10 sm:p-14 grid grid-cols-1 md:grid-cols-2 gap-10 sm:gap-20 items-center">
@@ -177,7 +187,7 @@ export function InsightView({ price, decimalPlaces, lastDigitTicks, priceHistory
                 <div className="flex flex-col sm:flex-row items-center gap-8 justify-between px-10">
                     <div className="flex items-center gap-8">
                         <div className="w-16 h-16 rounded-[1.5rem] bg-primary/20 flex items-center justify-center border-2 border-primary/30 shadow-[0_0_30px_rgba(var(--primary),0.3)] group transition-transform hover:scale-110">
-                            <Lightbulb className="h-8 w-8 text-primary drop-shadow-[0_0_12px_rgba(var(--primary),1)]" />
+                            <Bot className="h-8 w-8 text-primary drop-shadow-[0_0_12px_rgba(var(--primary),1)]" />
                         </div>
                         <div className="text-center sm:text-left">
                             <h3 className="text-2xl font-black uppercase tracking-[0.4em] text-white">STRATEGY INTELLIGENCE</h3>
@@ -221,7 +231,7 @@ export function InsightView({ price, decimalPlaces, lastDigitTicks, priceHistory
                                 </>
                             )}
                         </Button>
-                        <p className="text-[10px] font-black text-muted-foreground uppercase tracking-[0.6em] mt-6 animate-pulse">Ready for high-precision vectoring</p>
+                        <p className="text-[10px] font-black text-muted-foreground uppercase tracking-[0.6em] mt-6 animate-pulse">Ready for multi-protocol vectoring</p>
                     </div>
                     
                     {renderContent()}
