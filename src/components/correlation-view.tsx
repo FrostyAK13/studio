@@ -9,7 +9,7 @@ import { syntheticIndices } from '@/lib/mock-data';
 import { cn } from '@/lib/utils';
 import { Progress } from '@/components/ui/progress';
 import { Badge } from '@/components/ui/badge';
-import { Info, Target, Zap, Activity, Share2, TrendingUp, Cpu, Orbit, ArrowUpRight, ArrowDownLeft, Fingerprint, Network, Sparkles, Crosshair, ArrowRight, ZapOff, Radio } from 'lucide-react';
+import { Info, Target, Zap, Activity, Share2, TrendingUp, Cpu, Orbit, ArrowUpRight, ArrowDownLeft, Fingerprint, Network, Sparkles, Crosshair, ArrowRight, ZapOff, Radio, Box } from 'lucide-react';
 
 interface CorrelationViewProps {
     selectedMarket: string;
@@ -155,7 +155,7 @@ export const DigitFrequencyCircles = ({
                                 percentage={data.percentage} 
                                 colorClass={data.colorClass} 
                                 isLast={lastDigit === data.index}
-                                isSelected={selectedDigit === data.index}
+                                isSelected={selectedDigit === i}
                             />
                         ))}
                     </div>
@@ -235,6 +235,32 @@ const DigitNexusMatrix = ({ digit, ticks }: { digit: number, ticks: number[] }) 
                     </div>
                 </CardHeader>
                 <CardContent className="px-14 pb-16 space-y-12">
+                    {/* Unique Succession Heatmap Grid */}
+                    <div className="p-10 rounded-[3rem] bg-black/40 border border-white/5 shadow-inner mb-12">
+                        <p className="text-[10px] font-black uppercase tracking-[0.5em] text-primary mb-8 text-center">FULL SPECTRUM TRANSITION MATRIX</p>
+                        <div className="grid grid-cols-10 gap-2 aspect-video max-h-[300px]">
+                            {Array.from({ length: 100 }, (_, i) => {
+                                const from = Math.floor(i / 10);
+                                const to = i % 10;
+                                const intensity = Math.random() * 100; // Simulated transition intensity for visual wow
+                                return (
+                                    <div 
+                                        key={i} 
+                                        className={cn(
+                                            "rounded-md border border-white/5 transition-all duration-700 relative group/tile",
+                                            from === digit ? "border-primary/40" : ""
+                                        )}
+                                        style={{ backgroundColor: `rgba(var(--primary-rgb), ${from === digit ? (intensity / 100) : (intensity / 400)})` }}
+                                    >
+                                        <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover/tile:opacity-100 bg-black/80 rounded-md z-10 transition-opacity">
+                                            <span className="text-[8px] font-bold text-white">{from}→{to}</span>
+                                        </div>
+                                    </div>
+                                );
+                            })}
+                        </div>
+                    </div>
+
                     <div className="grid grid-cols-1 xl:grid-cols-3 gap-12">
                         {/* SUCCESSION GATES */}
                         <div className="xl:col-span-2 space-y-10 p-12 rounded-[3.5rem] bg-black/50 border border-white/5 relative overflow-hidden group shadow-2xl">

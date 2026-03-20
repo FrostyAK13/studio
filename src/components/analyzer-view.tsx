@@ -1,3 +1,4 @@
+
 'use client';
 
 import * as React from 'react';
@@ -7,10 +8,11 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Input } from '@/components/ui/input';
 import { syntheticIndices } from '@/lib/mock-data';
 import { cn } from '@/lib/utils';
-import { ArrowDown, ArrowUp, BarChartHorizontal, Hash, List, TrendingUp, TrendingDown, Target, Zap, Activity } from 'lucide-react';
+import { ArrowDown, ArrowUp, BarChartHorizontal, Hash, List, TrendingUp, TrendingDown, Target, Zap, Activity, Cpu, Layers, Fingerprint, Network } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { PieChart, Pie, Cell, Tooltip, ResponsiveContainer } from 'recharts';
 import { ChartContainer } from '@/components/ui/chart';
+import { Badge } from '@/components/ui/badge';
 
 interface AnalyzerViewProps {
     price: number;
@@ -109,47 +111,55 @@ export function AnalyzerView({
         }
     }, [tradeType, evenOddChartData, matchesDiffersChartData, overUnderChartData, riseFallChartData]);
 
+    const patternIntelligence = React.useMemo(() => {
+        if (lastDigitTicks.length < 5) return { repeat: null, intensity: 0 };
+        const slice = lastDigitTicks.slice(0, 5);
+        let repeats = 0;
+        for(let i=0; i < slice.length-1; i++) {
+            if (slice[i] === slice[i+1]) repeats++;
+        }
+        return {
+            repeat: repeats > 0 ? slice[0] : null,
+            intensity: (repeats / 4) * 100
+        };
+    }, [lastDigitTicks]);
+
     const renderSequence = () => {
         const count = 24;
         const slice = [...lastDigitTicks.slice(0, count)].reverse();
-        const priceSlice = [...priceHistory.slice(0, count)].reverse();
 
         return slice.map((digit, i) => {
             let color = 'bg-white/5';
             let label = digit.toString();
 
             if (tradeType === 'even-odd') {
-                color = digit % 2 === 0 ? `bg-[${COLORS.EVEN}]` : `bg-[${COLORS.ODD}]`;
-                // Tailwind color class mapping
-                color = digit % 2 === 0 ? 'bg-primary shadow-[0_0_10px_rgba(var(--primary),0.5)]' : 'bg-rose-500 shadow-[0_0_10px_rgba(244,63,94,0.5)]';
+                color = digit % 2 === 0 ? 'bg-primary shadow-[0_0_15px_rgba(var(--primary),0.5)]' : 'bg-rose-500 shadow-[0_0_15px_rgba(244,63,94,0.5)]';
             } else if (tradeType === 'matches-differs') {
                 const isMatch = digit === matchesDigit;
-                color = isMatch ? 'bg-emerald-500 shadow-[0_0_15px_rgba(16,185,129,0.6)]' : 'bg-orange-500/20 text-orange-400 border-orange-500/30';
+                color = isMatch ? 'bg-emerald-500 shadow-[0_0_20px_rgba(16,185,129,0.7)] scale-110 z-10' : 'bg-orange-500/10 text-orange-400 border-orange-500/20';
             } else if (tradeType === 'over-under') {
-                if (digit > overUnderDigit) color = 'bg-cyan-500 shadow-[0_0_15px_rgba(6,182,212,0.6)]';
-                else if (digit < overUnderDigit) color = 'bg-rose-500 shadow-[0_0_15px_rgba(244,63,94,0.6)]';
-                else color = 'bg-white/10 text-white/40';
+                if (digit > overUnderDigit) color = 'bg-cyan-500 shadow-[0_0_20px_rgba(6,182,212,0.7)] scale-110 z-10';
+                else if (digit < overUnderDigit) color = 'bg-rose-500 shadow-[0_0_20px_rgba(244,63,94,0.7)] scale-110 z-10';
+                else color = 'bg-white/5 text-white/20';
             } else if (tradeType === 'rise-fall') {
-                // For rise fall we need relative comparison. Sequence uses historical price shifts.
-                const currentPrice = priceHistory[i];
-                const prevPrice = priceHistory[i+1];
-                if (currentPrice > prevPrice) {
-                    color = 'bg-emerald-500 shadow-[0_0_15px_rgba(16,185,129,0.6)]';
-                    label = 'R';
-                } else if (currentPrice < prevPrice) {
-                    color = 'bg-rose-500 shadow-[0_0_15px_rgba(244,63,94,0.6)]';
-                    label = 'F';
-                } else {
-                    color = 'bg-white/5';
-                    label = '-';
+                const currentIdx = lastDigitTicks.length - 1 - i;
+                const prevIdx = currentIdx + 1;
+                if (prevIdx < lastDigitTicks.length) {
+                    if (priceHistory[currentIdx] > priceHistory[prevIdx]) {
+                        color = 'bg-emerald-500 shadow-[0_0_15px_rgba(16,185,129,0.6)]';
+                        label = '↑';
+                    } else if (priceHistory[currentIdx] < priceHistory[prevIdx]) {
+                        color = 'bg-rose-500 shadow-[0_0_15px_rgba(244,63,94,0.6)]';
+                        label = '↓';
+                    }
                 }
             }
 
             return (
                 <div key={i} className={cn(
-                    "flex items-center justify-center w-10 h-10 rounded-xl font-black text-sm border border-white/5 shadow-lg shrink-0 transition-all duration-300",
+                    "flex items-center justify-center w-12 h-12 rounded-2xl font-black text-lg border transition-all duration-500 shrink-0",
                     color,
-                    (tradeType === 'matches-differs' && digit !== matchesDigit) ? "" : "text-white"
+                    "border-white/5 shadow-2xl"
                 )}>
                     {label}
                 </div>
@@ -158,42 +168,43 @@ export function AnalyzerView({
     };
 
     return (
-        <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-700">
-             <Card className="border-none shadow-[0_20px_60px_rgba(0,0,0,0.5)] bg-slate-900/40 backdrop-blur-[50px] overflow-hidden relative rounded-[3rem]">
-                <div className="absolute top-0 left-0 w-full h-[1px] bg-gradient-to-r from-transparent via-primary/50 to-transparent" />
-                <CardContent className="p-8 sm:p-12 grid grid-cols-1 md:grid-cols-3 gap-8 sm:gap-12 items-end">
-                    <div className="space-y-4">
-                        <Label className="text-[12px] font-black uppercase tracking-[0.5em] text-primary ml-2">MARKET VECTOR SELECT</Label>
+        <div className="space-y-12 animate-in fade-in slide-in-from-bottom-8 duration-1000 pb-20">
+             <Card className="border-none shadow-[0_30px_100px_rgba(0,0,0,0.7)] bg-slate-900/40 backdrop-blur-[60px] overflow-hidden relative rounded-[4rem]">
+                <div className="absolute top-0 left-0 w-full h-[2px] bg-gradient-to-r from-transparent via-primary/60 to-transparent" />
+                <CardContent className="p-10 sm:p-14 grid grid-cols-1 md:grid-cols-3 gap-12 items-end">
+                    <div className="space-y-6">
+                        <Label className="text-[14px] font-black uppercase tracking-[0.7em] text-primary ml-4">MARKET VECTOR SELECT</Label>
                         <Select value={selectedMarket} onValueChange={onMarketChange}>
-                            <SelectTrigger className="h-16 bg-black/40 border-white/10 rounded-[1.5rem] font-black text-lg shadow-[inset_0_2px_10px_rgba(0,0,0,0.5)] px-8">
+                            <SelectTrigger className="h-20 bg-black/50 border-white/10 rounded-[2.5rem] font-black text-xl shadow-[inset_0_2px_15px_rgba(0,0,0,0.6)] px-10">
                                 <SelectValue placeholder="Select Index" />
                             </SelectTrigger>
-                            <SelectContent side="bottom" position="popper" sideOffset={4} className="w-[var(--radix-select-trigger-width)] max-h-[400px] rounded-[1.5rem] border-white/10 bg-slate-950 text-white z-[100]">
+                            <SelectContent side="bottom" position="popper" sideOffset={8} className="w-[var(--radix-select-trigger-width)] max-h-[400px] rounded-[2.5rem] border-white/10 bg-slate-950 text-white z-[100] shadow-2xl">
                                 {syntheticIndices.map((index) => (
-                                <SelectItem key={index.id} value={index.id} className="focus:bg-primary/20 focus:text-white cursor-pointer py-3">
+                                <SelectItem key={index.id} value={index.id} className="focus:bg-primary/20 focus:text-white cursor-pointer py-4 font-black">
                                     {index.name}
                                 </SelectItem>
                                 ))}
                             </SelectContent>
                         </Select>
                     </div>
-                    <div className="space-y-4">
-                        <Label className="text-[12px] font-black uppercase tracking-[0.5em] text-primary ml-2">ALGORITHM TYPE</Label>
+                    <div className="space-y-6">
+                        <Label className="text-[14px] font-black uppercase tracking-[0.7em] text-primary ml-4">ALGORITHM PROTOCOL</Label>
                         <Select value={tradeType} onValueChange={setTradeType}>
-                             <SelectTrigger className="h-16 bg-black/40 border-white/10 rounded-[1.5rem] font-black text-lg shadow-[inset_0_2px_10px_rgba(0,0,0,0.5)] px-8 text-center justify-center">
-                                <SelectValue placeholder="Select Trade Type" />
+                             <SelectTrigger className="h-20 bg-black/50 border-white/10 rounded-[2.5rem] font-black text-xl shadow-[inset_0_2px_15px_rgba(0,0,0,0.6)] px-10 text-center justify-center">
+                                <SelectValue placeholder="Select Protocol" />
                             </SelectTrigger>
-                            <SelectContent side="bottom" position="popper" sideOffset={4} className="w-[var(--radix-select-trigger-width)] max-h-[400px] rounded-[1.5rem] border-white/10 bg-slate-950 text-white z-[100]">
-                                <SelectItem value="even-odd" className="focus:bg-primary/20 focus:text-white cursor-pointer py-3">Even / Odd</SelectItem>
-                                <SelectItem value="matches-differs" className="focus:bg-primary/20 focus:text-white cursor-pointer py-3">Matches / Differs</SelectItem>
-                                <SelectItem value="over-under" className="focus:bg-primary/20 focus:text-white cursor-pointer py-3">Over / Under</SelectItem>
-                                <SelectItem value="rise-fall" className="focus:bg-primary/20 focus:text-white cursor-pointer py-3">Rise / Fall</SelectItem>
+                            <SelectContent side="bottom" position="popper" sideOffset={8} className="w-[var(--radix-select-trigger-width)] max-h-[400px] rounded-[2.5rem] border-white/10 bg-slate-950 text-white z-[100] shadow-2xl">
+                                <SelectItem value="even-odd" className="focus:bg-primary/20 focus:text-white cursor-pointer py-4 font-black">Even / Odd Matrix</SelectItem>
+                                <SelectItem value="matches-differs" className="focus:bg-primary/20 focus:text-white cursor-pointer py-4 font-black">Matches / Differs Matrix</SelectItem>
+                                <SelectItem value="over-under" className="focus:bg-primary/20 focus:text-white cursor-pointer py-4 font-black">Over / Under Matrix</SelectItem>
+                                <SelectItem value="rise-fall" className="focus:bg-primary/20 focus:text-white cursor-pointer py-4 font-black">Rise / Fall Matrix</SelectItem>
                             </SelectContent>
                         </Select>
                     </div>
-                    <div className="space-y-4">
-                        <Label className="text-[12px] font-black uppercase tracking-[0.5em] text-primary ml-2">DATA HORIZON (TICKS)</Label>
-                        <div className="relative">
+                    <div className="space-y-6">
+                        <Label className="text-[14px] font-black uppercase tracking-[0.7em] text-primary ml-4">DATA HORIZON</Label>
+                        <div className="relative group">
+                            <div className="absolute -inset-1 bg-primary/10 blur-xl opacity-0 group-hover:opacity-100 transition-opacity" />
                             <Input
                                 type="number"
                                 min="1"
@@ -201,44 +212,56 @@ export function AnalyzerView({
                                 value={maxTicks === 0 ? '' : maxTicks}
                                 onChange={handleMaxTicksChange}
                                 onBlur={handleMaxTicksBlur}
-                                className="h-16 bg-black/40 border-white/10 rounded-[1.5rem] font-black text-3xl text-primary text-center shadow-[inset_0_2px_10px_rgba(0,0,0,0.5)] focus:ring-primary/50 transition-all"
+                                className="h-20 bg-black/50 border-white/10 rounded-[2.5rem] font-black text-4xl text-primary text-center shadow-[inset_0_2px_15px_rgba(0,0,0,0.6)] relative z-10"
                             />
-                            <div className="absolute right-6 top-1/2 -translate-y-1/2 pointer-events-none opacity-20"><Activity size={24} /></div>
+                            <div className="absolute right-10 top-1/2 -translate-y-1/2 pointer-events-none opacity-20 z-20"><Activity size={32} /></div>
                         </div>
                     </div>
                 </CardContent>
             </Card>
 
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                <Card className="lg:col-span-2 border-none shadow-2xl bg-slate-950/80 backdrop-blur-xl overflow-hidden relative">
-                    <div className="absolute top-0 left-0 w-full h-[2px] bg-gradient-to-r from-cyan-500 via-primary to-purple-500" />
-                    <CardHeader className="pb-2 px-6 pt-6">
-                        <div className="flex items-center justify-between gap-4">
-                            <div>
-                                <CardTitle className="text-xs font-black uppercase tracking-[0.4em] text-primary">Live Probabilities</CardTitle>
-                                <CardDescription className="text-[10px] font-bold uppercase text-muted-foreground mt-1">Real-time Sequence Analysis</CardDescription>
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-12">
+                <Card className="lg:col-span-2 border-none shadow-[0_40px_120px_rgba(0,0,0,0.8)] bg-slate-950/80 backdrop-blur-[80px] overflow-hidden relative rounded-[4rem]">
+                    <div className="absolute top-0 left-0 w-full h-[4px] bg-gradient-to-r from-primary via-cyan-400 to-primary" />
+                    <CardHeader className="pb-8 px-12 pt-12">
+                        <div className="flex items-center justify-between gap-10">
+                            <div className="flex items-center gap-6">
+                                <div className="p-4 bg-primary/20 rounded-[1.5rem] border border-primary/30 shadow-[0_0_20px_rgba(var(--primary),0.3)]">
+                                    <Layers className="h-8 w-8 text-primary" />
+                                </div>
+                                <div>
+                                    <CardTitle className="text-sm font-black uppercase tracking-[0.5em] text-primary">Live Volumetric Flux</CardTitle>
+                                    <CardDescription className="text-[10px] font-bold uppercase text-muted-foreground/60 mt-2 tracking-widest">REAL-TIME SEQUENCE SCANNER</CardDescription>
+                                </div>
                             </div>
-                            <div className="text-right">
-                                <p className="text-[10px] font-black uppercase text-muted-foreground tracking-widest">Global Pivot</p>
-                                <p className="text-2xl font-black text-foreground tracking-tighter tabular-nums">{price.toFixed(decimalPlaces)}</p>
+                            <div className="text-right bg-white/5 px-8 py-3 rounded-[1.5rem] border border-white/10">
+                                <p className="text-[10px] font-black uppercase text-muted-foreground/40 tracking-widest mb-1">GLOBAL PIVOT</p>
+                                <p className="text-3xl font-black text-white tabular-nums tracking-tighter">{price.toFixed(decimalPlaces)}</p>
                             </div>
                         </div>
                     </CardHeader>
-                    <CardContent className="p-6">
-                        <div className="flex flex-wrap gap-2 mb-8 min-h-[48px]">
+                    <CardContent className="px-12 pb-14 space-y-12">
+                        <div className="flex flex-wrap gap-4 min-h-[56px] p-6 bg-black/40 rounded-[2.5rem] border border-white/5 shadow-inner">
                             {renderSequence()}
                         </div>
                         
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                             {activeChartData.map((data, idx) => (
-                                <div key={idx} className="bg-white/5 p-4 rounded-2xl border border-white/5 relative overflow-hidden group">
-                                    <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity" style={{ backgroundColor: `${data.color}05` }} />
-                                    <div className="flex items-center justify-between mb-2">
-                                        <p className="text-[10px] font-black tracking-widest uppercase opacity-70" style={{ color: data.color }}>{data.name} RATIO</p>
-                                        <span className="text-2xl font-black tabular-nums">{data.value.toFixed(1)}%</span>
+                                <div key={idx} className="bg-black/60 p-8 rounded-[2.5rem] border border-white/5 relative overflow-hidden group shadow-2xl transition-all hover:bg-black/80">
+                                    <div className="absolute inset-0 opacity-0 group-hover:opacity-10 transition-opacity" style={{ backgroundColor: data.color }} />
+                                    <div className="flex items-center justify-between mb-6">
+                                        <p className="text-[12px] font-black tracking-[0.4em] uppercase" style={{ color: data.color }}>{data.name} RATIO</p>
+                                        <span className="text-4xl font-black tabular-nums text-white tracking-tighter">{data.value.toFixed(1)}%</span>
                                     </div>
-                                    <div className="w-full bg-black/40 rounded-full h-3 overflow-hidden border border-white/5">
-                                        <div className="h-full transition-all duration-1000 ease-out shadow-[0_0_12px]" style={{ width: `${data.value}%`, backgroundColor: data.color, boxShadow: `0 0 12px ${data.color}40` }} />
+                                    <div className="w-full bg-black/40 rounded-full h-4 overflow-hidden border border-white/5 shadow-inner">
+                                        <div 
+                                            className="h-full transition-all duration-1000 ease-out shadow-[0_0_20px]" 
+                                            style={{ 
+                                                width: `${data.value}%`, 
+                                                backgroundColor: data.color, 
+                                                boxShadow: `0 0 20px ${data.color}40` 
+                                            }} 
+                                        />
                                     </div>
                                 </div>
                             ))}
@@ -246,76 +269,101 @@ export function AnalyzerView({
                     </CardContent>
                 </Card>
 
-                <Card className="border-none shadow-2xl bg-slate-950/90 backdrop-blur-xl overflow-hidden relative flex flex-col p-6 h-full min-h-[380px]">
-                    <div className="absolute top-0 left-0 w-full h-[1px] bg-gradient-to-r from-transparent via-cyan-400 to-transparent opacity-30" />
-                    <CardHeader className="text-center pb-0 px-0">
-                        <CardTitle className="text-[10px] font-black uppercase tracking-[0.5em] text-cyan-400/80">HUD DISTRIBUTION</CardTitle>
-                    </CardHeader>
-                    
-                    <div className="flex-1 relative flex items-center justify-center py-4">
-                        <ChartContainer config={{}} className="w-full aspect-square max-w-[200px]">
-                            <PieChart>
-                                <Pie
-                                    data={activeChartData}
-                                    dataKey="value"
-                                    nameKey="name"
-                                    cx="50%"
-                                    cy="50%"
-                                    innerRadius={55}
-                                    outerRadius={75}
-                                    paddingAngle={4}
-                                    stroke="none"
-                                >
-                                    {activeChartData.map((entry, index) => (
-                                        <Cell 
-                                            key={`cell-${index}`} 
-                                            fill={entry.color} 
-                                            className="hover:opacity-80 transition-opacity drop-shadow-[0_0_8px_rgba(var(--primary),0.5)]" 
-                                        />
-                                    ))}
-                                </Pie>
-                                <Tooltip content={() => null} />
-                            </PieChart>
-                        </ChartContainer>
+                <div className="space-y-12 h-full flex flex-col">
+                    <Card className="border-none shadow-[0_40px_120px_rgba(0,0,0,0.8)] bg-slate-950/90 backdrop-blur-[80px] overflow-hidden relative flex flex-col p-10 h-full rounded-[4rem]">
+                        <div className="absolute top-0 left-0 w-full h-[1px] bg-gradient-to-r from-transparent via-cyan-400 to-transparent" />
+                        <CardHeader className="text-center pb-8 px-0">
+                            <CardTitle className="text-[12px] font-black uppercase tracking-[0.8em] text-cyan-400">ANALYSIS HUD</CardTitle>
+                        </CardHeader>
                         
-                        <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
-                            <Activity className="h-5 w-5 text-cyan-400/40 mb-1 animate-pulse" />
-                            <span className="text-3xl font-black tracking-tighter tabular-nums text-white">
-                                {activeChartData[0]?.value.toFixed(0)}
-                                <span className="text-sm opacity-40 ml-0.5">%</span>
-                            </span>
-                            <span className="text-[8px] font-black uppercase tracking-widest text-muted-foreground/60">{activeChartData[0]?.name} FLOW</span>
-                        </div>
-                    </div>
-
-                    <div className="grid grid-cols-2 gap-3 mt-auto">
-                         {activeChartData.map((data, idx) => (
-                            <div key={idx} className="text-center p-3 rounded-2xl bg-white/5 border border-white/5">
-                                <p className="text-[8px] font-black uppercase tracking-widest opacity-40 mb-1">{data.name}</p>
-                                <p className="text-lg font-black tabular-nums" style={{ color: data.color }}>{data.value.toFixed(1)}%</p>
+                        <div className="flex-1 relative flex items-center justify-center py-6">
+                            <ChartContainer config={{}} className="w-full aspect-square max-w-[240px]">
+                                <PieChart>
+                                    <Pie
+                                        data={activeChartData}
+                                        dataKey="value"
+                                        nameKey="name"
+                                        cx="50%"
+                                        cy="50%"
+                                        innerRadius={70}
+                                        outerRadius={95}
+                                        paddingAngle={6}
+                                        stroke="none"
+                                    >
+                                        {activeChartData.map((entry, index) => (
+                                            <Cell 
+                                                key={`cell-${index}`} 
+                                                fill={entry.color} 
+                                                className="hover:opacity-80 transition-opacity drop-shadow-[0_0_15px_rgba(255,255,255,0.1)]" 
+                                            />
+                                        ))}
+                                    </Pie>
+                                    <Tooltip content={() => null} />
+                                </PieChart>
+                            </ChartContainer>
+                            
+                            <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
+                                <div className="p-3 bg-cyan-400/10 rounded-full mb-3 shadow-[0_0_30px_rgba(6,182,212,0.2)]">
+                                    <Activity className="h-6 w-6 text-cyan-400 animate-pulse" />
+                                </div>
+                                <span className="text-5xl font-black tracking-tighter tabular-nums text-white drop-shadow-[0_0_15px_rgba(255,255,255,0.3)]">
+                                    {activeChartData[0]?.value.toFixed(0)}
+                                    <span className="text-xl opacity-40 ml-1">%</span>
+                                </span>
+                                <span className="text-[10px] font-black uppercase tracking-[0.5em] text-muted-foreground/60 mt-2">{activeChartData[0]?.name} VECTOR</span>
                             </div>
-                        ))}
-                    </div>
-                </Card>
+                        </div>
+
+                        <div className="grid grid-cols-2 gap-6 mt-auto">
+                            {activeChartData.map((data, idx) => (
+                                <div key={idx} className="text-center p-6 rounded-[2rem] bg-black/40 border border-white/5 group transition-all hover:bg-black/60 shadow-xl">
+                                    <p className="text-[10px] font-black uppercase tracking-[0.3em] opacity-40 mb-3 group-hover:opacity-100 transition-opacity" style={{ color: data.color }}>{data.name}</p>
+                                    <p className="text-3xl font-black tabular-nums" style={{ color: data.color }}>{data.value.toFixed(1)}%</p>
+                                </div>
+                            ))}
+                        </div>
+                    </Card>
+
+                    {patternIntelligence.repeat !== null && (
+                         <Card className="border-none bg-emerald-500/10 border border-emerald-500/20 p-8 rounded-[3rem] flex items-center justify-between shadow-[0_20px_60px_rgba(16,185,129,0.2)] animate-pulse">
+                            <div className="flex items-center gap-6">
+                                <div className="p-4 bg-emerald-500/20 rounded-[1.5rem]">
+                                    <Cpu className="h-8 w-8 text-emerald-400" />
+                                </div>
+                                <div>
+                                    <p className="text-[10px] font-black text-emerald-400 uppercase tracking-widest">PATTERN ANOMALY DETECTED</p>
+                                    <p className="text-2xl font-black text-white">REPETITION AT {patternIntelligence.repeat}</p>
+                                </div>
+                            </div>
+                            <Badge className="bg-emerald-500 text-white font-black px-6 py-2 rounded-xl text-[12px] uppercase">INTENSE</Badge>
+                         </Card>
+                    )}
+                </div>
             </div>
 
             {tradeType === 'matches-differs' && (
-                <Card className="border-none shadow-2xl bg-slate-900/40 backdrop-blur-xl p-8 rounded-3xl">
-                    <div className="flex items-center gap-3 mb-6">
-                        <Hash className="h-5 w-5 text-primary" />
-                        <p className="text-xs font-black uppercase tracking-[0.2em]">Select Digit Target</p>
+                <Card className="border-none shadow-[0_40px_100px_rgba(0,0,0,0.8)] bg-slate-900/40 backdrop-blur-[60px] p-12 rounded-[4rem] relative overflow-hidden group">
+                    <div className="absolute top-0 left-0 w-2 h-full bg-emerald-500/40 group-hover:bg-emerald-500 transition-colors" />
+                    <div className="flex items-center gap-6 mb-10">
+                        <div className="p-4 bg-emerald-500/10 rounded-full">
+                            <Hash className="h-6 w-6 text-emerald-400" />
+                        </div>
+                        <p className="text-[14px] font-black uppercase tracking-[0.6em] text-white">SELECT TARGET DIGIT VECTOR</p>
                     </div>
-                    <div className="grid grid-cols-5 sm:grid-cols-10 gap-3">
+                    <div className="grid grid-cols-5 sm:grid-cols-10 gap-6">
                         {Array.from({ length: 10 }, (_, i) => (
                             <Button
                                 key={i}
                                 variant={matchesDigit === i ? 'default' : 'outline'}
                                 className={cn(
-                                    'h-14 rounded-xl text-xl font-black transition-all duration-300',
-                                    matchesDigit === i ? 'bg-emerald-500 text-white shadow-xl shadow-emerald-500/30 scale-110' : 'bg-background/40 border-white/5 hover:bg-white/10'
+                                    'h-20 rounded-[2rem] text-3xl font-black transition-all duration-500 relative overflow-hidden',
+                                    matchesDigit === i 
+                                        ? 'bg-emerald-500 text-white shadow-[0_20px_50px_rgba(16,185,129,0.4)] scale-110 z-10 border-none' 
+                                        : 'bg-black/40 border-white/5 hover:bg-white/10 hover:border-emerald-500/30'
                                 )}
                                 onClick={() => setMatchesDigit(i)}
                             >
+                                {matchesDigit === i && <div className="absolute inset-0 bg-white/20 animate-pulse" />}
                                 {i}
                             </Button>
                         ))}
@@ -324,22 +372,28 @@ export function AnalyzerView({
             )}
 
             {tradeType === 'over-under' && (
-                <Card className="border-none shadow-2xl bg-slate-900/40 backdrop-blur-xl p-8 rounded-3xl">
-                     <div className="flex items-center gap-3 mb-6">
-                        <BarChartHorizontal className="h-5 w-5 text-cyan-400" />
-                        <p className="text-xs font-black uppercase tracking-[0.2em]">Select Barrier Level</p>
+                <Card className="border-none shadow-[0_40px_100px_rgba(0,0,0,0.8)] bg-slate-900/40 backdrop-blur-[60px] p-12 rounded-[4rem] relative overflow-hidden group">
+                     <div className="absolute top-0 right-0 w-2 h-full bg-cyan-500/40 group-hover:bg-cyan-500 transition-colors" />
+                     <div className="flex items-center gap-6 mb-10">
+                        <div className="p-4 bg-cyan-500/10 rounded-full">
+                            <BarChartHorizontal className="h-6 w-6 text-cyan-400" />
+                        </div>
+                        <p className="text-[14px] font-black uppercase tracking-[0.6em] text-white">SELECT BARRIER PIVOT LEVEL</p>
                     </div>
-                    <div className="grid grid-cols-5 sm:grid-cols-10 gap-3">
+                    <div className="grid grid-cols-5 sm:grid-cols-10 gap-6">
                         {Array.from({ length: 10 }, (_, i) => (
                             <Button
                                 key={i}
                                 variant={overUnderDigit === i ? 'default' : 'outline'}
                                 className={cn(
-                                    'h-14 rounded-xl text-xl font-black transition-all duration-300',
-                                    overUnderDigit === i ? 'bg-cyan-500 text-white shadow-xl shadow-cyan-500/30 scale-110' : 'bg-background/40 border-white/5 hover:bg-white/10'
+                                    'h-20 rounded-[2rem] text-3xl font-black transition-all duration-500 relative overflow-hidden',
+                                    overUnderDigit === i 
+                                        ? 'bg-cyan-500 text-white shadow-[0_20px_50px_rgba(6,182,212,0.4)] scale-110 z-10 border-none' 
+                                        : 'bg-black/40 border-white/5 hover:bg-white/10 hover:border-cyan-500/30'
                                 )}
                                 onClick={() => setOverUnderDigit(i)}
                             >
+                                {overUnderDigit === i && <div className="absolute inset-0 bg-white/20 animate-pulse" />}
                                 {i}
                             </Button>
                         ))}
