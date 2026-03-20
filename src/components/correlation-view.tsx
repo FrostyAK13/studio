@@ -20,12 +20,14 @@ export const DigitFrequencyCircles = ({
     ticks, 
     selectedDigit, 
     onDigitSelect,
-    selectedMarket
+    selectedMarket,
+    onMarketChange
 }: { 
     ticks: number[], 
     selectedDigit: number | null, 
     onDigitSelect: (d: number) => void,
-    selectedMarket: string
+    selectedMarket: string,
+    onMarketChange?: (market: string) => void
 }) => {
     const marketName = React.useMemo(() => {
         return syntheticIndices.find(m => m.id === selectedMarket)?.name || selectedMarket;
@@ -67,7 +69,7 @@ export const DigitFrequencyCircles = ({
         isLast: boolean,
         isSelected: boolean 
     }) => {
-        const radius = 22; // Reduced for mobile
+        const radius = 22;
         const smRadius = 28;
         const circumference = 2 * Math.PI * smRadius;
         const offset = circumference - (Math.min(percentage, 25) / 25) * circumference;
@@ -98,7 +100,7 @@ export const DigitFrequencyCircles = ({
                             stroke="currentColor"
                             strokeWidth="5"
                             fill="transparent"
-                            strokeDasharray="140%" // Approximated for scaling
+                            strokeDasharray="140%" 
                             strokeDashoffset={`${140 - (Math.min(percentage, 25) / 25) * 140}%`}
                             strokeLinecap="round"
                             className={cn("transition-all duration-700 ease-out", colorClass)}
@@ -284,9 +286,9 @@ export function CorrelationView({
                         <SelectTrigger id="circles-market-select" className="mt-2 h-10 sm:h-11 text-sm sm:text-base font-bold bg-background/50 border-white/5 shadow-inner rounded-xl">
                             <SelectValue placeholder="Select Index" />
                         </SelectTrigger>
-                        <SelectContent className="rounded-xl border-white/10">
+                        <SelectContent side="bottom" position="popper" sideOffset={4} className="rounded-xl border-white/10 bg-slate-950 text-white z-[100]">
                             {syntheticIndices.map((index) => (
-                            <SelectItem key={index.id} value={index.id}>
+                            <SelectItem key={index.id} value={index.id} className="focus:bg-primary/20 focus:text-white cursor-pointer py-2">
                                 {index.name}
                             </SelectItem>
                             ))}
@@ -300,6 +302,7 @@ export function CorrelationView({
                 selectedDigit={selectedDigit}
                 onDigitSelect={setSelectedDigit}
                 selectedMarket={selectedMarket}
+                onMarketChange={onMarketChange}
             />
 
             {selectedDigit !== null && (

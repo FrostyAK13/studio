@@ -155,9 +155,9 @@ export function InsightView({ price, decimalPlaces, lastDigitTicks, selectedMark
                                 <SelectTrigger className="h-12 bg-background/40 border-white/5 rounded-xl font-bold">
                                     <SelectValue placeholder="Select Index" />
                                 </SelectTrigger>
-                                <SelectContent className="rounded-xl border-white/10">
+                                <SelectContent side="bottom" position="popper" sideOffset={4} className="rounded-xl border-white/10 bg-slate-950 text-white z-[100]">
                                     {syntheticIndices.map((index) => (
-                                    <SelectItem key={index.id} value={index.id}>
+                                    <SelectItem key={index.id} value={index.id} className="focus:bg-primary/20 focus:text-white cursor-pointer py-2">
                                         {index.name}
                                     </SelectItem>
                                     ))}
@@ -175,6 +175,7 @@ export function InsightView({ price, decimalPlaces, lastDigitTicks, selectedMark
                     <DigitFrequencyCircles 
                         ticks={lastDigitTicks} 
                         selectedDigit={selectedDigit}
+                        onMarketChange={onMarketChange}
                         onDigitSelect={setSelectedDigit}
                         selectedMarket={selectedMarket}
                     />

@@ -127,9 +127,9 @@ export function AnalyzerView({
                             <SelectTrigger className="h-10 sm:h-12 bg-background/40 border-white/5 rounded-xl font-bold">
                                 <SelectValue placeholder="Select Index" />
                             </SelectTrigger>
-                            <SelectContent className="rounded-xl border-white/10">
+                            <SelectContent side="bottom" position="popper" sideOffset={4} className="rounded-xl border-white/10 bg-slate-950 text-white z-[100]">
                                 {syntheticIndices.map((index) => (
-                                <SelectItem key={index.id} value={index.id}>
+                                <SelectItem key={index.id} value={index.id} className="focus:bg-primary/20 focus:text-white cursor-pointer py-2">
                                     {index.name}
                                 </SelectItem>
                                 ))}
@@ -142,11 +142,11 @@ export function AnalyzerView({
                              <SelectTrigger className="h-10 sm:h-12 bg-background/40 border-white/5 rounded-xl font-bold">
                                 <SelectValue placeholder="Select Trade Type" />
                             </SelectTrigger>
-                            <SelectContent className="rounded-xl border-white/10">
-                                <SelectItem value="even-odd">Even / Odd</SelectItem>
-                                <SelectItem value="matches-differs">Matches / Differs</SelectItem>
-                                <SelectItem value="over-under">Over / Under</SelectItem>
-                                <SelectItem value="rise-fall">Rise / Fall</SelectItem>
+                            <SelectContent side="bottom" position="popper" sideOffset={4} className="rounded-xl border-white/10 bg-slate-950 text-white z-[100]">
+                                <SelectItem value="even-odd" className="focus:bg-primary/20 focus:text-white cursor-pointer py-2">Even / Odd</SelectItem>
+                                <SelectItem value="matches-differs" className="focus:bg-primary/20 focus:text-white cursor-pointer py-2">Matches / Differs</SelectItem>
+                                <SelectItem value="over-under" className="focus:bg-primary/20 focus:text-white cursor-pointer py-2">Over / Under</SelectItem>
+                                <SelectItem value="rise-fall" className="focus:bg-primary/20 focus:text-white cursor-pointer py-2">Rise / Fall</SelectItem>
                             </SelectContent>
                         </Select>
                     </div>
@@ -262,8 +262,8 @@ export function AnalyzerView({
                     <div className="grid grid-cols-2 gap-2 sm:gap-3 mt-auto">
                          {activeChartData.map((data, idx) => (
                             <div key={idx} className="text-center p-2 sm:p-3 rounded-xl sm:rounded-2xl bg-white/5 border border-white/5">
-                                <p className="text-[8px] sm:text-[9px] font-black uppercase tracking-widest opacity-40 mb-1">{data.name}</p>
-                                <p className="text-lg sm:text-xl font-black tabular-nums" style={{ color: data.color }}>{data.value.toFixed(1)}%</p>
+                                <p className="text-[8px] font-black uppercase tracking-widest opacity-40 mb-1">{data.name}</p>
+                                <p className="text-lg font-black tabular-nums" style={{ color: data.color }}>{data.value.toFixed(1)}%</p>
                             </div>
                         ))}
                     </div>
