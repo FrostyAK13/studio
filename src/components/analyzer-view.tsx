@@ -194,10 +194,10 @@ export function AnalyzerView({
                                 <SelectValue placeholder="Select Protocol" />
                             </SelectTrigger>
                             <SelectContent side="bottom" position="popper" sideOffset={8} className="w-[var(--radix-select-trigger-width)] max-h-[300px] rounded-[1rem] sm:rounded-[1.5rem] border-white/10 bg-slate-950 text-white z-[100] shadow-2xl">
-                                <SelectItem value="even-odd" className="focus:bg-primary/20 focus:text-white cursor-pointer py-3 font-black text-xs sm:text-base">Even / Odd Matrix</SelectItem>
-                                <SelectItem value="matches-differs" className="focus:bg-primary/20 focus:text-white cursor-pointer py-3 font-black text-xs sm:text-base">Matches / Differs Matrix</SelectItem>
-                                <SelectItem value="over-under" className="focus:bg-primary/20 focus:text-white cursor-pointer py-3 font-black text-xs sm:text-base">Over / Under Matrix</SelectItem>
-                                <SelectItem value="rise-fall" className="focus:bg-primary/20 focus:text-white cursor-pointer py-3 font-black text-xs sm:text-base">Rise / Fall Matrix</SelectItem>
+                                <SelectItem value="even-odd" className="focus:bg-primary/20 focus:text-white cursor-pointer py-3 font-black text-xs sm:text-base">Even / Odd</SelectItem>
+                                <SelectItem value="matches-differs" className="focus:bg-primary/20 focus:text-white cursor-pointer py-3 font-black text-xs sm:text-base">Matches / Differs</SelectItem>
+                                <SelectItem value="over-under" className="focus:bg-primary/20 focus:text-white cursor-pointer py-3 font-black text-xs sm:text-base">Over / Under</SelectItem>
+                                <SelectItem value="rise-fall" className="focus:bg-primary/20 focus:text-white cursor-pointer py-3 font-black text-xs sm:text-base">Rise / Fall</SelectItem>
                             </SelectContent>
                         </Select>
                     </div>
