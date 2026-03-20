@@ -1,3 +1,4 @@
+
 'use client';
 
 import * as React from 'react';
@@ -8,7 +9,7 @@ import { syntheticIndices } from '@/lib/mock-data';
 import { cn } from '@/lib/utils';
 import { Progress } from '@/components/ui/progress';
 import { Badge } from '@/components/ui/badge';
-import { Info, Target, Zap, Activity, Share2, TrendingUp, Cpu, Orbit, ArrowUpRight, ArrowDownLeft, Fingerprint, Network, Sparkles, Crosshair, ArrowRight, ZapOff } from 'lucide-react';
+import { Info, Target, Zap, Activity, Share2, TrendingUp, Cpu, Orbit, ArrowUpRight, ArrowDownLeft, Fingerprint, Network, Sparkles, Crosshair, ArrowRight, ZapOff, Radio } from 'lucide-react';
 
 interface CorrelationViewProps {
     selectedMarket: string;
@@ -165,11 +166,13 @@ export const DigitFrequencyCircles = ({
 };
 
 const DigitNexusMatrix = ({ digit, ticks }: { digit: number, ticks: number[] }) => {
+    const isTriggerActive = ticks.length > 0 && ticks[0] === digit;
+
     const nexusAnalysis = React.useMemo(() => {
         const followingDigits = Array(10).fill(0);
         let totalFollowers = 0;
         
-        // Reverse ticks to get chronological order for relationship analysis
+        // Chronological order for relationship analysis
         const chronoTicks = [...ticks].reverse();
         
         for (let i = 0; i < chronoTicks.length - 1; i++) {
@@ -186,7 +189,6 @@ const DigitNexusMatrix = ({ digit, ticks }: { digit: number, ticks: number[] }) 
             probability: (count / total) * 100
         })).sort((a, b) => b.probability - a.probability);
 
-        // Calculate Over/Under barriers based on what typically follows the selected digit
         const over = results.filter(r => r.digit > 4).reduce((sum, r) => sum + r.probability, 0);
         const under = results.filter(r => r.digit <= 4).reduce((sum, r) => sum + r.probability, 0);
 
@@ -223,20 +225,23 @@ const DigitNexusMatrix = ({ digit, ticks }: { digit: number, ticks: number[] }) 
                             </div>
                             <div className="w-px h-12 bg-white/10" />
                             <div className="text-center">
-                                <p className="text-[12px] font-black text-muted-foreground uppercase tracking-[0.4em] mb-2">RELIABILITY</p>
-                                <p className="text-3xl font-black text-emerald-400 tabular-nums">OPTIMAL</p>
+                                <p className="text-[12px] font-black text-muted-foreground uppercase tracking-[0.4em] mb-2">STATUS</p>
+                                <div className="flex items-center gap-2">
+                                    <div className="h-2 w-2 rounded-full bg-emerald-400 animate-pulse" />
+                                    <p className="text-3xl font-black text-emerald-400 tabular-nums">LIVE</p>
+                                </div>
                             </div>
                         </div>
                     </div>
                 </CardHeader>
                 <CardContent className="px-14 pb-16 space-y-12">
                     <div className="grid grid-cols-1 xl:grid-cols-3 gap-12">
-                        {/* SUCCESSION GATES (Matches/Differs context - what comes next) */}
+                        {/* SUCCESSION GATES */}
                         <div className="xl:col-span-2 space-y-10 p-12 rounded-[3.5rem] bg-black/50 border border-white/5 relative overflow-hidden group shadow-2xl">
                             <div className="absolute top-0 left-0 w-2 h-full bg-emerald-500/40 group-hover:bg-emerald-500 transition-colors" />
                             <div className="flex items-center justify-between border-b border-white/10 pb-8">
                                 <h4 className="text-[14px] font-black uppercase tracking-[0.6em] text-muted-foreground flex items-center gap-6">
-                                    <Cpu className="h-8 w-8 text-emerald-400" /> RECURSIVE SUCCESSion GATES
+                                    <Cpu className="h-8 w-8 text-emerald-400" /> RECURSIVE SUCCESSION GATES
                                 </h4>
                                 <Badge className="bg-emerald-500/10 text-emerald-400 border-none px-6 py-2 text-[12px] font-black uppercase tracking-widest">NEXT-DIGIT AFFINITY</Badge>
                             </div>
@@ -295,12 +300,20 @@ const DigitNexusMatrix = ({ digit, ticks }: { digit: number, ticks: number[] }) 
                     {/* STRATEGIC ENTRY SIGNAL & BARRIER SYMMETRY */}
                     <div className="grid grid-cols-1 xl:grid-cols-3 gap-12 pt-4">
                         {/* POSSIBLE ENTRY POINT CARD */}
-                        <div className="p-12 rounded-[3.5rem] bg-emerald-500/10 border-2 border-emerald-500/30 shadow-[0_0_80px_rgba(16,185,129,0.2)] flex flex-col justify-between items-center text-center relative overflow-hidden group">
-                             <div className="absolute top-0 left-0 w-full h-2 bg-emerald-500 animate-pulse" />
+                        <div className={cn(
+                            "p-12 rounded-[3.5rem] border-2 transition-all duration-500 flex flex-col justify-between items-center text-center relative overflow-hidden group",
+                            isTriggerActive 
+                                ? "bg-emerald-500/20 border-emerald-400 shadow-[0_0_100px_rgba(16,185,129,0.4)] scale-105" 
+                                : "bg-emerald-500/5 border-emerald-500/20 shadow-[0_0_80px_rgba(16,185,129,0.1)]"
+                        )}>
+                             {isTriggerActive && <div className="absolute top-0 left-0 w-full h-2 bg-emerald-500 animate-pulse shadow-[0_0_20px_emerald]" />}
                              <div className="space-y-4">
                                 <div className="flex items-center justify-center gap-3 mb-2">
-                                    <Zap className="h-5 w-5 text-emerald-400 fill-emerald-400" />
-                                    <p className="text-[12px] font-black uppercase tracking-[0.5em] text-emerald-400">OPTIMAL ENTRY SIGNAL</p>
+                                    <Zap className={cn("h-5 w-5", isTriggerActive ? "text-emerald-400 fill-emerald-400" : "text-emerald-500/40")} />
+                                    <p className={cn(
+                                        "text-[12px] font-black uppercase tracking-[0.5em]",
+                                        isTriggerActive ? "text-emerald-400 animate-bounce" : "text-emerald-500/60"
+                                    )}>{isTriggerActive ? 'TRIGGER ACTIVE' : 'WAITING FOR SIGNAL'}</p>
                                 </div>
                                 <h5 className="text-xl font-black text-white">RECURSIVE MATCH PATTERN</h5>
                              </div>
@@ -308,15 +321,25 @@ const DigitNexusMatrix = ({ digit, ticks }: { digit: number, ticks: number[] }) 
                              <div className="flex items-center gap-8 my-10">
                                 <div className="flex flex-col items-center">
                                     <span className="text-[10px] font-bold text-muted-foreground uppercase mb-4 tracking-widest">TRIGGER</span>
-                                    <div className="w-24 h-24 rounded-3xl bg-white/5 border border-white/10 flex items-center justify-center text-5xl font-black text-primary shadow-[inset_0_2px_10px_rgba(0,0,0,0.5)]">{digit}</div>
+                                    <div className={cn(
+                                        "w-24 h-24 rounded-3xl bg-black/40 border flex items-center justify-center text-5xl font-black transition-all",
+                                        isTriggerActive ? "border-emerald-400 text-emerald-400 shadow-[0_0_30px_rgba(16,185,129,0.6)]" : "border-white/10 text-primary"
+                                    )}>
+                                        {digit}
+                                    </div>
                                 </div>
                                 <div className="h-0.5 w-16 bg-white/10 relative">
                                      <div className="absolute -right-1 -top-1.5 w-3 h-3 border-t-2 border-r-2 border-white/40 rotate-45" />
-                                     <ArrowRight className="absolute left-1/2 -translate-x-1/2 -top-3 h-6 w-6 text-emerald-400/50" />
+                                     <ArrowRight className={cn("absolute left-1/2 -translate-x-1/2 -top-3 h-6 w-6 transition-colors", isTriggerActive ? "text-emerald-400" : "text-emerald-400/20")} />
                                 </div>
                                 <div className="flex flex-col items-center">
                                     <span className="text-[10px] font-bold text-muted-foreground uppercase mb-4 tracking-widest">TARGET MATCH</span>
-                                    <div className="w-24 h-24 rounded-3xl bg-emerald-500/20 border-2 border-emerald-500/40 flex items-center justify-center text-6xl font-black text-emerald-400 shadow-[0_0_40px_rgba(16,185,129,0.5)] animate-in zoom-in-75 duration-500">{nexusAnalysis.hottestNext.digit}</div>
+                                    <div className={cn(
+                                        "w-24 h-24 rounded-3xl border-2 flex items-center justify-center text-6xl font-black transition-all",
+                                        isTriggerActive ? "bg-emerald-500/40 border-emerald-400 text-white shadow-[0_0_50px_emerald]" : "bg-emerald-500/20 border-emerald-500/40 text-emerald-400"
+                                    )}>
+                                        {nexusAnalysis.hottestNext.digit}
+                                    </div>
                                 </div>
                              </div>
 
@@ -325,7 +348,7 @@ const DigitNexusMatrix = ({ digit, ticks }: { digit: number, ticks: number[] }) 
                              </div>
                         </div>
 
-                        {/* BARRIER SYMMETRY (Over/Under context for what follows the selected digit) */}
+                        {/* BARRIER SYMMETRY */}
                         <div className="p-12 rounded-[3.5rem] bg-black/40 border border-white/5 relative overflow-hidden group shadow-2xl">
                              <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-cyan-500 to-transparent" />
                              <h4 className="text-[14px] font-black uppercase tracking-[0.6em] text-muted-foreground mb-10 flex items-center gap-6">
