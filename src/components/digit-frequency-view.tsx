@@ -11,6 +11,7 @@ import { Badge } from '@/components/ui/badge';
 import { RiseFallAnalysis } from './rise-fall-analysis';
 import { Target, Zap, List, Hash, Activity, Flame, Timer, BarChartHorizontal, Sparkles, TrendingUp, TrendingDown } from 'lucide-react';
 import { Progress } from '@/components/ui/progress';
+import { motion, AnimatePresence } from 'framer-motion';
 
 interface DigitFrequencyViewProps {
     price: number;
@@ -24,10 +25,11 @@ interface DigitFrequencyViewProps {
     decimalPlaces: number;
 }
 
-const DigitHeatCard = ({ digit, ticks, isSelected, onSelect }: { 
+const DigitHeatCard = ({ digit, ticks, isSelected, isLatest, onSelect }: { 
     digit: number, 
     ticks: number[], 
     isSelected: boolean, 
+    isLatest: boolean,
     onSelect: (d: number) => void 
 }) => {
     const stats = React.useMemo(() => {
@@ -75,62 +77,81 @@ const DigitHeatCard = ({ digit, ticks, isSelected, onSelect }: {
         <div 
             onClick={() => onSelect(digit)}
             className={cn(
-                "relative group cursor-pointer transition-all duration-500 rounded-[1.25rem] sm:rounded-[2rem] border p-3 sm:p-6 flex flex-col justify-between h-40 sm:h-52 md:h-64 overflow-hidden backdrop-blur-xl",
+                "relative group cursor-pointer transition-all duration-500 rounded-[1rem] sm:rounded-[2rem] border p-3 sm:p-5 flex flex-col justify-between h-40 sm:h-64 overflow-hidden backdrop-blur-xl",
                 stats.bgClass,
                 stats.glowClass || "border-white/5",
                 isSelected ? "ring-2 ring-primary scale-105 z-20 shadow-[0_0_40px_rgba(var(--primary),0.2)] bg-primary/20" : "hover:scale-[1.02] hover:bg-white/10"
             )}
         >
-            <div className="absolute top-0 right-0 p-2 sm:p-5 opacity-15 group-hover:opacity-30 transition-opacity">
-                <Hash className={cn("w-12 h-12 sm:w-20 sm:h-20 md:w-28 md:h-28", stats.colorClass)} />
+            {/* Live Cursor Scanner Overlay */}
+            {isLatest && (
+                <motion.div 
+                    layoutId="digit-scanner-cursor"
+                    className="absolute inset-0 z-30 pointer-events-none"
+                    initial={false}
+                    transition={{ type: "spring", stiffness: 300, damping: 30 }}
+                >
+                    <div className="absolute inset-0 border-2 sm:border-4 border-cyan-400/60 rounded-[inherit] shadow-[0_0_30px_rgba(34,211,238,0.4)]" />
+                    <div className="absolute inset-0 bg-cyan-400/5" />
+                    <motion.div 
+                        initial={{ top: "-100%" }}
+                        animate={{ top: "200%" }}
+                        transition={{ repeat: Infinity, duration: 1.5, ease: "linear" }}
+                        className="absolute left-0 w-full h-1/2 bg-gradient-to-b from-transparent via-cyan-400/20 to-transparent"
+                    />
+                </motion.div>
+            )}
+
+            <div className="absolute top-0 right-0 p-2 sm:p-4 opacity-30 group-hover:opacity-50 transition-opacity">
+                <Hash className={cn("w-12 h-12 sm:w-24 sm:h-24", stats.colorClass)} />
             </div>
 
             <div className="flex justify-between items-start relative z-10">
                 <div className="relative">
                     <span className={cn(
-                        "text-4xl sm:text-6xl md:text-8xl font-black tracking-tighter leading-none select-none drop-shadow-md transition-all duration-500",
-                        isSelected ? "text-foreground scale-110" : stats.colorClass
+                        "text-5xl sm:text-7xl md:text-8xl font-black tracking-tighter leading-none select-none drop-shadow-2xl transition-all duration-500",
+                        isSelected ? "text-white scale-110" : stats.colorClass
                     )}>
                         {digit}
                     </span>
                     {Math.abs(stats.velocity) > 2 && (
                         <div className={cn(
-                            "absolute -top-1 -right-6 sm:-right-10 flex items-center gap-0.5 font-black text-[7px] sm:text-[9px] uppercase tracking-widest px-2 py-0.5 rounded-full shadow-lg z-20",
+                            "absolute -top-1 -right-6 sm:-right-12 flex items-center gap-0.5 font-black text-[7px] sm:text-[10px] uppercase tracking-widest px-2 py-0.5 rounded-full shadow-lg z-20",
                             stats.velocity > 0 ? "bg-emerald-500 text-white" : "bg-rose-500 text-white"
                         )}>
-                            {stats.velocity > 0 ? <TrendingUp size={9} /> : <TrendingDown size={9} />}
-                            {stats.velocity > 0 ? 'HT' : 'CL'}
+                            {stats.velocity > 0 ? <TrendingUp size={10} /> : <TrendingDown size={10} />}
+                            {stats.velocity > 0 ? 'HEAT' : 'COLD'}
                         </div>
                     )}
                 </div>
                 <div className="text-right">
                     <Badge className={cn(
-                        "text-[7px] sm:text-[10px] font-black tracking-widest mb-1 sm:mb-2 px-2 sm:px-3 py-0.5 border-none",
+                        "text-[7px] sm:text-[11px] font-black tracking-widest mb-1 sm:mb-3 px-2 sm:px-4 py-0.5 border-none",
                         stats.colorClass.replace('text-', 'bg-').replace('400', '500').replace('500', '600') + "/20",
                         stats.colorClass
                     )}>
                         {stats.rating}
                     </Badge>
-                    <p className={cn("text-lg sm:text-2xl md:text-3xl font-black tabular-nums tracking-tighter", stats.colorClass)}>
+                    <p className={cn("text-lg sm:text-3xl font-black tabular-nums tracking-tighter", stats.colorClass)}>
                         {stats.freq.toFixed(1)}%
                     </p>
                 </div>
             </div>
 
-            <div className="space-y-1 sm:space-y-2 relative z-10">
+            <div className="space-y-1 sm:space-y-3 relative z-10">
                 <div className="flex items-center gap-1.5 opacity-60">
-                    <Timer className="h-3 w-3 sm:h-4 sm:w-4" />
-                    <span className="text-[7px] sm:text-[10px] font-black uppercase tracking-widest">TSL GAP</span>
+                    <Timer className="h-3 w-3 sm:h-5 sm:w-5" />
+                    <span className="text-[7px] sm:text-[11px] font-black uppercase tracking-widest text-foreground">TICKS SINCE LAST</span>
                 </div>
-                <div className="flex items-baseline gap-1.5 sm:gap-2">
-                    <span className="text-3xl sm:text-4xl md:text-5xl font-black text-foreground tabular-nums tracking-tighter drop-shadow-sm">
+                <div className="flex items-baseline gap-1.5 sm:gap-3">
+                    <span className="text-3xl sm:text-5xl md:text-6xl font-black text-foreground tabular-nums tracking-tighter drop-shadow-xl">
                         {stats.tsl}
                     </span>
-                    <span className="text-[8px] sm:text-[12px] font-black text-muted-foreground uppercase tracking-widest opacity-80">TICKS</span>
+                    <span className="text-[8px] sm:text-[14px] font-black text-muted-foreground uppercase tracking-widest opacity-80">STREAK</span>
                 </div>
             </div>
 
-            <div className="absolute bottom-0 left-0 w-full h-1.5 bg-black/10 overflow-hidden">
+            <div className="absolute bottom-0 left-0 w-full h-2 bg-black/20 overflow-hidden">
                 <div 
                     className={cn("h-full transition-all duration-1000 ease-out", stats.colorClass.replace('text-', 'bg-'))} 
                     style={{ 
@@ -250,6 +271,8 @@ export function DigitFrequencyView({
 }: DigitFrequencyViewProps) {
     const [selectedDigit, setSelectedDigit] = React.useState<number | null>(null);
 
+    const latestDigit = lastDigitTicks.length > 0 ? lastDigitTicks[0] : null;
+
     const marketDirectionAnalysis = React.useMemo(() => {
         const ticks = lastDigitTicks;
         if (ticks.length < 2) return null;
@@ -336,6 +359,7 @@ export function DigitFrequencyView({
                             digit={i} 
                             ticks={lastDigitTicks} 
                             isSelected={selectedDigit === i} 
+                            isLatest={latestDigit === i}
                             onSelect={setSelectedDigit} 
                         />
                     ))}
