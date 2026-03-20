@@ -75,62 +75,62 @@ const DigitHeatCard = ({ digit, ticks, isSelected, onSelect }: {
         <div 
             onClick={() => onSelect(digit)}
             className={cn(
-                "relative group cursor-pointer transition-all duration-500 rounded-[1.25rem] sm:rounded-[2rem] border p-3 sm:p-5 flex flex-col justify-between h-32 sm:h-44 md:h-56 overflow-hidden backdrop-blur-xl",
+                "relative group cursor-pointer transition-all duration-500 rounded-[1.25rem] sm:rounded-[2rem] border p-3 sm:p-6 flex flex-col justify-between h-40 sm:h-52 md:h-64 overflow-hidden backdrop-blur-xl",
                 stats.bgClass,
                 stats.glowClass || "border-white/5",
                 isSelected ? "ring-2 ring-primary scale-105 z-20 shadow-[0_0_40px_rgba(var(--primary),0.2)] bg-primary/20" : "hover:scale-[1.02] hover:bg-white/10"
             )}
         >
-            <div className="absolute top-0 right-0 p-2 sm:p-4 opacity-5 group-hover:opacity-10 transition-opacity">
-                <Hash className={cn("w-10 h-10 sm:w-16 sm:h-16", stats.colorClass)} />
+            <div className="absolute top-0 right-0 p-2 sm:p-5 opacity-15 group-hover:opacity-30 transition-opacity">
+                <Hash className={cn("w-12 h-12 sm:w-20 sm:h-20 md:w-28 md:h-28", stats.colorClass)} />
             </div>
 
             <div className="flex justify-between items-start relative z-10">
                 <div className="relative">
                     <span className={cn(
-                        "text-3xl sm:text-4xl md:text-5xl font-black tracking-tighter leading-none select-none drop-shadow-sm transition-all duration-500",
+                        "text-4xl sm:text-6xl md:text-8xl font-black tracking-tighter leading-none select-none drop-shadow-md transition-all duration-500",
                         isSelected ? "text-foreground scale-110" : stats.colorClass
                     )}>
                         {digit}
                     </span>
                     {Math.abs(stats.velocity) > 2 && (
                         <div className={cn(
-                            "absolute -top-1 -right-4 sm:-right-8 flex items-center gap-0.5 font-black text-[6px] sm:text-[8px] uppercase tracking-widest px-1.5 py-0.5 rounded-full shadow-lg",
+                            "absolute -top-1 -right-6 sm:-right-10 flex items-center gap-0.5 font-black text-[7px] sm:text-[9px] uppercase tracking-widest px-2 py-0.5 rounded-full shadow-lg z-20",
                             stats.velocity > 0 ? "bg-emerald-500 text-white" : "bg-rose-500 text-white"
                         )}>
-                            {stats.velocity > 0 ? <TrendingUp size={8} /> : <TrendingDown size={8} />}
+                            {stats.velocity > 0 ? <TrendingUp size={9} /> : <TrendingDown size={9} />}
                             {stats.velocity > 0 ? 'HT' : 'CL'}
                         </div>
                     )}
                 </div>
                 <div className="text-right">
                     <Badge className={cn(
-                        "text-[6px] sm:text-[8px] font-black tracking-widest mb-1 sm:mb-2 px-1.5 sm:px-2 py-0 border-none",
-                        stats.colorClass.replace('text-', 'bg-').replace('400', '500').replace('500', '600') + "/10",
+                        "text-[7px] sm:text-[10px] font-black tracking-widest mb-1 sm:mb-2 px-2 sm:px-3 py-0.5 border-none",
+                        stats.colorClass.replace('text-', 'bg-').replace('400', '500').replace('500', '600') + "/20",
                         stats.colorClass
                     )}>
                         {stats.rating}
                     </Badge>
-                    <p className={cn("text-base sm:text-lg md:text-xl font-black tabular-nums tracking-tighter", stats.colorClass)}>
+                    <p className={cn("text-lg sm:text-2xl md:text-3xl font-black tabular-nums tracking-tighter", stats.colorClass)}>
                         {stats.freq.toFixed(1)}%
                     </p>
                 </div>
             </div>
 
-            <div className="space-y-0.5 sm:space-y-1 relative z-10">
-                <div className="flex items-center gap-1.5 opacity-40">
-                    <Timer className="h-2.5 w-2.5 sm:h-3 sm:w-3" />
-                    <span className="text-[6px] sm:text-[8px] font-black uppercase tracking-widest">TSL GAP</span>
+            <div className="space-y-1 sm:space-y-2 relative z-10">
+                <div className="flex items-center gap-1.5 opacity-60">
+                    <Timer className="h-3 w-3 sm:h-4 sm:w-4" />
+                    <span className="text-[7px] sm:text-[10px] font-black uppercase tracking-widest">TSL GAP</span>
                 </div>
-                <div className="flex items-baseline gap-1 sm:gap-1.5">
-                    <span className="text-xl sm:text-2xl md:text-3xl font-black text-foreground tabular-nums tracking-tighter">
+                <div className="flex items-baseline gap-1.5 sm:gap-2">
+                    <span className="text-3xl sm:text-4xl md:text-5xl font-black text-foreground tabular-nums tracking-tighter drop-shadow-sm">
                         {stats.tsl}
                     </span>
-                    <span className="text-[7px] sm:text-[9px] font-black text-muted-foreground uppercase tracking-widest opacity-60">TICKS</span>
+                    <span className="text-[8px] sm:text-[12px] font-black text-muted-foreground uppercase tracking-widest opacity-80">TICKS</span>
                 </div>
             </div>
 
-            <div className="absolute bottom-0 left-0 w-full h-1 bg-black/5 overflow-hidden">
+            <div className="absolute bottom-0 left-0 w-full h-1.5 bg-black/10 overflow-hidden">
                 <div 
                     className={cn("h-full transition-all duration-1000 ease-out", stats.colorClass.replace('text-', 'bg-'))} 
                     style={{ 
