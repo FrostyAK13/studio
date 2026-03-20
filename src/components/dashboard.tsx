@@ -12,6 +12,7 @@ import { ConnectionStatus } from './connection-status';
 import { BotRunner } from './bot-runner';
 import { Button } from './ui/button';
 import { Bot, PanelRightClose, PanelRightOpen } from 'lucide-react';
+import { cn } from '@/lib/utils';
 
 type ConnectionStatusType = 'connecting' | 'streaming' | 'disconnected';
 
@@ -189,7 +190,7 @@ export function Dashboard() {
                             value={tab}
                             className="flex-shrink-0 px-4 sm:px-8 py-2.5 sm:py-3 rounded-full border border-transparent data-[state=active]:border-primary/20 data-[state=active]:bg-primary/10 data-[state=active]:text-primary data-[state=active]:shadow-[0_0_20px_rgba(var(--primary),0.15)] text-muted-foreground font-black text-[9px] sm:text-[10px] uppercase tracking-[0.1em] sm:tracking-[0.2em] transition-all duration-300 hover:text-foreground hover:bg-muted/50"
                         >
-                            {tab}
+                            {tab.toUpperCase()}
                         </TabsTrigger>
                     ))}
                 </TabsList>
