@@ -8,7 +8,7 @@ import { syntheticIndices } from '@/lib/mock-data';
 import { cn } from '@/lib/utils';
 import { Progress } from '@/components/ui/progress';
 import { Badge } from '@/components/ui/badge';
-import { Info, Target, Zap, Activity, Share2, TrendingUp, Cpu, Orbit, ArrowUpRight, ArrowDownLeft, Fingerprint, Network } from 'lucide-react';
+import { Info, Target, Zap, Activity, Share2, TrendingUp, Cpu, Orbit, ArrowUpRight, ArrowDownLeft, Fingerprint, Network, Sparkles, Crosshair } from 'lucide-react';
 
 interface CorrelationViewProps {
     selectedMarket: string;
@@ -167,6 +167,7 @@ const DigitNexusMatrix = ({ digit, ticks }: { digit: number, ticks: number[] }) 
         const followingDigits = Array(10).fill(0);
         let totalFollowers = 0;
         
+        // Reverse ticks to get chronological order for relationship analysis
         const chronoTicks = [...ticks].reverse();
         
         for (let i = 0; i < chronoTicks.length - 1; i++) {
@@ -183,8 +184,9 @@ const DigitNexusMatrix = ({ digit, ticks }: { digit: number, ticks: number[] }) 
             probability: (count / total) * 100
         })).sort((a, b) => b.probability - a.probability);
 
-        const over = results.filter(r => r.digit > digit).reduce((sum, r) => sum + r.probability, 0);
-        const under = results.filter(r => r.digit < digit).reduce((sum, r) => sum + r.probability, 0);
+        // Calculate Over/Under barriers based on what typically follows the selected digit
+        const over = results.filter(r => r.digit > 4).reduce((sum, r) => sum + r.probability, 0);
+        const under = results.filter(r => r.digit <= 4).reduce((sum, r) => sum + r.probability, 0);
 
         return {
             results,
@@ -227,14 +229,14 @@ const DigitNexusMatrix = ({ digit, ticks }: { digit: number, ticks: number[] }) 
                 </CardHeader>
                 <CardContent className="px-14 pb-16 space-y-12">
                     <div className="grid grid-cols-1 xl:grid-cols-3 gap-12">
-                        {/* THE PREDICTION HUB (Matches/Differs Context) */}
+                        {/* SUCCESSION GATES (Matches/Differs context - what comes next) */}
                         <div className="xl:col-span-2 space-y-10 p-12 rounded-[3.5rem] bg-black/50 border border-white/5 relative overflow-hidden group shadow-2xl">
                             <div className="absolute top-0 left-0 w-2 h-full bg-emerald-500/40 group-hover:bg-emerald-500 transition-colors" />
                             <div className="flex items-center justify-between border-b border-white/10 pb-8">
                                 <h4 className="text-[14px] font-black uppercase tracking-[0.6em] text-muted-foreground flex items-center gap-6">
-                                    <Cpu className="h-8 w-8 text-emerald-400" /> RECURSIVE SUCCESSION GATES
+                                    <Cpu className="h-8 w-8 text-emerald-400" /> RECURSIVE SUCCESSion GATES
                                 </h4>
-                                <Badge className="bg-emerald-500/10 text-emerald-400 border-none px-6 py-2 text-[12px] font-black uppercase tracking-widest">MATCH AFFINITY ACTIVE</Badge>
+                                <Badge className="bg-emerald-500/10 text-emerald-400 border-none px-6 py-2 text-[12px] font-black uppercase tracking-widest">NEXT-DIGIT AFFINITY</Badge>
                             </div>
                             
                             <div className="grid grid-cols-2 sm:grid-cols-5 gap-6">
@@ -243,11 +245,11 @@ const DigitNexusMatrix = ({ digit, ticks }: { digit: number, ticks: number[] }) 
                                         "p-6 rounded-[2rem] border transition-all duration-700 relative overflow-hidden group/res",
                                         idx === 0 ? "bg-emerald-500/20 border-emerald-500/40 scale-110 z-10 shadow-[0_0_50px_rgba(16,185,129,0.3)]" : "bg-white/5 border-white/5 hover:bg-white/10"
                                     )}>
-                                        {idx === 0 && <Zap className="absolute top-4 right-4 h-4 w-4 text-emerald-400 animate-pulse" />}
+                                        {idx === 0 && <Sparkles className="absolute top-4 right-4 h-4 w-4 text-emerald-400 animate-pulse" />}
                                         <p className={cn(
                                             "text-xs font-black uppercase tracking-[0.2em] mb-3",
                                             idx === 0 ? "text-emerald-400" : "text-muted-foreground/60"
-                                        )}>NEXT</p>
+                                        )}>PROBABILITY OF NEXT</p>
                                         <p className={cn(
                                             "text-5xl font-black leading-none tracking-tighter mb-4",
                                             idx === 0 ? "text-white" : "text-foreground/80"
@@ -267,53 +269,53 @@ const DigitNexusMatrix = ({ digit, ticks }: { digit: number, ticks: number[] }) 
                             </div>
                         </div>
 
-                        {/* STRATEGY RECOMMENDATION */}
+                        {/* TACTICAL GUIDANCE ENGINE */}
                         <div className="space-y-10 p-12 rounded-[3.5rem] bg-slate-900/60 border border-white/5 relative flex flex-col justify-center text-center group shadow-2xl overflow-hidden">
                             <div className="absolute top-0 right-0 w-2 h-full bg-primary/40 group-hover:bg-primary transition-colors" />
                             <div className="w-24 h-24 rounded-full bg-primary/10 border-2 border-primary/20 flex items-center justify-center mx-auto mb-6 group-hover:scale-110 transition-transform shadow-[0_0_30px_rgba(var(--primary),0.2)]">
-                                <TrendingUp className="h-12 w-12 text-primary drop-shadow-[0_0_15px_rgba(var(--primary),1)]" />
+                                <Crosshair className="h-12 w-12 text-primary drop-shadow-[0_0_15px_rgba(var(--primary),1)]" />
                             </div>
                             <div>
                                 <h4 className="text-[14px] font-black uppercase tracking-[0.6em] text-primary mb-6">TACTICAL GUIDANCE</h4>
                                 <p className="text-2xl font-medium text-white/90 leading-relaxed italic px-6">
-                                    "Statistically, digit <span className="text-emerald-400 font-black">{nexusAnalysis.hottestNext.digit}</span> has the highest recursive affinity following <span className="text-primary font-black">{digit}</span>. Entry on Match {nexusAnalysis.hottestNext.digit} carries a {nexusAnalysis.hottestNext.probability.toFixed(1)}% historical edge."
+                                    "Neural analysis identifies <span className="text-emerald-400 font-black">Digit {nexusAnalysis.hottestNext.digit}</span> as having the highest recursive affinity following <span className="text-primary font-black">{digit}</span>. In this sequence, a <span className="text-emerald-400 font-black">Match {nexusAnalysis.hottestNext.digit}</span> prediction carries a {nexusAnalysis.hottestNext.probability.toFixed(1)}% historical edge over random variance."
                                 </p>
                             </div>
                             <div className="mt-10 pt-10 border-t border-white/5">
                                 <div className="flex items-center justify-between px-6">
-                                    <span className="text-[12px] font-black uppercase tracking-[0.3em] text-muted-foreground">RELIABILITY INDEX</span>
-                                    <span className="text-emerald-400 font-black text-2xl drop-shadow-[0_0_10px_rgba(52,211,153,0.5)]">OPTIMAL</span>
+                                    <span className="text-[12px] font-black uppercase tracking-[0.3em] text-muted-foreground">RECURSIVE STRENGTH</span>
+                                    <span className="text-emerald-400 font-black text-2xl drop-shadow-[0_0_10px_rgba(52,211,153,0.5)]">HIGH</span>
                                 </div>
                             </div>
                         </div>
                     </div>
 
-                    {/* BARRIER SYMMETRY (Over/Under Context) */}
+                    {/* BARRIER SYMMETRY (Over/Under context for what follows the selected digit) */}
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-12 pt-4">
                         <div className="p-12 rounded-[3.5rem] bg-black/40 border border-white/5 relative overflow-hidden group shadow-2xl">
                              <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-cyan-500 to-transparent" />
                              <h4 className="text-[14px] font-black uppercase tracking-[0.6em] text-muted-foreground mb-10 flex items-center gap-6">
-                                <ArrowUpRight className="h-8 w-8 text-cyan-400" /> NEXUS OVER WEIGHT
+                                <ArrowUpRight className="h-8 w-8 text-cyan-400" /> POST-SIGNAL OVER SKEW
                              </h4>
                              <div className="flex items-end justify-between mb-6">
                                 <span className="text-6xl font-black text-white tabular-nums tracking-tighter">{nexusAnalysis.barrierSymmetry.over.toFixed(1)}%</span>
-                                <Badge className="bg-cyan-500/10 text-cyan-400 border-none px-6 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest">BULLISH SKEW</Badge>
+                                <Badge className="bg-cyan-500/10 text-cyan-400 border-none px-6 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest">BULLISH FOLLOWING {digit}</Badge>
                              </div>
                              <Progress value={nexusAnalysis.barrierSymmetry.over} className="h-6 bg-black/60 [&>div]:bg-gradient-to-r [&>div]:from-cyan-600 [&>div]:to-cyan-400 shadow-[0_0_30px_rgba(6,182,212,0.4)]" />
-                             <p className="mt-8 text-[12px] font-mono text-cyan-400/60 uppercase tracking-widest text-center">Probability of outcome exceeding pivot digit {digit}</p>
+                             <p className="mt-8 text-[12px] font-mono text-cyan-400/60 uppercase tracking-widest text-center">Probability of outcome exceeding pivot 4 following digit {digit}</p>
                         </div>
 
                         <div className="p-12 rounded-[3.5rem] bg-black/40 border border-white/5 relative overflow-hidden group shadow-2xl">
                              <div className="absolute top-0 right-0 w-full h-1 bg-gradient-to-l from-rose-500 to-transparent" />
                              <h4 className="text-[14px] font-black uppercase tracking-[0.6em] text-muted-foreground mb-10 flex items-center gap-6 justify-end">
-                                <ArrowDownLeft className="h-8 w-8 text-rose-500" /> NEXUS UNDER WEIGHT
+                                <ArrowDownLeft className="h-8 w-8 text-rose-500" /> POST-SIGNAL UNDER SKEW
                              </h4>
                              <div className="flex items-end justify-between mb-6">
-                                <Badge className="bg-rose-500/10 text-rose-500 border-none px-6 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest">BEARISH SKEW</Badge>
+                                <Badge className="bg-rose-500/10 text-rose-500 border-none px-6 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest">BEARISH FOLLOWING {digit}</Badge>
                                 <span className="text-6xl font-black text-white tabular-nums tracking-tighter">{nexusAnalysis.barrierSymmetry.under.toFixed(1)}%</span>
                              </div>
                              <Progress value={nexusAnalysis.barrierSymmetry.under} className="h-6 bg-black/60 [&>div]:bg-gradient-to-r [&>div]:from-rose-600 [&>div]:to-rose-400 shadow-[0_0_30px_rgba(244,63,94,0.4)]" />
-                             <p className="mt-8 text-[12px] font-mono text-rose-500/60 uppercase tracking-widest text-center">Probability of outcome falling below pivot digit {digit}</p>
+                             <p className="mt-8 text-[12px] font-mono text-rose-500/60 uppercase tracking-widest text-center">Probability of outcome falling below pivot 5 following digit {digit}</p>
                         </div>
                     </div>
                 </CardContent>
