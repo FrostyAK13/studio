@@ -131,54 +131,54 @@ export function Dashboard() {
 
   return (
     <div className="flex min-h-screen w-full flex-col bg-background font-sans overflow-x-hidden">
-      <header className="sticky top-0 z-50 flex h-20 items-center border-b bg-background/80 px-6 backdrop-blur-xl transition-all duration-300">
-        <div className="flex w-full items-center justify-between max-w-7xl mx-auto gap-4">
+      <header className="sticky top-0 z-50 flex h-auto min-h-20 flex-col md:flex-row items-center border-b bg-background/80 px-4 py-4 md:py-0 md:px-6 backdrop-blur-xl transition-all duration-300">
+        <div className="flex w-full items-center justify-between max-w-7xl mx-auto gap-2 md:gap-4">
           
-          <div className="flex-1">
+          <div className="flex-1 min-w-0">
             <a
               href="https://frostytraders.com"
               target="_blank"
               rel="noopener noreferrer"
-              className="text-2xl font-black tracking-tighter text-primary drop-shadow-[0_0_15px_rgba(var(--primary),0.3)] transition-transform hover:scale-105"
+              className="text-lg sm:text-2xl font-black tracking-tighter text-primary drop-shadow-[0_0_15px_rgba(var(--primary),0.3)] transition-transform hover:scale-105 block truncate"
             >
               frosty<span className="text-foreground">traders.com</span>
             </a>
           </div>
 
-          <div className="hidden md:flex flex-1 justify-center">
+          <div className="flex flex-1 justify-center order-3 md:order-2 w-full md:w-auto mt-2 md:mt-0">
             <div className="relative group">
                 <div className="absolute -inset-1 bg-gradient-to-r from-primary/20 to-cyan-400/20 rounded-full blur opacity-25 group-hover:opacity-75 transition duration-1000 group-hover:duration-200"></div>
-                <div className="relative flex items-center px-6 py-2 bg-card border border-white/5 rounded-full shadow-2xl">
-                    <span className="text-sm font-black uppercase tracking-[0.4em] text-foreground/70 whitespace-nowrap">
+                <div className="relative flex items-center px-4 md:px-6 py-1 md:py-2 bg-card border border-white/5 rounded-full shadow-2xl">
+                    <span className="text-[8px] md:text-sm font-black uppercase tracking-[0.2em] md:tracking-[0.4em] text-foreground/70 whitespace-nowrap">
                         EMPORER MIGOSI
                     </span>
                 </div>
             </div>
           </div>
 
-          <div className="flex-1 flex justify-end">
-            <div className="flex items-center gap-3 px-4 py-2 bg-muted/30 rounded-full border border-white/5 backdrop-blur-sm shadow-inner">
+          <div className="flex-1 flex justify-end order-2 md:order-3">
+            <div className="flex items-center gap-2 px-3 py-1.5 bg-muted/30 rounded-full border border-white/5 backdrop-blur-sm shadow-inner">
                 <ConnectionStatus status={connectionStatus} />
             </div>
           </div>
         </div>
       </header>
 
-      <main className="flex-1 p-4 sm:p-8">
+      <main className="flex-1 p-3 sm:p-6 lg:p-8">
         <Tabs defaultValue="scanner" className="w-full max-w-7xl mx-auto">
-            <TabsList className="flex items-center justify-center gap-2 bg-transparent h-auto p-0 mb-10 overflow-x-auto no-scrollbar pb-2">
+            <TabsList className="flex items-center justify-start md:justify-center gap-2 bg-transparent h-auto p-0 mb-6 md:mb-10 overflow-x-auto no-scrollbar pb-2 w-full">
                 {['scanner', 'analyzer', 'frequency', 'insight', 'circles'].map((tab) => (
                     <TabsTrigger 
                         key={tab} 
                         value={tab}
-                        className="px-8 py-3 rounded-full border border-transparent data-[state=active]:border-primary/20 data-[state=active]:bg-primary/10 data-[state=active]:text-primary data-[state=active]:shadow-[0_0_20px_rgba(var(--primary),0.15)] text-muted-foreground font-black text-[10px] uppercase tracking-[0.2em] transition-all duration-300 hover:text-foreground hover:bg-muted/50"
+                        className="flex-shrink-0 px-4 sm:px-8 py-2.5 sm:py-3 rounded-full border border-transparent data-[state=active]:border-primary/20 data-[state=active]:bg-primary/10 data-[state=active]:text-primary data-[state=active]:shadow-[0_0_20px_rgba(var(--primary),0.15)] text-muted-foreground font-black text-[9px] sm:text-[10px] uppercase tracking-[0.1em] sm:tracking-[0.2em] transition-all duration-300 hover:text-foreground hover:bg-muted/50"
                     >
                         {tab}
                     </TabsTrigger>
                 ))}
             </TabsList>
 
-            <TabsContent value="scanner" className="mt-0 animate-in fade-in zoom-in-95 duration-500">
+            <TabsContent value="scanner" className="mt-0 animate-in fade-in zoom-in-95 duration-500 outline-none">
                 <ScannerView 
                     price={price} 
                     lastDigitTicks={analyzedDigits}
@@ -192,7 +192,7 @@ export function Dashboard() {
                 />
             </TabsContent>
 
-            <TabsContent value="analyzer" className="mt-0 animate-in fade-in zoom-in-95 duration-500">
+            <TabsContent value="analyzer" className="mt-0 animate-in fade-in zoom-in-95 duration-500 outline-none">
                 <AnalyzerView
                     price={price}
                     lastDigitTicks={analyzedDigits}
@@ -206,7 +206,7 @@ export function Dashboard() {
                 />
             </TabsContent>
 
-            <TabsContent value="frequency" className="mt-0 animate-in fade-in zoom-in-95 duration-500">
+            <TabsContent value="frequency" className="mt-0 animate-in fade-in zoom-in-95 duration-500 outline-none">
                 <DigitFrequencyView
                     price={price}
                     lastDigitTicks={analyzedDigits}
@@ -220,7 +220,7 @@ export function Dashboard() {
                 />
             </TabsContent>
 
-             <TabsContent value="insight" className="mt-0 animate-in fade-in zoom-in-95 duration-500">
+             <TabsContent value="insight" className="mt-0 animate-in fade-in zoom-in-95 duration-500 outline-none">
                 <InsightView
                     price={price}
                     decimalPlaces={decimalPlaces}
@@ -231,7 +231,7 @@ export function Dashboard() {
                 />
             </TabsContent>
             
-            <TabsContent value="circles" className="mt-0 animate-in fade-in zoom-in-95 duration-500">
+            <TabsContent value="circles" className="mt-0 animate-in fade-in zoom-in-95 duration-500 outline-none">
                 <CorrelationView
                     selectedMarket={selectedMarket}
                     onMarketChange={setSelectedMarket}
