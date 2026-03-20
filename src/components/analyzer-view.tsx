@@ -7,11 +7,10 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Input } from '@/components/ui/input';
 import { syntheticIndices } from '@/lib/mock-data';
 import { cn } from '@/lib/utils';
-import { ArrowDown, ArrowUp, BarChartHorizontal, Hash, List, TrendingUp, TrendingDown, Target, Zap, Activity, Cpu, Layers, Fingerprint, Network, Boxes, SignalHigh } from 'lucide-react';
+import { Activity, Layers, Activity as ActivityIcon, SignalHigh, Hash, BarChartHorizontal, Boxes } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { PieChart, Pie, Cell, Tooltip, ResponsiveContainer } from 'recharts';
+import { PieChart, Pie, Cell, Tooltip } from 'recharts';
 import { ChartContainer } from '@/components/ui/chart';
-import { Badge } from '@/components/ui/badge';
 
 interface AnalyzerViewProps {
     price: number;
@@ -123,7 +122,7 @@ export function AnalyzerView({
     }, [lastDigitTicks]);
 
     const renderSequence = () => {
-        const count = 24;
+        const count = 16;
         const slice = [...lastDigitTicks.slice(0, count)].reverse();
 
         return slice.map((digit, i) => {
@@ -132,24 +131,24 @@ export function AnalyzerView({
             let isAnomaly = false;
 
             if (tradeType === 'even-odd') {
-                color = digit % 2 === 0 ? 'bg-primary shadow-[0_0_15px_rgba(var(--primary),0.5)]' : 'bg-rose-500 shadow-[0_0_15px_rgba(244,63,94,0.5)]';
+                color = digit % 2 === 0 ? 'bg-primary shadow-[0_0_10px_rgba(var(--primary),0.3)]' : 'bg-rose-500 shadow-[0_0_10px_rgba(244,63,94,0.3)]';
             } else if (tradeType === 'matches-differs') {
                 const isMatch = digit === matchesDigit;
-                color = isMatch ? 'bg-emerald-500 shadow-[0_0_20px_rgba(16,185,129,0.7)] scale-110 z-10' : 'bg-orange-500/10 text-orange-400 border-orange-500/20';
+                color = isMatch ? 'bg-emerald-500 shadow-[0_0_15px_rgba(16,185,129,0.5)] scale-110 z-10' : 'bg-orange-500/10 text-orange-400 border-orange-500/20';
                 if (isMatch) isAnomaly = true;
             } else if (tradeType === 'over-under') {
-                if (digit > overUnderDigit) color = 'bg-cyan-500 shadow-[0_0_20px_rgba(6,182,212,0.7)] scale-110 z-10';
-                else if (digit < overUnderDigit) color = 'bg-rose-500 shadow-[0_0_20px_rgba(244,63,94,0.7)] scale-110 z-10';
+                if (digit > overUnderDigit) color = 'bg-cyan-500 shadow-[0_0_15px_rgba(6,182,212,0.5)] scale-110 z-10';
+                else if (digit < overUnderDigit) color = 'bg-rose-500 shadow-[0_0_15px_rgba(244,63,94,0.5)] scale-110 z-10';
                 else color = 'bg-white/5 text-white/20';
             } else if (tradeType === 'rise-fall') {
                 const currentIdx = lastDigitTicks.length - 1 - i;
                 const prevIdx = currentIdx + 1;
                 if (prevIdx < lastDigitTicks.length) {
                     if (priceHistory[currentIdx] > priceHistory[prevIdx]) {
-                        color = 'bg-emerald-500 shadow-[0_0_15px_rgba(16,185,129,0.6)]';
+                        color = 'bg-emerald-500 shadow-[0_0_10px_rgba(16,185,129,0.4)]';
                         label = '↑';
                     } else if (priceHistory[currentIdx] < priceHistory[prevIdx]) {
-                        color = 'bg-rose-500 shadow-[0_0_15px_rgba(244,63,94,0.6)]';
+                        color = 'bg-rose-500 shadow-[0_0_10px_rgba(244,63,94,0.4)]';
                         label = '↓';
                     }
                 }
@@ -157,55 +156,54 @@ export function AnalyzerView({
 
             return (
                 <div key={i} className={cn(
-                    "flex items-center justify-center w-8 h-8 sm:w-12 sm:h-12 rounded-lg sm:rounded-2xl font-black text-xs sm:text-lg border transition-all duration-500 shrink-0",
+                    "flex items-center justify-center w-8 h-8 sm:w-10 sm:h-10 rounded-lg font-black text-xs sm:text-base border transition-all duration-300 shrink-0",
                     color,
-                    "border-white/5 shadow-2xl relative"
+                    "border-white/5 shadow-lg relative"
                 )}>
                     {label}
-                    {isAnomaly && <div className="absolute -top-0.5 -right-0.5 w-2 h-2 sm:w-3 sm:h-3 bg-white rounded-full animate-ping" />}
+                    {isAnomaly && <div className="absolute -top-0.5 -right-0.5 w-2 h-2 bg-white rounded-full animate-ping" />}
                 </div>
             );
         });
     };
 
     return (
-        <div className="space-y-6 sm:space-y-12 animate-in fade-in slide-in-from-bottom-8 duration-1000 pb-20">
-             <Card className="border-none shadow-2xl bg-slate-900/40 backdrop-blur-[60px] overflow-hidden relative rounded-[2rem] sm:rounded-[4rem]">
+        <div className="space-y-6 sm:space-y-10 animate-in fade-in slide-in-from-bottom-5 duration-700 pb-20">
+             <Card className="border-none shadow-2xl bg-slate-900/40 backdrop-blur-3xl overflow-hidden relative rounded-[1.5rem] sm:rounded-[3rem]">
                 <div className="absolute top-0 left-0 w-full h-[2px] bg-gradient-to-r from-transparent via-primary/60 to-transparent" />
-                <CardContent className="p-6 sm:p-14 grid grid-cols-1 md:grid-cols-3 gap-6 sm:gap-12 items-end">
-                    <div className="space-y-4 sm:space-y-6">
-                        <Label className="text-[10px] sm:text-[14px] font-black uppercase tracking-[0.4em] sm:tracking-[0.7em] text-primary ml-2 sm:ml-4">MARKET VECTOR SELECT</Label>
+                <CardContent className="p-5 sm:p-10 grid grid-cols-1 md:grid-cols-3 gap-6 sm:gap-10 items-end">
+                    <div className="space-y-3">
+                        <Label className="text-[9px] sm:text-[12px] font-black uppercase tracking-widest text-primary ml-1">MARKET VECTOR SELECT</Label>
                         <Select value={selectedMarket} onValueChange={onMarketChange}>
-                            <SelectTrigger className="h-14 sm:h-20 bg-black/50 border-white/10 rounded-[1.5rem] sm:rounded-[2.5rem] font-black text-sm sm:text-xl shadow-[inset_0_2px_15px_rgba(0,0,0,0.6)] px-6 sm:px-10">
+                            <SelectTrigger className="h-12 sm:h-16 bg-black/50 border-white/10 rounded-[1rem] sm:rounded-[1.5rem] font-black text-xs sm:text-lg px-4 sm:px-8">
                                 <SelectValue placeholder="Select Index" />
                             </SelectTrigger>
-                            <SelectContent side="bottom" position="popper" sideOffset={8} className="w-[var(--radix-select-trigger-width)] max-h-[300px] sm:max-h-[400px] rounded-[1.5rem] sm:rounded-[2.5rem] border-white/10 bg-slate-950 text-white z-[100] shadow-2xl">
+                            <SelectContent side="bottom" position="popper" sideOffset={8} className="w-[var(--radix-select-trigger-width)] max-h-[300px] rounded-[1rem] sm:rounded-[1.5rem] border-white/10 bg-slate-950 text-white z-[100] shadow-2xl">
                                 {syntheticIndices.map((index) => (
-                                <SelectItem key={index.id} value={index.id} className="focus:bg-primary/20 focus:text-white cursor-pointer py-3 sm:py-4 font-black text-xs sm:text-base">
+                                <SelectItem key={index.id} value={index.id} className="focus:bg-primary/20 focus:text-white cursor-pointer py-3 font-black text-xs sm:text-base">
                                     {index.name}
                                 </SelectItem>
                                 ))}
                             </SelectContent>
                         </Select>
                     </div>
-                    <div className="space-y-4 sm:space-y-6">
-                        <Label className="text-[10px] sm:text-[14px] font-black uppercase tracking-[0.4em] sm:tracking-[0.7em] text-primary ml-2 sm:ml-4">ALGORITHM PROTOCOL</Label>
+                    <div className="space-y-3">
+                        <Label className="text-[9px] sm:text-[12px] font-black uppercase tracking-widest text-primary ml-1">ALGORITHM PROTOCOL</Label>
                         <Select value={tradeType} onValueChange={setTradeType}>
-                             <SelectTrigger className="h-14 sm:h-20 bg-black/50 border-white/10 rounded-[1.5rem] sm:rounded-[2.5rem] font-black text-sm sm:text-xl shadow-[inset_0_2px_15px_rgba(0,0,0,0.6)] px-6 sm:px-10 text-center justify-center">
+                             <SelectTrigger className="h-12 sm:h-16 bg-black/50 border-white/10 rounded-[1rem] sm:rounded-[1.5rem] font-black text-xs sm:text-lg px-4 sm:px-8">
                                 <SelectValue placeholder="Select Protocol" />
                             </SelectTrigger>
-                            <SelectContent side="bottom" position="popper" sideOffset={8} className="w-[var(--radix-select-trigger-width)] max-h-[300px] sm:max-h-[400px] rounded-[1.5rem] sm:rounded-[2.5rem] border-white/10 bg-slate-950 text-white z-[100] shadow-2xl">
-                                <SelectItem value="even-odd" className="focus:bg-primary/20 focus:text-white cursor-pointer py-3 sm:py-4 font-black text-xs sm:text-base">Even / Odd Matrix</SelectItem>
-                                <SelectItem value="matches-differs" className="focus:bg-primary/20 focus:text-white cursor-pointer py-3 sm:py-4 font-black text-xs sm:text-base">Matches / Differs Matrix</SelectItem>
-                                <SelectItem value="over-under" className="focus:bg-primary/20 focus:text-white cursor-pointer py-3 sm:py-4 font-black text-xs sm:text-base">Over / Under Matrix</SelectItem>
-                                <SelectItem value="rise-fall" className="focus:bg-primary/20 focus:text-white cursor-pointer py-3 sm:py-4 font-black text-xs sm:text-base">Rise / Fall Matrix</SelectItem>
+                            <SelectContent side="bottom" position="popper" sideOffset={8} className="w-[var(--radix-select-trigger-width)] max-h-[300px] rounded-[1rem] sm:rounded-[1.5rem] border-white/10 bg-slate-950 text-white z-[100] shadow-2xl">
+                                <SelectItem value="even-odd" className="focus:bg-primary/20 focus:text-white cursor-pointer py-3 font-black text-xs sm:text-base">Even / Odd Matrix</SelectItem>
+                                <SelectItem value="matches-differs" className="focus:bg-primary/20 focus:text-white cursor-pointer py-3 font-black text-xs sm:text-base">Matches / Differs Matrix</SelectItem>
+                                <SelectItem value="over-under" className="focus:bg-primary/20 focus:text-white cursor-pointer py-3 font-black text-xs sm:text-base">Over / Under Matrix</SelectItem>
+                                <SelectItem value="rise-fall" className="focus:bg-primary/20 focus:text-white cursor-pointer py-3 font-black text-xs sm:text-base">Rise / Fall Matrix</SelectItem>
                             </SelectContent>
                         </Select>
                     </div>
-                    <div className="space-y-4 sm:space-y-6">
-                        <Label className="text-[10px] sm:text-[14px] font-black uppercase tracking-[0.4em] sm:tracking-[0.7em] text-primary ml-2 sm:ml-4">DATA HORIZON</Label>
+                    <div className="space-y-3">
+                        <Label className="text-[9px] sm:text-[12px] font-black uppercase tracking-widest text-primary ml-1">DATA HORIZON</Label>
                         <div className="relative group">
-                            <div className="absolute -inset-1 bg-primary/10 blur-xl opacity-0 group-hover:opacity-100 transition-opacity" />
                             <Input
                                 type="number"
                                 min="1"
@@ -213,54 +211,52 @@ export function AnalyzerView({
                                 value={maxTicks === 0 ? '' : maxTicks}
                                 onChange={handleMaxTicksChange}
                                 onBlur={handleMaxTicksBlur}
-                                className="h-14 sm:h-20 bg-black/50 border-white/10 rounded-[1.5rem] sm:rounded-[2.5rem] font-black text-xl sm:text-4xl text-primary text-center shadow-[inset_0_2px_15px_rgba(0,0,0,0.6)] relative z-10"
+                                className="h-12 sm:h-16 bg-black/50 border-white/10 rounded-[1rem] sm:rounded-[1.5rem] font-black text-lg sm:text-3xl text-primary text-center shadow-inner relative z-10"
                             />
-                            <div className="absolute right-4 sm:right-10 top-1/2 -translate-y-1/2 pointer-events-none opacity-20 z-20"><Activity size={24} className="sm:w-8 sm:h-8" /></div>
+                            <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none opacity-20 z-20"><Activity size={20} className="sm:w-6 sm:h-6" /></div>
                         </div>
                     </div>
                 </CardContent>
             </Card>
 
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 sm:gap-12">
-                <Card className="lg:col-span-2 border-none shadow-2xl bg-slate-950/80 backdrop-blur-[80px] overflow-hidden relative rounded-[2rem] sm:rounded-[4rem]">
-                    <div className="absolute top-0 left-0 w-full h-[4px] bg-gradient-to-r from-primary via-cyan-400 to-primary" />
-                    <CardHeader className="pb-6 sm:pb-8 px-6 sm:px-12 pt-8 sm:pt-12">
-                        <div className="flex flex-col sm:flex-row items-center justify-between gap-6 sm:gap-10">
-                            <div className="flex items-center gap-4 sm:gap-6">
-                                <div className="p-3 sm:p-4 bg-primary/20 rounded-[1rem] sm:rounded-[1.5rem] border border-primary/30 shadow-[0_0_20px_rgba(var(--primary),0.3)]">
-                                    <Layers className="h-6 w-6 sm:h-8 sm:w-8 text-primary" />
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 sm:gap-10">
+                <Card className="lg:col-span-2 border-none shadow-2xl bg-slate-950/80 backdrop-blur-3xl overflow-hidden relative rounded-[1.5rem] sm:rounded-[3rem]">
+                    <div className="absolute top-0 left-0 w-full h-[3px] bg-gradient-to-r from-primary via-cyan-400 to-primary" />
+                    <CardHeader className="pb-4 px-6 sm:px-10 pt-8 sm:pt-10">
+                        <div className="flex flex-col sm:flex-row items-center justify-between gap-6">
+                            <div className="flex items-center gap-4">
+                                <div className="p-2 sm:p-3 bg-primary/20 rounded-[0.75rem] sm:rounded-[1rem] border border-primary/30">
+                                    <Layers className="h-5 w-5 sm:h-6 sm:w-6 text-primary" />
                                 </div>
                                 <div>
-                                    <CardTitle className="text-[10px] sm:text-sm font-black uppercase tracking-[0.3em] sm:tracking-[0.5em] text-primary">Live Volumetric Flux</CardTitle>
-                                    <CardDescription className="text-[8px] sm:text-[10px] font-bold uppercase text-muted-foreground/60 mt-1 sm:mt-2 tracking-widest">REAL-TIME SEQUENCE SCANNER</CardDescription>
+                                    <CardTitle className="text-[9px] sm:text-[12px] font-black uppercase tracking-widest text-primary">Live Volumetric Flux</CardTitle>
+                                    <CardDescription className="text-[7px] sm:text-[9px] font-bold uppercase text-muted-foreground/60 mt-1 tracking-widest">REAL-TIME SEQUENCE SCANNER</CardDescription>
                                 </div>
                             </div>
-                            <div className="text-center sm:text-right bg-white/5 px-6 sm:px-8 py-2 sm:py-3 rounded-[1rem] sm:rounded-[1.5rem] border border-white/10 w-full sm:w-auto">
-                                <p className="text-[8px] sm:text-[10px] font-black uppercase text-muted-foreground/40 tracking-widest mb-1">GLOBAL PIVOT</p>
-                                <p className="text-xl sm:text-3xl font-black text-white tabular-nums tracking-tighter">{price.toFixed(decimalPlaces)}</p>
+                            <div className="text-center sm:text-right bg-white/5 px-4 sm:px-6 py-1 sm:py-2 rounded-[1rem] border border-white/10 w-full sm:w-auto">
+                                <p className="text-[7px] sm:text-[9px] font-black uppercase text-muted-foreground/40 tracking-widest mb-0.5">GLOBAL PIVOT</p>
+                                <p className="text-lg sm:text-2xl font-black text-white tabular-nums tracking-tighter">{price.toFixed(decimalPlaces)}</p>
                             </div>
                         </div>
                     </CardHeader>
-                    <CardContent className="px-6 sm:px-12 pb-10 sm:pb-14 space-y-8 sm:space-y-12">
-                        <div className="flex flex-wrap gap-2 sm:gap-4 min-h-[40px] sm:min-h-[56px] p-4 sm:p-6 bg-black/40 rounded-[1.5rem] sm:rounded-[2.5rem] border border-white/5 shadow-inner">
+                    <CardContent className="px-6 sm:px-10 pb-8 sm:pb-12 space-y-6 sm:space-y-10">
+                        <div className="flex flex-wrap gap-1.5 sm:gap-3 p-3 sm:p-5 bg-black/40 rounded-[1rem] sm:rounded-[1.5rem] border border-white/5 shadow-inner min-h-[4rem] sm:min-h-[5rem] items-center justify-center">
                             {renderSequence()}
                         </div>
                         
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-8">
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6">
                             {activeChartData.map((data, idx) => (
-                                <div key={idx} className="bg-black/60 p-6 sm:p-8 rounded-[1.5rem] sm:rounded-[2.5rem] border border-white/5 relative overflow-hidden group shadow-2xl transition-all hover:bg-black/80">
-                                    <div className="absolute inset-0 opacity-0 group-hover:opacity-10 transition-opacity" style={{ backgroundColor: data.color }} />
-                                    <div className="flex items-center justify-between mb-4 sm:mb-6">
-                                        <p className="text-[10px] sm:text-[12px] font-black tracking-[0.3em] sm:tracking-[0.4em] uppercase" style={{ color: data.color }}>{data.name} RATIO</p>
-                                        <span className="text-2xl sm:text-4xl font-black tabular-nums text-white tracking-tighter">{data.value.toFixed(1)}%</span>
+                                <div key={idx} className="bg-black/60 p-4 sm:p-6 rounded-[1.25rem] sm:rounded-[2rem] border border-white/5 relative overflow-hidden group shadow-xl">
+                                    <div className="flex items-center justify-between mb-3 sm:mb-4">
+                                        <p className="text-[8px] sm:text-[10px] font-black tracking-widest uppercase" style={{ color: data.color }}>{data.name} RATIO</p>
+                                        <span className="text-xl sm:text-3xl font-black tabular-nums text-white tracking-tighter">{data.value.toFixed(1)}%</span>
                                     </div>
-                                    <div className="w-full bg-black/40 rounded-full h-3 sm:h-4 overflow-hidden border border-white/5 shadow-inner">
+                                    <div className="w-full bg-black/40 rounded-full h-2 sm:h-3 overflow-hidden border border-white/5">
                                         <div 
-                                            className="h-full transition-all duration-1000 ease-out shadow-[0_0_20px]" 
+                                            className="h-full transition-all duration-1000 ease-out" 
                                             style={{ 
                                                 width: `${data.value}%`, 
                                                 backgroundColor: data.color, 
-                                                boxShadow: `0 0 20px ${data.color}40` 
                                             }} 
                                         />
                                     </div>
@@ -270,15 +266,15 @@ export function AnalyzerView({
                     </CardContent>
                 </Card>
 
-                <div className="space-y-6 sm:space-y-12 h-full flex flex-col">
-                    <Card className="border-none shadow-2xl bg-slate-950/90 backdrop-blur-[80px] overflow-hidden relative flex flex-col p-6 sm:p-10 h-full rounded-[2rem] sm:rounded-[4rem]">
+                <div className="space-y-6 sm:space-y-10 h-full flex flex-col">
+                    <Card className="border-none shadow-2xl bg-slate-950/90 backdrop-blur-3xl overflow-hidden relative flex flex-col p-6 sm:p-8 h-full rounded-[1.5rem] sm:rounded-[3rem]">
                         <div className="absolute top-0 left-0 w-full h-[1px] bg-gradient-to-r from-transparent via-cyan-400 to-transparent" />
-                        <CardHeader className="text-center pb-6 sm:pb-8 px-0">
-                            <CardTitle className="text-[10px] sm:text-[12px] font-black uppercase tracking-[0.5em] sm:tracking-[0.8em] text-cyan-400">ANALYSIS HUD</CardTitle>
+                        <CardHeader className="text-center pb-4 px-0">
+                            <CardTitle className="text-[9px] sm:text-[11px] font-black uppercase tracking-widest text-cyan-400">ANALYSIS HUD</CardTitle>
                         </CardHeader>
                         
-                        <div className="flex-1 relative flex items-center justify-center py-4 sm:py-6">
-                            <ChartContainer config={{}} className="w-full aspect-square max-w-[180px] sm:max-w-[240px]">
+                        <div className="flex-1 relative flex items-center justify-center py-4">
+                            <ChartContainer config={{}} className="w-full aspect-square max-w-[140px] sm:max-w-[200px]">
                                 <PieChart>
                                     <Pie
                                         data={activeChartData}
@@ -286,16 +282,16 @@ export function AnalyzerView({
                                         nameKey="name"
                                         cx="50%"
                                         cy="50%"
-                                        innerRadius={50}
-                                        outerRadius={75}
-                                        paddingAngle={6}
+                                        innerRadius={45}
+                                        outerRadius={65}
+                                        paddingAngle={4}
                                         stroke="none"
                                     >
                                         {activeChartData.map((entry, index) => (
                                             <Cell 
                                                 key={`cell-${index}`} 
                                                 fill={entry.color} 
-                                                className="hover:opacity-80 transition-opacity drop-shadow-[0_0_15px_rgba(255,255,255,0.1)]" 
+                                                className="hover:opacity-80 transition-opacity" 
                                             />
                                         ))}
                                     </Pie>
@@ -304,65 +300,61 @@ export function AnalyzerView({
                             </ChartContainer>
                             
                             <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
-                                <div className="p-2 sm:p-3 bg-cyan-400/10 rounded-full mb-2 sm:mb-3 shadow-[0_0_30px_rgba(6,182,212,0.2)]">
-                                    <Activity className="h-4 w-4 sm:h-6 sm:w-6 text-cyan-400 animate-pulse" />
-                                </div>
-                                <span className="text-3xl sm:text-5xl font-black tracking-tighter tabular-nums text-white drop-shadow-[0_0_15px_rgba(255,255,255,0.3)]">
+                                <span className="text-2xl sm:text-4xl font-black tracking-tighter tabular-nums text-white">
                                     {activeChartData[0]?.value.toFixed(0)}
-                                    <span className="text-base sm:text-xl opacity-40 ml-0.5 sm:ml-1">%</span>
+                                    <span className="text-sm sm:text-lg opacity-40 ml-0.5">%</span>
                                 </span>
-                                <span className="text-[8px] sm:text-[10px] font-black uppercase tracking-[0.3em] sm:tracking-[0.5em] text-muted-foreground/60 mt-1 sm:mt-2">{activeChartData[0]?.name} VECTOR</span>
+                                <span className="text-[7px] sm:text-[9px] font-black uppercase tracking-widest text-muted-foreground/60 mt-1">{activeChartData[0]?.name} VECTOR</span>
                             </div>
                         </div>
 
-                        <div className="grid grid-cols-2 gap-4 sm:gap-6 mt-auto">
+                        <div className="grid grid-cols-2 gap-3 sm:gap-4 mt-auto">
                             {activeChartData.map((data, idx) => (
-                                <div key={idx} className="text-center p-4 sm:p-6 rounded-[1.5rem] sm:rounded-[2rem] bg-black/40 border border-white/5 group transition-all hover:bg-black/60 shadow-xl">
-                                    <p className="text-[8px] sm:text-[10px] font-black uppercase tracking-[0.2em] sm:tracking-[0.3em] opacity-40 mb-2 sm:mb-3 group-hover:opacity-100 transition-opacity" style={{ color: data.color }}>{data.name}</p>
-                                    <p className="text-xl sm:text-3xl font-black tabular-nums" style={{ color: data.color }}>{data.value.toFixed(1)}%</p>
+                                <div key={idx} className="text-center p-3 sm:p-4 rounded-[1rem] sm:rounded-[1.5rem] bg-black/40 border border-white/5">
+                                    <p className="text-[7px] sm:text-[9px] font-black uppercase tracking-widest opacity-40 mb-1" style={{ color: data.color }}>{data.name}</p>
+                                    <p className="text-lg sm:text-2xl font-black tabular-nums" style={{ color: data.color }}>{data.value.toFixed(1)}%</p>
                                 </div>
                             ))}
                         </div>
                     </Card>
 
-                    <Card className="border-none bg-slate-950/80 border border-white/5 p-6 sm:p-8 rounded-[1.5rem] sm:rounded-[3rem] flex items-center justify-between shadow-2xl mt-4 sm:mt-0">
-                        <div className="flex items-center gap-4 sm:gap-6">
-                            <div className="p-3 sm:p-4 bg-primary/10 rounded-[1rem] sm:rounded-[1.5rem]">
-                                <Boxes className="h-6 w-6 sm:h-8 sm:w-8 text-primary" />
+                    <Card className="border-none bg-slate-950/80 border border-white/5 p-4 sm:p-6 rounded-[1.25rem] sm:rounded-[2rem] flex items-center justify-between shadow-xl mt-4 sm:mt-0">
+                        <div className="flex items-center gap-3 sm:gap-4">
+                            <div className="p-2 sm:p-3 bg-primary/10 rounded-[0.75rem] sm:rounded-[1rem]">
+                                <Boxes className="h-5 w-5 sm:h-6 sm:w-6 text-primary" />
                             </div>
                             <div>
-                                <p className="text-[8px] sm:text-[10px] font-black text-primary uppercase tracking-widest">PATTERN RECURSION</p>
-                                <p className="text-base sm:text-2xl font-black text-white">{patternIntelligence.repeat !== null ? `REPETITION: ${patternIntelligence.repeat}` : 'SCANNING...'}</p>
+                                <p className="text-[7px] sm:text-[9px] font-black text-primary uppercase tracking-widest">PATTERN RECURSION</p>
+                                <p className="text-sm sm:text-xl font-black text-white">{patternIntelligence.repeat !== null ? `REPETITION: ${patternIntelligence.repeat}` : 'SCANNING...'}</p>
                             </div>
                         </div>
-                        <SignalHigh className={cn("h-6 w-6 sm:h-8 sm:w-8", patternIntelligence.intensity > 50 ? "text-emerald-400" : "text-primary/40")} />
+                        <SignalHigh className={cn("h-5 w-5 sm:h-6 sm:w-6", patternIntelligence.intensity > 50 ? "text-emerald-400" : "text-primary/40")} />
                     </Card>
                 </div>
             </div>
 
             {tradeType === 'matches-differs' && (
-                <Card className="border-none shadow-2xl bg-slate-900/40 backdrop-blur-[60px] p-6 sm:p-12 rounded-[2rem] sm:rounded-[4rem] relative overflow-hidden group">
-                    <div className="absolute top-0 left-0 w-2 h-full bg-emerald-500/40 group-hover:bg-emerald-500 transition-colors" />
-                    <div className="flex items-center gap-4 sm:gap-6 mb-8 sm:mb-10">
-                        <div className="p-3 sm:p-4 bg-emerald-500/10 rounded-full">
-                            <Hash className="h-5 w-5 sm:h-6 sm:w-6 text-emerald-400" />
+                <Card className="border-none shadow-2xl bg-slate-900/40 backdrop-blur-3xl p-5 sm:p-10 rounded-[1.5rem] sm:rounded-[3rem] relative overflow-hidden group">
+                    <div className="absolute top-0 left-0 w-1.5 h-full bg-emerald-500/40" />
+                    <div className="flex items-center gap-3 sm:gap-5 mb-6 sm:mb-8">
+                        <div className="p-2 sm:p-3 bg-emerald-500/10 rounded-full">
+                            <Hash className="h-4 w-4 sm:h-5 sm:w-5 text-emerald-400" />
                         </div>
-                        <p className="text-[10px] sm:text-[14px] font-black uppercase tracking-[0.4em] sm:tracking-[0.6em] text-white">SELECT TARGET DIGIT VECTOR</p>
+                        <p className="text-[9px] sm:text-[12px] font-black uppercase tracking-widest text-white">SELECT TARGET DIGIT VECTOR</p>
                     </div>
-                    <div className="grid grid-cols-5 sm:grid-cols-10 gap-3 sm:gap-6">
+                    <div className="grid grid-cols-5 sm:grid-cols-10 gap-2 sm:gap-4">
                         {Array.from({ length: 10 }, (_, i) => (
                             <Button
                                 key={i}
                                 variant={matchesDigit === i ? 'default' : 'outline'}
                                 className={cn(
-                                    'h-12 sm:h-20 rounded-[1rem] sm:rounded-[2rem] text-xl sm:text-3xl font-black transition-all duration-500 relative overflow-hidden',
+                                    'h-10 sm:h-16 rounded-[0.75rem] sm:rounded-[1.25rem] text-lg sm:text-2xl font-black transition-all duration-300 relative overflow-hidden',
                                     matchesDigit === i 
-                                        ? 'bg-emerald-500 text-white shadow-[0_10px_30px_rgba(16,185,129,0.4)] scale-110 z-10 border-none' 
-                                        : 'bg-black/40 border-white/5 hover:bg-white/10 hover:border-emerald-500/30'
+                                        ? 'bg-emerald-500 text-white shadow-xl scale-105 z-10 border-none' 
+                                        : 'bg-black/40 border-white/5 hover:bg-white/10'
                                 )}
                                 onClick={() => setMatchesDigit(i)}
                             >
-                                {matchesDigit === i && <div className="absolute inset-0 bg-white/20 animate-pulse" />}
                                 {i}
                             </Button>
                         ))}
@@ -371,28 +363,27 @@ export function AnalyzerView({
             )}
 
             {tradeType === 'over-under' && (
-                <Card className="border-none shadow-2xl bg-slate-900/40 backdrop-blur-[60px] p-6 sm:p-12 rounded-[2rem] sm:rounded-[4rem] relative overflow-hidden group">
-                     <div className="absolute top-0 right-0 w-2 h-full bg-cyan-500/40 group-hover:bg-cyan-500 transition-colors" />
-                     <div className="flex items-center gap-4 sm:gap-6 mb-8 sm:mb-10">
-                        <div className="p-3 sm:p-4 bg-cyan-500/10 rounded-full">
-                            <BarChartHorizontal className="h-5 w-5 sm:h-6 sm:w-6 text-cyan-400" />
+                <Card className="border-none shadow-2xl bg-slate-900/40 backdrop-blur-3xl p-5 sm:p-10 rounded-[1.5rem] sm:rounded-[3rem] relative overflow-hidden group">
+                     <div className="absolute top-0 right-0 w-1.5 h-full bg-cyan-500/40" />
+                     <div className="flex items-center gap-3 sm:gap-5 mb-6 sm:mb-8">
+                        <div className="p-2 sm:p-3 bg-cyan-500/10 rounded-full">
+                            <BarChartHorizontal className="h-4 w-4 sm:h-5 sm:w-5 text-cyan-400" />
                         </div>
-                        <p className="text-[10px] sm:text-[14px] font-black uppercase tracking-[0.4em] sm:tracking-[0.6em] text-white">SELECT BARRIER PIVOT LEVEL</p>
+                        <p className="text-[9px] sm:text-[12px] font-black uppercase tracking-widest text-white">SELECT BARRIER PIVOT LEVEL</p>
                     </div>
-                    <div className="grid grid-cols-5 sm:grid-cols-10 gap-3 sm:gap-6">
+                    <div className="grid grid-cols-5 sm:grid-cols-10 gap-2 sm:gap-4">
                         {Array.from({ length: 10 }, (_, i) => (
                             <Button
                                 key={i}
                                 variant={overUnderDigit === i ? 'default' : 'outline'}
                                 className={cn(
-                                    'h-12 sm:h-20 rounded-[1rem] sm:rounded-[2rem] text-xl sm:text-3xl font-black transition-all duration-500 relative overflow-hidden',
+                                    'h-10 sm:h-16 rounded-[0.75rem] sm:rounded-[1.25rem] text-lg sm:text-2xl font-black transition-all duration-300 relative overflow-hidden',
                                     overUnderDigit === i 
-                                        ? 'bg-cyan-500 text-white shadow-[0_10px_30px_rgba(6,182,212,0.4)] scale-110 z-10 border-none' 
-                                        : 'bg-black/40 border-white/5 hover:bg-white/10 hover:border-cyan-500/30'
+                                        ? 'bg-cyan-500 text-white shadow-xl scale-105 z-10 border-none' 
+                                        : 'bg-black/40 border-white/5 hover:bg-white/10'
                                 )}
                                 onClick={() => setOverUnderDigit(i)}
                             >
-                                {overUnderDigit === i && <div className="absolute inset-0 bg-white/20 animate-pulse" />}
                                 {i}
                             </Button>
                         ))}
