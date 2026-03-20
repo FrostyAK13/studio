@@ -8,7 +8,7 @@ import { syntheticIndices } from '@/lib/mock-data';
 import { cn } from '@/lib/utils';
 import { Progress } from '@/components/ui/progress';
 import { Badge } from '@/components/ui/badge';
-import { Info, Target, Zap } from 'lucide-react';
+import { Info, Target, Zap, Activity } from 'lucide-react';
 
 interface CorrelationViewProps {
     selectedMarket: string;
@@ -278,22 +278,34 @@ export function CorrelationView({
     const [selectedDigit, setSelectedDigit] = React.useState<number | null>(null);
 
     return (
-        <div className="space-y-4">
-            <Card className="border-none shadow-xl bg-card/60 backdrop-blur-md">
-                <CardContent className="p-3 sm:p-4">
-                    <Label htmlFor="circles-market-select" className="text-[9px] sm:text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground ml-1">Configuration Market</Label>
-                    <Select value={selectedMarket} onValueChange={onMarketChange}>
-                        <SelectTrigger id="circles-market-select" className="mt-2 h-10 sm:h-11 text-sm sm:text-base font-bold bg-background/50 border-white/5 shadow-inner rounded-xl">
-                            <SelectValue placeholder="Select Index" />
-                        </SelectTrigger>
-                        <SelectContent side="bottom" position="popper" sideOffset={4} className="w-[var(--radix-select-trigger-width)] max-h-[400px] rounded-xl border-white/10 bg-slate-950 text-white z-[100]">
-                            {syntheticIndices.map((index) => (
-                            <SelectItem key={index.id} value={index.id} className="focus:bg-primary/20 focus:text-white cursor-pointer py-2">
-                                {index.name}
-                            </SelectItem>
-                            ))}
-                        </SelectContent>
-                    </Select>
+        <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-700">
+            <Card className="border-none shadow-[0_20px_60px_rgba(0,0,0,0.5)] bg-slate-900/40 backdrop-blur-[50px] overflow-hidden relative rounded-[3rem]">
+                <div className="absolute top-0 left-0 w-full h-[1px] bg-gradient-to-r from-transparent via-primary/50 to-transparent" />
+                <CardContent className="p-8 sm:p-12 grid grid-cols-1 md:grid-cols-2 gap-8 sm:gap-12 items-end">
+                    <div className="space-y-4">
+                        <Label className="text-[12px] font-black uppercase tracking-[0.5em] text-primary ml-2">MARKET VECTOR SELECT</Label>
+                        <Select value={selectedMarket} onValueChange={onMarketChange}>
+                            <SelectTrigger className="h-16 bg-black/40 border-white/10 rounded-[1.5rem] font-black text-lg shadow-[inset_0_2px_10px_rgba(0,0,0,0.5)] px-8">
+                                <SelectValue placeholder="Select Index" />
+                            </SelectTrigger>
+                            <SelectContent side="bottom" position="popper" sideOffset={4} className="w-[var(--radix-select-trigger-width)] max-h-[400px] rounded-[1.5rem] border-white/10 bg-slate-950 text-white z-[100]">
+                                {syntheticIndices.map((index) => (
+                                <SelectItem key={index.id} value={index.id} className="focus:bg-primary/20 focus:text-white cursor-pointer py-3">
+                                    {index.name}
+                                </SelectItem>
+                                ))}
+                            </SelectContent>
+                        </Select>
+                    </div>
+                    <div className="space-y-4">
+                        <Label className="text-[12px] font-black uppercase tracking-[0.5em] text-primary ml-2">SAMPLE WINDOW (TICKS)</Label>
+                        <div className="relative">
+                            <div className="h-16 bg-black/40 border-white/10 rounded-[1.5rem] flex items-center justify-center font-black text-3xl text-primary shadow-[inset_0_2px_10px_rgba(0,0,0,0.5)]">
+                                {lastDigitTicks.length}
+                            </div>
+                            <div className="absolute right-6 top-1/2 -translate-y-1/2 pointer-events-none opacity-20"><Activity size={24} /></div>
+                        </div>
+                    </div>
                 </CardContent>
             </Card>
 
