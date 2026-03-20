@@ -46,9 +46,9 @@ export function ScannerView({
                       <SelectTrigger className="w-full bg-transparent font-bold text-base sm:text-lg h-full border-0 focus:ring-0 focus:ring-offset-0">
                         <SelectValue placeholder="Select Index" />
                       </SelectTrigger>
-                      <SelectContent className="rounded-xl">
+                      <SelectContent side="bottom" position="popper" sideOffset={4} className="w-[var(--radix-select-trigger-width)] max-h-[400px] rounded-xl border-white/10 bg-slate-950 text-white z-[100]">
                         {syntheticIndices.map((index) => (
-                          <SelectItem key={index.id} value={index.id}>
+                          <SelectItem key={index.id} value={index.id} className="focus:bg-primary/20 focus:text-white cursor-pointer py-2">
                             {index.name}
                           </SelectItem>
                         ))}

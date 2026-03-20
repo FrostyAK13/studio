@@ -286,7 +286,7 @@ export function CorrelationView({
                         <SelectTrigger id="circles-market-select" className="mt-2 h-10 sm:h-11 text-sm sm:text-base font-bold bg-background/50 border-white/5 shadow-inner rounded-xl">
                             <SelectValue placeholder="Select Index" />
                         </SelectTrigger>
-                        <SelectContent side="bottom" position="popper" sideOffset={4} className="rounded-xl border-white/10 bg-slate-950 text-white z-[100]">
+                        <SelectContent side="bottom" position="popper" sideOffset={4} className="w-[var(--radix-select-trigger-width)] max-h-[400px] rounded-xl border-white/10 bg-slate-950 text-white z-[100]">
                             {syntheticIndices.map((index) => (
                             <SelectItem key={index.id} value={index.id} className="focus:bg-primary/20 focus:text-white cursor-pointer py-2">
                                 {index.name}

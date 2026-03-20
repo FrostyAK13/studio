@@ -127,7 +127,7 @@ export function AnalyzerView({
                             <SelectTrigger className="h-10 sm:h-12 bg-background/40 border-white/5 rounded-xl font-bold">
                                 <SelectValue placeholder="Select Index" />
                             </SelectTrigger>
-                            <SelectContent side="bottom" position="popper" sideOffset={4} className="rounded-xl border-white/10 bg-slate-950 text-white z-[100]">
+                            <SelectContent side="bottom" position="popper" sideOffset={4} className="w-[var(--radix-select-trigger-width)] max-h-[400px] rounded-xl border-white/10 bg-slate-950 text-white z-[100]">
                                 {syntheticIndices.map((index) => (
                                 <SelectItem key={index.id} value={index.id} className="focus:bg-primary/20 focus:text-white cursor-pointer py-2">
                                     {index.name}
@@ -142,7 +142,7 @@ export function AnalyzerView({
                              <SelectTrigger className="h-10 sm:h-12 bg-background/40 border-white/5 rounded-xl font-bold">
                                 <SelectValue placeholder="Select Trade Type" />
                             </SelectTrigger>
-                            <SelectContent side="bottom" position="popper" sideOffset={4} className="rounded-xl border-white/10 bg-slate-950 text-white z-[100]">
+                            <SelectContent side="bottom" position="popper" sideOffset={4} className="w-[var(--radix-select-trigger-width)] max-h-[400px] rounded-xl border-white/10 bg-slate-950 text-white z-[100]">
                                 <SelectItem value="even-odd" className="focus:bg-primary/20 focus:text-white cursor-pointer py-2">Even / Odd</SelectItem>
                                 <SelectItem value="matches-differs" className="focus:bg-primary/20 focus:text-white cursor-pointer py-2">Matches / Differs</SelectItem>
                                 <SelectItem value="over-under" className="focus:bg-primary/20 focus:text-white cursor-pointer py-2">Over / Under</SelectItem>

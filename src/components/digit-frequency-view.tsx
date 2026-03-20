@@ -269,7 +269,7 @@ export function DigitFrequencyView({
                             <SelectTrigger className="h-16 bg-black/40 border-white/10 rounded-[1.5rem] font-black text-lg shadow-[inset_0_2px_10px_rgba(0,0,0,0.5)] px-8">
                                 <SelectValue placeholder="Select Index" />
                             </SelectTrigger>
-                            <SelectContent side="bottom" position="popper" sideOffset={4} className="rounded-[1.5rem] border-white/10 bg-slate-950 text-white z-[100]">
+                            <SelectContent side="bottom" position="popper" sideOffset={4} className="w-[var(--radix-select-trigger-width)] max-h-[400px] rounded-[1.5rem] border-white/10 bg-slate-950 text-white z-[100]">
                                 {syntheticIndices.map((index) => (
                                 <SelectItem key={index.id} value={index.id} className="focus:bg-primary/20 focus:text-white cursor-pointer py-3">
                                     {index.name}
