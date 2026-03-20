@@ -13,9 +13,10 @@ export type InsightOutput = {
  * Evaluates Rise/Fall, Over/Under, Even/Odd, and Matches/Differs.
  */
 export function generateInsight(ticks: number[], prices: number[]): InsightOutput {
-  const analysisWindow = ticks.length;
+  const analysisWindow = ticks?.length || 0;
+  const priceWindow = prices?.length || 0;
   
-  if (analysisWindow < 50) {
+  if (analysisWindow < 50 || priceWindow < 50) {
     throw new Error("Data sequence unstable. Minimum 50 ticks required for multi-protocol analysis.");
   }
 

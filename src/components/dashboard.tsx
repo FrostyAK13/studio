@@ -227,6 +227,7 @@ export function Dashboard() {
                         price={price}
                         decimalPlaces={decimalPlaces}
                         lastDigitTicks={analyzedDigits}
+                        priceHistory={analyzedPrices}
                         selectedMarket={selectedMarket}
                         onMarketChange={setSelectedMarket}
                         maxTicks={maxTicks}
