@@ -38,50 +38,53 @@ export function AnalyzerView({
     const [tradeType, setTradeType] = React.useState('even-odd');
     const [matchesDigit, setMatchesDigit] = React.useState(0);
     const [overUnderDigit, setOverUnderDigit] = React.useState(5);
+
+    // Color Constants for HUD Clarity
+    const COLORS = {
+        EVEN: 'hsl(var(--chart-1))',       // Blue
+        ODD: 'hsl(var(--chart-3))',        // Rose
+        MATCH: 'hsl(var(--chart-2))',      // Cyan/Emerald
+        DIFFER: 'hsl(var(--chart-5))',     // Orange
+        OVER: 'hsl(var(--chart-2))',       // Cyan
+        UNDER: 'hsl(var(--chart-3))',      // Rose/Red
+        RISE: 'hsl(var(--chart-2))',       // Cyan
+        FALL: 'hsl(var(--chart-3))',       // Rose
+        NEUTRAL: 'rgba(255, 255, 255, 0.1)'
+    };
     
     const evenOddChartData = React.useMemo(() => {
         const evenCount = lastDigitTicks.filter(d => d % 2 === 0).length;
         const oddCount = lastDigitTicks.length - evenCount;
         const total = lastDigitTicks.length || 1;
         return [
-            { name: 'Even', value: (evenCount / total) * 100, color: 'hsl(var(--chart-1))' },
-            { name: 'Odd', value: (oddCount / total) * 100, color: 'hsl(var(--chart-3))' },
+            { name: 'Even', value: (evenCount / total) * 100, color: COLORS.EVEN },
+            { name: 'Odd', value: (oddCount / total) * 100, color: COLORS.ODD },
         ];
     }, [lastDigitTicks]);
-
-    const evenOddOutcomes = lastDigitTicks.map(digit => (digit % 2 === 0 ? 'E' : 'O'));
 
     const matchesDiffersChartData = React.useMemo(() => {
         const matchesCount = lastDigitTicks.filter(d => d === matchesDigit).length;
         const total = lastDigitTicks.length || 1;
         return [
-            { name: 'Matches', value: (matchesCount / total) * 100, color: 'hsl(var(--chart-2))' },
-            { name: 'Differs', value: ((total - matchesCount) / total) * 100, color: 'hsl(var(--chart-5))' },
+            { name: 'Matches', value: (matchesCount / total) * 100, color: COLORS.MATCH },
+            { name: 'Differs', value: ((total - matchesCount) / total) * 100, color: COLORS.DIFFER },
         ];
     }, [lastDigitTicks, matchesDigit]);
-
-    const matchesDiffersOutcomes = lastDigitTicks.map(digit => (digit === matchesDigit ? 'M' : 'D'));
 
     const overUnderChartData = React.useMemo(() => {
         const overCount = lastDigitTicks.filter(d => d > overUnderDigit).length;
         const underCount = lastDigitTicks.filter(d => d < overUnderDigit).length;
-        const relevantCount = (overCount + underCount) || 1;
+        const total = lastDigitTicks.length || 1;
         return [
-            { name: 'Over', value: (overCount / relevantCount) * 100, color: 'hsl(var(--accent))' },
-            { name: 'Under', value: (underCount / relevantCount) * 100, color: 'hsl(var(--destructive))' },
+            { name: 'Over', value: (overCount / total) * 100, color: COLORS.OVER },
+            { name: 'Under', value: (underCount / total) * 100, color: COLORS.UNDER },
         ];
     }, [lastDigitTicks, overUnderDigit]);
 
-    const overUnderOutcomes = lastDigitTicks.map(digit => {
-        if (digit > overUnderDigit) return 'O';
-        if (digit < overUnderDigit) return 'U';
-        return 'E';
-    });
-
     const riseFallChartData = React.useMemo(() => {
         if (priceHistory.length < 2) return [
-            { name: 'Rise', value: 0, color: 'hsl(var(--accent))' },
-            { name: 'Fall', value: 0, color: 'hsl(var(--destructive))' },
+            { name: 'Rise', value: 0, color: COLORS.RISE },
+            { name: 'Fall', value: 0, color: COLORS.FALL },
         ];
         let riseCount = 0;
         let fallCount = 0;
@@ -91,19 +94,9 @@ export function AnalyzerView({
         }
         const total = (riseCount + fallCount) || 1;
         return [
-            { name: 'Rise', value: (riseCount / total) * 100, color: 'hsl(var(--accent))' },
-            { name: 'Fall', value: (fallCount / total) * 100, color: 'hsl(var(--destructive))' },
+            { name: 'Rise', value: (riseCount / total) * 100, color: COLORS.RISE },
+            { name: 'Fall', value: (fallCount / total) * 100, color: COLORS.FALL },
         ];
-    }, [priceHistory]);
-
-    const riseFallOutcomes = React.useMemo(() => {
-        const outcomes: string[] = [];
-        for (let i = 0; i < priceHistory.length - 1; i++) {
-            if (priceHistory[i] > priceHistory[i+1]) outcomes.push('R');
-            else if (priceHistory[i] < priceHistory[i+1]) outcomes.push('F');
-            else outcomes.push('S');
-        }
-        return outcomes;
     }, [priceHistory]);
 
     const activeChartData = React.useMemo(() => {
@@ -115,6 +108,54 @@ export function AnalyzerView({
             default: return evenOddChartData;
         }
     }, [tradeType, evenOddChartData, matchesDiffersChartData, overUnderChartData, riseFallChartData]);
+
+    const renderSequence = () => {
+        const count = 24;
+        const slice = [...lastDigitTicks.slice(0, count)].reverse();
+        const priceSlice = [...priceHistory.slice(0, count)].reverse();
+
+        return slice.map((digit, i) => {
+            let color = 'bg-white/5';
+            let label = digit.toString();
+
+            if (tradeType === 'even-odd') {
+                color = digit % 2 === 0 ? `bg-[${COLORS.EVEN}]` : `bg-[${COLORS.ODD}]`;
+                // Tailwind color class mapping
+                color = digit % 2 === 0 ? 'bg-primary shadow-[0_0_10px_rgba(var(--primary),0.5)]' : 'bg-rose-500 shadow-[0_0_10px_rgba(244,63,94,0.5)]';
+            } else if (tradeType === 'matches-differs') {
+                const isMatch = digit === matchesDigit;
+                color = isMatch ? 'bg-emerald-500 shadow-[0_0_15px_rgba(16,185,129,0.6)]' : 'bg-orange-500/20 text-orange-400 border-orange-500/30';
+            } else if (tradeType === 'over-under') {
+                if (digit > overUnderDigit) color = 'bg-cyan-500 shadow-[0_0_15px_rgba(6,182,212,0.6)]';
+                else if (digit < overUnderDigit) color = 'bg-rose-500 shadow-[0_0_15px_rgba(244,63,94,0.6)]';
+                else color = 'bg-white/10 text-white/40';
+            } else if (tradeType === 'rise-fall') {
+                // For rise fall we need relative comparison. Sequence uses historical price shifts.
+                const currentPrice = priceHistory[i];
+                const prevPrice = priceHistory[i+1];
+                if (currentPrice > prevPrice) {
+                    color = 'bg-emerald-500 shadow-[0_0_15px_rgba(16,185,129,0.6)]';
+                    label = 'R';
+                } else if (currentPrice < prevPrice) {
+                    color = 'bg-rose-500 shadow-[0_0_15px_rgba(244,63,94,0.6)]';
+                    label = 'F';
+                } else {
+                    color = 'bg-white/5';
+                    label = '-';
+                }
+            }
+
+            return (
+                <div key={i} className={cn(
+                    "flex items-center justify-center w-10 h-10 rounded-xl font-black text-sm border border-white/5 shadow-lg shrink-0 transition-all duration-300",
+                    color,
+                    (tradeType === 'matches-differs' && digit !== matchesDigit) ? "" : "text-white"
+                )}>
+                    {label}
+                </div>
+            );
+        });
+    };
 
     return (
         <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-700">
@@ -185,22 +226,7 @@ export function AnalyzerView({
                     </CardHeader>
                     <CardContent className="p-6">
                         <div className="flex flex-wrap gap-2 mb-8 min-h-[48px]">
-                            {(() => {
-                                const outcomes = tradeType === 'even-odd' ? evenOddOutcomes : 
-                                               tradeType === 'matches-differs' ? matchesDiffersOutcomes :
-                                               tradeType === 'over-under' ? overUnderOutcomes :
-                                               riseFallOutcomes;
-                                return [...outcomes.slice(0, 24)].reverse().map((o, i) => (
-                                    <div key={i} className={cn(
-                                        "flex items-center justify-center w-10 h-10 rounded-xl font-black text-sm border border-white/5 shadow-lg shrink-0",
-                                        (o === 'E' || o === 'M' || o === 'O' || o === 'R') 
-                                            ? 'bg-gradient-to-br from-primary to-blue-600 text-white' 
-                                            : 'bg-white/5 text-muted-foreground'
-                                    )}>
-                                        {o}
-                                    </div>
-                                ));
-                            })()}
+                            {renderSequence()}
                         </div>
                         
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -286,7 +312,7 @@ export function AnalyzerView({
                                 variant={matchesDigit === i ? 'default' : 'outline'}
                                 className={cn(
                                     'h-14 rounded-xl text-xl font-black transition-all duration-300',
-                                    matchesDigit === i ? 'bg-primary text-white shadow-xl shadow-primary/30 scale-110' : 'bg-background/40 border-white/5 hover:bg-white/10'
+                                    matchesDigit === i ? 'bg-emerald-500 text-white shadow-xl shadow-emerald-500/30 scale-110' : 'bg-background/40 border-white/5 hover:bg-white/10'
                                 )}
                                 onClick={() => setMatchesDigit(i)}
                             >
@@ -300,7 +326,7 @@ export function AnalyzerView({
             {tradeType === 'over-under' && (
                 <Card className="border-none shadow-2xl bg-slate-900/40 backdrop-blur-xl p-8 rounded-3xl">
                      <div className="flex items-center gap-3 mb-6">
-                        <BarChartHorizontal className="h-5 w-5 text-accent" />
+                        <BarChartHorizontal className="h-5 w-5 text-cyan-400" />
                         <p className="text-xs font-black uppercase tracking-[0.2em]">Select Barrier Level</p>
                     </div>
                     <div className="grid grid-cols-5 sm:grid-cols-10 gap-3">
@@ -310,7 +336,7 @@ export function AnalyzerView({
                                 variant={overUnderDigit === i ? 'default' : 'outline'}
                                 className={cn(
                                     'h-14 rounded-xl text-xl font-black transition-all duration-300',
-                                    overUnderDigit === i ? 'bg-accent text-white shadow-xl shadow-accent/30 scale-110' : 'bg-background/40 border-white/5 hover:bg-white/10'
+                                    overUnderDigit === i ? 'bg-cyan-500 text-white shadow-xl shadow-cyan-500/30 scale-110' : 'bg-background/40 border-white/5 hover:bg-white/10'
                                 )}
                                 onClick={() => setOverUnderDigit(i)}
                             >
