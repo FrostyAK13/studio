@@ -49,48 +49,47 @@ const DigitHeatCard = ({ digit, ticks, isSelected, onSelect }: {
         let colorClass = "text-muted-foreground";
         let glowClass = "";
         let bgClass = "bg-white/5";
-        let borderClass = "border-white/5";
         let rating = "STABLE";
 
         if (freq > 13) {
-            colorClass = "text-rose-400";
-            glowClass = "shadow-[0_0_20px_rgba(244,63,94,0.3)] border-rose-500/30";
+            colorClass = "text-rose-500";
+            glowClass = "shadow-[0_0_20px_rgba(244,63,94,0.15)] border-rose-500/20";
             bgClass = "bg-rose-500/10";
             rating = "VOLATILE";
         } else if (freq > 11) {
-            colorClass = "text-orange-400";
-            glowClass = "shadow-[0_0_15px_rgba(249,115,22,0.15)] border-orange-500/20";
+            colorClass = "text-orange-500";
+            glowClass = "shadow-[0_0_15px_rgba(249,115,22,0.1)] border-orange-500/10";
             bgClass = "bg-orange-500/5";
             rating = "TRENDING";
         } else if (freq < 7) {
-            colorClass = "text-cyan-400";
-            glowClass = "shadow-[0_0_20px_rgba(6,182,212,0.25)] border-cyan-500/30";
+            colorClass = "text-cyan-500";
+            glowClass = "shadow-[0_0_20px_rgba(6,182,212,0.15)] border-cyan-500/20";
             bgClass = "bg-cyan-500/10";
             rating = "COLD";
         }
 
-        return { freq, tsl, colorClass, glowClass, bgClass, borderClass, rating, velocity };
+        return { freq, tsl, colorClass, glowClass, bgClass, rating, velocity };
     }, [digit, ticks]);
 
     return (
         <div 
             onClick={() => onSelect(digit)}
             className={cn(
-                "relative group cursor-pointer transition-all duration-500 rounded-[1rem] sm:rounded-[2rem] border p-3 sm:p-5 flex flex-col justify-between h-32 sm:h-48 md:h-64 overflow-hidden backdrop-blur-xl",
+                "relative group cursor-pointer transition-all duration-500 rounded-[1.25rem] sm:rounded-[2rem] border p-3 sm:p-5 flex flex-col justify-between h-32 sm:h-44 md:h-56 overflow-hidden backdrop-blur-xl",
                 stats.bgClass,
-                stats.glowClass || stats.borderClass,
-                isSelected ? "ring-2 ring-primary scale-105 z-20 shadow-[0_0_40px_rgba(var(--primary),0.3)] bg-primary/20" : "hover:scale-[1.02] hover:bg-white/10"
+                stats.glowClass || "border-white/5",
+                isSelected ? "ring-2 ring-primary scale-105 z-20 shadow-[0_0_40px_rgba(var(--primary),0.2)] bg-primary/20" : "hover:scale-[1.02] hover:bg-white/10"
             )}
         >
             <div className="absolute top-0 right-0 p-2 sm:p-4 opacity-5 group-hover:opacity-10 transition-opacity">
-                <Hash className={cn("w-12 h-12 sm:w-20 sm:h-20", stats.colorClass)} />
+                <Hash className={cn("w-10 h-10 sm:w-16 sm:h-16", stats.colorClass)} />
             </div>
 
             <div className="flex justify-between items-start relative z-10">
                 <div className="relative">
                     <span className={cn(
-                        "text-3xl sm:text-5xl md:text-7xl font-black tracking-tighter leading-none select-none drop-shadow-lg transition-all duration-500",
-                        isSelected ? "text-white scale-110" : stats.colorClass
+                        "text-3xl sm:text-4xl md:text-5xl font-black tracking-tighter leading-none select-none drop-shadow-sm transition-all duration-500",
+                        isSelected ? "text-foreground scale-110" : stats.colorClass
                     )}>
                         {digit}
                     </span>
@@ -106,32 +105,32 @@ const DigitHeatCard = ({ digit, ticks, isSelected, onSelect }: {
                 </div>
                 <div className="text-right">
                     <Badge className={cn(
-                        "text-[6px] sm:text-[9px] font-black tracking-widest mb-1 sm:mb-2 px-2 sm:px-3 py-0.5 border-none",
-                        stats.colorClass.replace('text-', 'bg-').replace('400', '500').replace('500', '600') + "/20",
+                        "text-[6px] sm:text-[8px] font-black tracking-widest mb-1 sm:mb-2 px-1.5 sm:px-2 py-0 border-none",
+                        stats.colorClass.replace('text-', 'bg-').replace('400', '500').replace('500', '600') + "/10",
                         stats.colorClass
                     )}>
                         {stats.rating}
                     </Badge>
-                    <p className={cn("text-lg sm:text-xl md:text-2xl font-black tabular-nums tracking-tighter", stats.colorClass)}>
+                    <p className={cn("text-base sm:text-lg md:text-xl font-black tabular-nums tracking-tighter", stats.colorClass)}>
                         {stats.freq.toFixed(1)}%
                     </p>
                 </div>
             </div>
 
             <div className="space-y-0.5 sm:space-y-1 relative z-10">
-                <div className="flex items-center gap-1.5 opacity-50">
-                    <Timer className="h-2.5 w-2.5 sm:h-4 sm:w-4" />
-                    <span className="text-[6px] sm:text-[9px] font-black uppercase tracking-widest">TSL GAP</span>
+                <div className="flex items-center gap-1.5 opacity-40">
+                    <Timer className="h-2.5 w-2.5 sm:h-3 sm:w-3" />
+                    <span className="text-[6px] sm:text-[8px] font-black uppercase tracking-widest">TSL GAP</span>
                 </div>
-                <div className="flex items-baseline gap-1.5 sm:gap-2">
-                    <span className="text-xl sm:text-3xl md:text-4xl font-black text-white tabular-nums tracking-tighter">
+                <div className="flex items-baseline gap-1 sm:gap-1.5">
+                    <span className="text-xl sm:text-2xl md:text-3xl font-black text-foreground tabular-nums tracking-tighter">
                         {stats.tsl}
                     </span>
-                    <span className="text-[8px] sm:text-[10px] font-black text-muted-foreground uppercase tracking-widest opacity-60">TICKS</span>
+                    <span className="text-[7px] sm:text-[9px] font-black text-muted-foreground uppercase tracking-widest opacity-60">TICKS</span>
                 </div>
             </div>
 
-            <div className="absolute bottom-0 left-0 w-full h-1 sm:h-2 bg-black/60 overflow-hidden">
+            <div className="absolute bottom-0 left-0 w-full h-1 bg-black/5 overflow-hidden">
                 <div 
                     className={cn("h-full transition-all duration-1000 ease-out", stats.colorClass.replace('text-', 'bg-'))} 
                     style={{ 
@@ -167,69 +166,69 @@ const DigitDetailInsights = ({ digit, ticks }: { digit: number, ticks: number[] 
             <CardHeader className="pb-4 sm:pb-8 pt-8 sm:pt-12 px-5 sm:px-10">
                 <div className="flex flex-col sm:flex-row items-center justify-between gap-4 sm:gap-8">
                     <div className="flex flex-col sm:flex-row items-center gap-4 sm:gap-8 text-center sm:text-left">
-                        <div className="w-12 h-12 sm:w-20 sm:h-20 rounded-[0.75rem] sm:rounded-[1.5rem] bg-primary/20 flex items-center justify-center border border-primary/30 shadow-[0_0_30px_rgba(var(--primary),0.2)]">
-                            <Activity className="h-6 w-6 sm:h-10 sm:w-10 text-primary drop-shadow-[0_0_15px_rgba(var(--primary),1)]" />
+                        <div className="w-12 h-12 sm:w-16 sm:h-16 rounded-[0.75rem] sm:rounded-[1.25rem] bg-primary/20 flex items-center justify-center border border-primary/30 shadow-[0_0_30px_rgba(var(--primary),0.2)]">
+                            <Activity className="h-6 w-6 sm:h-8 sm:w-8 text-primary drop-shadow-[0_0_15px_rgba(var(--primary),1)]" />
                         </div>
                         <div>
-                            <CardTitle className="text-xl sm:text-3xl md:text-4xl font-black text-white tracking-tighter uppercase leading-none">DIGIT {digit} INTEL</CardTitle>
-                            <CardDescription className="text-primary/70 font-black uppercase tracking-[0.3em] text-[8px] sm:text-[12px] mt-2">Precision Volumetric Matrix</CardDescription>
+                            <CardTitle className="text-xl sm:text-2xl md:text-3xl font-black text-white tracking-tighter uppercase leading-none">DIGIT {digit} INTEL</CardTitle>
+                            <CardDescription className="text-primary/70 font-black uppercase tracking-[0.3em] text-[7px] sm:text-[10px] mt-2">Precision Volumetric Matrix</CardDescription>
                         </div>
                     </div>
-                    <div className="bg-white/5 border border-white/10 px-5 sm:px-8 py-2 sm:py-4 rounded-[1rem] sm:rounded-[2rem] text-center shadow-2xl w-full sm:w-auto">
-                        <p className="text-[7px] sm:text-[10px] font-black uppercase text-muted-foreground tracking-widest mb-1">STABILITY INDEX</p>
-                        <p className="text-sm sm:text-xl md:text-2xl font-black text-emerald-400 tabular-nums">ULTRA PRECISION</p>
+                    <div className="bg-white/5 border border-white/10 px-5 sm:px-8 py-2 sm:py-3 rounded-[1rem] sm:rounded-[1.5rem] text-center shadow-2xl w-full sm:w-auto">
+                        <p className="text-[7px] sm:text-[9px] font-black uppercase text-muted-foreground tracking-widest mb-1">STABILITY INDEX</p>
+                        <p className="text-sm sm:text-xl font-black text-emerald-400 tabular-nums uppercase">Ultra Precision</p>
                     </div>
                 </div>
             </CardHeader>
             <CardContent className="px-5 sm:px-10 pb-8 sm:pb-12 grid grid-cols-1 lg:grid-cols-2 gap-6 sm:gap-10">
-                <div className="space-y-6 sm:space-y-8 p-6 sm:p-10 rounded-[1.5rem] sm:rounded-[2.5rem] bg-black/50 border border-white/5 relative overflow-hidden group">
+                <div className="space-y-6 sm:space-y-8 p-5 sm:p-8 rounded-[1.5rem] sm:rounded-[2.5rem] bg-black/50 border border-white/5 relative overflow-hidden group">
                     <div className="absolute top-0 left-0 w-1.5 h-full bg-emerald-500/40" />
                     <div className="flex justify-between items-center border-b border-white/10 pb-4 sm:pb-6">
-                        <h4 className="text-[10px] sm:text-[14px] font-black uppercase tracking-widest text-muted-foreground flex items-center gap-3">
-                            <Hash className="h-4 w-4 sm:h-6 sm:w-6 text-emerald-400" /> ACCURACY GATE
+                        <h4 className="text-[10px] sm:text-[12px] font-black uppercase tracking-widest text-muted-foreground flex items-center gap-3">
+                            <Hash className="h-4 w-4 sm:h-5 sm:w-5 text-emerald-400" /> ACCURACY GATE
                         </h4>
-                        <span className="text-xl sm:text-3xl md:text-4xl font-black text-emerald-400 tabular-nums">{stats.actualFreq.toFixed(1)}%</span>
+                        <span className="text-xl sm:text-2xl md:text-3xl font-black text-emerald-400 tabular-nums">{stats.actualFreq.toFixed(1)}%</span>
                     </div>
                     <div className="space-y-6">
                         <div className="space-y-2">
-                            <div className="flex justify-between text-[7px] sm:text-[10px] font-black uppercase tracking-widest text-emerald-300">
+                            <div className="flex justify-between text-[7px] sm:text-[9px] font-black uppercase tracking-widest text-emerald-300">
                                 <span>MATCHES FLOW</span>
                                 <span>{stats.matches} TICKS</span>
                             </div>
-                            <Progress value={stats.actualFreq * 4} className="h-3 sm:h-4 bg-black/60 [&>div]:bg-emerald-500" />
+                            <Progress value={stats.actualFreq * 4} className="h-2.5 sm:h-3 bg-black/60 [&>div]:bg-emerald-500" />
                         </div>
                         <div className="space-y-2">
-                            <div className="flex justify-between text-[7px] sm:text-[10px] font-black uppercase tracking-widest text-rose-300">
+                            <div className="flex justify-between text-[7px] sm:text-[9px] font-black uppercase tracking-widest text-rose-300">
                                 <span>VARIANCE RATIO</span>
                                 <span>{stats.differs} TICKS</span>
                             </div>
-                            <Progress value={100 - (stats.actualFreq * 4)} className="h-3 sm:h-4 bg-black/60 [&>div]:bg-rose-500" />
+                            <Progress value={Math.max(0, 100 - (stats.actualFreq * 4))} className="h-2.5 sm:h-3 bg-black/60 [&>div]:bg-rose-500" />
                         </div>
                     </div>
                 </div>
 
-                <div className="space-y-6 sm:space-y-8 p-6 sm:p-10 rounded-[1.5rem] sm:rounded-[2.5rem] bg-black/50 border border-white/5 relative overflow-hidden group">
+                <div className="space-y-6 sm:space-y-8 p-5 sm:p-8 rounded-[1.5rem] sm:rounded-[2.5rem] bg-black/50 border border-white/5 relative overflow-hidden group">
                     <div className="absolute top-0 right-0 w-1.5 h-full bg-cyan-500/40" />
                     <div className="flex justify-between items-center border-b border-white/10 pb-4 sm:pb-6">
-                        <h4 className="text-[10px] sm:text-[14px] font-black uppercase tracking-widest text-muted-foreground flex items-center gap-3">
-                            <BarChartHorizontal className="h-4 w-4 sm:h-6 sm:w-6 text-cyan-400" /> BARRIER SYMMETRY
+                        <h4 className="text-[10px] sm:text-[12px] font-black uppercase tracking-widest text-muted-foreground flex items-center gap-3">
+                            <BarChartHorizontal className="h-4 w-4 sm:h-5 sm:w-5 text-cyan-400" /> BARRIER SYMMETRY
                         </h4>
-                        <span className="text-xl sm:text-3xl md:text-4xl font-black text-cyan-400 tabular-nums">{stats.over.toFixed(1)}%</span>
+                        <span className="text-xl sm:text-2xl md:text-3xl font-black text-cyan-400 tabular-nums">{stats.over.toFixed(1)}%</span>
                     </div>
                     <div className="space-y-6">
                         <div className="space-y-2">
-                            <div className="flex justify-between text-[7px] sm:text-[10px] font-black uppercase tracking-widest text-cyan-300">
+                            <div className="flex justify-between text-[7px] sm:text-[9px] font-black uppercase tracking-widest text-cyan-300">
                                 <span>OVER {digit} WEIGHT</span>
                                 <span>{stats.over.toFixed(1)}%</span>
                             </div>
-                            <Progress value={stats.over} className="h-3 sm:h-4 bg-black/60 [&>div]:bg-cyan-500" />
+                            <Progress value={stats.over} className="h-2.5 sm:h-3 bg-black/60 [&>div]:bg-cyan-500" />
                         </div>
                         <div className="space-y-2">
-                            <div className="flex justify-between text-[7px] sm:text-[10px] font-black uppercase tracking-widest text-orange-300">
+                            <div className="flex justify-between text-[7px] sm:text-[9px] font-black uppercase tracking-widest text-orange-300">
                                 <span>UNDER {digit} WEIGHT</span>
                                 <span>{stats.under.toFixed(1)}%</span>
                             </div>
-                            <Progress value={stats.under} className="h-3 sm:h-4 bg-black/60 [&>div]:bg-orange-500" />
+                            <Progress value={stats.under} className="h-2.5 sm:h-3 bg-black/60 [&>div]:bg-orange-500" />
                         </div>
                     </div>
                 </div>
@@ -280,24 +279,24 @@ export function DigitFrequencyView({
         <div className="space-y-8 sm:space-y-12 animate-in fade-in slide-in-from-bottom-10 duration-700 pb-20">
             <Card className="border-none shadow-2xl bg-slate-900/40 backdrop-blur-[60px] overflow-hidden relative rounded-[1.5rem] sm:rounded-[3rem]">
                 <div className="absolute top-0 left-0 w-full h-[2px] bg-gradient-to-r from-transparent via-primary/60 to-transparent" />
-                <CardContent className="p-6 sm:p-12 grid grid-cols-1 md:grid-cols-2 gap-6 sm:gap-16 items-center">
-                    <div className="space-y-3 sm:space-y-5">
-                        <Label className="text-[9px] sm:text-[12px] font-black uppercase tracking-widest text-primary ml-1 sm:ml-2">MARKET VECTOR SELECT</Label>
+                <CardContent className="p-5 sm:p-10 grid grid-cols-1 md:grid-cols-2 gap-6 sm:gap-16 items-center">
+                    <div className="space-y-2 sm:space-y-4">
+                        <Label className="text-[9px] sm:text-[11px] font-black uppercase tracking-widest text-primary ml-1 sm:ml-2">MARKET VECTOR SELECT</Label>
                         <Select value={selectedMarket} onValueChange={onMarketChange}>
-                            <SelectTrigger className="h-12 sm:h-16 bg-black/60 border-white/10 rounded-[1rem] sm:rounded-[1.5rem] font-black text-xs sm:text-lg px-4 sm:px-8">
+                            <SelectTrigger className="h-12 sm:h-16 bg-black/60 border-white/10 rounded-[1rem] sm:rounded-[1.5rem] font-black text-xs sm:text-base px-4 sm:px-6">
                                 <SelectValue placeholder="Select Index" />
                             </SelectTrigger>
                             <SelectContent side="bottom" position="popper" sideOffset={10} className="w-[var(--radix-select-trigger-width)] max-h-[400px] rounded-[1rem] sm:rounded-[1.5rem] border-white/10 bg-slate-950 text-white z-[100] shadow-2xl">
                                 {syntheticIndices.map((index) => (
-                                <SelectItem key={index.id} value={index.id} className="focus:bg-primary/20 focus:text-white cursor-pointer py-3 px-4 font-black text-xs sm:text-base transition-colors">
+                                <SelectItem key={index.id} value={index.id} className="focus:bg-primary/20 focus:text-white cursor-pointer py-3 px-4 font-black text-xs sm:text-sm transition-colors">
                                     {index.name}
                                 </SelectItem>
                                 ))}
                             </SelectContent>
                         </Select>
                     </div>
-                    <div className="space-y-3 sm:space-y-5">
-                        <Label className="text-[9px] sm:text-[12px] font-black uppercase tracking-widest text-primary ml-1 sm:ml-2">NEXUS DATA HORIZON</Label>
+                    <div className="space-y-2 sm:space-y-4">
+                        <Label className="text-[9px] sm:text-[11px] font-black uppercase tracking-widest text-primary ml-1 sm:ml-2">NEXUS DATA HORIZON</Label>
                         <div className="relative group">
                             <Input
                                 type="number"
@@ -306,9 +305,9 @@ export function DigitFrequencyView({
                                 value={maxTicks === 0 ? '' : maxTicks}
                                 onChange={handleMaxTicksChange}
                                 onBlur={handleMaxTicksBlur}
-                                className="h-12 sm:h-16 bg-black/60 border-white/10 rounded-[1rem] sm:rounded-[1.5rem] font-black text-lg sm:text-3xl text-primary text-center shadow-inner relative z-10"
+                                className="h-12 sm:h-16 bg-black/60 border-white/10 rounded-[1rem] sm:rounded-[1.5rem] font-black text-lg sm:text-2xl text-primary text-center shadow-inner relative z-10"
                             />
-                            <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none opacity-20 z-20"><Activity size={24} className="sm:w-8 sm:h-8" /></div>
+                            <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none opacity-20 z-20"><Activity size={20} className="sm:w-6 sm:h-6" /></div>
                         </div>
                     </div>
                 </CardContent>
@@ -317,15 +316,15 @@ export function DigitFrequencyView({
             <div className="space-y-6 sm:space-y-10">
                 <div className="flex flex-col sm:flex-row items-center justify-between gap-4 sm:gap-8 px-4 sm:px-8">
                     <div className="flex flex-col sm:flex-row items-center gap-4 sm:gap-6 text-center sm:text-left">
-                        <div className="p-3 sm:p-5 bg-rose-500/25 rounded-[1rem] sm:rounded-[1.5rem] shadow-[0_0_30px_rgba(244,63,94,0.3)] border border-rose-500/30">
-                            <Flame className="h-6 w-6 sm:h-10 sm:w-10 text-rose-500" />
+                        <div className="p-3 sm:p-4 bg-rose-500/25 rounded-[1rem] sm:rounded-[1.25rem] shadow-[0_0_30px_rgba(244,63,94,0.2)] border border-rose-500/30">
+                            <Flame className="h-6 w-6 sm:h-8 sm:w-8 text-rose-500" />
                         </div>
                         <div>
-                            <h3 className="text-xl sm:text-3xl font-black uppercase tracking-widest text-white">DIGIT HEAT MATRIX</h3>
-                            <p className="text-[7px] sm:text-[11px] font-black uppercase tracking-widest text-muted-foreground mt-1">Precision Volumetric HUD Flux</p>
+                            <h3 className="text-xl sm:text-2xl font-black uppercase tracking-widest text-white">DIGIT HEAT MATRIX</h3>
+                            <p className="text-[7px] sm:text-[9px] font-black uppercase tracking-widest text-muted-foreground mt-1">Precision Volumetric HUD Flux</p>
                         </div>
                     </div>
-                    <Badge className="bg-primary/20 text-primary border border-primary/40 px-4 sm:px-8 py-2 sm:py-3 font-black tracking-widest uppercase text-[7px] sm:text-[11px] rounded-full shadow-lg">
+                    <Badge className="bg-primary/20 text-primary border border-primary/40 px-3 sm:px-6 py-1.5 sm:py-2 font-black tracking-widest uppercase text-[7px] sm:text-[9px] rounded-full shadow-lg">
                         {lastDigitTicks.length} TICK STREAM ACTIVE
                     </Badge>
                 </div>
@@ -350,72 +349,72 @@ export function DigitFrequencyView({
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 sm:gap-10 mt-12">
                 {marketDirectionAnalysis && (
                     <>
-                        <div className="p-6 sm:p-10 rounded-[1.5rem] sm:rounded-[3rem] bg-slate-950/80 border border-white/10 backdrop-blur-3xl shadow-2xl relative overflow-hidden">
+                        <div className="p-5 sm:p-8 rounded-[1.5rem] sm:rounded-[2.5rem] bg-slate-950/80 border border-white/10 backdrop-blur-3xl shadow-2xl relative overflow-hidden">
                             <div className="absolute top-0 left-0 w-full h-[2px] bg-chart-1 opacity-60" />
-                            <h4 className="text-[10px] sm:text-[14px] font-black uppercase tracking-widest text-muted-foreground border-b border-white/5 pb-4 sm:pb-8 flex items-center gap-4">
-                                <List className="h-5 w-5 sm:h-8 sm:w-8 text-chart-1" /> EVEN / ODD GATES
+                            <h4 className="text-[10px] sm:text-[12px] font-black uppercase tracking-widest text-muted-foreground border-b border-white/5 pb-4 sm:pb-6 flex items-center gap-3">
+                                <List className="h-5 w-5 sm:h-6 sm:w-6 text-chart-1" /> EVEN / ODD GATES
                             </h4>
-                            <div className="space-y-6 sm:space-y-10 pt-4 sm:pt-8">
-                                <div className="space-y-3">
-                                    <div className="flex justify-between text-[7px] sm:text-[10px] font-black uppercase tracking-widest">
+                            <div className="space-y-6 sm:space-y-8 pt-4 sm:pt-6">
+                                <div className="space-y-2">
+                                    <div className="flex justify-between text-[7px] sm:text-[9px] font-black uppercase tracking-widest">
                                         <span className="text-chart-1">EVEN FLOW</span>
-                                        <span className="text-white text-lg sm:text-2xl tabular-nums">{marketDirectionAnalysis.evenOdd.even.toFixed(1)}%</span>
+                                        <span className="text-white text-base sm:text-xl tabular-nums">{marketDirectionAnalysis.evenOdd.even.toFixed(1)}%</span>
                                     </div>
-                                    <Progress value={marketDirectionAnalysis.evenOdd.even} className="h-2.5 sm:h-4 bg-black/60 [&>div]:bg-chart-1" />
+                                    <Progress value={marketDirectionAnalysis.evenOdd.even} className="h-2 sm:h-3 bg-black/60 [&>div]:bg-chart-1" />
                                 </div>
-                                <div className="space-y-3">
-                                    <div className="flex justify-between text-[7px] sm:text-[10px] font-black uppercase tracking-widest">
+                                <div className="space-y-2">
+                                    <div className="flex justify-between text-[7px] sm:text-[9px] font-black uppercase tracking-widest">
                                         <span className="text-chart-3">ODD FLOW</span>
-                                        <span className="text-white text-lg sm:text-2xl tabular-nums">{marketDirectionAnalysis.evenOdd.odd.toFixed(1)}%</span>
+                                        <span className="text-white text-base sm:text-xl tabular-nums">{marketDirectionAnalysis.evenOdd.odd.toFixed(1)}%</span>
                                     </div>
-                                    <Progress value={marketDirectionAnalysis.evenOdd.odd} className="h-2.5 sm:h-4 bg-black/60 [&>div]:bg-chart-3" />
+                                    <Progress value={marketDirectionAnalysis.evenOdd.odd} className="h-2 sm:h-3 bg-black/60 [&>div]:bg-chart-3" />
                                 </div>
                             </div>
                         </div>
 
-                        <div className="p-6 sm:p-10 rounded-[1.5rem] sm:rounded-[3rem] bg-slate-950/80 border border-white/10 backdrop-blur-3xl shadow-2xl relative overflow-hidden">
+                        <div className="p-5 sm:p-8 rounded-[1.5rem] sm:rounded-[2.5rem] bg-slate-950/80 border border-white/10 backdrop-blur-3xl shadow-2xl relative overflow-hidden">
                             <div className="absolute top-0 left-0 w-full h-[2px] bg-accent opacity-60" />
-                            <h4 className="text-[10px] sm:text-[14px] font-black uppercase tracking-widest text-muted-foreground border-b border-white/5 pb-4 sm:pb-8 flex items-center gap-4">
-                                <BarChartHorizontal className="h-5 w-5 sm:h-8 sm:w-8 text-accent" /> BARRIER SYMMETRY
+                            <h4 className="text-[10px] sm:text-[12px] font-black uppercase tracking-widest text-muted-foreground border-b border-white/5 pb-4 sm:pb-6 flex items-center gap-3">
+                                <BarChartHorizontal className="h-5 w-5 sm:h-6 sm:w-6 text-accent" /> BARRIER SYMMETRY
                             </h4>
-                            <div className="space-y-6 sm:space-y-10 pt-4 sm:pt-8">
-                                <div className="space-y-3">
-                                    <div className="flex justify-between text-[7px] sm:text-[10px] font-black uppercase tracking-widest">
+                            <div className="space-y-6 sm:space-y-8 pt-4 sm:pt-6">
+                                <div className="space-y-2">
+                                    <div className="flex justify-between text-[7px] sm:text-[9px] font-black uppercase tracking-widest">
                                         <span className="text-accent">UNDER 5 WEIGHT</span>
-                                        <span className="text-white text-lg sm:text-2xl tabular-nums">{marketDirectionAnalysis.overUnder.lower.toFixed(1)}%</span>
+                                        <span className="text-white text-base sm:text-xl tabular-nums">{marketDirectionAnalysis.overUnder.lower.toFixed(1)}%</span>
                                     </div>
-                                    <Progress value={marketDirectionAnalysis.overUnder.lower} className="h-2.5 sm:h-4 bg-black/60 [&>div]:bg-accent" />
+                                    <Progress value={marketDirectionAnalysis.overUnder.lower} className="h-2 sm:h-3 bg-black/60 [&>div]:bg-accent" />
                                 </div>
-                                <div className="space-y-3">
-                                    <div className="flex justify-between text-[7px] sm:text-[10px] font-black uppercase tracking-widest">
+                                <div className="space-y-2">
+                                    <div className="flex justify-between text-[7px] sm:text-[9px] font-black uppercase tracking-widest">
                                         <span className="text-rose-500">OVER 4 WEIGHT</span>
-                                        <span className="text-white text-lg sm:text-2xl tabular-nums">{marketDirectionAnalysis.overUnder.higher.toFixed(1)}%</span>
+                                        <span className="text-white text-base sm:text-xl tabular-nums">{marketDirectionAnalysis.overUnder.higher.toFixed(1)}%</span>
                                     </div>
-                                    <Progress value={marketDirectionAnalysis.overUnder.higher} className="h-2.5 sm:h-4 bg-black/60 [&>div]:bg-rose-500" />
+                                    <Progress value={marketDirectionAnalysis.overUnder.higher} className="h-2 sm:h-3 bg-black/60 [&>div]:bg-rose-500" />
                                 </div>
                             </div>
                         </div>
 
-                        <div className="p-6 sm:p-10 rounded-[1.5rem] sm:rounded-[3rem] bg-slate-950/80 border border-white/10 backdrop-blur-3xl shadow-2xl relative overflow-hidden flex flex-col justify-center">
+                        <div className="p-5 sm:p-8 rounded-[1.5rem] sm:rounded-[2.5rem] bg-slate-950/80 border border-white/10 backdrop-blur-3xl shadow-2xl relative overflow-hidden flex flex-col justify-center">
                             <div className="absolute top-0 left-0 w-full h-[2px] bg-cyan-400 opacity-60" />
-                            <h4 className="text-[10px] sm:text-[14px] font-black uppercase tracking-widest text-muted-foreground border-b border-white/5 pb-4 sm:pb-8 flex items-center gap-4">
-                                <Zap className="h-5 w-5 sm:h-8 sm:w-8 text-cyan-400" /> REAL-TIME PIVOT
+                            <h4 className="text-[10px] sm:text-[12px] font-black uppercase tracking-widest text-muted-foreground border-b border-white/5 pb-4 sm:pb-6 flex items-center gap-3">
+                                <Zap className="h-5 w-5 sm:h-6 sm:w-6 text-cyan-400" /> REAL-TIME PIVOT
                             </h4>
-                            <div className="flex flex-col items-center justify-center pt-6 sm:pt-10 flex-1">
+                            <div className="flex flex-col items-center justify-center pt-5 sm:pt-8 flex-1">
                                 <div className="relative group/price text-center">
-                                    <p className="text-[7px] sm:text-[10px] font-black uppercase text-primary tracking-widest mb-3 sm:mb-6">TECHNICAL HUD FLUX</p>
-                                    <p className="text-2xl sm:text-4xl md:text-6xl font-black text-white tracking-tighter tabular-nums drop-shadow-[0_0_20px_rgba(var(--primary),0.8)] relative">
+                                    <p className="text-[7px] sm:text-[9px] font-black uppercase text-primary tracking-widest mb-2 sm:mb-4">TECHNICAL HUD FLUX</p>
+                                    <p className="text-xl sm:text-3xl md:text-4xl font-black text-white tracking-tighter tabular-nums drop-shadow-[0_0_20px_rgba(var(--primary),0.6)] relative">
                                         {price.toFixed(decimalPlaces)}
                                     </p>
                                 </div>
-                                <div className="mt-8 sm:mt-12 flex gap-4 sm:gap-8 w-full">
-                                    <div className="flex-1 text-center bg-emerald-500/10 border border-emerald-500/30 py-4 sm:py-8 rounded-[1rem] sm:rounded-[2rem] shadow-lg">
-                                        <p className="text-[7px] sm:text-[11px] font-black uppercase text-emerald-400 tracking-widest mb-1 sm:mb-2">BULLISH</p>
-                                        <p className="text-sm sm:text-2xl font-black text-white">{marketDirectionAnalysis.overUnder.higher.toFixed(0)}%</p>
+                                <div className="mt-6 sm:mt-10 flex gap-4 w-full">
+                                    <div className="flex-1 text-center bg-emerald-500/10 border border-emerald-500/20 py-3 sm:py-5 rounded-[0.75rem] sm:rounded-[1.5rem] shadow-lg">
+                                        <p className="text-[7px] sm:text-[10px] font-black uppercase text-emerald-400 tracking-widest mb-1">BULLISH</p>
+                                        <p className="text-sm sm:text-lg font-black text-white">{marketDirectionAnalysis.overUnder.higher.toFixed(0)}%</p>
                                     </div>
-                                    <div className="flex-1 text-center bg-rose-500/10 border border-rose-500/30 py-4 sm:py-8 rounded-[1rem] sm:rounded-[2rem] shadow-lg">
-                                        <p className="text-[7px] sm:text-[11px] font-black uppercase text-rose-400 tracking-widest mb-1 sm:mb-2">BEARISH</p>
-                                        <p className="text-sm sm:text-2xl font-black text-white">{marketDirectionAnalysis.overUnder.lower.toFixed(0)}%</p>
+                                    <div className="flex-1 text-center bg-rose-500/10 border border-rose-500/20 py-3 sm:py-5 rounded-[0.75rem] sm:rounded-[1.5rem] shadow-lg">
+                                        <p className="text-[7px] sm:text-[10px] font-black uppercase text-rose-400 tracking-widest mb-1">BEARISH</p>
+                                        <p className="text-sm sm:text-lg font-black text-white">{marketDirectionAnalysis.overUnder.lower.toFixed(0)}%</p>
                                     </div>
                                 </div>
                             </div>
