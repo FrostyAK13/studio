@@ -8,7 +8,7 @@ import { syntheticIndices } from '@/lib/mock-data';
 import { cn } from '@/lib/utils';
 import { Progress } from '@/components/ui/progress';
 import { Badge } from '@/components/ui/badge';
-import { Info, Target, Zap, Activity, Share2, TrendingUp, Cpu, Orbit, ArrowUpRight, ArrowDownLeft, Fingerprint, Network, Sparkles, Crosshair } from 'lucide-react';
+import { Info, Target, Zap, Activity, Share2, TrendingUp, Cpu, Orbit, ArrowUpRight, ArrowDownLeft, Fingerprint, Network, Sparkles, Crosshair, ArrowRight, ZapOff } from 'lucide-react';
 
 interface CorrelationViewProps {
     selectedMarket: string;
@@ -290,8 +290,40 @@ const DigitNexusMatrix = ({ digit, ticks }: { digit: number, ticks: number[] }) 
                         </div>
                     </div>
 
-                    {/* BARRIER SYMMETRY (Over/Under context for what follows the selected digit) */}
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-12 pt-4">
+                    {/* STRATEGIC ENTRY SIGNAL & BARRIER SYMMETRY */}
+                    <div className="grid grid-cols-1 xl:grid-cols-3 gap-12 pt-4">
+                        {/* POSSIBLE ENTRY POINT CARD */}
+                        <div className="p-12 rounded-[3.5rem] bg-emerald-500/10 border-2 border-emerald-500/30 shadow-[0_0_80px_rgba(16,185,129,0.2)] flex flex-col justify-between items-center text-center relative overflow-hidden group">
+                             <div className="absolute top-0 left-0 w-full h-2 bg-emerald-500 animate-pulse" />
+                             <div className="space-y-4">
+                                <div className="flex items-center justify-center gap-3 mb-2">
+                                    <Zap className="h-5 w-5 text-emerald-400 fill-emerald-400" />
+                                    <p className="text-[12px] font-black uppercase tracking-[0.5em] text-emerald-400">OPTIMAL ENTRY SIGNAL</p>
+                                </div>
+                                <h5 className="text-xl font-black text-white">RECURSIVE MATCH PATTERN</h5>
+                             </div>
+                             
+                             <div className="flex items-center gap-8 my-10">
+                                <div className="flex flex-col items-center">
+                                    <span className="text-[10px] font-bold text-muted-foreground uppercase mb-4 tracking-widest">TRIGGER</span>
+                                    <div className="w-24 h-24 rounded-3xl bg-white/5 border border-white/10 flex items-center justify-center text-5xl font-black text-primary shadow-[inset_0_2px_10px_rgba(0,0,0,0.5)]">{digit}</div>
+                                </div>
+                                <div className="h-0.5 w-16 bg-white/10 relative">
+                                     <div className="absolute -right-1 -top-1.5 w-3 h-3 border-t-2 border-r-2 border-white/40 rotate-45" />
+                                     <ArrowRight className="absolute left-1/2 -translate-x-1/2 -top-3 h-6 w-6 text-emerald-400/50" />
+                                </div>
+                                <div className="flex flex-col items-center">
+                                    <span className="text-[10px] font-bold text-muted-foreground uppercase mb-4 tracking-widest">TARGET MATCH</span>
+                                    <div className="w-24 h-24 rounded-3xl bg-emerald-500/20 border-2 border-emerald-500/40 flex items-center justify-center text-6xl font-black text-emerald-400 shadow-[0_0_40px_rgba(16,185,129,0.5)] animate-in zoom-in-75 duration-500">{nexusAnalysis.hottestNext.digit}</div>
+                                </div>
+                             </div>
+
+                             <div className="w-full pt-6 border-t border-white/5">
+                                <p className="text-[11px] font-black text-emerald-400/80 uppercase tracking-[0.3em]">PROBABILITY EDGE: +{nexusAnalysis.hottestNext.probability.toFixed(1)}%</p>
+                             </div>
+                        </div>
+
+                        {/* BARRIER SYMMETRY (Over/Under context for what follows the selected digit) */}
                         <div className="p-12 rounded-[3.5rem] bg-black/40 border border-white/5 relative overflow-hidden group shadow-2xl">
                              <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-cyan-500 to-transparent" />
                              <h4 className="text-[14px] font-black uppercase tracking-[0.6em] text-muted-foreground mb-10 flex items-center gap-6">
