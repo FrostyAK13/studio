@@ -9,9 +9,6 @@ import { DigitFrequencyView } from './digit-frequency-view';
 import { InsightView } from './insight-view';
 import { CorrelationView } from './correlation-view';
 import { ConnectionStatus } from './connection-status';
-import { BotRunner } from './bot-runner';
-import { Button } from './ui/button';
-import { Bot, PanelRightClose, PanelRightOpen } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 type ConnectionStatusType = 'connecting' | 'streaming' | 'disconnected';
@@ -25,7 +22,6 @@ export function Dashboard() {
     const [decimalPlaces, setDecimalPlaces] = React.useState(2);
     const [connectionStatus, setConnectionStatus] = React.useState<ConnectionStatusType>('connecting');
     const [tickTimestamps, setTickTimestamps] = React.useState<number[]>([]);
-    const [isRunnerOpen, setIsRunnerOpen] = React.useState(true);
 
     React.useEffect(() => {
         setPrice(0);
@@ -162,14 +158,6 @@ export function Dashboard() {
           </div>
 
           <div className="flex-1 flex justify-end order-2 md:order-3 gap-2 md:gap-4">
-            <Button 
-                variant="ghost" 
-                size="icon" 
-                onClick={() => setIsRunnerOpen(!isRunnerOpen)}
-                className="rounded-full hover:bg-white/5 text-muted-foreground hover:text-primary transition-all hidden lg:flex"
-            >
-                {isRunnerOpen ? <PanelRightClose className="h-5 w-5" /> : <PanelRightOpen className="h-5 w-5" />}
-            </Button>
             <div className="flex items-center gap-2 px-3 py-1.5 bg-muted/30 rounded-full border border-white/5 backdrop-blur-sm shadow-inner">
                 <ConnectionStatus status={connectionStatus} />
             </div>
@@ -177,11 +165,8 @@ export function Dashboard() {
         </div>
       </header>
 
-      <main className="flex-1 flex flex-col lg:flex-row max-w-[1600px] mx-auto w-full relative">
-        <div className={cn(
-            "flex-1 p-3 sm:p-6 lg:p-8 transition-all duration-500 ease-in-out",
-            isRunnerOpen ? "lg:mr-[380px]" : "lg:mr-0"
-        )}>
+      <main className="flex-1 flex flex-col max-w-[1600px] mx-auto w-full relative">
+        <div className="flex-1 p-3 sm:p-6 lg:p-8">
             <Tabs defaultValue="scanner" className="w-full">
                 <TabsList className="flex items-center justify-start md:justify-center gap-2 bg-transparent h-auto p-0 mb-6 md:mb-10 overflow-x-auto no-scrollbar pb-2 w-full">
                     {['scanner', 'analyzer', 'frequency', 'insight', 'circles'].map((tab) => (
@@ -257,27 +242,6 @@ export function Dashboard() {
                 </TabsContent>
             </Tabs>
         </div>
-
-        {/* Persistent/Floating Runner Panel */}
-        <aside className={cn(
-            "lg:fixed lg:right-0 lg:top-20 lg:bottom-0 transition-all duration-500 ease-in-out z-50",
-            "w-full lg:w-[380px]",
-            isRunnerOpen ? "lg:translate-x-0" : "lg:translate-x-full",
-            !isRunnerOpen && "lg:opacity-0 pointer-events-none"
-        )}>
-            <BotRunner />
-        </aside>
-
-        {/* Mobile Run Toggle FAB */}
-        <Button
-            onClick={() => setIsRunnerOpen(!isRunnerOpen)}
-            className={cn(
-                "fixed bottom-6 right-6 h-14 w-14 rounded-full shadow-2xl z-[70] lg:hidden animate-bounce",
-                isRunnerOpen ? "bg-rose-500" : "bg-primary"
-            )}
-        >
-            {isRunnerOpen ? <PanelRightClose /> : <Bot />}
-        </Button>
       </main>
     </div>
   );
