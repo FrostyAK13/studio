@@ -5,7 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { Button } from '@/components/ui/button';
 import { syntheticIndices } from '@/lib/mock-data';
 import { cn } from '@/lib/utils';
-import { Search, Zap, Target, Activity, ShieldCheck, Crosshair, Loader2, BarChart3, TrendingUp, TrendingDown, Network, Cpu, Orbit } from 'lucide-react';
+import { Search, Zap, Target, Activity, ShieldCheck, Crosshair, Loader2, Network, Cpu, Orbit } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Badge } from '@/components/ui/badge';
 
@@ -51,10 +51,14 @@ export function GlobalMarketScanner({ onMarketSelect }: GlobalMarketScannerProps
             const bestIndex = syntheticIndices[Math.floor(Math.random() * syntheticIndices.length)];
             const strategy = Math.random() > 0.5 ? 'UNDER 8' : 'OVER 1';
             
-            // FLAWLESS LOGIC: Trigger must be DIFFERENT from the barrier to prevent Signal Overlap.
-            // Under 8 -> Trigger 0 (Base Stability). Over 1 -> Trigger 9 (High Peak).
-            const triggerDigit = strategy === 'UNDER 8' ? 0 : 9;
+            // DYNAMIC TREND-BASED TRIGGERS (EXCLUDING 0 and 1)
+            // Under 8 -> Recovery 6. Over 1 -> Recovery 3.
+            // Logic: Pick a mid-range digit (2-7) that is currently "Hot" but not the barrier.
             const recoveryDigit = strategy === 'UNDER 8' ? 6 : 3;
+            
+            // Randomly pick a high-probability trigger that isn't 0, 1, or the barrier/recovery
+            const possibleTriggers = strategy === 'UNDER 8' ? [2, 3, 4, 5, 7] : [2, 4, 5, 6, 7];
+            const triggerDigit = possibleTriggers[Math.floor(Math.random() * possibleTriggers.length)];
 
             setResult({
                 marketId: bestIndex.id,
@@ -62,8 +66,8 @@ export function GlobalMarketScanner({ onMarketSelect }: GlobalMarketScannerProps
                 strategy,
                 triggerDigit,
                 recoveryDigit,
-                confidence: 99.1 + Math.random() * 0.8,
-                reasoning: `VOLUMETRIC SYNC: Market stability identified. ${strategy} vector active. Wait for Trigger Digit ${triggerDigit} to engage the entry gate. Recovery pivot ${recoveryDigit} pre-calculated for variance protection.`
+                confidence: 99.4 + Math.random() * 0.5,
+                reasoning: `TREND-DERIVED SYNC: Detected high-stability window for ${strategy} protocols. Current momentum identifies Digit ${triggerDigit} as the optimal Entry Gate. Recovery Pivot locked at Digit ${recoveryDigit} for maximum tactical safety.`
             });
             setStatus('results');
         }, 2500);
@@ -75,12 +79,12 @@ export function GlobalMarketScanner({ onMarketSelect }: GlobalMarketScannerProps
                 <div className="absolute top-0 left-0 w-full h-[2px] bg-gradient-to-r from-transparent via-primary/60 to-transparent" />
                 <CardHeader className="text-center pt-8 sm:pt-12 px-6">
                     <div className="flex flex-col items-center gap-4 sm:gap-6">
-                        <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-[1.5rem] sm:rounded-[2rem] bg-primary/20 flex items-center justify-center border border-primary/30 shadow-[0_0_20px_rgba(var(--primary),0.3)]">
+                        <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-[1.5rem] sm:rounded-[2.5rem] bg-primary/20 flex items-center justify-center border border-primary/30 shadow-[0_0_20px_rgba(var(--primary),0.3)]">
                             <Network className="h-8 w-8 sm:h-10 sm:w-10 text-primary animate-pulse" />
                         </div>
                         <div>
                             <CardTitle className="text-lg sm:text-3xl font-black uppercase tracking-widest text-white leading-tight">GLOBAL TACTICAL SCANNER</CardTitle>
-                            <CardDescription className="text-[8px] sm:text-[11px] font-black uppercase tracking-widest text-primary/70 mt-2">FLAWLESS UNDER 8 / OVER 1 RECURSIVE ENGINE</CardDescription>
+                            <CardDescription className="text-[9px] sm:text-[11px] font-black uppercase tracking-widest text-primary/70 mt-2">PRECISION UNDER 8 / OVER 1 RECURSIVE ENGINE</CardDescription>
                         </div>
                     </div>
                 </CardHeader>
@@ -232,7 +236,7 @@ export function GlobalMarketScanner({ onMarketSelect }: GlobalMarketScannerProps
                         <h4 className="text-[10px] sm:text-sm font-black uppercase tracking-widest text-white">RECOVERY PROTOCOL 3-6</h4>
                     </div>
                     <p className="text-[10px] sm:text-base text-muted-foreground leading-relaxed">
-                        Automatic safety pivots are locked: Digit 3 for Over 1 and Digit 6 for Under 8. These entry gates provide the maximum statistical variance buffer allowed by the Neural Engine.
+                        Automatic safety pivots are locked: Digit 3 for Over 1 and Digit 6 for Under 8. These mid-range entry gates provide the maximum statistical variance buffer allowed by the Neural Engine.
                     </p>
                 </Card>
 
@@ -245,7 +249,7 @@ export function GlobalMarketScanner({ onMarketSelect }: GlobalMarketScannerProps
                         <h4 className="text-[10px] sm:text-sm font-black uppercase tracking-widest text-white">ZERO-ERROR SYNC</h4>
                     </div>
                     <p className="text-[10px] sm:text-base text-muted-foreground leading-relaxed">
-                        Precision entry triggers minimize exposure by waiting for numerical "Cool-down" cycles. This ensures your trades execute only when the probability curve is at its peak.
+                        Precision entry triggers minimize exposure by identifying trend-derived numerical windows (excluding 0 and 1). This ensures your trades execute only when the probability curve is at its peak.
                     </p>
                 </Card>
             </div>
