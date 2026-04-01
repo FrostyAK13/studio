@@ -10,6 +10,7 @@ import { syntheticIndices } from '@/lib/mock-data';
 import { cn } from '@/lib/utils';
 import { Activity, Layers, SignalHigh, Hash, Boxes, Timer, BarChart3, Scale, LayoutGrid, Target, ArrowRightLeft, Sparkles, TrendingUp, TrendingDown, Crosshair, Zap } from 'lucide-react';
 import { Progress } from '@/components/ui/progress';
+import { Badge } from '@/components/ui/badge';
 import { motion, AnimatePresence } from 'framer-motion';
 
 interface AnalyzerViewProps {
@@ -72,24 +73,25 @@ export function AnalyzerView({
             
             if (isOver) {
                 label = "O";
-                color = "bg-gradient-to-br from-emerald-400 to-emerald-600 text-white shadow-[0_0_15px_rgba(16,185,129,0.5)] border-emerald-400/50";
+                color = "bg-gradient-to-br from-emerald-400 to-emerald-600 text-white shadow-[0_0_20px_rgba(16,185,129,0.4)] border-emerald-300/50";
             } else if (isUnder) {
                 label = "U";
-                color = "bg-gradient-to-br from-rose-400 to-rose-600 text-white shadow-[0_0_15px_rgba(244,63,94,0.5)] border-rose-400/50";
+                color = "bg-gradient-to-br from-rose-400 to-rose-600 text-white shadow-[0_0_20px_rgba(244,63,94,0.4)] border-rose-300/50";
             }
 
             return (
                 <motion.div 
                     key={i} 
-                    initial={{ scale: 0, opacity: 0 }}
-                    animate={{ scale: 1, opacity: 1 }}
-                    transition={{ type: "spring", stiffness: 300, damping: 20, delay: i * 0.02 }}
+                    initial={{ scale: 0, opacity: 0, y: 10 }}
+                    animate={{ scale: 1, opacity: 1, y: 0 }}
+                    transition={{ type: "spring", stiffness: 400, damping: 25, delay: i * 0.01 }}
                     className={cn(
-                        "w-10 h-10 sm:w-12 sm:h-12 rounded-xl flex items-center justify-center font-black text-xs sm:text-base border transition-all duration-300 backdrop-blur-md",
+                        "w-10 h-10 sm:w-14 sm:h-14 rounded-2xl flex items-center justify-center font-black text-xs sm:text-xl border transition-all duration-300 backdrop-blur-xl relative overflow-hidden group",
                         color
                     )}
                 >
-                    {label}
+                    <div className="absolute inset-0 bg-white/10 opacity-0 group-hover:opacity-100 transition-opacity" />
+                    <span className="relative z-10 drop-shadow-md">{label}</span>
                 </motion.div>
             );
         });
@@ -98,7 +100,7 @@ export function AnalyzerView({
     return (
         <div className="space-y-8 sm:space-y-12 animate-in fade-in slide-in-from-bottom-8 duration-1000 pb-24 max-w-7xl mx-auto">
             {/* Top Configuration Grid */}
-            <Card className="border-none shadow-2xl bg-slate-900/60 backdrop-blur-3xl rounded-[2rem] sm:rounded-[3.5rem] overflow-hidden border border-white/5">
+            <Card className="border-none shadow-2xl bg-slate-900/60 backdrop-blur-3xl rounded-[2rem] sm:rounded-[4rem] overflow-hidden border border-white/5">
                 <CardContent className="p-8 sm:p-14 space-y-10">
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                         <div className="space-y-4">
@@ -171,7 +173,7 @@ export function AnalyzerView({
                         exit={{ height: 0, opacity: 0, y: 20 }}
                         className="overflow-hidden"
                     >
-                        <Card className="border-none bg-primary/10 backdrop-blur-2xl rounded-[2rem] sm:rounded-[3rem] border border-primary/20 shadow-2xl">
+                        <Card className="border-none bg-primary/10 backdrop-blur-3xl rounded-[2rem] sm:rounded-[3rem] border border-primary/20 shadow-[0_20px_60px_rgba(0,0,0,0.4)]">
                             <CardContent className="p-8 sm:p-12">
                                 <div className="flex flex-col md:flex-row items-center justify-between gap-8 sm:gap-16">
                                     <div className="space-y-4 text-center md:text-left">

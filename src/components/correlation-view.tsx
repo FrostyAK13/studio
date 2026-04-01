@@ -74,11 +74,13 @@ export const DigitFrequencyCircles = ({
             <div 
                 className={cn(
                     "flex flex-col items-center relative cursor-pointer transition-all duration-500 p-2 sm:p-4 group",
-                    isSelected ? "bg-primary/20 rounded-[2rem] sm:rounded-[3rem] ring-4 ring-primary/60 scale-110 z-20 shadow-[0_0_30px_rgba(var(--primary),0.3)]" : "hover:scale-105"
+                    isSelected 
+                        ? "bg-primary/20 rounded-[2rem] sm:rounded-[3.5rem] ring-[6px] ring-primary/80 scale-110 z-20 shadow-[0_0_40px_rgba(var(--primary),0.5)]" 
+                        : "hover:scale-105"
                 )}
                 onClick={() => onDigitSelect(digit)}
             >
-                <div className="relative w-16 h-16 sm:w-28 sm:h-28 flex items-center justify-center">
+                <div className="relative w-16 h-16 sm:w-32 sm:h-32 flex items-center justify-center">
                     <svg className="absolute inset-0 w-full h-full -rotate-90">
                         <circle
                             cx="50%"
@@ -94,26 +96,26 @@ export const DigitFrequencyCircles = ({
                             cy="50%"
                             r="42%"
                             stroke="currentColor"
-                            strokeWidth="5"
+                            strokeWidth="6"
                             fill="transparent"
                             strokeDasharray="100 100" 
                             strokeDashoffset={100 - percentage}
                             strokeLinecap="round"
-                            className={cn("transition-all duration-1000 ease-out", isSelected ? "text-primary drop-shadow-[0_0_8px_rgba(var(--primary),0.8)]" : colorClass)}
+                            className={cn("transition-all duration-1000 ease-out", isSelected ? "text-primary drop-shadow-[0_0_12px_rgba(var(--primary),0.8)]" : colorClass)}
                         />
                     </svg>
                     <div className="flex flex-col items-center justify-center z-10">
                         <span className={cn(
-                            "text-2xl sm:text-5xl font-black leading-none tracking-tighter transition-all duration-500",
-                            isSelected ? "text-white scale-125 drop-shadow-[0_0_10px_white]" : "text-foreground"
+                            "text-3xl sm:text-7xl font-black leading-none tracking-tighter transition-all duration-500",
+                            isSelected ? "text-white scale-125 drop-shadow-[0_0_15px_white]" : "text-foreground"
                         )}>{digit}</span>
-                        <span className="text-[8px] sm:text-[12px] font-black text-muted-foreground mt-1 uppercase tracking-widest">{percentage.toFixed(0)}%</span>
+                        <span className="text-[8px] sm:text-[14px] font-black text-muted-foreground mt-1 uppercase tracking-widest">{percentage.toFixed(0)}%</span>
                     </div>
                 </div>
                 {isLast && (
                     <div className="absolute top-0 right-0">
-                        <div className="h-3 w-3 sm:h-5 sm:w-5 rounded-full bg-cyan-400 animate-ping shadow-[0_0_15px_cyan] absolute" />
-                        <div className="h-3 w-3 sm:h-5 sm:w-5 rounded-full bg-cyan-400 shadow-[0_0_10px_cyan] relative" />
+                        <div className="h-4 w-4 sm:h-6 sm:w-6 rounded-full bg-cyan-400 animate-ping shadow-[0_0_20px_cyan] absolute" />
+                        <div className="h-4 w-4 sm:h-6 sm:w-6 rounded-full bg-cyan-400 shadow-[0_0_15px_cyan] relative" />
                     </div>
                 )}
             </div>
