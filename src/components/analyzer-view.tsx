@@ -1,3 +1,4 @@
+
 'use client';
 
 import * as React from 'react';
@@ -7,10 +8,11 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Input } from '@/components/ui/input';
 import { syntheticIndices } from '@/lib/mock-data';
 import { cn } from '@/lib/utils';
-import { Activity, Layers, Activity as ActivityIcon, SignalHigh, Hash, BarChartHorizontal, Boxes } from 'lucide-react';
+import { Activity, Layers, Activity as ActivityIcon, SignalHigh, Hash, BarChartHorizontal, Boxes, Timer } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { PieChart, Pie, Cell, Tooltip } from 'recharts';
 import { ChartContainer } from '@/components/ui/chart';
+import { TickPacingVisualizer } from './tick-pacing-visualizer';
 
 interface AnalyzerViewProps {
     price: number;
@@ -22,6 +24,7 @@ interface AnalyzerViewProps {
     selectedMarket: string;
     onMarketChange: (market: string) => void;
     decimalPlaces: number;
+    tickTimestamps: number[];
 }
 
 export function AnalyzerView({
@@ -34,6 +37,7 @@ export function AnalyzerView({
     selectedMarket,
     onMarketChange,
     decimalPlaces,
+    tickTimestamps,
 }: AnalyzerViewProps) {
     const [tradeType, setTradeType] = React.useState('even-odd');
     const [matchesDigit, setMatchesDigit] = React.useState(0);
@@ -188,7 +192,7 @@ export function AnalyzerView({
                         </Select>
                     </div>
                     <div className="space-y-3">
-                        <Label className="text-[9px] sm:text-[12px] font-black uppercase tracking-widest text-primary ml-1">ALGORITHM PROTOCOL</Label>
+                        <Label className="text-[9px] sm:text-[12px] font-black uppercase tracking-widest text-primary ml-1">ALGORITHM</Label>
                         <Select value={tradeType} onValueChange={setTradeType}>
                              <SelectTrigger className="h-12 sm:h-16 bg-black/50 border-white/10 rounded-[1rem] sm:rounded-[1.5rem] font-black text-xs sm:text-lg px-4 sm:px-8">
                                 <SelectValue placeholder="Select Protocol" />
@@ -229,7 +233,7 @@ export function AnalyzerView({
                                     <Layers className="h-5 w-5 sm:h-6 sm:w-6 text-primary" />
                                 </div>
                                 <div>
-                                    <CardTitle className="text-[9px] sm:text-[12px] font-black uppercase tracking-widest text-primary">Live Volumetric Flux</CardTitle>
+                                    <CardTitle className="text-[9px] sm:text-[12px] font-black uppercase tracking-widest text-primary">Volumetric Flux</CardTitle>
                                     <CardDescription className="text-[7px] sm:text-[9px] font-bold uppercase text-muted-foreground/60 mt-1 tracking-widest">REAL-TIME SEQUENCE SCANNER</CardDescription>
                                 </div>
                             </div>
@@ -267,56 +271,7 @@ export function AnalyzerView({
                 </Card>
 
                 <div className="space-y-6 sm:space-y-10 h-full flex flex-col">
-                    <Card className="border-none shadow-2xl bg-slate-950/90 backdrop-blur-3xl overflow-hidden relative flex flex-col p-6 sm:p-8 h-full rounded-[1.5rem] sm:rounded-[3rem]">
-                        <div className="absolute top-0 left-0 w-full h-[1px] bg-gradient-to-r from-transparent via-cyan-400 to-transparent" />
-                        <CardHeader className="text-center pb-4 px-0">
-                            <CardTitle className="text-[9px] sm:text-[11px] font-black uppercase tracking-widest text-cyan-400">ANALYSIS HUD</CardTitle>
-                        </CardHeader>
-                        
-                        <div className="flex-1 relative flex items-center justify-center py-4">
-                            <ChartContainer config={{}} className="w-full aspect-square max-w-[140px] sm:max-w-[200px]">
-                                <PieChart>
-                                    <Pie
-                                        data={activeChartData}
-                                        dataKey="value"
-                                        nameKey="name"
-                                        cx="50%"
-                                        cy="50%"
-                                        innerRadius={45}
-                                        outerRadius={65}
-                                        paddingAngle={4}
-                                        stroke="none"
-                                    >
-                                        {activeChartData.map((entry, index) => (
-                                            <Cell 
-                                                key={`cell-${index}`} 
-                                                fill={entry.color} 
-                                                className="hover:opacity-80 transition-opacity" 
-                                            />
-                                        ))}
-                                    </Pie>
-                                    <Tooltip content={() => null} />
-                                </PieChart>
-                            </ChartContainer>
-                            
-                            <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
-                                <span className="text-2xl sm:text-4xl font-black tracking-tighter tabular-nums text-white">
-                                    {activeChartData[0]?.value.toFixed(0)}
-                                    <span className="text-sm sm:text-lg opacity-40 ml-0.5">%</span>
-                                </span>
-                                <span className="text-[7px] sm:text-[9px] font-black uppercase tracking-widest text-muted-foreground/60 mt-1">{activeChartData[0]?.name} VECTOR</span>
-                            </div>
-                        </div>
-
-                        <div className="grid grid-cols-2 gap-3 sm:gap-4 mt-auto">
-                            {activeChartData.map((data, idx) => (
-                                <div key={idx} className="text-center p-3 sm:p-4 rounded-[1rem] sm:rounded-[1.5rem] bg-black/40 border border-white/5">
-                                    <p className="text-[7px] sm:text-[9px] font-black uppercase tracking-widest opacity-40 mb-1" style={{ color: data.color }}>{data.name}</p>
-                                    <p className="text-lg sm:text-2xl font-black tabular-nums" style={{ color: data.color }}>{data.value.toFixed(1)}%</p>
-                                </div>
-                            ))}
-                        </div>
-                    </Card>
+                    <TickPacingVisualizer tickTimestamps={tickTimestamps} lastDigitTicks={lastDigitTicks} />
 
                     <Card className="border-none bg-slate-950/80 border border-white/5 p-4 sm:p-6 rounded-[1.25rem] sm:rounded-[2rem] flex items-center justify-between shadow-xl mt-4 sm:mt-0">
                         <div className="flex items-center gap-3 sm:gap-4">
@@ -332,64 +287,6 @@ export function AnalyzerView({
                     </Card>
                 </div>
             </div>
-
-            {tradeType === 'matches-differs' && (
-                <Card className="border-none shadow-2xl bg-slate-900/40 backdrop-blur-3xl p-5 sm:p-10 rounded-[1.5rem] sm:rounded-[3rem] relative overflow-hidden group">
-                    <div className="absolute top-0 left-0 w-1.5 h-full bg-emerald-500/40" />
-                    <div className="flex items-center gap-3 sm:gap-5 mb-6 sm:mb-8">
-                        <div className="p-2 sm:p-3 bg-emerald-500/10 rounded-full">
-                            <Hash className="h-4 w-4 sm:h-5 sm:w-5 text-emerald-400" />
-                        </div>
-                        <p className="text-[9px] sm:text-[12px] font-black uppercase tracking-widest text-white">SELECT TARGET DIGIT VECTOR</p>
-                    </div>
-                    <div className="grid grid-cols-5 sm:grid-cols-10 gap-2 sm:gap-4">
-                        {Array.from({ length: 10 }, (_, i) => (
-                            <Button
-                                key={i}
-                                variant={matchesDigit === i ? 'default' : 'outline'}
-                                className={cn(
-                                    'h-10 sm:h-16 rounded-[0.75rem] sm:rounded-[1.25rem] text-lg sm:text-2xl font-black transition-all duration-300 relative overflow-hidden',
-                                    matchesDigit === i 
-                                        ? 'bg-emerald-500 text-white shadow-xl scale-105 z-10 border-none' 
-                                        : 'bg-black/40 border-white/5 hover:bg-white/10'
-                                )}
-                                onClick={() => setMatchesDigit(i)}
-                            >
-                                {i}
-                            </Button>
-                        ))}
-                    </div>
-                </Card>
-            )}
-
-            {tradeType === 'over-under' && (
-                <Card className="border-none shadow-2xl bg-slate-900/40 backdrop-blur-3xl p-5 sm:p-10 rounded-[1.5rem] sm:rounded-[3rem] relative overflow-hidden group">
-                     <div className="absolute top-0 right-0 w-1.5 h-full bg-cyan-500/40" />
-                     <div className="flex items-center gap-3 sm:gap-5 mb-6 sm:mb-8">
-                        <div className="p-2 sm:p-3 bg-cyan-500/10 rounded-full">
-                            <BarChartHorizontal className="h-4 w-4 sm:h-5 sm:w-5 text-cyan-400" />
-                        </div>
-                        <p className="text-[9px] sm:text-[12px] font-black uppercase tracking-widest text-white">SELECT BARRIER PIVOT LEVEL</p>
-                    </div>
-                    <div className="grid grid-cols-5 sm:grid-cols-10 gap-2 sm:gap-4">
-                        {Array.from({ length: 10 }, (_, i) => (
-                            <Button
-                                key={i}
-                                variant={overUnderDigit === i ? 'default' : 'outline'}
-                                className={cn(
-                                    'h-10 sm:h-16 rounded-[0.75rem] sm:rounded-[1.25rem] text-lg sm:text-2xl font-black transition-all duration-300 relative overflow-hidden',
-                                    overUnderDigit === i 
-                                        ? 'bg-cyan-500 text-white shadow-xl scale-105 z-10 border-none' 
-                                        : 'bg-black/40 border-white/5 hover:bg-white/10'
-                                )}
-                                onClick={() => setOverUnderDigit(i)}
-                            >
-                                {i}
-                            </Button>
-                        ))}
-                    </div>
-                </Card>
-            )}
         </div>
     );
 }

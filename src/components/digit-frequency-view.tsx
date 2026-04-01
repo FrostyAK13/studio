@@ -1,3 +1,4 @@
+
 'use client';
 
 import * as React from 'react';
@@ -9,7 +10,7 @@ import { syntheticIndices } from '@/lib/mock-data';
 import { cn } from '@/lib/utils';
 import { Badge } from '@/components/ui/badge';
 import { RiseFallAnalysis } from './rise-fall-analysis';
-import { Target, Zap, List, Hash, Activity, Flame, Timer, BarChartHorizontal, Sparkles, TrendingUp, TrendingDown } from 'lucide-react';
+import { Target, Zap, List, Hash, Activity, Flame, Timer, BarChartHorizontal, Sparkles, TrendingUp, TrendingDown, Gauge } from 'lucide-react';
 import { Progress } from '@/components/ui/progress';
 import { motion, AnimatePresence } from 'framer-motion';
 
@@ -37,10 +38,11 @@ const DigitHeatCard = ({ digit, ticks, isSelected, isLatest, onSelect }: {
         const matches = ticks.filter(t => t === digit).length;
         const freq = (matches / total) * 100;
         
-        const recentTicks = ticks.slice(0, 50);
-        const recentMatches = recentTicks.filter(t => t === digit).length;
-        const recentFreq = (recentMatches / (recentTicks.length || 1)) * 100;
-        const velocity = recentFreq - freq;
+        // Z-Score Calculation (Feature 2)
+        const mean = total / 10;
+        const variance = total * 0.1 * 0.9;
+        const stdDev = Math.sqrt(variance);
+        const zScore = (matches - mean) / (stdDev || 1);
 
         let tsl = 0;
         for (let i = 0; i < ticks.length; i++) {
@@ -53,24 +55,24 @@ const DigitHeatCard = ({ digit, ticks, isSelected, isLatest, onSelect }: {
         let bgClass = "bg-white/5";
         let rating = "STABLE";
 
-        if (freq > 13) {
+        if (zScore > 2) {
             colorClass = "text-rose-500";
             glowClass = "shadow-[0_0_15px_rgba(244,63,94,0.1)] border-rose-500/20";
             bgClass = "bg-rose-500/10";
-            rating = "VOLATILE";
-        } else if (freq > 11) {
+            rating = "OVER-SATURATED";
+        } else if (zScore < -2) {
+            colorClass = "text-cyan-500";
+            glowClass = "shadow-[0_0_15px_rgba(6,182,212,0.1)] border-cyan-500/20";
+            bgClass = "bg-cyan-500/10";
+            rating = "STATISTICALLY DUE";
+        } else if (freq > 11.5) {
             colorClass = "text-orange-500";
             glowClass = "shadow-[0_0_10px_rgba(249,115,22,0.1)] border-orange-500/10";
             bgClass = "bg-orange-500/5";
             rating = "TRENDING";
-        } else if (freq < 7) {
-            colorClass = "text-cyan-500";
-            glowClass = "shadow-[0_0_15px_rgba(6,182,212,0.1)] border-cyan-500/20";
-            bgClass = "bg-cyan-500/10";
-            rating = "COLD";
         }
 
-        return { freq, tsl, colorClass, glowClass, bgClass, rating, velocity };
+        return { freq, tsl, colorClass, glowClass, bgClass, rating, zScore };
     }, [digit, ticks]);
 
     return (
@@ -84,14 +86,9 @@ const DigitHeatCard = ({ digit, ticks, isSelected, isLatest, onSelect }: {
             )}
         >
             {isLatest && (
-                <motion.div 
-                    layoutId="digit-scanner-cursor"
-                    className="absolute inset-0 z-30 pointer-events-none"
-                    initial={false}
-                    transition={{ type: "spring", stiffness: 300, damping: 30 }}
-                >
+                <div className="absolute inset-0 z-30 pointer-events-none">
                     <div className="absolute inset-0 border-2 border-cyan-400/50 rounded-[inherit]" />
-                </motion.div>
+                </div>
             )}
 
             <div className="absolute top-0 right-0 p-1 sm:p-2 opacity-10 sm:opacity-20">
@@ -107,7 +104,7 @@ const DigitHeatCard = ({ digit, ticks, isSelected, isLatest, onSelect }: {
                 </span>
                 <div className="text-right">
                     <Badge className={cn(
-                        "text-[5px] sm:text-[9px] font-black tracking-widest px-1 sm:px-2 py-0 border-none",
+                        "text-[5px] sm:text-[8px] font-black tracking-widest px-1 sm:px-2 py-0 border-none",
                         stats.colorClass.replace('text-', 'bg-') + "/20",
                         stats.colorClass
                     )}>
@@ -119,11 +116,19 @@ const DigitHeatCard = ({ digit, ticks, isSelected, isLatest, onSelect }: {
                 </div>
             </div>
 
-            <div className="relative z-10">
-                <p className="text-[6px] sm:text-[9px] font-black text-muted-foreground uppercase tracking-widest opacity-60">SINCE LAST</p>
-                <p className="text-sm sm:text-3xl font-black text-foreground tabular-nums tracking-tighter leading-none mt-0.5">
-                    {stats.tsl}
-                </p>
+            <div className="relative z-10 flex justify-between items-end">
+                <div>
+                    <p className="text-[6px] sm:text-[9px] font-black text-muted-foreground uppercase tracking-widest opacity-60">GAP</p>
+                    <p className="text-sm sm:text-3xl font-black text-foreground tabular-nums tracking-tighter leading-none mt-0.5">
+                        {stats.tsl}
+                    </p>
+                </div>
+                <div className="text-right">
+                    <p className="text-[6px] sm:text-[8px] font-black text-muted-foreground uppercase tracking-widest opacity-40">Z-SCORE</p>
+                    <p className={cn("text-[8px] sm:text-xs font-black", Math.abs(stats.zScore) > 2 ? stats.colorClass : "text-white/20")}>
+                        {stats.zScore.toFixed(2)}
+                    </p>
+                </div>
             </div>
 
             <div className="absolute bottom-0 left-0 w-full h-1 bg-black/20 overflow-hidden">
@@ -159,7 +164,7 @@ const DigitDetailInsights = ({ digit, ticks }: { digit: number, ticks: number[] 
             <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-cyan-500 via-primary to-emerald-600" />
             <CardHeader className="pb-4 pt-6 sm:pt-8 px-5 sm:px-8">
                 <div className="flex items-center gap-4 text-center sm:text-left">
-                    <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl bg-primary/20 flex items-center justify-center border border-primary/30">
+                    <div className="w-10 h-10 sm:w-12 h-12 rounded-xl bg-primary/20 flex items-center justify-center border border-primary/30">
                         <Activity className="h-5 w-5 sm:h-6 sm:w-6 text-primary" />
                     </div>
                     <div>
@@ -264,7 +269,7 @@ export function DigitFrequencyView({
                         </Select>
                     </div>
                     <div className="space-y-2 sm:space-y-4">
-                        <Label className="text-[10px] sm:text-[12px] font-black uppercase tracking-widest text-primary ml-1">NEXUS DATA HORIZON</Label>
+                        <Label className="text-[10px] sm:text-[12px] font-black uppercase tracking-widest text-primary ml-1">DATA HORIZON</Label>
                         <div className="relative">
                             <Input
                                 type="number"
@@ -286,8 +291,8 @@ export function DigitFrequencyView({
                         <Flame className="h-5 w-5 sm:h-6 sm:w-6 text-rose-500" />
                     </div>
                     <div>
-                        <h3 className="text-base sm:text-xl font-black uppercase tracking-widest text-foreground">DIGIT HEAT MATRIX</h3>
-                        <p className="text-[7px] sm:text-[9px] font-black uppercase tracking-widest text-muted-foreground mt-0.5">Precision Volumetric HUD Flux</p>
+                        <h3 className="text-base sm:text-xl font-black uppercase tracking-widest text-foreground">STATISTICAL Z-CORE MATRIX</h3>
+                        <p className="text-[7px] sm:text-[9px] font-black uppercase tracking-widest text-muted-foreground mt-0.5">Statistical Edge & Deviation Analysis</p>
                     </div>
                 </div>
 

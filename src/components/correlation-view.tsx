@@ -1,3 +1,4 @@
+
 'use client';
 
 import * as React from 'react';
@@ -8,7 +9,7 @@ import { syntheticIndices } from '@/lib/mock-data';
 import { cn } from '@/lib/utils';
 import { Progress } from '@/components/ui/progress';
 import { Badge } from '@/components/ui/badge';
-import { Info, Target, Zap, Activity, Share2, TrendingUp, Cpu, Orbit, ArrowUpRight, ArrowDownLeft, Fingerprint, Network, Sparkles, Crosshair, ArrowRight, ZapOff, Radio, Box } from 'lucide-react';
+import { Info, Target, Zap, Activity, Share2, TrendingUp, Cpu, Orbit, ArrowUpRight, ArrowDownLeft, Fingerprint, Network, Sparkles, Crosshair, ArrowRight, ZapOff, Radio, Box, Layers } from 'lucide-react';
 
 interface CorrelationViewProps {
     selectedMarket: string;
@@ -165,18 +166,22 @@ export const DigitFrequencyCircles = ({
 };
 
 const DigitNexusMatrix = ({ digit, ticks }: { digit: number, ticks: number[] }) => {
-    const isTriggerActive = ticks.length > 0 && ticks[0] === digit;
-
     const nexusAnalysis = React.useMemo(() => {
         const followingDigits = Array(10).fill(0);
+        const chain3Data: Record<string, number> = {};
         let totalFollowers = 0;
         
         const chronoTicks = [...ticks].reverse();
         
-        for (let i = 0; i < chronoTicks.length - 1; i++) {
+        for (let i = 0; i < chronoTicks.length - 2; i++) {
             if (chronoTicks[i] === digit) {
+                // 2-Digit Next
                 followingDigits[chronoTicks[i+1]]++;
                 totalFollowers++;
+
+                // 3-Digit Sequence Chain (Feature 4)
+                const chain = `${chronoTicks[i+1]}→${chronoTicks[i+2]}`;
+                chain3Data[chain] = (chain3Data[chain] || 0) + 1;
             }
         }
 
@@ -187,15 +192,16 @@ const DigitNexusMatrix = ({ digit, ticks }: { digit: number, ticks: number[] }) 
             probability: (count / total) * 100
         })).sort((a, b) => b.probability - a.probability);
 
-        const over = results.filter(r => r.digit > 4).reduce((sum, r) => sum + r.probability, 0);
-        const under = results.filter(r => r.digit <= 4).reduce((sum, r) => sum + r.probability, 0);
+        const chains = Object.entries(chain3Data)
+            .map(([chain, count]) => ({ chain, count, probability: (count / total) * 100 }))
+            .sort((a, b) => b.count - a.count)
+            .slice(0, 4);
 
         return {
             results,
+            chains,
             hottestNext: results[0],
-            coldestNext: results[9],
             totalFound: totalFollowers,
-            barrierSymmetry: { over, under }
         };
     }, [digit, ticks]);
 
@@ -232,72 +238,61 @@ const DigitNexusMatrix = ({ digit, ticks }: { digit: number, ticks: number[] }) 
                         </div>
                     </div>
                 </CardHeader>
-                <CardContent className="px-4 sm:px-10 pb-8 sm:pb-12 space-y-6 sm:space-y-8">
-                    <div className="p-3 sm:p-6 rounded-xl sm:rounded-3xl bg-black/40 border border-white/5 shadow-inner">
-                        <p className="text-[7px] sm:text-[9px] font-black uppercase tracking-widest text-primary mb-3 sm:mb-4 text-center">FULL SPECTRUM TRANSITION MATRIX</p>
-                        <div className="grid grid-cols-10 gap-0.5 sm:gap-1 aspect-video max-h-[120px] sm:max-h-[200px]">
-                            {Array.from({ length: 100 }, (_, i) => {
-                                const from = Math.floor(i / 10);
-                                const intensity = Math.random() * 100;
-                                return (
-                                    <div 
-                                        key={i} 
-                                        className={cn(
-                                            "rounded-sm border border-white/5 transition-all relative group/tile",
-                                            from === digit ? "border-primary/40" : ""
-                                        )}
-                                        style={{ backgroundColor: `rgba(var(--primary-rgb), ${from === digit ? (intensity / 100) : (intensity / 400)})` }}
-                                    />
-                                );
-                            })}
-                        </div>
-                    </div>
-
-                    <div className="grid grid-cols-1 xl:grid-cols-3 gap-6 sm:gap-8">
-                        <div className="xl:col-span-2 space-y-4 sm:space-y-6 p-4 sm:p-8 rounded-[1.25rem] sm:rounded-[2.5rem] bg-black/50 border border-white/5 relative overflow-hidden shadow-xl">
+                <CardContent className="px-4 sm:px-10 pb-8 sm:pb-12 space-y-8">
+                    <div className="grid grid-cols-1 xl:grid-cols-2 gap-8">
+                        <div className="space-y-6 p-6 rounded-[2rem] bg-black/50 border border-white/5 relative overflow-hidden shadow-xl">
                             <div className="absolute top-0 left-0 w-1 h-full bg-emerald-500/40" />
-                            <div className="flex flex-col sm:flex-row items-center justify-between border-b border-white/10 pb-3 sm:pb-4 gap-2">
+                            <div className="flex items-center justify-between border-b border-white/10 pb-4">
                                 <h4 className="text-[9px] sm:text-[11px] font-black uppercase tracking-widest text-muted-foreground flex items-center gap-2">
-                                    <Cpu className="h-4 w-4 sm:h-5 sm:w-5 text-emerald-400" /> RECURSIVE SUCCESSION GATES
+                                    <Cpu className="h-5 w-5 text-emerald-400" /> RECURSIVE SUCCESSION GATES
                                 </h4>
-                                <Badge className="bg-emerald-500/10 text-emerald-400 border-none px-2 sm:px-3 py-0.5 text-[7px] sm:text-[9px] font-black uppercase tracking-widest">NEXT-DIGIT AFFINITY</Badge>
+                                <Badge className="bg-emerald-500/10 text-emerald-400 border-none px-3 text-[9px] font-black uppercase">AFFINITY</Badge>
                             </div>
                             
-                            <div className="grid grid-cols-5 gap-1.5 sm:gap-3">
+                            <div className="grid grid-cols-5 gap-3">
                                 {nexusAnalysis.results.slice(0, 5).map((res, idx) => (
                                     <div key={res.digit} className={cn(
-                                        "p-2 sm:p-4 rounded-xl border transition-all relative overflow-hidden",
-                                        idx === 0 ? "bg-emerald-500/20 border-emerald-500/40 scale-105 z-10" : "bg-white/5 border-white/5"
+                                        "p-4 rounded-xl border transition-all relative overflow-hidden text-center",
+                                        idx === 0 ? "bg-emerald-500/20 border-emerald-500/40 scale-105 z-10 shadow-lg" : "bg-white/5 border-white/5"
                                     )}>
-                                        <p className={cn(
-                                            "text-[6px] sm:text-[8px] font-black uppercase tracking-wider mb-1",
-                                            idx === 0 ? "text-emerald-400" : "text-muted-foreground/60"
-                                        )}>PROBABILITY</p>
-                                        <p className={cn(
-                                            "text-lg sm:text-3xl font-black leading-none tracking-tighter mb-1",
-                                            idx === 0 ? "text-white" : "text-foreground/80"
-                                        )}>{res.digit}</p>
-                                        <p className={cn(
-                                            "text-[10px] sm:text-lg font-black tabular-nums",
-                                            idx === 0 ? "text-emerald-400" : "text-muted-foreground/40"
-                                        )}>{res.probability.toFixed(0)}%</p>
+                                        <p className={cn("text-xs font-black mb-1", idx === 0 ? "text-white" : "text-foreground/80")}>{res.digit}</p>
+                                        <p className={cn("text-[10px] font-black tabular-nums", idx === 0 ? "text-emerald-400" : "text-muted-foreground/40")}>{res.probability.toFixed(0)}%</p>
                                     </div>
                                 ))}
                             </div>
                         </div>
 
-                        <div className="space-y-3 sm:space-y-6 p-4 sm:p-8 rounded-[1.25rem] sm:rounded-[2.5rem] bg-slate-900/60 border border-white/5 relative flex flex-col justify-center text-center shadow-xl">
-                            <div className="absolute top-0 right-0 w-1 h-full bg-primary/40" />
-                            <div className="w-10 h-10 sm:w-14 sm:h-14 rounded-full bg-primary/10 border border-primary/20 flex items-center justify-center mx-auto mb-2 sm:mb-4">
-                                <Crosshair className="h-5 w-5 sm:h-7 sm:w-7 text-primary" />
+                        <div className="space-y-6 p-6 rounded-[2rem] bg-black/50 border border-white/5 relative overflow-hidden shadow-xl">
+                            <div className="absolute top-0 right-0 w-1 h-full bg-cyan-500/40" />
+                            <div className="flex items-center justify-between border-b border-white/10 pb-4">
+                                <h4 className="text-[9px] sm:text-[11px] font-black uppercase tracking-widest text-muted-foreground flex items-center gap-2">
+                                    <Layers className="h-5 w-5 text-cyan-400" /> 3-DIGIT SEQUENCE CHAINS
+                                </h4>
+                                <Badge className="bg-cyan-500/10 text-cyan-400 border-none px-3 text-[9px] font-black uppercase">RECURSION</Badge>
                             </div>
-                            <div>
-                                <h4 className="text-[8px] sm:text-[10px] font-black uppercase tracking-widest text-primary mb-2 sm:mb-4">TACTICAL GUIDANCE</h4>
-                                <p className="text-[10px] sm:text-sm font-medium text-white/90 leading-relaxed italic px-2">
-                                    "Neural analysis identifies <span className="text-emerald-400 font-black">Digit {nexusAnalysis.hottestNext.digit}</span> as the highest affinity following <span className="text-primary font-black">{digit}</span>."
-                                </p>
+                            
+                            <div className="grid grid-cols-2 gap-4">
+                                {nexusAnalysis.chains.map((chain, idx) => (
+                                    <div key={idx} className="flex items-center justify-between p-3 bg-white/5 rounded-xl border border-white/10">
+                                        <div className="flex items-center gap-2">
+                                            <span className="text-primary font-black text-xs">{digit}</span>
+                                            <ArrowRight className="h-3 w-3 text-white/20" />
+                                            <span className="text-white font-black text-sm">{chain.chain}</span>
+                                        </div>
+                                        <span className="text-[10px] font-black text-emerald-400 tabular-nums">{chain.probability.toFixed(1)}%</span>
+                                    </div>
+                                ))}
                             </div>
                         </div>
+                    </div>
+
+                    <div className="p-6 rounded-[2rem] bg-slate-900/60 border border-white/5 text-center shadow-xl">
+                        <h4 className="text-[10px] font-black uppercase tracking-widest text-primary mb-4 flex items-center justify-center gap-2">
+                            <Crosshair className="h-4 w-4" /> TACTICAL PREDICTION ENGINE
+                        </h4>
+                        <p className="text-sm font-medium text-white/90 leading-relaxed italic max-w-2xl mx-auto">
+                            "Neural analysis identifies <span className="text-emerald-400 font-black">Digit {nexusAnalysis.hottestNext.digit}</span> as the high-affinity successor. 3-Digit chain scan suggests a recursive cycle towards <span className="text-cyan-400 font-black">{nexusAnalysis.chains[0]?.chain || '...'}</span>."
+                        </p>
                     </div>
                 </CardContent>
             </Card>
