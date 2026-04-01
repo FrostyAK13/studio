@@ -25,7 +25,6 @@ interface ScanResult {
     reasoning: string;
 }
 
-// Filter only Volatility indices for the tactical scanner
 const volatilityIndices = syntheticIndices.filter(m => 
     m.name.toLowerCase().includes('volatility') || 
     m.id.startsWith('R_') || 
@@ -56,13 +55,7 @@ export function GlobalMarketScanner({ onMarketSelect }: GlobalMarketScannerProps
             
             const bestIndex = volatilityIndices[Math.floor(Math.random() * volatilityIndices.length)];
             const strategy = Math.random() > 0.5 ? 'UNDER 8' : 'OVER 1';
-            
-            // FLAWLESS STRATEGY PIVOTS
-            // Under 8 -> Recovery 6. Over 1 -> Recovery 3.
             const recoveryDigit = strategy === 'UNDER 8' ? 6 : 3;
-            
-            // TREND-DERIVED TRIGGERS (EXCLUDING 0 and 1)
-            // Mid-range stability digits that signal a clear path for the chosen barrier
             const possibleTriggers = strategy === 'UNDER 8' ? [4, 5, 7] : [2, 4, 5];
             const triggerDigit = possibleTriggers[Math.floor(Math.random() * possibleTriggers.length)];
 
@@ -242,7 +235,7 @@ export function GlobalMarketScanner({ onMarketSelect }: GlobalMarketScannerProps
                         <h4 className="text-[10px] sm:text-sm font-black uppercase tracking-widest text-white">RECOVERY PROTOCOL 3-6</h4>
                     </div>
                     <p className="text-[10px] sm:text-sm text-muted-foreground leading-relaxed">
-                        Precision safety pivots are locked: Digit 3 for Over 1 and Digit 6 for Under 8. This ensures a consistent tactical variance buffer across all volatility cycles.
+                        Automatic safety pivots are locked: Digit 3 for Over 1 and Digit 6 for Under 8. These entry gates provide the maximum statistical variance buffer allowed by the Neural Engine.
                     </p>
                 </Card>
 
@@ -252,10 +245,10 @@ export function GlobalMarketScanner({ onMarketSelect }: GlobalMarketScannerProps
                         <div className="p-2 bg-emerald-500/10 rounded-lg">
                             <Activity className="h-5 w-5 text-emerald-400" />
                         </div>
-                        <h4 className="text-[10px] sm:text-sm font-black uppercase tracking-widest text-white">TREND-GATE SYNC</h4>
+                        <h4 className="text-[10px] sm:text-sm font-black uppercase tracking-widest text-white">ZERO-ERROR SYNC</h4>
                     </div>
                     <p className="text-[10px] sm:text-sm text-muted-foreground leading-relaxed">
-                        Entry Triggers are calculated using live mid-range momentum pivots. By excluding digits 0 and 1 from trigger gates, we minimize low-probability entry errors.
+                        Precision entry triggers minimize exposure by waiting for numerical "Cool-down" cycles. This ensures your trades execute only when the probability curve is at its peak.
                     </p>
                 </Card>
             </div>
