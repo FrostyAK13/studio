@@ -1,3 +1,4 @@
+
 'use client';
 
 import * as React from 'react';
@@ -8,6 +9,7 @@ import { syntheticIndices } from '@/lib/mock-data';
 import { DigitFrequencyView } from './digit-frequency-view';
 import { InsightView } from './insight-view';
 import { CorrelationView } from './correlation-view';
+import { GlobalMarketScanner } from './global-market-scanner';
 import { cn } from '@/lib/utils';
 
 type ConnectionStatusType = 'connecting' | 'streaming' | 'disconnected';
@@ -146,9 +148,7 @@ export function Dashboard() {
       <header className="sticky top-0 z-[60] flex h-auto min-h-[4rem] flex-col md:flex-row items-center border-b bg-background/80 px-4 py-2 md:py-0 md:px-6 backdrop-blur-xl transition-all duration-300">
         <div className="flex w-full items-center justify-between max-w-[1600px] mx-auto gap-2 md:gap-4">
           
-          <div className="flex-1 hidden md:block">
-            {/* Logo removed as per request */}
-          </div>
+          <div className="flex-1 hidden md:block" />
 
           <div className="flex flex-1 justify-center w-full md:w-auto mt-0">
             <a 
@@ -178,26 +178,28 @@ export function Dashboard() {
             </a>
           </div>
 
-          <div className="flex-1 hidden md:block">
-            {/* Right side empty for balance */}
-          </div>
+          <div className="flex-1 hidden md:block" />
         </div>
       </header>
 
       <main className="flex-1 flex flex-col max-w-[1600px] mx-auto w-full relative">
         <div className="flex-1 p-2 sm:p-4 md:p-6 lg:p-8">
-            <Tabs defaultValue="scanner" className="w-full">
+            <Tabs defaultValue="global-scan" className="w-full">
                 <TabsList className="flex items-center justify-start md:justify-center gap-1.5 md:gap-2 bg-transparent h-auto p-0 mb-4 md:mb-10 overflow-x-auto no-scrollbar pb-2 w-full">
-                    {['scanner', 'analyzer', 'frequency', 'insight', 'circles'].map((tab) => (
+                    {['global-scan', 'scanner', 'analyzer', 'frequency', 'insight', 'circles'].map((tab) => (
                         <TabsTrigger 
                             key={tab} 
                             value={tab}
                             className="flex-shrink-0 px-3 sm:px-6 md:px-8 py-2 md:py-3 rounded-full border border-transparent data-[state=active]:border-primary/20 data-[state=active]:bg-primary/10 data-[state=active]:text-primary data-[state=active]:shadow-[0_0_20px_rgba(var(--primary),0.15)] text-muted-foreground font-black text-[8px] sm:text-[9px] md:text-[10px] uppercase tracking-[0.1em] sm:tracking-[0.2em] transition-all duration-300 hover:text-foreground hover:bg-muted/50"
                         >
-                            {tab.toUpperCase()}
+                            {tab === 'global-scan' ? 'GLOBAL SCAN' : tab.toUpperCase()}
                         </TabsTrigger>
                     ))}
                 </TabsList>
+
+                <TabsContent value="global-scan" className="mt-0 animate-in fade-in zoom-in-95 duration-500 outline-none">
+                    <GlobalMarketScanner onMarketSelect={setSelectedMarket} />
+                </TabsContent>
 
                 <TabsContent value="scanner" className="mt-0 animate-in fade-in zoom-in-95 duration-500 outline-none">
                     <ScannerView 
@@ -268,3 +270,4 @@ export function Dashboard() {
     </div>
   );
 }
+
