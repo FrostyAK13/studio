@@ -6,7 +6,7 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { syntheticIndices } from '@/lib/mock-data';
 import { cn } from '@/lib/utils';
-import { Activity, Crosshair, TrendingUp, TrendingDown, Target, Zap, ArrowUp, ArrowDown } from 'lucide-react';
+import { Activity, Zap, TrendingUp, TrendingDown, Target, Crosshair, ArrowUp, ArrowDown } from 'lucide-react';
 import { Progress } from '@/components/ui/progress';
 import { Badge } from '@/components/ui/badge';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -105,11 +105,33 @@ export function AnalyzerView({
         return slice.map((digit, i) => {
             const isPivot = i === pivotIndex;
             const isMatch = digit === selectedDigit;
-            const isOver = digit > selectedDigit;
             
-            let colorClass = "bg-rose-500 border-rose-400/30 text-white"; // Default Under
-            if (isMatch) colorClass = "bg-blue-600 border-blue-400/30 text-white"; // Match = Blue
-            else if (isOver) colorClass = "bg-emerald-500 border-emerald-400/30 text-white"; // Over = Green
+            let colorClass = "bg-slate-800 text-white/40"; // Default
+            
+            if (isMatch) {
+                colorClass = "bg-blue-600 border-blue-400/30 text-white";
+            } else {
+                switch (tradeType) {
+                    case 'even-odd':
+                        colorClass = digit % 2 === 0 
+                            ? "bg-emerald-500 border-emerald-400/30 text-white" 
+                            : "bg-rose-500 border-rose-400/30 text-white";
+                        break;
+                    case 'over-under':
+                        colorClass = digit > selectedDigit
+                            ? "bg-emerald-500 border-emerald-400/30 text-white"
+                            : "bg-rose-500 border-rose-400/30 text-white";
+                        break;
+                    case 'rise-fall':
+                        colorClass = digit % 2 === 0 
+                            ? "bg-emerald-500/40 text-white/60" 
+                            : "bg-rose-500/40 text-white/60";
+                        break;
+                    case 'matches-differs':
+                        colorClass = "bg-rose-500 border-rose-400/30 text-white";
+                        break;
+                }
+            }
             
             return (
                 <motion.div 
