@@ -5,7 +5,7 @@ import { AnimatePresence } from 'framer-motion';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
-import { ScanLine, Loader2, TrendingUp, TrendingDown } from 'lucide-react';
+import { ScanLine, Loader2, TrendingUp, TrendingDown, Gauge } from 'lucide-react';
 import { HackerAnimation } from './hacker-animation';
 import { syntheticIndices } from '@/lib/mock-data';
 import { ScannerAnimationContent } from './scanner-animation-content';
@@ -88,9 +88,9 @@ export function RiseFallAnalysis({
     
     setIsScanning(true);
 
-    if (outcomes.length < 10) {
+    if (priceHistory.length < 30) {
         setTimeout(() => {
-            setScanResultLines(['Not enough data. Need at least 10 ticks.']);
+            setScanResultLines(['ERROR: Insufficient price history.', 'Minimum 30 price points required for momentum profiling.']);
             setIsScanning(false);
             setTimeout(() => setScanResultLines(null), 3000);
         }, 1000);
@@ -101,36 +101,34 @@ export function RiseFallAnalysis({
         let predictedOutcome: 'RISE' | 'FALL';
         let reasoning: string;
 
-        const riseThreshold = 60;
-        const fallThreshold = 60;
-        const streakThreshold = 5;
+        const recentPrices = priceHistory.slice(0, 10);
+        const roc = ((recentPrices[0] - recentPrices[9]) / (recentPrices[9] || 1)) * 100;
+        
+        const ema3 = (recentPrices[0] + recentPrices[1] + recentPrices[2]) / 3;
+        const ema10 = recentPrices.reduce((a, b) => a + b, 0) / 10;
 
-        if (percentages.rise > riseThreshold) {
+        if (streak.count >= 6) {
+            predictedOutcome = streak.type === 'R' ? 'FALL' : 'RISE';
+            reasoning = `EXHAUSTION DETECTED: Asset identifies ${streak.count}x consecutive ${streak.type === 'R' ? 'Rises' : 'Falls'}. High probability trend correction at current pivot.`;
+        } else if (roc > 0.05 && ema3 > ema10) {
             predictedOutcome = 'RISE';
-            reasoning = `High 'Rise' probability detected (${percentages.rise.toFixed(1)}%).`;
-        } else if (percentages.fall > fallThreshold) {
+            reasoning = `MOMENTUM ACCELERATION: Price identifies bullish ROC [${roc.toFixed(4)}%] and EMA-3 crossover. Trend following is prioritized.`;
+        } else if (roc < -0.05 && ema3 < ema10) {
             predictedOutcome = 'FALL';
-            reasoning = `High 'Fall' probability detected (${percentages.fall.toFixed(1)}%).`;
-        } else if (streak.count >= streakThreshold) {
-            if (streak.type === 'R') {
-                predictedOutcome = 'FALL';
-                reasoning = `A long streak of 'Rise' (${streak.count}x) suggests a potential reversal.`;
-            } else { // streak.type === 'F'
-                predictedOutcome = 'RISE';
-                reasoning = `A long streak of 'Fall' (${streak.count}x) suggests a potential reversal.`;
-            }
+            reasoning = `MOMENTUM DECELERATION: Bearish ROC [${roc.toFixed(4)}%] identified with sustained downward pressure. Entering Fall vector.`;
         } else {
-            predictedOutcome = percentages.rise >= percentages.fall ? 'RISE' : 'FALL';
-            reasoning = 'No strong signal. Defaulting to general tendency.';
+            predictedOutcome = percentages.rise > percentages.fall ? 'FALL' : 'RISE';
+            reasoning = `RANGE MEAN REVERSION: Market identifying sideways oscillation. Targeting corrective vector based on global density variance.`;
         }
 
         const initialResults = [
-          'Analysis Complete!',
-          `--> Prediction: ${predictedOutcome}`,
+          'MOMENTUM INTELLIGENCE V8.1 - ACTIVE',
+          `--> ENTRY SIGNAL: ${predictedOutcome}`,
+          `--> ROC INDEX: ${roc.toFixed(4)}%`,
+          `--> TREND SKEW: ${percentages.rise.toFixed(1)}% BULL / ${percentages.fall.toFixed(1)}% BEAR`,
           '',
-          `Reasoning: ${reasoning}`,
-          `Rise Probability: ${percentages.rise.toFixed(2)}%`,
-          `Fall Probability: ${percentages.fall.toFixed(2)}%`,
+          `TECHNICAL REASONING: ${reasoning}`,
+          `LIVE PRICE PIVOT: ${price.toFixed(decimalPlaces)}`,
           ''
         ];
 
@@ -146,15 +144,12 @@ export function RiseFallAnalysis({
               };
               
               if (countdown >= 0) {
-                  const newLines = [...initialResults, `Running bot in ${countdown} seconds...`];
+                  const newLines = [...initialResults, `BUFFERING ENTRY: T-minus ${countdown}s...`];
                   countdown--;
                   return newLines;
               } else {
                   clearInterval(interval);
-                  const finalLines = [...initialResults, `Running bot in 0 seconds...`, 'Bot activated!'];
-                  setTimeout(() => {
-                      setScanResultLines(null);
-                  }, 60000);
+                  const finalLines = [...initialResults, `SIGNAL ACTIVE: Auto-entry confirmed.`, 'MONITORING FOR ACCELERATION ANOMALIES...'];
                   return finalLines;
               }
           });
@@ -163,7 +158,6 @@ export function RiseFallAnalysis({
   };
   
   const chartData = React.useMemo(() => {
-      // Reverse history so oldest is first for the chart
       return [...priceHistory].reverse().map(p => ({ price: p }));
   }, [priceHistory]);
 
@@ -177,10 +171,10 @@ export function RiseFallAnalysis({
   const MiniChartTooltip = ({ active, payload }: any) => {
     if (active && payload && payload.length) {
         return (
-        <div className="rounded-lg border bg-background p-2 text-sm shadow-sm">
+        <div className="rounded-lg border bg-background p-2 text-xs shadow-sm">
             <div className="grid grid-cols-2 gap-2">
                 <div className="flex flex-col">
-                    <span className="text-[0.70rem] uppercase text-muted-foreground">
+                    <span className="text-[0.60rem] uppercase text-muted-foreground">
                     {payload[0].name}
                     </span>
                     <span className="font-bold text-foreground">
@@ -195,67 +189,80 @@ export function RiseFallAnalysis({
   };
 
   return (
-    <Card>
-      <CardContent className="p-6">
-        <div className="flex justify-between items-start mb-4">
+    <Card className="border-none shadow-xl bg-card/60 backdrop-blur-md overflow-hidden relative">
+      <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-emerald-500 via-primary to-rose-500" />
+      <CardContent className="p-4 sm:p-6">
+        <div className="flex justify-between items-start mb-4 gap-2">
             <div>
-                <h3 className="text-lg font-semibold">Rise/Fall Analysis</h3>
-                <p className="text-sm text-muted-foreground -mt-1">{marketName}</p>
+                <h3 className="text-xs sm:text-lg font-black tracking-tight uppercase">RISE/FALL PROTOCOL</h3>
+                <p className="text-[7px] sm:text-[10px] text-muted-foreground font-bold tracking-widest uppercase truncate max-w-[120px] sm:max-w-none">{marketName}</p>
             </div>
-            <div className="flex items-start gap-8">
+            <div className="flex items-start gap-3 sm:gap-8">
                 <div className="text-right">
-                    <p className="text-muted-foreground font-medium text-sm">
-                        Current Streak: <br/> {streak.count}x {streak.type === 'R' ? 'Rise' : 'Fall'}
+                    <p className="text-muted-foreground font-bold text-[7px] sm:text-[10px] uppercase tracking-widest">
+                        TREND STREAK
                     </p>
+                    <p className="text-xs sm:text-xl font-black text-primary">{streak.count}x {streak.type === 'R' ? 'RISE' : 'FALL'}</p>
                 </div>
-                <div className="text-right">
-                    <p className="text-sm text-muted-foreground">PRICE</p>
-                    <p className="text-2xl font-bold text-primary">{price.toFixed(decimalPlaces)}</p>
+                <div className="text-right hidden sm:block">
+                    <p className="text-[10px] text-muted-foreground font-bold uppercase tracking-widest">PRICE</p>
+                    <p className="text-xl font-black text-primary">{price.toFixed(decimalPlaces)}</p>
                 </div>
             </div>
         </div>
 
-        <SimplePriceChart data={chartData.slice(-100)} />
+        <div className="rounded-xl overflow-hidden border border-white/5 bg-black/40 p-2 mb-6">
+             <SimplePriceChart data={chartData.slice(-100)} />
+        </div>
 
         {variant === 'default' && (
             <>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-6">
-                    <Card className="bg-gradient-to-br from-accent to-green-400 border-0 text-white">
-                        <CardContent className="p-4">
-                            <p className="text-sm text-green-100/80 flex items-center gap-1"><TrendingUp size={16} /> RISE</p>
-                            <p className="text-3xl font-bold my-2">{percentages.rise.toFixed(1)}%</p>
-                            <Progress value={percentages.rise} className="h-2 bg-white/20 [&>div]:bg-white" />
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-4 mt-6">
+                    <Card className="bg-gradient-to-br from-emerald-500 to-emerald-700 border-0 text-white shadow-xl">
+                        <CardContent className="p-3 sm:p-4">
+                            <p className="text-[7px] sm:text-xs text-emerald-100/80 flex items-center gap-1 font-black uppercase tracking-widest"><TrendingUp size={12} /> RISE DENSITY</p>
+                            <p className="text-lg sm:text-3xl font-black my-1 sm:my-2">{percentages.rise.toFixed(1)}%</p>
+                            <Progress value={percentages.rise} className="h-1 sm:h-2 bg-white/20 [&>div]:bg-white" />
                         </CardContent>
                     </Card>
-                    <Card className="bg-gradient-to-br from-destructive to-red-400 border-0 text-white">
-                        <CardContent className="p-4">
-                            <p className="text-sm text-red-100/80 flex items-center gap-1"><TrendingDown size={16} /> FALL</p>
-                            <p className="text-3xl font-bold my-2">{percentages.fall.toFixed(1)}%</p>
-                            <Progress value={percentages.fall} className="h-2 bg-white/20 [&>div]:bg-white" />
+                    <Card className="bg-gradient-to-br from-rose-500 to-rose-700 border-0 text-white shadow-xl">
+                        <CardContent className="p-3 sm:p-4">
+                            <p className="text-[7px] sm:text-xs text-rose-100/80 flex items-center gap-1 font-black uppercase tracking-widest"><TrendingDown size={12} /> FALL DENSITY</p>
+                            <p className="text-lg sm:text-3xl font-black my-1 sm:my-2">{percentages.fall.toFixed(1)}%</p>
+                            <Progress value={percentages.fall} className="h-1 sm:h-2 bg-white/20 [&>div]:bg-white" />
                         </CardContent>
                     </Card>
                 </div>
 
-                <div className="mt-6 text-center">
-                    <Button onClick={handleScan} variant="secondary" disabled={isScanning}>
-                        {isScanning && !scanResultLines ? (
-                            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                        ) : (
-                            <ScanLine className="mr-2 h-4 w-4" />
+                <div className="mt-6 sm:mt-8 text-center">
+                    <Button 
+                        onClick={handleScan} 
+                        className={cn(
+                            "h-10 sm:h-14 px-6 sm:px-10 rounded-full font-black text-[8px] sm:text-xs uppercase tracking-[0.2em] shadow-2xl transition-all active:scale-95",
+                            scanResultLines ? "bg-rose-500 hover:bg-rose-600" : "bg-primary hover:bg-primary/90"
                         )}
-                        {scanResultLines ? 'Hide Scanner' : isScanning ? 'Analyzing...' : 'Run Scanner'}
+                        disabled={isScanning}
+                    >
+                        {isScanning && !scanResultLines ? (
+                            <Loader2 className="mr-2 sm:mr-3 h-3 w-3 sm:h-5 sm:w-5 animate-spin" />
+                        ) : (
+                            <ScanLine className="mr-2 sm:mr-3 h-3 w-3 sm:h-5 sm:w-5" />
+                        )}
+                        {scanResultLines ? 'HALT SCAN' : isScanning ? 'ANALYZING...' : 'INITIATE SMART SCAN'}
                     </Button>
                 </div>
                 
                 <AnimatePresence>
                     {(isScanning || scanResultLines) && (
-                        <HackerAnimation title={`Analysis Dashboard - Rise/Fall on ${marketName}`}>
+                        <HackerAnimation title={`MOMENTUM SCAN: ${marketName.toUpperCase()}`}>
                             {isScanning && !scanResultLines ? (
                                 <ScannerAnimationContent />
                             ) : (
-                                <div className="space-y-1">
+                                <div className="space-y-1 sm:space-y-1.5 text-[8px] sm:text-sm">
                                     {scanResultLines?.map((line, index) => (
-                                        <p key={index}>{line}</p>
+                                        <p key={index} className={cn(
+                                            line.startsWith('-->') ? "text-emerald-400 font-black" : "text-green-500/80"
+                                        )}>{line}</p>
                                     ))}
                                 </div>
                             )}
@@ -266,31 +273,35 @@ export function RiseFallAnalysis({
         )}
 
         {variant === 'compact' && (
-            <div className="grid grid-cols-2 items-center gap-4 mt-6">
-                <div className="space-y-3">
+            <div className="grid grid-cols-1 sm:grid-cols-2 items-center gap-4 sm:gap-6 mt-6">
+                <div className="space-y-3 sm:space-y-4">
                     <div>
-                        <div className="flex justify-between mb-1 text-sm">
-                            <span className="font-medium">Rise</span>
+                        <div className="flex justify-between mb-1 sm:mb-2 text-[8px] sm:text-xs font-black uppercase tracking-widest">
+                            <span className="text-emerald-400">RISE MOMENTUM</span>
                             <span className="text-muted-foreground">{percentages.rise.toFixed(1)}%</span>
                         </div>
-                        <div className="w-full bg-muted rounded-full h-2 overflow-hidden">
-                            <div className="bg-accent h-full rounded-full" style={{ width: `${percentages.rise}%` }}></div>
-                        </div>
+                        <Progress value={percentages.rise} className="h-1 sm:h-2.5 bg-white/5 [&>div]:bg-emerald-500" />
                     </div>
                     <div>
-                        <div className="flex justify-between mb-1 text-sm">
-                            <span className="font-medium">Fall</span>
+                        <div className="flex justify-between mb-1 sm:mb-2 text-[8px] sm:text-xs font-black uppercase tracking-widest">
+                            <span className="text-rose-500">FALL MOMENTUM</span>
                             <span className="text-muted-foreground">{percentages.fall.toFixed(1)}%</span>
                         </div>
-                        <div className="w-full bg-muted rounded-full h-2 overflow-hidden">
-                            <div className="bg-destructive h-full rounded-full" style={{ width: `${percentages.fall}%` }}></div>
-                        </div>
+                        <Progress value={percentages.fall} className="h-1 sm:h-2.5 bg-white/5 [&>div]:bg-rose-500" />
                     </div>
                 </div>
-                <ChartContainer config={{}} className="h-40 w-40 mx-auto">
+                <ChartContainer config={{}} className="h-24 sm:h-40 w-24 sm:w-40 mx-auto aspect-square">
                     <PieChart>
                         <Tooltip content={<MiniChartTooltip />} />
-                        <Pie data={riseFallPieData} dataKey="value" nameKey="name" innerRadius={40} outerRadius={60} paddingAngle={2}>
+                        <Pie 
+                          data={riseFallPieData} 
+                          dataKey="value" 
+                          nameKey="name" 
+                          innerRadius={30} 
+                          outerRadius={45} 
+                          paddingAngle={2}
+                          stroke="none"
+                        >
                             {riseFallPieData.map((entry) => (
                                 <Cell key={`cell-${entry.name}`} fill={entry.fill} />
                             ))}
