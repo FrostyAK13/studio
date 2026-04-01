@@ -109,7 +109,9 @@ export const DigitFrequencyCircles = ({
                             "text-3xl sm:text-7xl font-black leading-none tracking-tighter transition-all duration-500",
                             isSelected ? "text-white scale-125 drop-shadow-[0_0_15px_white]" : "text-foreground"
                         )}>{digit}</span>
-                        <span className="text-[8px] sm:text-[14px] font-black text-muted-foreground mt-1 uppercase tracking-widest">{percentage.toFixed(0)}%</span>
+                        <span className="text-[10px] sm:text-[18px] font-black text-cyan-400 mt-1 uppercase tracking-widest drop-shadow-[0_2px_4px_rgba(0,0,0,0.8)]">
+                            {percentage.toFixed(0)}%
+                        </span>
                     </div>
                 </div>
                 {isLast && (
@@ -363,3 +365,4 @@ export function CorrelationView({
         </div>
     );
 }
+
