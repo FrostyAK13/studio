@@ -1,3 +1,4 @@
+
 'use client';
 
 import * as React from 'react';
@@ -100,11 +101,8 @@ export function MatchesDiffersAnalysis({ lastDigitTicks, selectedMarket, price, 
         predictedOutcome = 'DIFFER';
         targetDigit = hottest; 
 
-        // FLAWLESS NON-COLLISION: Ensure Trigger is NOT the same as Target
-        let triggerDigit = recentTicks[0];
-        if (triggerDigit === targetDigit) {
-            triggerDigit = (triggerDigit + 1) % 10;
-        }
+        // FLAWLESS NON-COLLISION: Ensure Trigger is NOT 0, 1, or Target
+        let triggerDigit = recentTicks.find(t => t > 1 && t !== targetDigit) || 5;
 
         const strategyReasoning = `FLAWLESS DIFFER: Market variance identifies high recurrence in Digit ${hottest}. Wait for Trigger ${triggerDigit} to enter DIFFER Digit ${targetDigit} for maximum safety.`;
 

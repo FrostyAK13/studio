@@ -1,3 +1,4 @@
+
 'use client';
 
 import * as React from 'react';
@@ -82,28 +83,26 @@ export function EvenOddAnalysis({ lastDigitTicks, selectedMarket, price, decimal
     }
 
     setTimeout(() => {
-        const recentTicks = lastDigitTicks.slice(0, 15);
-        const tickSeq = [...recentTicks].reverse().join(',');
+        const recentTicks = lastDigitTicks.slice(0, 30);
+        const tickSeq = [...recentTicks].slice(0, 10).reverse().join(',');
         let predictedOutcome: Outcome;
         let strategy = "";
-        let triggerDigit = recentTicks[0];
+        
+        // Zero-Error Trigger Logic: Exclude 0 and 1
+        let triggerDigit = recentTicks.find(t => t > 1) || 5;
 
         // Advanced Logic: Cluster Density vs Momentum
         const cluster10 = outcomes.slice(0, 10);
         const evenCount10 = cluster10.filter(o => o === 'E').length;
         const oddCount10 = 10 - evenCount10;
 
-        // Detection of saturation vs oscillation
         if (streak.count >= 5) {
-            // Reversal logic for extended streaks
             predictedOutcome = streak.type === 'E' ? 'O' : 'E';
             strategy = `RECURSIVE REVERSAL: Detected ${streak.count}x ${streak.type} saturation. Statistical gravity favors immediate pivot to ${predictedOutcome === 'E' ? 'Even' : 'Odd'}.`;
         } else if (Math.abs(evenCount10 - 5) >= 3) {
-            // Momentum following for strong bias
             predictedOutcome = evenCount10 > oddCount10 ? 'E' : 'O';
             strategy = `MOMENTUM FLOW: Cluster analysis identifies a ${Math.max(evenCount10, oddCount10)}0% directional bias. Following current ${predictedOutcome === 'E' ? 'Even' : 'Odd'} vector.`;
         } else {
-            // Mean reversion logic
             predictedOutcome = percentages.even >= percentages.odd ? 'O' : 'E';
             strategy = `MEAN REVERSION: Global distribution [${percentages.even.toFixed(1)}%] is over-weighted. Targeting ${predictedOutcome === 'E' ? 'Even' : 'Odd'} for equilibrium correction.`;
         }

@@ -37,6 +37,16 @@ export function GlobalMarketScanner({ onMarketSelect, lastDigitTicks = [] }: Glo
     const [status, setStatus] = React.useState<ScanStatus>('idle');
     const [currentScanIndex, setCurrentScanIndex] = React.useState(0);
     const [result, setResult] = React.useState<ScanResult | null>(null);
+    const [marketHeat, setMarketHeat] = React.useState<Record<string, number>>({});
+
+    // Fix hydration mismatch by generating random heat only on client
+    React.useEffect(() => {
+        const heat: Record<string, number> = {};
+        volatilityIndices.forEach(m => {
+            heat[m.id] = Math.floor(Math.random() * 10);
+        });
+        setMarketHeat(heat);
+    }, []);
 
     const startScan = () => {
         setResult(null);
@@ -59,7 +69,8 @@ export function GlobalMarketScanner({ onMarketSelect, lastDigitTicks = [] }: Glo
             const strategy = Math.random() > 0.5 ? 'UNDER 8' : 'OVER 1';
             const recoveryDigit = strategy === 'UNDER 8' ? 6 : 3;
             
-            const possibleTriggers = [2, 3, 4, 5, 6, 7];
+            // Zero-Error Trigger Logic: Exclude 0 and 1
+            const possibleTriggers = [2, 3, 4, 5, 7];
             const triggerDigit = possibleTriggers[Math.floor(Math.random() * possibleTriggers.length)];
 
             setResult({
@@ -244,7 +255,9 @@ export function GlobalMarketScanner({ onMarketSelect, lastDigitTicks = [] }: Glo
                                 </div>
                                 <div className="text-right">
                                     <p className="text-[8px] font-black text-primary uppercase">HEAT</p>
-                                    <p className="text-sm font-black text-emerald-400">{Math.floor(Math.random() * 10)}</p>
+                                    <p className="text-sm font-black text-emerald-400">
+                                        {marketHeat[m.id] ?? '--'}
+                                    </p>
                                 </div>
                             </div>
                         ))}
