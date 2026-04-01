@@ -147,14 +147,19 @@ export function Dashboard() {
           </div>
 
           <div className="flex flex-1 justify-center order-3 md:order-2 w-full md:w-auto mt-0">
-            <div className="relative group">
+            <a 
+              href="https://frostytraders.com"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="relative group transition-all duration-300 hover:scale-105 active:scale-95"
+            >
                 <div className="absolute -inset-1 bg-gradient-to-r from-primary/20 to-cyan-400/20 rounded-full blur opacity-25 group-hover:opacity-75 transition duration-1000 group-hover:duration-200"></div>
                 <div className="relative flex items-center px-3 md:px-6 py-1 md:py-2 bg-card border border-white/5 rounded-full shadow-2xl">
                     <span className="text-[7px] sm:text-[9px] md:text-sm font-black uppercase tracking-[0.2em] md:tracking-[0.4em] text-foreground/70 whitespace-nowrap">
-                        EMPORER MIGOSI
+                        FROSTY HOLDINGS
                     </span>
                 </div>
-            </div>
+            </a>
           </div>
 
           <div className="flex-1 flex justify-end order-2 md:order-3 gap-2 md:gap-4">
