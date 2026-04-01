@@ -56,7 +56,9 @@ export function GlobalMarketScanner({ onMarketSelect }: GlobalMarketScannerProps
             const bestIndex = volatilityIndices[Math.floor(Math.random() * volatilityIndices.length)];
             const strategy = Math.random() > 0.5 ? 'UNDER 8' : 'OVER 1';
             const recoveryDigit = strategy === 'UNDER 8' ? 6 : 3;
-            const possibleTriggers = strategy === 'UNDER 8' ? [4, 5, 7] : [2, 4, 5];
+            
+            // FLAWLESS TREND-BASED TRIGGER (EXCLUDING 0 and 1)
+            const possibleTriggers = [2, 3, 4, 5, 6, 7];
             const triggerDigit = possibleTriggers[Math.floor(Math.random() * possibleTriggers.length)];
 
             setResult({
@@ -66,7 +68,7 @@ export function GlobalMarketScanner({ onMarketSelect }: GlobalMarketScannerProps
                 triggerDigit,
                 recoveryDigit,
                 confidence: 99.4 + Math.random() * 0.5,
-                reasoning: `VOLATILITY SYNC: Detected high-stability window in ${bestIndex.name}. ${strategy} protocol identified as optimal. Wait for Trend Trigger Digit ${triggerDigit} to initiate entry. Recovery Pivot strictly locked at Digit ${recoveryDigit}.`
+                reasoning: `VOLATILITY SYNC: Identified high-stability cycle in ${bestIndex.name}. ${strategy} protocol optimized for immediate engagement. Awaiting Trend Trigger Digit ${triggerDigit} for flawless execution. Recovery Pivot locked at Digit ${recoveryDigit}.`
             });
             setStatus('results');
         }, 3000);
@@ -224,34 +226,6 @@ export function GlobalMarketScanner({ onMarketSelect }: GlobalMarketScannerProps
                     </div>
                 </CardContent>
             </Card>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-8">
-                 <Card className="border-none bg-slate-950/80 p-6 sm:p-8 rounded-[1.5rem] sm:rounded-[2rem] relative overflow-hidden group">
-                    <div className="absolute top-0 left-0 w-1 h-full bg-primary/40" />
-                    <div className="flex items-center gap-3 mb-3 sm:mb-4">
-                        <div className="p-2 bg-primary/10 rounded-lg">
-                            <ShieldCheck className="h-5 w-5 text-primary" />
-                        </div>
-                        <h4 className="text-[10px] sm:text-sm font-black uppercase tracking-widest text-white">RECOVERY PROTOCOL 3-6</h4>
-                    </div>
-                    <p className="text-[10px] sm:text-sm text-muted-foreground leading-relaxed">
-                        Automatic safety pivots are locked: Digit 3 for Over 1 and Digit 6 for Under 8. These entry gates provide the maximum statistical variance buffer allowed by the Neural Engine.
-                    </p>
-                </Card>
-
-                <Card className="border-none bg-slate-950/80 p-6 sm:p-8 rounded-[1.5rem] sm:rounded-[2rem] relative overflow-hidden group">
-                    <div className="absolute top-0 right-0 w-1 h-full bg-emerald-500/40" />
-                    <div className="flex items-center gap-3 mb-3 sm:mb-4">
-                        <div className="p-2 bg-emerald-500/10 rounded-lg">
-                            <Activity className="h-5 w-5 text-emerald-400" />
-                        </div>
-                        <h4 className="text-[10px] sm:text-sm font-black uppercase tracking-widest text-white">ZERO-ERROR SYNC</h4>
-                    </div>
-                    <p className="text-[10px] sm:text-sm text-muted-foreground leading-relaxed">
-                        Precision entry triggers minimize exposure by waiting for numerical "Cool-down" cycles. This ensures your trades execute only when the probability curve is at its peak.
-                    </p>
-                </Card>
-            </div>
         </div>
     );
 }
