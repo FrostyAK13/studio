@@ -8,7 +8,6 @@ import { syntheticIndices } from '@/lib/mock-data';
 import { DigitFrequencyView } from './digit-frequency-view';
 import { InsightView } from './insight-view';
 import { CorrelationView } from './correlation-view';
-import { ConnectionStatus } from './connection-status';
 import { cn } from '@/lib/utils';
 
 type ConnectionStatusType = 'connecting' | 'streaming' | 'disconnected';
@@ -130,42 +129,57 @@ export function Dashboard() {
     const analyzedDigits = lastDigitTicks.slice(0, maxTicks);
     const analyzedPrices = priceHistory.slice(0, maxTicks);
 
+    const statusColors = {
+        streaming: 'text-emerald-400',
+        connecting: 'text-amber-400',
+        disconnected: 'text-rose-500'
+    };
+
+    const statusBg = {
+        streaming: 'bg-emerald-400',
+        connecting: 'bg-amber-400',
+        disconnected: 'bg-rose-500'
+    };
+
   return (
     <div className="flex min-h-screen w-full flex-col bg-background font-sans overflow-x-hidden">
       <header className="sticky top-0 z-[60] flex h-auto min-h-[4rem] flex-col md:flex-row items-center border-b bg-background/80 px-4 py-2 md:py-0 md:px-6 backdrop-blur-xl transition-all duration-300">
         <div className="flex w-full items-center justify-between max-w-[1600px] mx-auto gap-2 md:gap-4">
           
-          <div className="flex-1 min-w-0">
-            <a
-              href="https://frostytraders.com"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="text-sm sm:text-lg md:text-2xl font-black tracking-tighter text-primary drop-shadow-[0_0_15px_rgba(var(--primary),0.3)] transition-transform hover:scale-105 block truncate"
-            >
-              frosty<span className="text-foreground">traders.com</span>
-            </a>
+          <div className="flex-1 hidden md:block">
+            {/* Logo removed as per request */}
           </div>
 
-          <div className="flex flex-1 justify-center order-3 md:order-2 w-full md:w-auto mt-0">
+          <div className="flex flex-1 justify-center w-full md:w-auto mt-0">
             <a 
               href="https://frostytraders.com"
               target="_blank"
               rel="noopener noreferrer"
               className="relative group transition-all duration-300 hover:scale-105 active:scale-95"
             >
-                <div className="absolute -inset-1 bg-gradient-to-r from-primary/20 to-cyan-400/20 rounded-full blur opacity-25 group-hover:opacity-75 transition duration-1000 group-hover:duration-200"></div>
-                <div className="relative flex items-center px-3 md:px-6 py-1 md:py-2 bg-card border border-white/5 rounded-full shadow-2xl">
-                    <span className="text-[7px] sm:text-[9px] md:text-sm font-black uppercase tracking-[0.2em] md:tracking-[0.4em] text-foreground/70 whitespace-nowrap">
+                <div className={cn(
+                    "absolute -inset-1 rounded-full blur opacity-25 group-hover:opacity-75 transition duration-1000",
+                    statusBg[connectionStatus]
+                )}></div>
+                <div className="relative flex items-center gap-3 px-4 md:px-8 py-2 md:py-3 bg-card border border-white/5 rounded-full shadow-2xl">
+                    <div className="relative flex items-center justify-center">
+                        <div className={cn("h-2 w-2 md:h-2.5 md:w-2.5 rounded-full transition-all duration-500", statusBg[connectionStatus])} />
+                        {connectionStatus === 'streaming' && (
+                            <div className={cn("absolute h-2 w-2 md:h-2.5 md:w-2.5 rounded-full animate-ping opacity-75", statusBg[connectionStatus])} />
+                        )}
+                    </div>
+                    <span className={cn(
+                        "text-[9px] sm:text-[11px] md:text-sm font-black uppercase tracking-[0.2em] md:tracking-[0.4em] whitespace-nowrap transition-colors duration-500",
+                        statusColors[connectionStatus]
+                    )}>
                         FROSTY HOLDINGS
                     </span>
                 </div>
             </a>
           </div>
 
-          <div className="flex-1 flex justify-end order-2 md:order-3 gap-2 md:gap-4">
-            <div className="flex items-center gap-1.5 px-2 py-1 bg-muted/30 rounded-full border border-white/5 backdrop-blur-sm shadow-inner">
-                <ConnectionStatus status={connectionStatus} />
-            </div>
+          <div className="flex-1 hidden md:block">
+            {/* Right side empty for balance */}
           </div>
         </div>
       </header>
