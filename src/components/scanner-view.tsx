@@ -101,7 +101,7 @@ export function ScannerView({
                 <Card className="border-none shadow-[0_10px_40px_rgba(0,0,0,0.6)] sm:shadow-[0_20px_80px_rgba(0,0,0,0.6)] bg-slate-950/80 backdrop-blur-[60px] rounded-[2rem] sm:rounded-[4rem] p-6 sm:p-10 flex flex-col justify-between border-l border-white/5 relative overflow-hidden">
                     <div className="absolute top-0 right-0 p-4 sm:p-8 opacity-10"><Radio size={48} className="text-primary sm:w-20 sm:h-20" /></div>
                     <div>
-                        <p className="text-[8px] sm:text-[10px] font-black uppercase tracking-[0.3em] sm:tracking-[0.5em] text-primary mb-4 sm:mb-6">GLOBAL BIAS HUD</p>
+                        <p className="text-[8px] sm:text-[10px] font-black uppercase tracking-[0.3em] sm:tracking-[0.5em] text-primary mb-4 sm:mb-6 uppercase">GLOBAL BIAS HUD</p>
                         <div className="flex items-end gap-2 sm:gap-3">
                             <span className="text-4xl sm:text-6xl font-black text-white tracking-tighter tabular-nums">{globalBias.toFixed(0)}</span>
                             <span className="text-[10px] sm:text-sm font-black text-muted-foreground uppercase tracking-widest mb-1 sm:mb-2">VECTOR</span>
@@ -121,8 +121,8 @@ export function ScannerView({
                 <div className="flex items-center gap-4 sm:gap-6 px-4 sm:px-10">
                     <div className="h-8 sm:h-12 w-1 sm:w-1.5 bg-primary rounded-full shadow-[0_0_15px_rgba(var(--primary),1)]" />
                     <div>
-                        <h2 className="text-lg sm:text-2xl font-black uppercase tracking-[0.3em] sm:tracking-[0.6em] text-white leading-tight">TECHNICAL PROTOCOLS</h2>
-                        <p className="text-[8px] sm:text-[10px] font-black uppercase tracking-[0.3em] sm:tracking-[0.4em] text-primary/60 mt-1 sm:mt-2">Active Strategic Surveillance Protocols</p>
+                        <h2 className="text-lg sm:text-2xl font-black uppercase tracking-[0.3em] sm:tracking-[0.6em] text-white leading-tight">TECHNICAL ANALYSIS</h2>
+                        <p className="text-[8px] sm:text-[10px] font-black uppercase tracking-[0.3em] sm:tracking-[0.4em] text-primary/60 mt-1 sm:mt-2">Active Strategic Surveillance</p>
                     </div>
                 </div>
 

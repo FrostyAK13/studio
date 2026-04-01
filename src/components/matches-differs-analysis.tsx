@@ -118,7 +118,7 @@ export function MatchesDiffersAnalysis({ lastDigitTicks, selectedMarket, price, 
         }
 
         const initialResults = [
-          'PATTERN RECOGNITION HUD - PRECISION V6.1',
+          'PATTERN HUB - PRECISION V6.1',
           `--> ENTRY TRIGGER: WATCH FOR DIGIT ${triggerDigit}`,
           `--> STRATEGY: ${predictedOutcome}`,
           `--> TARGET DIGIT: ${targetDigit}`,
@@ -162,7 +162,7 @@ export function MatchesDiffersAnalysis({ lastDigitTicks, selectedMarket, price, 
       <CardContent className="p-4 sm:p-6">
         <div className="flex justify-between items-start mb-4 sm:mb-6 gap-2">
             <div>
-                <h3 className="text-sm sm:text-lg font-black tracking-tight uppercase">MATCHES/DIFFERS PROTOCOL</h3>
+                <h3 className="text-sm sm:text-lg font-black tracking-tight uppercase">MATCHES/DIFFERS</h3>
                 <p className="text-[8px] sm:text-[10px] text-muted-foreground font-bold tracking-widest uppercase truncate max-w-[120px] sm:max-w-none">{marketName}</p>
             </div>
             <div className="flex items-start gap-3 sm:gap-8">
@@ -214,7 +214,7 @@ export function MatchesDiffersAnalysis({ lastDigitTicks, selectedMarket, price, 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-4">
             <div className="bg-white/5 rounded-xl sm:rounded-2xl p-3 sm:p-4 border border-white/5 relative overflow-hidden group">
                 <div className="absolute inset-0 bg-chart-2/5 opacity-0 group-hover:opacity-100 transition-opacity" />
-                <p className="text-[8px] sm:text-[10px] font-black text-chart-2 tracking-widest">MATCH DENSITY</p>
+                <p className="text-[8px] sm:text-[10px] font-black text-chart-2 tracking-widest uppercase">MATCH DENSITY</p>
                 <div className="flex items-end justify-between mt-1 mb-2">
                     <p className="text-xl sm:text-3xl font-black">{percentages.matches.toFixed(1)}%</p>
                     <div className="p-1 sm:p-1.5 bg-chart-2/20 rounded-lg"><Zap className="h-3 w-3 sm:h-4 sm:w-4 text-chart-2" /></div>
@@ -223,7 +223,7 @@ export function MatchesDiffersAnalysis({ lastDigitTicks, selectedMarket, price, 
             </div>
             <div className="bg-white/5 rounded-xl sm:rounded-2xl p-3 sm:p-4 border border-white/5 relative overflow-hidden group">
                 <div className="absolute inset-0 bg-chart-5/5 opacity-0 group-hover:opacity-100 transition-opacity" />
-                <p className="text-[8px] sm:text-[10px] font-black text-chart-5 tracking-widest">DIFFER DENSITY</p>
+                <p className="text-[8px] sm:text-[10px] font-black text-chart-5 tracking-widest uppercase">DIFFER DENSITY</p>
                 <div className="flex items-end justify-between mt-1 mb-2">
                     <p className="text-xl sm:text-3xl font-black">{percentages.differs.toFixed(1)}%</p>
                     <div className="p-1 sm:p-1.5 bg-chart-5/20 rounded-lg"><Target className="h-3 w-3 sm:h-4 sm:w-4 text-chart-5" /></div>

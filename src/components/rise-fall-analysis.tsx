@@ -123,7 +123,7 @@ export function RiseFallAnalysis({
         }
 
         const initialResults = [
-          'MOMENTUM INTELLIGENCE V8.1 - ACTIVE',
+          'MOMENTUM HUB V8.1 - ACTIVE',
           `--> ENTRY SIGNAL: ${predictedOutcome}`,
           `--> ROC INDEX: ${roc.toFixed(4)}%`,
           `--> TREND SKEW: ${percentages.rise.toFixed(1)}% BULL / ${percentages.fall.toFixed(1)}% BEAR`,
@@ -195,7 +195,7 @@ export function RiseFallAnalysis({
       <CardContent className="p-4 sm:p-6">
         <div className="flex justify-between items-start mb-4 gap-2">
             <div>
-                <h3 className="text-xs sm:text-lg font-black tracking-tight uppercase">RISE/FALL PROTOCOL</h3>
+                <h3 className="text-xs sm:text-lg font-black tracking-tight uppercase">RISE/FALL</h3>
                 <p className="text-[7px] sm:text-[10px] text-muted-foreground font-bold tracking-widest uppercase truncate max-w-[120px] sm:max-w-none">{marketName}</p>
             </div>
             <div className="flex items-start gap-3 sm:gap-8">
@@ -298,8 +298,8 @@ export function RiseFallAnalysis({
                           data={riseFallPieData} 
                           dataKey="value" 
                           nameKey="name" 
-                          innerRadius={30} 
-                          outerRadius={45} 
+                          innerRadius={25} 
+                          outerRadius={40} 
                           paddingAngle={2}
                           stroke="none"
                         >

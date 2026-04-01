@@ -109,7 +109,7 @@ export function EvenOddAnalysis({ lastDigitTicks, selectedMarket, price, decimal
         }
 
         const initialResults = [
-          'STRATEGY PROTOCOL V5.2 - PRECISION MODE',
+          'STRATEGY HUB V5.2 - PRECISION MODE',
           `--> ENTRY TRIGGER: WATCH FOR DIGIT ${triggerDigit}`,
           `--> PREDICTED VECTOR: ${predictedOutcome === 'E' ? 'EVEN' : 'ODD'}`,
           `--> CONFIDENCE INDEX: ${Math.abs(percentages.even - 50) + 70}%`,
@@ -153,7 +153,7 @@ export function EvenOddAnalysis({ lastDigitTicks, selectedMarket, price, decimal
       <CardContent className="p-4 sm:p-6">
         <div className="flex justify-between items-start mb-4 sm:mb-6 gap-2">
             <div>
-                <h3 className="text-sm sm:text-lg font-black tracking-tight uppercase">EVEN/ODD PROTOCOL</h3>
+                <h3 className="text-sm sm:text-lg font-black tracking-tight uppercase">EVEN/ODD</h3>
                 <p className="text-[8px] sm:text-[10px] text-muted-foreground font-bold tracking-widest uppercase truncate max-w-[120px] sm:max-w-none">{marketName}</p>
             </div>
             <div className="flex items-start gap-3 sm:gap-8">
@@ -191,7 +191,7 @@ export function EvenOddAnalysis({ lastDigitTicks, selectedMarket, price, decimal
         <div className="grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-4">
             <div className="bg-white/5 rounded-xl sm:rounded-2xl p-3 sm:p-4 border border-white/5 relative overflow-hidden group">
                 <div className="absolute inset-0 bg-chart-1/5 opacity-0 group-hover:opacity-100 transition-opacity" />
-                <p className="text-[8px] sm:text-[10px] font-black text-chart-1 tracking-widest">EVEN DENSITY</p>
+                <p className="text-[8px] sm:text-[10px] font-black text-chart-1 tracking-widest uppercase">EVEN DENSITY</p>
                 <div className="flex items-end justify-between mt-1 mb-2">
                     <p className="text-xl sm:text-3xl font-black">{percentages.even.toFixed(1)}%</p>
                     <div className="p-1 sm:p-1.5 bg-chart-1/20 rounded-lg"><Activity className="h-3 w-3 sm:h-4 sm:w-4 text-chart-1" /></div>
@@ -200,7 +200,7 @@ export function EvenOddAnalysis({ lastDigitTicks, selectedMarket, price, decimal
             </div>
             <div className="bg-white/5 rounded-xl sm:rounded-2xl p-3 sm:p-4 border border-white/5 relative overflow-hidden group">
                 <div className="absolute inset-0 bg-chart-3/5 opacity-0 group-hover:opacity-100 transition-opacity" />
-                <p className="text-[8px] sm:text-[10px] font-black text-chart-3 tracking-widest">ODD DENSITY</p>
+                <p className="text-[8px] sm:text-[10px] font-black text-chart-3 tracking-widest uppercase">ODD DENSITY</p>
                 <div className="flex items-end justify-between mt-1 mb-2">
                     <p className="text-xl sm:text-3xl font-black">{percentages.odd.toFixed(1)}%</p>
                     <div className="p-1 sm:p-1.5 bg-chart-3/20 rounded-lg"><ShieldCheck className="h-3 w-3 sm:h-4 sm:w-4 text-chart-3" /></div>

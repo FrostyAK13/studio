@@ -124,11 +124,11 @@ export function OverUnderAnalysis({ lastDigitTicks, selectedMarket, price, decim
             // Stability mean reversion
             predictedOutcome = avg > 4.5 ? 'UNDER' : 'OVER';
             barrierDigit = predictedOutcome === 'OVER' ? 3 : 6;
-            reasoning = `STABILITY HUD: Global mean [${avg.toFixed(1)}] is stable. Entry at trigger ${triggerDigit} targets ${predictedOutcome} ${barrierDigit} for statistical equilibrium.`;
+            reasoning = `STABILITY HUB: Global mean [${avg.toFixed(1)}] is stable. Entry at trigger ${triggerDigit} targets ${predictedOutcome} ${barrierDigit} for statistical equilibrium.`;
         }
 
         const initialResults = [
-            'BARRIER PRECISION ENGINE - V7.4',
+            'BARRIER HUB - V7.4',
             `--> ENTRY TRIGGER: WATCH FOR DIGIT ${triggerDigit}`,
             `--> PREDICTION: ${predictedOutcome} ${barrierDigit}`,
             `--> SKEW WEIGHT: ${Math.max(higherCount, lowerCount) * 5}%`,
@@ -173,7 +173,7 @@ export function OverUnderAnalysis({ lastDigitTicks, selectedMarket, price, decim
       <CardContent className="p-4 sm:p-6">
         <div className="flex justify-between items-start mb-4 sm:mb-6 gap-2">
             <div>
-                <h3 className="text-sm sm:text-lg font-black tracking-tight uppercase">OVER/UNDER PROTOCOL</h3>
+                <h3 className="text-sm sm:text-lg font-black tracking-tight uppercase">OVER/UNDER</h3>
                 <p className="text-[8px] sm:text-[10px] text-muted-foreground font-bold tracking-widest uppercase truncate max-w-[120px] sm:max-w-none">{marketName}</p>
             </div>
             <div className="flex items-start gap-3 sm:gap-8">
@@ -231,7 +231,7 @@ export function OverUnderAnalysis({ lastDigitTicks, selectedMarket, price, decim
         <div className="grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-4">
             <div className="bg-white/5 rounded-xl sm:rounded-2xl p-3 sm:p-4 border border-white/5 relative overflow-hidden group">
                 <div className="absolute inset-0 bg-accent/5 opacity-0 group-hover:opacity-100 transition-opacity" />
-                <p className="text-[8px] sm:text-[10px] font-black text-accent tracking-widest flex items-center gap-1.5"><ArrowUp size={10} /> OVER DENSITY</p>
+                <p className="text-[8px] sm:text-[10px] font-black text-accent tracking-widest flex items-center gap-1.5 uppercase"><ArrowUp size={10} /> OVER DENSITY</p>
                 <div className="flex items-end justify-between mt-1 mb-2">
                     <p className="text-xl sm:text-3xl font-black">{percentages.over.toFixed(1)}%</p>
                     <div className="p-1 sm:p-1.5 bg-accent/20 rounded-lg"><Gauge className="h-3 w-3 sm:h-4 sm:w-4 text-accent" /></div>
@@ -240,7 +240,7 @@ export function OverUnderAnalysis({ lastDigitTicks, selectedMarket, price, decim
             </div>
             <div className="bg-white/5 rounded-xl sm:rounded-2xl p-3 sm:p-4 border border-white/5 relative overflow-hidden group">
                 <div className="absolute inset-0 bg-destructive/5 opacity-0 group-hover:opacity-100 transition-opacity" />
-                <p className="text-[8px] sm:text-[10px] font-black text-destructive tracking-widest flex items-center gap-1.5"><ArrowDown size={10} /> UNDER DENSITY</p>
+                <p className="text-[8px] sm:text-[10px] font-black text-destructive tracking-widest flex items-center gap-1.5 uppercase"><ArrowDown size={10} /> UNDER DENSITY</p>
                 <div className="flex items-end justify-between mt-1 mb-2">
                     <p className="text-xl sm:text-3xl font-black">{percentages.under.toFixed(1)}%</p>
                     <div className="p-1 sm:p-1.5 bg-destructive/20 rounded-lg"><Gauge className="h-3 w-3 sm:h-4 sm:w-4 text-destructive" /></div>

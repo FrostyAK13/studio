@@ -44,7 +44,7 @@ export function InsightView({ price, decimalPlaces, lastDigitTicks, priceHistory
 
         setTimeout(() => {
             if (lastDigitTicks.length < 50 || priceHistory.length < 50) {
-                setError(`Data sequence unstable. Minimum 50 ticks required for deep protocol analysis.`);
+                setError(`Data sequence unstable. Minimum 50 ticks required for deep tactical analysis.`);
                 setAnalysisState('error');
                 return;
             }
@@ -204,7 +204,7 @@ export function InsightView({ price, decimalPlaces, lastDigitTicks, priceHistory
                         </div>
                         <div>
                             <h3 className="text-base sm:text-2xl font-black uppercase tracking-widest text-foreground leading-tight">STRATEGY INTELLIGENCE</h3>
-                            <p className="text-[8px] sm:text-[10px] font-black uppercase tracking-widest text-primary/70 mt-1">PRECISION MULTI-PROTOCOL ANALYSIS MATRIX</p>
+                            <p className="text-[8px] sm:text-[10px] font-black uppercase tracking-widest text-primary/70 mt-1">PRECISION MULTI-ANALYSIS MATRIX</p>
                         </div>
                     </div>
                     <div className="text-center sm:text-right bg-card/60 px-5 sm:px-8 py-2 sm:py-4 rounded-[1rem] sm:rounded-[1.5rem] border border-white/10 shadow-lg w-full sm:w-auto">
@@ -239,7 +239,7 @@ export function InsightView({ price, decimalPlaces, lastDigitTicks, priceHistory
                             ) : (
                                 <>
                                 <Zap className="mr-2 sm:mr-3 h-4 w-4 sm:h-5 sm:w-5 fill-current" />
-                                INITIATE DEEP PROTOCOL SCAN
+                                INITIATE DEEP TACTICAL SCAN
                                 </>
                             )}
                         </Button>
