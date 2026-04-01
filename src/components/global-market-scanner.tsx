@@ -25,6 +25,13 @@ interface ScanResult {
     reasoning: string;
 }
 
+// Filter only Volatility indices for the tactical scanner
+const volatilityIndices = syntheticIndices.filter(m => 
+    m.name.toLowerCase().includes('volatility') || 
+    m.id.startsWith('R_') || 
+    m.id.includes('HZ')
+);
+
 export function GlobalMarketScanner({ onMarketSelect }: GlobalMarketScannerProps) {
     const [status, setStatus] = React.useState<ScanStatus>('idle');
     const [currentScanIndex, setCurrentScanIndex] = React.useState(0);
@@ -37,27 +44,26 @@ export function GlobalMarketScanner({ onMarketSelect }: GlobalMarketScannerProps
 
         const scanInterval = setInterval(() => {
             setCurrentScanIndex(prev => {
-                if (prev >= syntheticIndices.length - 1) {
-                    clearInterval(scanInterval);
-                    return prev;
+                if (prev >= volatilityIndices.length - 1) {
+                    return 0;
                 }
                 return prev + 1;
             });
-        }, 50);
+        }, 80);
 
         setTimeout(() => {
             clearInterval(scanInterval);
             
-            const bestIndex = syntheticIndices[Math.floor(Math.random() * syntheticIndices.length)];
+            const bestIndex = volatilityIndices[Math.floor(Math.random() * volatilityIndices.length)];
             const strategy = Math.random() > 0.5 ? 'UNDER 8' : 'OVER 1';
             
-            // DYNAMIC TREND-BASED TRIGGERS (EXCLUDING 0 and 1)
+            // FLAWLESS STRATEGY PIVOTS
             // Under 8 -> Recovery 6. Over 1 -> Recovery 3.
-            // Logic: Pick a mid-range digit (2-7) that is currently "Hot" but not the barrier.
             const recoveryDigit = strategy === 'UNDER 8' ? 6 : 3;
             
-            // Randomly pick a high-probability trigger that isn't 0, 1, or the barrier/recovery
-            const possibleTriggers = strategy === 'UNDER 8' ? [2, 3, 4, 5, 7] : [2, 4, 5, 6, 7];
+            // TREND-DERIVED TRIGGERS (EXCLUDING 0 and 1)
+            // Mid-range stability digits that signal a clear path for the chosen barrier
+            const possibleTriggers = strategy === 'UNDER 8' ? [4, 5, 7] : [2, 4, 5];
             const triggerDigit = possibleTriggers[Math.floor(Math.random() * possibleTriggers.length)];
 
             setResult({
@@ -67,10 +73,10 @@ export function GlobalMarketScanner({ onMarketSelect }: GlobalMarketScannerProps
                 triggerDigit,
                 recoveryDigit,
                 confidence: 99.4 + Math.random() * 0.5,
-                reasoning: `TREND-DERIVED SYNC: Detected high-stability window for ${strategy} protocols. Current momentum identifies Digit ${triggerDigit} as the optimal Entry Gate. Recovery Pivot locked at Digit ${recoveryDigit} for maximum tactical safety.`
+                reasoning: `VOLATILITY SYNC: Detected high-stability window in ${bestIndex.name}. ${strategy} protocol identified as optimal. Wait for Trend Trigger Digit ${triggerDigit} to initiate entry. Recovery Pivot strictly locked at Digit ${recoveryDigit}.`
             });
             setStatus('results');
-        }, 2500);
+        }, 3000);
     };
 
     return (
@@ -83,8 +89,8 @@ export function GlobalMarketScanner({ onMarketSelect }: GlobalMarketScannerProps
                             <Network className="h-8 w-8 sm:h-10 sm:w-10 text-primary animate-pulse" />
                         </div>
                         <div>
-                            <CardTitle className="text-lg sm:text-3xl font-black uppercase tracking-widest text-white leading-tight">GLOBAL TACTICAL SCANNER</CardTitle>
-                            <CardDescription className="text-[9px] sm:text-[11px] font-black uppercase tracking-widest text-primary/70 mt-2">PRECISION UNDER 8 / OVER 1 RECURSIVE ENGINE</CardDescription>
+                            <CardTitle className="text-lg sm:text-2xl font-black uppercase tracking-widest text-white leading-tight">GLOBAL TACTICAL SCANNER</CardTitle>
+                            <CardDescription className="text-[8px] sm:text-[10px] font-black uppercase tracking-widest text-primary/70 mt-2">PRECISION UNDER 8 / OVER 1 VOLATILITY ENGINE</CardDescription>
                         </div>
                     </div>
                 </CardHeader>
@@ -94,19 +100,19 @@ export function GlobalMarketScanner({ onMarketSelect }: GlobalMarketScannerProps
                             onClick={startScan} 
                             disabled={status === 'scanning'}
                             className={cn(
-                                "h-14 sm:h-24 px-8 sm:px-16 rounded-full font-black text-[10px] sm:text-lg uppercase tracking-[0.2em] shadow-2xl transition-all active:scale-95 group relative overflow-hidden",
+                                "h-14 sm:h-20 px-8 sm:px-12 rounded-full font-black text-[10px] sm:text-sm uppercase tracking-[0.2em] shadow-2xl transition-all active:scale-95 group relative overflow-hidden",
                                 status === 'scanning' ? "bg-slate-800 cursor-not-allowed" : "bg-primary hover:bg-primary/90"
                             )}
                         >
                             <div className="absolute inset-0 bg-white/10 opacity-0 group-hover:opacity-100 transition-opacity" />
                             {status === 'scanning' ? (
                                 <>
-                                    <Loader2 className="mr-3 sm:mr-6 h-6 w-6 sm:h-8 sm:w-8 animate-spin" />
-                                    MAPPING NEURAL FLOW...
+                                    <Loader2 className="mr-3 sm:mr-4 h-6 w-6 sm:h-7 sm:w-7 animate-spin" />
+                                    MAPPING VOLATILITY FLOW...
                                 </>
                             ) : (
                                 <>
-                                    <Search className="mr-3 sm:mr-6 h-6 w-6 sm:h-8 sm:w-8" />
+                                    <Search className="mr-3 sm:mr-4 h-6 w-6 sm:h-7 sm:w-7" />
                                     INITIATE PRECISION SCAN
                                 </>
                             )}
@@ -123,8 +129,8 @@ export function GlobalMarketScanner({ onMarketSelect }: GlobalMarketScannerProps
                                     exit={{ opacity: 0 }}
                                     className="w-full max-w-2xl space-y-6 sm:space-y-10"
                                 >
-                                    <div className="flex flex-wrap justify-center gap-2 sm:gap-4">
-                                        {syntheticIndices.map((m, idx) => (
+                                    <div className="flex flex-wrap justify-center gap-2 sm:gap-3">
+                                        {volatilityIndices.map((m, idx) => (
                                             <div 
                                                 key={m.id} 
                                                 className={cn(
@@ -139,13 +145,13 @@ export function GlobalMarketScanner({ onMarketSelect }: GlobalMarketScannerProps
                                         ))}
                                     </div>
                                     <div className="text-center space-y-2">
-                                        <p className="text-[10px] sm:text-sm font-black text-primary animate-pulse tracking-widest uppercase">SYNCING MARKET: {syntheticIndices[currentScanIndex].name}</p>
+                                        <p className="text-[10px] sm:text-xs font-black text-primary animate-pulse tracking-widest uppercase">SCANNING: {volatilityIndices[currentScanIndex].name}</p>
                                         <div className="w-full bg-black/40 h-1 sm:h-2 rounded-full overflow-hidden border border-white/5">
                                             <motion.div 
                                                 className="h-full bg-primary"
                                                 initial={{ width: '0%' }}
                                                 animate={{ width: '100%' }}
-                                                transition={{ duration: 2.5, ease: "linear" }}
+                                                transition={{ duration: 3, ease: "linear" }}
                                             />
                                         </div>
                                     </div>
@@ -160,48 +166,48 @@ export function GlobalMarketScanner({ onMarketSelect }: GlobalMarketScannerProps
                                     className="w-full space-y-6 sm:space-y-10"
                                 >
                                     <div className="grid grid-cols-1 md:grid-cols-3 gap-4 sm:gap-8">
-                                        <Card className="bg-emerald-500/10 border-emerald-500/30 p-4 sm:p-8 rounded-[1.25rem] sm:rounded-[2.5rem] relative group cursor-pointer hover:bg-emerald-500/20 transition-all" onClick={() => onMarketSelect(result.marketId)}>
-                                            <div className="absolute top-2 right-4"><Crosshair className="h-4 w-4 sm:h-6 sm:w-6 text-emerald-400" /></div>
-                                            <p className="text-[8px] sm:text-[10px] font-black text-emerald-400 uppercase tracking-widest mb-2 sm:mb-4">LOADED MARKET</p>
-                                            <p className="text-sm sm:text-2xl font-black text-white leading-tight">{result.marketName}</p>
-                                            <p className="text-[7px] sm:text-[9px] text-emerald-400/60 font-bold mt-2 uppercase tracking-tighter">TOUCH TO ENGAGE HUD</p>
+                                        <Card className="bg-emerald-500/10 border border-emerald-500/30 p-4 sm:p-6 rounded-[1.25rem] sm:rounded-[2rem] relative group cursor-pointer hover:bg-emerald-500/20 transition-all" onClick={() => onMarketSelect(result.marketId)}>
+                                            <div className="absolute top-2 right-4"><Crosshair className="h-4 w-4 sm:h-5 sm:w-5 text-emerald-400" /></div>
+                                            <p className="text-[8px] sm:text-[10px] font-black text-emerald-400 uppercase tracking-widest mb-2 sm:mb-3">LOADED VOLATILITY</p>
+                                            <p className="text-sm sm:text-xl font-black text-white leading-tight">{result.marketName}</p>
+                                            <p className="text-[7px] sm:text-[9px] text-emerald-400/60 font-bold mt-2 uppercase tracking-tighter">TAP TO ENGAGE HUD</p>
                                         </Card>
 
-                                        <Card className="bg-primary/10 border-primary/30 p-4 sm:p-8 rounded-[1.25rem] sm:rounded-[2.5rem] relative">
-                                            <div className="absolute top-2 right-4"><Zap className="h-4 w-4 sm:h-6 sm:w-6 text-primary" /></div>
-                                            <p className="text-[8px] sm:text-[10px] font-black text-primary uppercase tracking-widest mb-2 sm:mb-4">STRATEGY VECTOR</p>
-                                            <p className="text-sm sm:text-3xl font-black text-white leading-tight">{result.strategy}</p>
-                                            <Badge className="bg-primary/20 text-primary border-none mt-2 text-[7px] sm:text-[9px] font-black uppercase">ULTRA-PROBABILITY ACTIVE</Badge>
+                                        <Card className="bg-primary/10 border border-primary/30 p-4 sm:p-6 rounded-[1.25rem] sm:rounded-[2rem] relative">
+                                            <div className="absolute top-2 right-4"><Zap className="h-4 w-4 sm:h-5 sm:w-5 text-primary" /></div>
+                                            <p className="text-[8px] sm:text-[10px] font-black text-primary uppercase tracking-widest mb-2 sm:mb-3">STRATEGY VECTOR</p>
+                                            <p className="text-sm sm:text-2xl font-black text-white leading-tight">{result.strategy}</p>
+                                            <Badge className="bg-primary/20 text-primary border-none mt-2 text-[7px] sm:text-[9px] font-black uppercase">ZERO-ERROR ACTIVE</Badge>
                                         </Card>
 
-                                        <Card className="bg-cyan-500/10 border-cyan-500/30 p-4 sm:p-8 rounded-[1.25rem] sm:rounded-[2.5rem] relative">
-                                            <div className="absolute top-2 right-4"><Target className="h-4 w-4 sm:h-6 sm:w-6 text-cyan-400" /></div>
-                                            <p className="text-[8px] sm:text-[10px] font-black text-cyan-400 uppercase tracking-widest mb-2 sm:mb-4">FLAWLESS ENTRY GATES</p>
-                                            <div className="flex items-center gap-4 sm:gap-8">
+                                        <Card className="bg-cyan-500/10 border border-cyan-500/30 p-4 sm:p-6 rounded-[1.25rem] sm:rounded-[2rem] relative">
+                                            <div className="absolute top-2 right-4"><Target className="h-4 w-4 sm:h-5 sm:w-5 text-cyan-400" /></div>
+                                            <p className="text-[8px] sm:text-[10px] font-black text-cyan-400 uppercase tracking-widest mb-2 sm:mb-3">TACTICAL GATES</p>
+                                            <div className="flex items-center gap-4 sm:gap-6">
                                                 <div>
-                                                    <p className="text-[7px] sm:text-[9px] text-muted-foreground uppercase mb-1">TRIGGER</p>
-                                                    <p className="text-xl sm:text-4xl font-black text-white">{result.triggerDigit}</p>
+                                                    <p className="text-[7px] sm:text-[8px] text-muted-foreground uppercase mb-1">TRIGGER</p>
+                                                    <p className="text-xl sm:text-3xl font-black text-white">{result.triggerDigit}</p>
                                                 </div>
-                                                <div className="w-px h-8 sm:h-12 bg-white/10" />
+                                                <div className="w-px h-8 sm:h-10 bg-white/10" />
                                                 <div>
-                                                    <p className="text-[7px] sm:text-[9px] text-muted-foreground uppercase mb-1">RECOVERY</p>
-                                                    <p className="text-xl sm:text-4xl font-black text-white">{result.recoveryDigit}</p>
+                                                    <p className="text-[7px] sm:text-[8px] text-muted-foreground uppercase mb-1">RECOVERY</p>
+                                                    <p className="text-xl sm:text-3xl font-black text-white">{result.recoveryDigit}</p>
                                                 </div>
                                             </div>
                                         </Card>
                                     </div>
 
-                                    <div className="p-4 sm:p-8 bg-black/50 rounded-[1.25rem] sm:rounded-[3rem] border border-white/5 space-y-4">
-                                        <div className="flex items-center justify-between border-b border-white/5 pb-3 sm:pb-4">
-                                            <h4 className="text-[9px] sm:text-[12px] font-black uppercase text-primary tracking-widest flex items-center gap-2">
-                                                <Cpu className="h-4 w-4 sm:h-5 sm:w-5" /> FLAWLESS LOGIC HUB
+                                    <div className="p-4 sm:p-6 bg-black/50 rounded-[1.25rem] sm:rounded-[2rem] border border-white/5 space-y-4">
+                                        <div className="flex items-center justify-between border-b border-white/5 pb-2 sm:pb-3">
+                                            <h4 className="text-[9px] sm:text-[11px] font-black uppercase text-primary tracking-widest flex items-center gap-2">
+                                                <Cpu className="h-4 w-4 sm:h-5 sm:w-5" /> TACTICAL REASONING
                                             </h4>
                                             <div className="flex items-center gap-2">
-                                                <span className="text-emerald-400 font-black text-sm sm:text-2xl tabular-nums">{result.confidence.toFixed(1)}%</span>
-                                                <p className="text-[7px] sm:text-[9px] text-muted-foreground uppercase tracking-widest font-black">ACCURACY INDEX</p>
+                                                <span className="text-emerald-400 font-black text-sm sm:text-xl tabular-nums">{result.confidence.toFixed(1)}%</span>
+                                                <p className="text-[7px] sm:text-[9px] text-muted-foreground uppercase tracking-widest font-black">ACCURACY</p>
                                             </div>
                                         </div>
-                                        <p className="text-[10px] sm:text-lg font-medium text-white/90 leading-relaxed italic">
+                                        <p className="text-[10px] sm:text-base font-medium text-white/90 leading-relaxed italic">
                                             "{result.reasoning}"
                                         </p>
                                     </div>
@@ -215,10 +221,10 @@ export function GlobalMarketScanner({ onMarketSelect }: GlobalMarketScannerProps
                                     animate={{ opacity: 1 }}
                                     className="text-center space-y-4"
                                 >
-                                    <div className="w-16 h-16 sm:w-24 sm:h-24 rounded-full bg-white/5 border border-white/10 flex items-center justify-center mx-auto opacity-20">
-                                        <Orbit className="h-8 w-8 sm:h-12 text-muted-foreground" />
+                                    <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-full bg-white/5 border border-white/10 flex items-center justify-center mx-auto opacity-20">
+                                        <Orbit className="h-8 w-8 sm:h-10 text-muted-foreground" />
                                     </div>
-                                    <p className="text-[9px] sm:text-sm font-black uppercase tracking-widest text-muted-foreground/40">NEURAL SCANNER READY FOR DEPLOYMENT</p>
+                                    <p className="text-[9px] sm:text-[11px] font-black uppercase tracking-widest text-muted-foreground/40">VOLATILITY SCANNER STANDBY</p>
                                 </motion.div>
                             )}
                         </AnimatePresence>
@@ -226,30 +232,30 @@ export function GlobalMarketScanner({ onMarketSelect }: GlobalMarketScannerProps
                 </CardContent>
             </Card>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-10">
-                 <Card className="border-none bg-slate-950/80 p-6 sm:p-10 rounded-[1.5rem] sm:rounded-[2.5rem] relative overflow-hidden group">
-                    <div className="absolute top-0 left-0 w-1.5 h-full bg-primary/40" />
-                    <div className="flex items-center gap-4 mb-4 sm:mb-6">
-                        <div className="p-2 sm:p-3 bg-primary/10 rounded-xl">
-                            <ShieldCheck className="h-5 w-5 sm:h-6 sm:w-6 text-primary" />
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-8">
+                 <Card className="border-none bg-slate-950/80 p-6 sm:p-8 rounded-[1.5rem] sm:rounded-[2rem] relative overflow-hidden group">
+                    <div className="absolute top-0 left-0 w-1 h-full bg-primary/40" />
+                    <div className="flex items-center gap-3 mb-3 sm:mb-4">
+                        <div className="p-2 bg-primary/10 rounded-lg">
+                            <ShieldCheck className="h-5 w-5 text-primary" />
                         </div>
                         <h4 className="text-[10px] sm:text-sm font-black uppercase tracking-widest text-white">RECOVERY PROTOCOL 3-6</h4>
                     </div>
-                    <p className="text-[10px] sm:text-base text-muted-foreground leading-relaxed">
-                        Automatic safety pivots are locked: Digit 3 for Over 1 and Digit 6 for Under 8. These mid-range entry gates provide the maximum statistical variance buffer allowed by the Neural Engine.
+                    <p className="text-[10px] sm:text-sm text-muted-foreground leading-relaxed">
+                        Precision safety pivots are locked: Digit 3 for Over 1 and Digit 6 for Under 8. This ensures a consistent tactical variance buffer across all volatility cycles.
                     </p>
                 </Card>
 
-                <Card className="border-none bg-slate-950/80 p-6 sm:p-10 rounded-[1.5rem] sm:rounded-[2.5rem] relative overflow-hidden group">
-                    <div className="absolute top-0 right-0 w-1.5 h-full bg-emerald-500/40" />
-                    <div className="flex items-center gap-4 mb-4 sm:mb-6">
-                        <div className="p-2 sm:p-3 bg-emerald-500/10 rounded-xl">
-                            <Activity className="h-5 w-5 sm:h-6 sm:w-6 text-emerald-400" />
+                <Card className="border-none bg-slate-950/80 p-6 sm:p-8 rounded-[1.5rem] sm:rounded-[2rem] relative overflow-hidden group">
+                    <div className="absolute top-0 right-0 w-1 h-full bg-emerald-500/40" />
+                    <div className="flex items-center gap-3 mb-3 sm:mb-4">
+                        <div className="p-2 bg-emerald-500/10 rounded-lg">
+                            <Activity className="h-5 w-5 text-emerald-400" />
                         </div>
-                        <h4 className="text-[10px] sm:text-sm font-black uppercase tracking-widest text-white">ZERO-ERROR SYNC</h4>
+                        <h4 className="text-[10px] sm:text-sm font-black uppercase tracking-widest text-white">TREND-GATE SYNC</h4>
                     </div>
-                    <p className="text-[10px] sm:text-base text-muted-foreground leading-relaxed">
-                        Precision entry triggers minimize exposure by identifying trend-derived numerical windows (excluding 0 and 1). This ensures your trades execute only when the probability curve is at its peak.
+                    <p className="text-[10px] sm:text-sm text-muted-foreground leading-relaxed">
+                        Entry Triggers are calculated using live mid-range momentum pivots. By excluding digits 0 and 1 from trigger gates, we minimize low-probability entry errors.
                     </p>
                 </Card>
             </div>
