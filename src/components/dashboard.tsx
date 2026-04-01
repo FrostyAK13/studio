@@ -10,7 +10,6 @@ import { DigitFrequencyView } from './digit-frequency-view';
 import { InsightView } from './insight-view';
 import { CorrelationView } from './correlation-view';
 import { GlobalMarketScanner } from './global-market-scanner';
-import { BotRunner } from './bot-runner';
 import { cn } from '@/lib/utils';
 
 type ConnectionStatusType = 'connecting' | 'streaming' | 'disconnected';
@@ -187,7 +186,7 @@ export function Dashboard() {
         <div className="flex-1 p-2 sm:p-4 md:p-6 lg:p-8">
             <Tabs defaultValue="global-scan" className="w-full">
                 <TabsList className="flex items-center justify-start md:justify-center gap-1.5 md:gap-2 bg-transparent h-auto p-0 mb-4 md:mb-10 overflow-x-auto no-scrollbar pb-2 w-full">
-                    {['global-scan', 'scanner', 'analyzer', 'frequency', 'insight', 'circles', 'bot'].map((tab) => (
+                    {['global-scan', 'scanner', 'analyzer', 'frequency', 'insight', 'circles'].map((tab) => (
                         <TabsTrigger 
                             key={tab} 
                             value={tab}
@@ -263,15 +262,6 @@ export function Dashboard() {
                         onMarketChange={setSelectedMarket}
                         lastDigitTicks={analyzedDigits}
                         price={price}
-                        decimalPlaces={decimalPlaces}
-                    />
-                </TabsContent>
-
-                <TabsContent value="bot" className="mt-0 animate-in fade-in zoom-in-95 duration-500 outline-none h-full">
-                    <BotRunner 
-                        price={price}
-                        lastDigitTicks={analyzedDigits}
-                        selectedMarket={selectedMarket}
                         decimalPlaces={decimalPlaces}
                     />
                 </TabsContent>

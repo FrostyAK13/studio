@@ -8,10 +8,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Input } from '@/components/ui/input';
 import { syntheticIndices } from '@/lib/mock-data';
 import { cn } from '@/lib/utils';
-import { Activity, Layers, Activity as ActivityIcon, SignalHigh, Hash, BarChartHorizontal, Boxes, Timer } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { PieChart, Pie, Cell, Tooltip } from 'recharts';
-import { ChartContainer } from '@/components/ui/chart';
+import { Activity, Layers, SignalHigh, Hash, Boxes, Timer, BarChart3 } from 'lucide-react';
 import { TickPacingVisualizer } from './tick-pacing-visualizer';
 
 interface AnalyzerViewProps {
@@ -54,6 +51,16 @@ export function AnalyzerView({
         FALL: 'hsl(var(--chart-3))',       
         NEUTRAL: 'rgba(255, 255, 255, 0.1)'
     };
+
+    const digitFrequencyData = React.useMemo(() => {
+        const counts = Array(10).fill(0);
+        lastDigitTicks.forEach(d => counts[d]++);
+        const total = lastDigitTicks.length || 1;
+        return counts.map((count, i) => ({
+            digit: i,
+            percentage: (count / total) * 100
+        }));
+    }, [lastDigitTicks]);
     
     const evenOddChartData = React.useMemo(() => {
         const evenCount = lastDigitTicks.filter(d => d % 2 === 0).length;
@@ -246,6 +253,22 @@ export function AnalyzerView({
                     <CardContent className="px-6 sm:px-10 pb-8 sm:pb-12 space-y-6 sm:space-y-10">
                         <div className="flex flex-wrap gap-1.5 sm:gap-3 p-3 sm:p-5 bg-black/40 rounded-[1rem] sm:rounded-[1.5rem] border border-white/5 shadow-inner min-h-[4rem] sm:min-h-[5rem] items-center justify-center">
                             {renderSequence()}
+                        </div>
+
+                        {/* Enhanced Digit Percentage Grid */}
+                        <div className="space-y-4">
+                            <div className="flex items-center gap-2 mb-2">
+                                <BarChart3 className="h-4 w-4 text-primary" />
+                                <span className="text-[10px] font-black uppercase tracking-widest text-primary">TACTICAL FREQUENCY MATRIX</span>
+                            </div>
+                            <div className="grid grid-cols-5 sm:grid-cols-10 gap-2">
+                                {digitFrequencyData.map((data) => (
+                                    <div key={data.digit} className="bg-black/60 p-2 sm:p-4 rounded-xl border border-white/5 text-center group transition-all hover:bg-primary/10">
+                                        <p className="text-[8px] font-black text-muted-foreground mb-1">D:{data.digit}</p>
+                                        <p className="text-xs sm:text-sm font-black text-white tabular-nums">{data.percentage.toFixed(1)}%</p>
+                                    </div>
+                                ))}
+                            </div>
                         </div>
                         
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6">
