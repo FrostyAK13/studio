@@ -83,9 +83,9 @@ export function OverUnderAnalysis({ lastDigitTicks, selectedMarket, price, decim
 
     setIsScanning(true);
 
-    if (lastDigitTicks.length < 40) {
+    if (lastDigitTicks.length < 50) {
         setTimeout(() => {
-            setScanResultLines(["ERROR: Sequence too short for high-precision barrier analysis.", "Please accumulate at least 40 ticks for Z-Score stabilization."]);
+            setScanResultLines(["ERROR: Precision analysis failed.", "Need 50+ ticks for flawless Z-Score stabilization."]);
             setIsScanning(false);
             setTimeout(() => setScanResultLines(null), 3000);
         }, 1000);
@@ -93,47 +93,36 @@ export function OverUnderAnalysis({ lastDigitTicks, selectedMarket, price, decim
     }
     
     setTimeout(() => {
-        const recentTicks = lastDigitTicks.slice(0, 20);
+        const recentTicks = lastDigitTicks.slice(0, 30);
         const tickSeq = [...recentTicks].slice(0, 10).reverse().join(',');
         let predictedOutcome: 'OVER' | 'UNDER';
         let barrierDigit: number;
-        let reasoning: string;
+        let recoveryDigit: number;
         let triggerDigit: number = recentTicks[0];
+        let reasoning: string;
 
-        // Advanced Skew Pivot Logic
-        const avg = recentTicks.reduce((a, b) => a + b, 0) / recentTicks.length;
         const higherCount = recentTicks.filter(d => d > 4).length;
-        const lowerCount = 20 - higherCount;
+        const lowerCount = 30 - higherCount;
 
-        if (streak.count >= 6) {
-            // Reversal on extreme exhaustion
-            predictedOutcome = streak.type === 'O' ? 'UNDER' : 'OVER';
-            barrierDigit = predictedOutcome === 'UNDER' ? 7 : 2;
-            reasoning = `SKEW EXHAUSTION: Sequence identifies ${streak.count}x ${streak.type === 'O' ? 'Bullish' : 'Bearish'} saturation. Entry trigger ${triggerDigit} favors immediate corrective pivot to ${predictedOutcome} ${barrierDigit}.`;
-        } else if (higherCount >= 14) {
-            // High probability momentum follow
-            predictedOutcome = 'OVER';
-            barrierDigit = 3;
-            reasoning = `BULLISH SKEW: Numerical center of gravity [${avg.toFixed(1)}] shifted to upper barrier. Following directional flow with entry pivot OVER ${barrierDigit}.`;
-        } else if (lowerCount >= 14) {
-            // Low probability momentum follow
+        if (higherCount >= lowerCount) {
             predictedOutcome = 'UNDER';
-            barrierDigit = 6;
-            reasoning = `BEARISH SKEW: Cluster profiling identifies sustained lower barrier saturation. Targeting UNDER ${barrierDigit} for safe mean exploitation.`;
+            barrierDigit = 8;
+            recoveryDigit = 6;
+            reasoning = `FLAWLESS OVER-SKEW: Market identifying high barrier stability. Enter Under ${barrierDigit} with Digit ${recoveryDigit} recovery protocol after trigger ${triggerDigit}.`;
         } else {
-            // Stability mean reversion
-            predictedOutcome = avg > 4.5 ? 'UNDER' : 'OVER';
-            barrierDigit = predictedOutcome === 'OVER' ? 3 : 6;
-            reasoning = `STABILITY HUB: Global mean [${avg.toFixed(1)}] is stable. Entry at trigger ${triggerDigit} targets ${predictedOutcome} ${barrierDigit} for statistical equilibrium.`;
+            predictedOutcome = 'OVER';
+            barrierDigit = 1;
+            recoveryDigit = 3;
+            reasoning = `FLAWLESS UNDER-SKEW: Global mean identifies lower range saturation. Enter Over ${barrierDigit} with Digit ${recoveryDigit} recovery protocol after trigger ${triggerDigit}.`;
         }
 
         const initialResults = [
-            'BARRIER HUB - V7.4',
+            'FROSTY HUB - FLAWLESS V9.1',
             `--> ENTRY TRIGGER: WATCH FOR DIGIT ${triggerDigit}`,
             `--> PREDICTION: ${predictedOutcome} ${barrierDigit}`,
-            `--> SKEW WEIGHT: ${Math.max(higherCount, lowerCount) * 5}%`,
+            `--> RECOVERY DIGIT: ${recoveryDigit}`,
             '',
-            `TECHNICAL REASONING: ${reasoning}`,
+            `NEURAL LOGIC: ${reasoning}`,
             `SEQUENCE SCAN: [${tickSeq}]`,
             ''
         ];
@@ -150,12 +139,12 @@ export function OverUnderAnalysis({ lastDigitTicks, selectedMarket, price, decim
                 };
 
                 if (countdown >= 0) {
-                    const newLines = [...initialResults, `STABILIZING ENTRY GATE: T-minus ${countdown}s...`];
+                    const newLines = [...initialResults, `LOCKING ENTRY GATE: T-minus ${countdown}s...`];
                     countdown--;
                     return newLines;
                 } else {
                     clearInterval(interval);
-                    const finalLines = [...initialResults, `ENTRY CONFIRMED at Trigger ${triggerDigit}.`, 'MONITORING FOR SKEW REVERSAL EVENTS...'];
+                    const finalLines = [...initialResults, `ENTRY EXECUTED at Trigger ${triggerDigit}.`, 'STABILIZATION HUB ACTIVE.'];
                     return finalLines;
                 }
             });
@@ -269,7 +258,7 @@ export function OverUnderAnalysis({ lastDigitTicks, selectedMarket, price, decim
         
         <AnimatePresence>
             {(isScanning || scanResultLines) && (
-                 <HackerAnimation title={`SYSTEM SCAN: OVER/UNDER ANALYTICS`}>
+                 <HackerAnimation title={`FLAWLESS SCAN: OVER/UNDER HUB`}>
                     {isScanning && !scanResultLines ? (
                         <ScannerAnimationContent />
                      ) : (

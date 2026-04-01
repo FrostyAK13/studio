@@ -76,9 +76,9 @@ export function MatchesDiffersAnalysis({ lastDigitTicks, selectedMarket, price, 
     
     setIsScanning(true);
 
-    if (lastDigitTicks.length < 30) {
+    if (lastDigitTicks.length < 50) {
         setTimeout(() => {
-            setScanResultLines(['ERROR: Data sample insufficient.', 'Need minimum 30 ticks for professional variance profiling.']);
+            setScanResultLines(['ERROR: Low data precision.', 'Accumulate 50+ ticks for flawless matching gates.']);
             setIsScanning(false);
             setTimeout(() => setScanResultLines(null), 3000);
         }, 1000);
@@ -86,44 +86,31 @@ export function MatchesDiffersAnalysis({ lastDigitTicks, selectedMarket, price, 
     }
 
     setTimeout(() => {
-        const recentTicks = lastDigitTicks.slice(0, 20);
+        const recentTicks = lastDigitTicks.slice(0, 30);
         const tickSeq = [...recentTicks].slice(0, 10).reverse().join(',');
         let predictedOutcome: 'MATCH' | 'DIFFER';
         let targetDigit: number;
         let triggerDigit: number = recentTicks[0];
         let strategyReasoning = "";
 
-        const digitCounts = Array(10).fill(0);
-        lastDigitTicks.forEach(d => digitCounts[d]++);
-        const digitPercentages = digitCounts.map(c => (c / lastDigitTicks.length) * 100);
+        const counts = Array(10).fill(0);
+        lastDigitTicks.forEach(d => counts[d]++);
+        const sorted = counts.map((c, i) => ({ d: i, c })).sort((a, b) => b.c - a.c);
 
-        // Sorting digits by frequency to find Hot/Cold clusters
-        const sortedDigits = digitCounts.map((count, index) => ({ digit: index, count }))
-            .sort((a, b) => b.count - a.count);
+        const hottest = sorted[0].d;
+        const coldest = sorted[9].d;
 
-        const hottestDigit = sortedDigits[0].digit;
-        const coldestDigit = sortedDigits[9].digit;
-        
-        // Analyze recent recurrence of hottest digit
-        const recentMatches = recentTicks.filter(d => d === hottestDigit).length;
-
-        if (recentMatches >= 3 && digitPercentages[hottestDigit] > 12) {
-            predictedOutcome = 'MATCH';
-            targetDigit = hottestDigit;
-            strategyReasoning = `VOLUMETRIC SPIKE: Digit ${hottestDigit} is trending with ${recentMatches} matches in the last 20 ticks. Protocol sync identifies high repetition probability following trigger ${triggerDigit}.`;
-        } else {
-            predictedOutcome = 'DIFFER';
-            targetDigit = hottestDigit; // Differing FROM the hottest digit is safer
-            strategyReasoning = `VARIANCE PROTECTION: Global skew identifies digit ${coldestDigit} as highly under-weighted. Using trigger ${triggerDigit} to enter Differ protocol against digit ${hottestDigit} for max safety margin.`;
-        }
+        predictedOutcome = 'DIFFER';
+        targetDigit = hottest; // Flawless Differ: entry against the hottest digit after it just appeared
+        strategyReasoning = `FLAWLESS DIFFER: Market variance identifies high recurrence in Digit ${hottest}. Wait for Trigger ${triggerDigit} to enter DIFFER Digit ${targetDigit} for maximum safety.`;
 
         const initialResults = [
-          'PATTERN HUB - PRECISION V6.1',
+          'FROSTY HUB - MATCH V10.2',
           `--> ENTRY TRIGGER: WATCH FOR DIGIT ${triggerDigit}`,
           `--> STRATEGY: ${predictedOutcome}`,
           `--> TARGET DIGIT: ${targetDigit}`,
           '',
-          `NUMERICAL LOGIC: ${strategyReasoning}`,
+          `PRECISION LOGIC: ${strategyReasoning}`,
           `ANALYZED STREAM: [${tickSeq}]`,
           ''
         ];
@@ -140,12 +127,12 @@ export function MatchesDiffersAnalysis({ lastDigitTicks, selectedMarket, price, 
               }
 
               if (countdown >= 0) {
-                  const newLines = [...initialResults, `BUFFERING ENTRY GATE: T-minus ${countdown}s...`];
+                  const newLines = [...initialResults, `LOCKING TRIGGER GATE: T-minus ${countdown}s...`];
                   countdown--;
                   return newLines;
               } else {
                   clearInterval(interval);
-                  const finalLines = [...initialResults, `ENTRY EXECUTED at Trigger ${triggerDigit}.`, 'MONITORING FOR RECURSIVE ANOMALIES...'];
+                  const finalLines = [...initialResults, `ENTRY EXECUTED at Trigger ${triggerDigit}.`, 'FLOWLESS HUD ENGAGED.'];
                   return finalLines;
               }
           });
@@ -252,7 +239,7 @@ export function MatchesDiffersAnalysis({ lastDigitTicks, selectedMarket, price, 
         
         <AnimatePresence>
             {(isScanning || scanResultLines) && (
-                <HackerAnimation title={`SYSTEM SCAN: MATCHES/DIFFERS ANALYTICS`}>
+                <HackerAnimation title={`FLAWLESS SCAN: MATCHES/DIFFERS HUB`}>
                     {isScanning && !scanResultLines ? (
                         <ScannerAnimationContent />
                     ) : (
