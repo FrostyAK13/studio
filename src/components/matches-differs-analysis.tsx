@@ -90,19 +90,23 @@ export function MatchesDiffersAnalysis({ lastDigitTicks, selectedMarket, price, 
         const tickSeq = [...recentTicks].slice(0, 10).reverse().join(',');
         let predictedOutcome: 'MATCH' | 'DIFFER';
         let targetDigit: number;
-        let triggerDigit: number = recentTicks[0];
-        let strategyReasoning = "";
-
+        
         const counts = Array(10).fill(0);
         lastDigitTicks.forEach(d => counts[d]++);
         const sorted = counts.map((c, i) => ({ d: i, c })).sort((a, b) => b.c - a.c);
 
         const hottest = sorted[0].d;
-        const coldest = sorted[9].d;
-
+        
         predictedOutcome = 'DIFFER';
-        targetDigit = hottest; // Flawless Differ: entry against the hottest digit after it just appeared
-        strategyReasoning = `FLAWLESS DIFFER: Market variance identifies high recurrence in Digit ${hottest}. Wait for Trigger ${triggerDigit} to enter DIFFER Digit ${targetDigit} for maximum safety.`;
+        targetDigit = hottest; 
+
+        // FLAWLESS NON-COLLISION: Ensure Trigger is NOT the same as Target
+        let triggerDigit = recentTicks[0];
+        if (triggerDigit === targetDigit) {
+            triggerDigit = (triggerDigit + 1) % 10;
+        }
+
+        const strategyReasoning = `FLAWLESS DIFFER: Market variance identifies high recurrence in Digit ${hottest}. Wait for Trigger ${triggerDigit} to enter DIFFER Digit ${targetDigit} for maximum safety.`;
 
         const initialResults = [
           'FROSTY HUB - MATCH V10.2',

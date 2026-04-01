@@ -98,7 +98,6 @@ export function OverUnderAnalysis({ lastDigitTicks, selectedMarket, price, decim
         let predictedOutcome: 'OVER' | 'UNDER';
         let barrierDigit: number;
         let recoveryDigit: number;
-        let triggerDigit: number = recentTicks[0];
         let reasoning: string;
 
         const higherCount = recentTicks.filter(d => d > 4).length;
@@ -108,12 +107,18 @@ export function OverUnderAnalysis({ lastDigitTicks, selectedMarket, price, decim
             predictedOutcome = 'UNDER';
             barrierDigit = 8;
             recoveryDigit = 6;
-            reasoning = `FLAWLESS OVER-SKEW: Market identifying high barrier stability. Enter Under ${barrierDigit} with Digit ${recoveryDigit} recovery protocol after trigger ${triggerDigit}.`;
+            reasoning = `FLAWLESS OVER-SKEW: Market identifying high barrier stability. Enter Under ${barrierDigit} with Digit ${recoveryDigit} recovery protocol.`;
         } else {
             predictedOutcome = 'OVER';
             barrierDigit = 1;
             recoveryDigit = 3;
-            reasoning = `FLAWLESS UNDER-SKEW: Global mean identifies lower range saturation. Enter Over ${barrierDigit} with Digit ${recoveryDigit} recovery protocol after trigger ${triggerDigit}.`;
+            reasoning = `FLAWLESS UNDER-SKEW: Global mean identifies lower range saturation. Enter Over ${barrierDigit} with Digit ${recoveryDigit} recovery protocol.`;
+        }
+
+        // FLAWLESS TRIGGER SEPARATION: Use a non-colliding momentum digit
+        let triggerDigit = recentTicks[0];
+        if (triggerDigit === barrierDigit) {
+            triggerDigit = (triggerDigit + 1) % 10;
         }
 
         const initialResults = [

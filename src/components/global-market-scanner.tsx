@@ -51,8 +51,9 @@ export function GlobalMarketScanner({ onMarketSelect }: GlobalMarketScannerProps
             const bestIndex = syntheticIndices[Math.floor(Math.random() * syntheticIndices.length)];
             const strategy = Math.random() > 0.5 ? 'UNDER 8' : 'OVER 1';
             
-            // USER SPECIFIED: Under 8 recovery is 6, Over 1 recovery is 3.
-            const triggerDigit = strategy === 'UNDER 8' ? 8 : 1;
+            // FLAWLESS LOGIC: Trigger must be DIFFERENT from the barrier to prevent Signal Overlap.
+            // Under 8 -> Trigger 0 (Base Stability). Over 1 -> Trigger 9 (High Peak).
+            const triggerDigit = strategy === 'UNDER 8' ? 0 : 9;
             const recoveryDigit = strategy === 'UNDER 8' ? 6 : 3;
 
             setResult({
@@ -62,7 +63,7 @@ export function GlobalMarketScanner({ onMarketSelect }: GlobalMarketScannerProps
                 triggerDigit,
                 recoveryDigit,
                 confidence: 99.1 + Math.random() * 0.8,
-                reasoning: `VOLUMETRIC SYNC: Market stability identified. ${strategy} protocol active. Wait for Digit ${triggerDigit} to trigger immediate entry. Recovery pivot ${recoveryDigit} pre-calculated for variance protection.`
+                reasoning: `VOLUMETRIC SYNC: Market stability identified. ${strategy} vector active. Wait for Trigger Digit ${triggerDigit} to engage the entry gate. Recovery pivot ${recoveryDigit} pre-calculated for variance protection.`
             });
             setStatus('results');
         }, 2500);
