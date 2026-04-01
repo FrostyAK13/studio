@@ -38,15 +38,6 @@ export function AnalyzerView({
     const [tradeType, setTradeType] = React.useState('over-under');
     const [overValue, setOverValue] = React.useState(4);
     const [underValue, setUnderValue] = React.useState(5);
-    const [selectedDigit, setSelectedDigit] = React.useState(5);
-
-    const COLORS = {
-        OVER: 'hsl(var(--accent))',
-        UNDER: 'hsl(var(--destructive))',
-        EVEN: 'hsl(var(--chart-1))',
-        ODD: 'hsl(var(--chart-3))',
-        NEUTRAL: 'rgba(255, 255, 255, 0.1)'
-    };
 
     const stats = React.useMemo(() => {
         const total = lastDigitTicks.length || 1;
@@ -62,6 +53,7 @@ export function AnalyzerView({
     }, [lastDigitTicks, overValue, underValue]);
 
     const renderPattern = () => {
+        // Show up to 24 circles
         const slice = [...lastDigitTicks.slice(0, 24)].reverse();
         return slice.map((digit, i) => {
             const isOver = digit > overValue;
