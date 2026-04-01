@@ -1,4 +1,3 @@
-
 'use client';
 
 import * as React from 'react';
@@ -8,7 +7,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Input } from '@/components/ui/input';
 import { syntheticIndices } from '@/lib/mock-data';
 import { cn } from '@/lib/utils';
-import { Activity, Layers, SignalHigh, Hash, Boxes, Timer, BarChart3 } from 'lucide-react';
+import { Activity, Layers, SignalHigh, Hash, Boxes, Timer, BarChart3, Scale } from 'lucide-react';
 import { TickPacingVisualizer } from './tick-pacing-visualizer';
 
 interface AnalyzerViewProps {
@@ -37,8 +36,7 @@ export function AnalyzerView({
     tickTimestamps,
 }: AnalyzerViewProps) {
     const [tradeType, setTradeType] = React.useState('even-odd');
-    const [matchesDigit, setMatchesDigit] = React.useState(0);
-    const [overUnderDigit, setOverUnderDigit] = React.useState(5);
+    const [selectedDigit, setSelectedDigit] = React.useState(5);
 
     const COLORS = {
         EVEN: 'hsl(var(--chart-1))',       
@@ -73,23 +71,23 @@ export function AnalyzerView({
     }, [lastDigitTicks]);
 
     const matchesDiffersChartData = React.useMemo(() => {
-        const matchesCount = lastDigitTicks.filter(d => d === matchesDigit).length;
+        const matchesCount = lastDigitTicks.filter(d => d === selectedDigit).length;
         const total = lastDigitTicks.length || 1;
         return [
             { name: 'Matches', value: (matchesCount / total) * 100, color: COLORS.MATCH },
             { name: 'Differs', value: ((total - matchesCount) / total) * 100, color: COLORS.DIFFER },
         ];
-    }, [lastDigitTicks, matchesDigit]);
+    }, [lastDigitTicks, selectedDigit]);
 
     const overUnderChartData = React.useMemo(() => {
-        const overCount = lastDigitTicks.filter(d => d > overUnderDigit).length;
-        const underCount = lastDigitTicks.filter(d => d < overUnderDigit).length;
+        const overCount = lastDigitTicks.filter(d => d > selectedDigit).length;
+        const underCount = lastDigitTicks.filter(d => d < selectedDigit).length;
         const total = lastDigitTicks.length || 1;
         return [
             { name: 'Over', value: (overCount / total) * 100, color: COLORS.OVER },
             { name: 'Under', value: (underCount / total) * 100, color: COLORS.UNDER },
         ];
-    }, [lastDigitTicks, overUnderDigit]);
+    }, [lastDigitTicks, selectedDigit]);
 
     const riseFallChartData = React.useMemo(() => {
         if (priceHistory.length < 2) return [
@@ -144,12 +142,12 @@ export function AnalyzerView({
             if (tradeType === 'even-odd') {
                 color = digit % 2 === 0 ? 'bg-primary shadow-[0_0_10px_rgba(var(--primary),0.3)]' : 'bg-rose-500 shadow-[0_0_10px_rgba(244,63,94,0.3)]';
             } else if (tradeType === 'matches-differs') {
-                const isMatch = digit === matchesDigit;
+                const isMatch = digit === selectedDigit;
                 color = isMatch ? 'bg-emerald-500 shadow-[0_0_15px_rgba(16,185,129,0.5)] scale-110 z-10' : 'bg-orange-500/10 text-orange-400 border-orange-500/20';
                 if (isMatch) isAnomaly = true;
             } else if (tradeType === 'over-under') {
-                if (digit > overUnderDigit) color = 'bg-cyan-500 shadow-[0_0_15px_rgba(6,182,212,0.5)] scale-110 z-10';
-                else if (digit < overUnderDigit) color = 'bg-rose-500 shadow-[0_0_15px_rgba(244,63,94,0.5)] scale-110 z-10';
+                if (digit > selectedDigit) color = 'bg-cyan-500 shadow-[0_0_15px_rgba(6,182,212,0.5)] scale-110 z-10';
+                else if (digit < selectedDigit) color = 'bg-rose-500 shadow-[0_0_15px_rgba(244,63,94,0.5)] scale-110 z-10';
                 else color = 'bg-white/5 text-white/20';
             } else if (tradeType === 'rise-fall') {
                 const currentIdx = lastDigitTicks.length - 1 - i;
@@ -263,7 +261,14 @@ export function AnalyzerView({
                             </div>
                             <div className="grid grid-cols-5 sm:grid-cols-10 gap-2">
                                 {digitFrequencyData.map((data) => (
-                                    <div key={data.digit} className="bg-black/60 p-2 sm:p-4 rounded-xl border border-white/5 text-center group transition-all hover:bg-primary/10">
+                                    <div 
+                                        key={data.digit} 
+                                        onClick={() => setSelectedDigit(data.digit)}
+                                        className={cn(
+                                            "bg-black/60 p-2 sm:p-4 rounded-xl border text-center group transition-all cursor-pointer",
+                                            selectedDigit === data.digit ? "border-primary bg-primary/20" : "border-white/5 hover:bg-primary/10"
+                                        )}
+                                    >
                                         <p className="text-[8px] font-black text-muted-foreground mb-1">D:{data.digit}</p>
                                         <p className="text-xs sm:text-sm font-black text-white tabular-nums">{data.percentage.toFixed(1)}%</p>
                                     </div>
@@ -290,6 +295,22 @@ export function AnalyzerView({
                                 </div>
                             ))}
                         </div>
+
+                        {(tradeType === 'matches-differs' || tradeType === 'over-under') && (
+                            <div className="p-4 sm:p-6 bg-primary/10 rounded-[1.25rem] sm:rounded-[2rem] border border-primary/20 flex flex-col sm:flex-row items-center justify-between gap-4">
+                                <div className="flex items-center gap-3">
+                                    <Scale className="h-5 w-5 text-primary" />
+                                    <div>
+                                        <p className="text-[10px] font-black uppercase text-primary tracking-widest">TACTICAL DELTA: DIGIT {selectedDigit}</p>
+                                        <p className="text-sm font-bold text-white/80">Comparing {selectedDigit} frequency against current market flux.</p>
+                                    </div>
+                                </div>
+                                <div className="text-right">
+                                    <span className="text-2xl font-black text-white">{digitFrequencyData[selectedDigit].percentage.toFixed(1)}%</span>
+                                    <p className="text-[8px] font-black text-muted-foreground uppercase">CURRENT HEAT</p>
+                                </div>
+                            </div>
+                        )}
                     </CardContent>
                 </Card>
 

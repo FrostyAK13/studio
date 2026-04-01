@@ -12,18 +12,12 @@ export const syntheticIndices: SyntheticIndex[] = [
   { id: 'R_25', name: 'Volatility 25 Index', price: 4523.12, change: -1.12 },
   { id: 'R_10', name: 'Volatility 10 Index', price: 3456.78, change: 0.99 },
   { id: '1HZ100V', name: 'Volatility 100 (1s) Index', price: 12543.78, change: 1.25 },
-  { id: '1HZ90V', name: 'Volatility 90 (1s) Index', price: 9000.0, change: 1.15 },
   { id: '1HZ75V', name: 'Volatility 75 (1s) Index', price: 8345.21, change: -0.56 },
   { id: '1HZ50V', name: 'Volatility 50 (1s) Index', price: 6789.45, change: 2.31 },
-  { id: '1HZ30V', name: 'Volatility 30 (1s) Index', price: 5000.0, change: -0.25 },
   { id: '1HZ25V', name: 'Volatility 25 (1s) Index', price: 4523.12, change: -1.12 },
-  { id: '1HZ15V', name: 'Volatility 15 (1s) Index', price: 4000.0, change: 0.5 },
   { id: '1HZ10V', name: 'Volatility 10 (1s) Index', price: 3456.78, change: 0.99 },
   { id: 'BOOM1000', name: 'Boom 1000 Index', price: 10450.5, change: 3.01 },
   { id: 'CRASH1000', name: 'Crash 1000 Index', price: 9870.1, change: -2.45 },
-  { id: 'BOOM500', name: 'Boom 500 Index', price: 7654.3, change: 1.98 },
-  { id: 'CRASH500', name: 'Crash 500 Index', price: 7123.9, change: -1.5 },
-  { id: 'STEPIND', name: 'Step Index', price: 8890.0, change: 0.89 },
 ];
 
 export const generateChartData = (points = 100) => {

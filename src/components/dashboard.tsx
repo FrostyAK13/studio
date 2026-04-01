@@ -1,4 +1,3 @@
-
 'use client';
 
 import * as React from 'react';
@@ -51,7 +50,7 @@ export function Dashboard() {
         ws.onopen = () => {
             ws.send(JSON.stringify({ 
                 "ticks_history": selectedMarket, 
-                "count": 5000, 
+                "count": 3000, 
                 "end": "latest", 
                 "style": "ticks", 
                 "subscribe": 1 
@@ -73,6 +72,17 @@ export function Dashboard() {
                         price: price,
                         time: data.history.times[index] * 1000 
                     })).reverse();
+                    
+                    if (pipSize !== null && historyBuffer) {
+                        const digits = historyBuffer.map(h => parseInt(h.price.toFixed(pipSize!).slice(-1)));
+                        const prices = historyBuffer.map(h => h.price);
+                        const times = historyBuffer.map(h => h.time);
+                        setLastDigitTicks(digits);
+                        setPriceHistory(prices);
+                        setTickTimestamps(times);
+                        setPrice(prices[0]);
+                        historyBuffer = null;
+                    }
                 }
             }
 
