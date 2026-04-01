@@ -73,19 +73,19 @@ export const DigitFrequencyCircles = ({
         return (
             <div 
                 className={cn(
-                    "flex flex-col items-center relative cursor-pointer transition-all duration-300 p-1 sm:p-2 group",
-                    isSelected ? "bg-primary/10 rounded-xl sm:rounded-3xl ring-2 ring-primary/40 scale-105 z-20 shadow-lg" : "hover:scale-105"
+                    "flex flex-col items-center relative cursor-pointer transition-all duration-500 p-2 sm:p-4 group",
+                    isSelected ? "bg-primary/20 rounded-[2rem] sm:rounded-[3rem] ring-4 ring-primary/60 scale-110 z-20 shadow-[0_0_30px_rgba(var(--primary),0.3)]" : "hover:scale-105"
                 )}
                 onClick={() => onDigitSelect(digit)}
             >
-                <div className="relative w-12 h-12 sm:w-20 sm:h-20 flex items-center justify-center">
+                <div className="relative w-16 h-16 sm:w-28 sm:h-28 flex items-center justify-center">
                     <svg className="absolute inset-0 w-full h-full -rotate-90">
                         <circle
                             cx="50%"
                             cy="50%"
                             r="42%"
                             stroke="currentColor"
-                            strokeWidth="2"
+                            strokeWidth="3"
                             fill="transparent"
                             className="text-white/5"
                         />
@@ -94,25 +94,26 @@ export const DigitFrequencyCircles = ({
                             cy="50%"
                             r="42%"
                             stroke="currentColor"
-                            strokeWidth="3"
+                            strokeWidth="5"
                             fill="transparent"
                             strokeDasharray="100 100" 
                             strokeDashoffset={100 - percentage}
                             strokeLinecap="round"
-                            className={cn("transition-all duration-700", isSelected ? "text-primary" : colorClass)}
+                            className={cn("transition-all duration-1000 ease-out", isSelected ? "text-primary drop-shadow-[0_0_8px_rgba(var(--primary),0.8)]" : colorClass)}
                         />
                     </svg>
                     <div className="flex flex-col items-center justify-center z-10">
                         <span className={cn(
-                            "text-lg sm:text-2xl font-black leading-none tracking-tight transition-all",
-                            isSelected ? "text-white scale-110" : "text-foreground"
+                            "text-2xl sm:text-5xl font-black leading-none tracking-tighter transition-all duration-500",
+                            isSelected ? "text-white scale-125 drop-shadow-[0_0_10px_white]" : "text-foreground"
                         )}>{digit}</span>
-                        <span className="text-[6px] sm:text-[9px] font-black text-muted-foreground mt-0.5 uppercase tracking-wider">{percentage.toFixed(0)}%</span>
+                        <span className="text-[8px] sm:text-[12px] font-black text-muted-foreground mt-1 uppercase tracking-widest">{percentage.toFixed(0)}%</span>
                     </div>
                 </div>
                 {isLast && (
                     <div className="absolute top-0 right-0">
-                        <div className="h-1.5 w-1.5 sm:h-2.5 sm:w-2.5 rounded-full bg-cyan-400 animate-pulse shadow-[0_0_8px_cyan]" />
+                        <div className="h-3 w-3 sm:h-5 sm:w-5 rounded-full bg-cyan-400 animate-ping shadow-[0_0_15px_cyan] absolute" />
+                        <div className="h-3 w-3 sm:h-5 sm:w-5 rounded-full bg-cyan-400 shadow-[0_0_10px_cyan] relative" />
                     </div>
                 )}
             </div>
@@ -120,22 +121,22 @@ export const DigitFrequencyCircles = ({
     };
 
     return (
-        <Card className="overflow-hidden border-none shadow-xl bg-slate-900/40 backdrop-blur-3xl rounded-[1.5rem] sm:rounded-[2.5rem]">
-            <div className="px-4 sm:px-8 pt-4 sm:pt-8">
-                <div className="flex items-center gap-2 sm:gap-3 bg-black/40 px-3 sm:px-6 py-1 sm:py-2 rounded-full text-[8px] sm:text-[10px] text-muted-foreground font-bold border border-white/5 uppercase tracking-widest w-fit">
-                    <Orbit className="h-3 w-3 sm:h-4 sm:w-4 text-cyan-400" />
-                    <span className="truncate max-w-[120px] sm:max-w-none">SAMPLE: {ticks.length} • {marketName}</span>
+        <Card className="overflow-hidden border-none shadow-2xl bg-slate-900/60 backdrop-blur-3xl rounded-[2rem] sm:rounded-[4rem] border border-white/5">
+            <div className="px-6 sm:px-12 pt-6 sm:pt-12">
+                <div className="flex items-center gap-2 sm:gap-4 bg-black/60 px-4 sm:px-8 py-2 sm:py-3 rounded-full text-[10px] sm:text-[12px] text-muted-foreground font-black border border-white/10 uppercase tracking-[0.2em] w-fit shadow-xl">
+                    <Orbit className="h-4 w-4 sm:h-5 sm:w-5 text-cyan-400" />
+                    <span>SAMPLE: {ticks.length} • {marketName}</span>
                 </div>
             </div>
-             <CardHeader className="pb-2 sm:pb-4 pt-4 sm:pt-6 text-center px-4 sm:px-8">
-                <CardTitle className="text-[10px] sm:text-sm font-black uppercase tracking-widest flex items-center justify-center gap-2 text-primary">
-                    <div className="w-2 h-2 rounded-full bg-primary animate-pulse" />
+             <CardHeader className="pb-4 sm:pb-8 pt-6 sm:pt-10 text-center px-6 sm:px-12">
+                <CardTitle className="text-xs sm:text-lg font-black uppercase tracking-[0.4em] flex items-center justify-center gap-3 text-primary">
+                    <div className="w-2.5 h-2.5 rounded-full bg-primary animate-pulse shadow-[0_0_10px_rgba(var(--primary),1)]" />
                     GLOBAL FREQUENCY ORBIT
                 </CardTitle>
             </CardHeader>
-            <CardContent className="p-3 sm:p-8">
-                <div className="space-y-4 sm:space-y-6">
-                    <div className="grid grid-cols-5 gap-2 sm:gap-4 border-b border-white/5 pb-4 sm:pb-6">
+            <CardContent className="p-4 sm:p-12">
+                <div className="space-y-6 sm:space-y-12">
+                    <div className="grid grid-cols-5 gap-3 sm:gap-8 border-b border-white/5 pb-6 sm:pb-12">
                         {digitData.slice(0, 5).map((data, i) => (
                             <DigitCircle 
                                 key={data.index} 
@@ -147,7 +148,7 @@ export const DigitFrequencyCircles = ({
                             />
                         ))}
                     </div>
-                    <div className="grid grid-cols-5 gap-2 sm:gap-4 pt-2">
+                    <div className="grid grid-cols-5 gap-3 sm:gap-8 pt-4">
                         {digitData.slice(5, 10).map((data, i) => (
                             <DigitCircle 
                                 key={data.index} 
@@ -206,92 +207,93 @@ const DigitNexusMatrix = ({ digit, ticks }: { digit: number, ticks: number[] }) 
     }, [digit, ticks]);
 
     return (
-        <div className="mt-6 sm:mt-10 animate-in fade-in slide-in-from-bottom-5 duration-700">
-            <Card className="border-none bg-slate-950 shadow-2xl overflow-hidden relative rounded-[1.5rem] sm:rounded-[2.5rem]">
-                <div className="absolute top-0 left-0 w-full h-[4px] bg-gradient-to-r from-cyan-500 via-primary to-emerald-500" />
-                <CardHeader className="pb-4 sm:pb-8 pt-6 sm:pt-10 px-4 sm:px-10">
-                    <div className="flex flex-col lg:flex-row items-center justify-between gap-4 sm:gap-8">
-                        <div className="flex flex-col sm:flex-row items-center gap-3 sm:gap-6 text-center sm:text-left">
-                            <div className="w-12 h-12 sm:w-16 sm:h-16 rounded-xl sm:rounded-2xl bg-primary/20 flex items-center justify-center border border-primary/30 shadow-lg">
-                                <Network className="h-6 w-6 sm:h-8 sm:w-8 text-primary" />
+        <div className="mt-8 sm:mt-16 animate-in fade-in slide-in-from-bottom-10 duration-1000">
+            <Card className="border-none bg-slate-950/90 shadow-[0_30px_90px_rgba(0,0,0,0.8)] overflow-hidden relative rounded-[2.5rem] sm:rounded-[4rem] border border-white/5">
+                <div className="absolute top-0 left-0 w-full h-[6px] bg-gradient-to-r from-cyan-500 via-primary to-emerald-500 shadow-[0_0_20px_rgba(var(--primary),0.5)]" />
+                <CardHeader className="pb-6 sm:pb-12 pt-8 sm:pt-16 px-6 sm:px-16">
+                    <div className="flex flex-col lg:flex-row items-center justify-between gap-8 sm:gap-12">
+                        <div className="flex flex-col sm:flex-row items-center gap-6 sm:gap-10 text-center sm:text-left">
+                            <div className="w-16 h-16 sm:w-24 sm:h-24 rounded-[1.5rem] sm:rounded-[2.5rem] bg-primary/20 flex items-center justify-center border border-primary/30 shadow-[0_0_25px_rgba(var(--primary),0.3)]">
+                                <Network className="h-8 w-8 sm:h-12 sm:w-12 text-primary" />
                             </div>
                             <div>
-                                <CardTitle className="text-lg sm:text-2xl font-black text-white tracking-tight uppercase leading-none flex items-center justify-center sm:justify-start gap-2">
-                                    DIGIT {digit} NEXUS <Fingerprint className="h-4 w-4 sm:h-6 sm:w-6 text-primary opacity-40" />
+                                <CardTitle className="text-xl sm:text-4xl font-black text-white tracking-tighter uppercase leading-none flex items-center justify-center sm:justify-start gap-4">
+                                    DIGIT {digit} NEXUS <Fingerprint className="h-6 w-6 sm:h-10 sm:w-10 text-primary opacity-40" />
                                 </CardTitle>
-                                <CardDescription className="text-primary/70 font-black uppercase tracking-widest text-[8px] sm:text-[10px] mt-1">Predictive Recursive Intelligence Matrix</CardDescription>
+                                <CardDescription className="text-primary/70 font-black uppercase tracking-[0.4em] text-[10px] sm:text-[12px] mt-3">PREDICTIVE INTELLIGENCE MATRIX</CardDescription>
                             </div>
                         </div>
-                        <div className="bg-white/5 border border-white/10 px-4 sm:px-8 py-2 sm:py-4 rounded-xl sm:rounded-2xl flex items-center gap-4 shadow-inner w-full sm:w-auto justify-center">
+                        <div className="bg-white/5 border border-white/10 px-6 sm:px-12 py-4 sm:py-6 rounded-[2rem] flex items-center gap-6 sm:gap-10 shadow-2xl w-full lg:w-auto justify-center">
                             <div className="text-center">
-                                <p className="text-[7px] sm:text-[9px] font-black text-muted-foreground uppercase tracking-widest mb-1">SEQUENCES</p>
-                                <p className="text-base sm:text-xl font-black text-white tabular-nums">{nexusAnalysis.totalFound}</p>
+                                <p className="text-[9px] sm:text-[11px] font-black text-muted-foreground uppercase tracking-widest mb-2">SEQUENCES</p>
+                                <p className="text-xl sm:text-3xl font-black text-white tabular-nums">{nexusAnalysis.totalFound}</p>
                             </div>
-                            <div className="w-px h-8 sm:h-10 bg-white/10" />
+                            <div className="w-px h-10 sm:h-16 bg-white/10" />
                             <div className="text-center">
-                                <p className="text-[7px] sm:text-[9px] font-black text-muted-foreground uppercase tracking-widest mb-1">STATUS</p>
-                                <div className="flex items-center gap-1.5 justify-center">
-                                    <div className="h-1.5 w-1.5 rounded-full bg-emerald-400 animate-pulse" />
-                                    <p className="text-base sm:text-xl font-black text-emerald-400 tabular-nums uppercase">Live</p>
+                                <p className="text-[9px] sm:text-[11px] font-black text-muted-foreground uppercase tracking-widest mb-2">STATUS</p>
+                                <div className="flex items-center gap-2 justify-center">
+                                    <div className="h-2 w-2 sm:h-3 sm:w-3 rounded-full bg-emerald-400 animate-pulse shadow-[0_0_10px_#10b981]" />
+                                    <p className="text-xl sm:text-3xl font-black text-emerald-400 tabular-nums uppercase">SYNC</p>
                                 </div>
                             </div>
                         </div>
                     </div>
                 </CardHeader>
-                <CardContent className="px-4 sm:px-10 pb-8 sm:pb-12 space-y-8">
-                    <div className="grid grid-cols-1 xl:grid-cols-2 gap-8">
-                        <div className="space-y-6 p-6 rounded-[2rem] bg-black/50 border border-white/5 relative overflow-hidden shadow-xl">
-                            <div className="absolute top-0 left-0 w-1 h-full bg-emerald-500/40" />
-                            <div className="flex items-center justify-between border-b border-white/10 pb-4">
-                                <h4 className="text-[9px] sm:text-[11px] font-black uppercase tracking-widest text-muted-foreground flex items-center gap-2">
-                                    <Cpu className="h-5 w-5 text-emerald-400" /> RECURSIVE SUCCESSION GATES
+                <CardContent className="px-6 sm:px-16 pb-12 sm:pb-20 space-y-12">
+                    <div className="grid grid-cols-1 xl:grid-cols-2 gap-12">
+                        <div className="space-y-8 p-8 rounded-[3rem] bg-black/60 border border-white/10 relative overflow-hidden shadow-2xl">
+                            <div className="absolute top-0 left-0 w-2 h-full bg-emerald-500/40" />
+                            <div className="flex items-center justify-between border-b border-white/10 pb-6">
+                                <h4 className="text-[11px] sm:text-[13px] font-black uppercase tracking-[0.2em] text-muted-foreground flex items-center gap-3">
+                                    <Cpu className="h-6 w-6 text-emerald-400" /> SUCCESSION GATES
                                 </h4>
-                                <Badge className="bg-emerald-500/10 text-emerald-400 border-none px-3 text-[9px] font-black uppercase">AFFINITY</Badge>
+                                <Badge className="bg-emerald-500/10 text-emerald-400 border-none px-4 py-1 text-[10px] font-black uppercase">AFFINITY</Badge>
                             </div>
                             
-                            <div className="grid grid-cols-5 gap-3">
+                            <div className="grid grid-cols-5 gap-4">
                                 {nexusAnalysis.results.slice(0, 5).map((res, idx) => (
                                     <div key={res.digit} className={cn(
-                                        "p-4 rounded-xl border transition-all relative overflow-hidden text-center",
-                                        idx === 0 ? "bg-emerald-500/20 border-emerald-500/40 scale-105 z-10 shadow-lg" : "bg-white/5 border-white/5"
+                                        "p-5 rounded-2xl border transition-all duration-500 relative overflow-hidden text-center",
+                                        idx === 0 ? "bg-emerald-500/20 border-emerald-500/50 scale-110 z-10 shadow-[0_0_20px_rgba(16,185,129,0.3)]" : "bg-white/5 border-white/5"
                                     )}>
-                                        <p className={cn("text-xs font-black mb-1", idx === 0 ? "text-white" : "text-foreground/80")}>{res.digit}</p>
-                                        <p className={cn("text-[10px] font-black tabular-nums", idx === 0 ? "text-emerald-400" : "text-muted-foreground/40")}>{res.probability.toFixed(0)}%</p>
+                                        <p className={cn("text-lg sm:text-xl font-black mb-1", idx === 0 ? "text-white" : "text-foreground/80")}>{res.digit}</p>
+                                        <p className={cn("text-[10px] sm:text-[12px] font-black tabular-nums", idx === 0 ? "text-emerald-400" : "text-muted-foreground/40")}>{res.probability.toFixed(0)}%</p>
                                     </div>
                                 ))}
                             </div>
                         </div>
 
-                        <div className="space-y-6 p-6 rounded-[2rem] bg-black/50 border border-white/5 relative overflow-hidden shadow-xl">
-                            <div className="absolute top-0 right-0 w-1 h-full bg-cyan-500/40" />
-                            <div className="flex items-center justify-between border-b border-white/10 pb-4">
-                                <h4 className="text-[9px] sm:text-[11px] font-black uppercase tracking-widest text-muted-foreground flex items-center gap-2">
-                                    <Layers className="h-5 w-5 text-cyan-400" /> 3-DIGIT SEQUENCE CHAINS
+                        <div className="space-y-8 p-8 rounded-[3rem] bg-black/60 border border-white/10 relative overflow-hidden shadow-2xl">
+                            <div className="absolute top-0 right-0 w-2 h-full bg-cyan-500/40" />
+                            <div className="flex items-center justify-between border-b border-white/10 pb-6">
+                                <h4 className="text-[11px] sm:text-[13px] font-black uppercase tracking-[0.2em] text-muted-foreground flex items-center gap-3">
+                                    <Layers className="h-6 w-6 text-cyan-400" /> 3-DIGIT CHAINS
                                 </h4>
-                                <Badge className="bg-cyan-500/10 text-cyan-400 border-none px-3 text-[9px] font-black uppercase">RECURSION</Badge>
+                                <Badge className="bg-cyan-500/10 text-cyan-400 border-none px-4 py-1 text-[10px] font-black uppercase">RECURSION</Badge>
                             </div>
                             
-                            <div className="grid grid-cols-2 gap-4">
+                            <div className="grid grid-cols-2 gap-6">
                                 {nexusAnalysis.chains.map((chain, idx) => (
-                                    <div key={idx} className="flex items-center justify-between p-3 bg-white/5 rounded-xl border border-white/10">
-                                        <div className="flex items-center gap-2">
-                                            <span className="text-primary font-black text-xs">{digit}</span>
-                                            <ArrowRight className="h-3 w-3 text-white/20" />
-                                            <span className="text-white font-black text-sm">{chain.chain}</span>
+                                    <div key={idx} className="flex items-center justify-between p-4 bg-white/5 rounded-2xl border border-white/10 transition-all hover:bg-white/10 shadow-lg">
+                                        <div className="flex items-center gap-3">
+                                            <span className="text-primary font-black text-sm sm:text-lg">{digit}</span>
+                                            <ArrowRight className="h-4 w-4 text-white/30" />
+                                            <span className="text-white font-black text-base sm:text-xl">{chain.chain}</span>
                                         </div>
-                                        <span className="text-[10px] font-black text-emerald-400 tabular-nums">{chain.probability.toFixed(1)}%</span>
+                                        <span className="text-xs sm:text-base font-black text-emerald-400 tabular-nums">{chain.probability.toFixed(1)}%</span>
                                     </div>
                                 ))}
                             </div>
                         </div>
                     </div>
 
-                    <div className="p-6 rounded-[2rem] bg-slate-900/60 border border-white/5 text-center shadow-xl">
-                        <h4 className="text-[10px] font-black uppercase tracking-widest text-primary mb-4 flex items-center justify-center gap-2">
-                            <Crosshair className="h-4 w-4" /> TACTICAL PREDICTION ENGINE
+                    <div className="p-8 sm:p-12 rounded-[3rem] sm:rounded-[4rem] bg-slate-900/80 border border-white/10 text-center shadow-2xl relative group overflow-hidden">
+                        <div className="absolute inset-0 bg-primary/5 opacity-0 group-hover:opacity-100 transition-opacity" />
+                        <h4 className="text-[12px] sm:text-[14px] font-black uppercase tracking-[0.5em] text-primary mb-6 flex items-center justify-center gap-4">
+                            <Crosshair className="h-6 w-6" /> TACTICAL PREDICTION ENGINE
                         </h4>
-                        <p className="text-sm font-medium text-white/90 leading-relaxed italic max-w-2xl mx-auto">
-                            "Neural analysis identifies <span className="text-emerald-400 font-black">Digit {nexusAnalysis.hottestNext.digit}</span> as the high-affinity successor. 3-Digit chain scan suggests a recursive cycle towards <span className="text-cyan-400 font-black">{nexusAnalysis.chains[0]?.chain || '...'}</span>."
+                        <p className="text-sm sm:text-2xl font-medium text-white/90 leading-relaxed italic max-w-4xl mx-auto drop-shadow-md">
+                            "Neural nexus identifies <span className="text-emerald-400 font-black px-2 py-1 bg-emerald-500/10 rounded-lg">Digit {nexusAnalysis.hottestNext.digit}</span> as the high-affinity successor. 3-Digit chain scan suggests recursive cycle towards <span className="text-cyan-400 font-black px-2 py-1 bg-cyan-500/10 rounded-lg">{nexusAnalysis.chains[0]?.chain || '...'}</span>."
                         </p>
                     </div>
                 </CardContent>
@@ -310,37 +312,37 @@ export function CorrelationView({
     const [selectedDigit, setSelectedDigit] = React.useState<number | null>(null);
 
     return (
-        <div className="space-y-6 sm:space-y-10 animate-in fade-in slide-in-from-bottom-5 duration-700 pb-24">
-            <Card className="border-none shadow-xl bg-slate-900/40 backdrop-blur-3xl overflow-hidden relative rounded-[1.5rem] sm:rounded-[2.5rem]">
-                <div className="absolute top-0 left-0 w-full h-[2px] bg-gradient-to-r from-transparent via-primary/60 to-transparent" />
-                <CardContent className="p-4 sm:p-10 grid grid-cols-1 md:grid-cols-3 gap-6 sm:gap-10 items-center">
-                    <div className="space-y-2 sm:space-y-4">
-                        <Label className="text-[10px] sm:text-[12px] font-black uppercase tracking-widest text-primary ml-1">MARKET VECTOR SELECT</Label>
+        <div className="space-y-8 sm:space-y-16 animate-in fade-in slide-in-from-bottom-12 duration-1000 pb-32">
+            <Card className="border-none shadow-2xl bg-slate-900/60 backdrop-blur-3xl overflow-hidden relative rounded-[2.5rem] sm:rounded-[4rem] border border-white/5">
+                <div className="absolute top-0 left-0 w-full h-[3px] bg-gradient-to-r from-transparent via-primary/80 to-transparent" />
+                <CardContent className="p-6 sm:p-16 grid grid-cols-1 md:grid-cols-3 gap-8 sm:gap-16 items-center">
+                    <div className="space-y-4 sm:space-y-6">
+                        <Label className="text-[12px] sm:text-[14px] font-black uppercase tracking-[0.4em] text-primary ml-2">MARKET VECTOR</Label>
                         <Select value={selectedMarket} onValueChange={onMarketChange}>
-                            <SelectTrigger className="h-12 sm:h-16 bg-black/50 border-white/10 rounded-xl sm:rounded-[1.5rem] font-black text-xs sm:text-lg px-4 sm:px-8">
+                            <SelectTrigger className="h-16 sm:h-24 bg-black/60 border-white/10 rounded-[1.5rem] sm:rounded-[2.5rem] font-black text-sm sm:text-2xl px-6 sm:px-12 shadow-[inset_0_4px_20px_rgba(0,0,0,0.5)]">
                                 <SelectValue placeholder="Select Index" />
                             </SelectTrigger>
-                            <SelectContent side="bottom" position="popper" sideOffset={8} className="w-[var(--radix-select-trigger-width)] max-h-[300px] rounded-xl sm:rounded-[1.5rem] border-white/10 bg-slate-950 text-white z-[100] shadow-2xl">
+                            <SelectContent side="bottom" position="popper" sideOffset={12} className="w-[var(--radix-select-trigger-width)] max-h-[400px] rounded-[2rem] border-white/10 bg-slate-950 text-white z-[100] shadow-2xl">
                                 {syntheticIndices.map((index) => (
-                                <SelectItem key={index.id} value={index.id} className="focus:bg-primary/20 focus:text-white cursor-pointer py-2.5 px-4 font-black text-xs sm:text-sm">
+                                <SelectItem key={index.id} value={index.id} className="focus:bg-primary/20 focus:text-white cursor-pointer py-4 px-6 font-black text-xs sm:text-lg">
                                     {index.name}
                                 </SelectItem>
                                 ))}
                             </SelectContent>
                         </Select>
                     </div>
-                    <div className="space-y-2 sm:space-y-4">
-                        <Label className="text-[10px] sm:text-[12px] font-black uppercase tracking-widest text-primary ml-1">LIVE DATA PIVOT</Label>
-                        <div className="h-12 sm:h-16 bg-gradient-to-br from-primary to-blue-700 rounded-xl sm:rounded-[1.5rem] flex items-center justify-center shadow-lg">
-                             <span className="text-lg sm:text-2xl font-black tabular-nums text-white">
+                    <div className="space-y-4 sm:space-y-6">
+                        <Label className="text-[12px] sm:text-[14px] font-black uppercase tracking-[0.4em] text-primary ml-2">LIVE PIVOT</Label>
+                        <div className="h-16 sm:h-24 bg-gradient-to-br from-primary to-blue-800 rounded-[1.5rem] sm:rounded-[2.5rem] flex items-center justify-center shadow-[0_15px_40px_rgba(var(--primary),0.3)] border border-white/10">
+                             <span className="text-2xl sm:text-5xl font-black tabular-nums text-white drop-shadow-xl">
                                 {price.toFixed(decimalPlaces)}
                              </span>
                         </div>
                     </div>
-                    <div className="space-y-2 sm:space-y-4">
-                        <Label className="text-[10px] sm:text-[12px] font-black uppercase tracking-widest text-primary ml-1">NEXUS DATA HORIZON</Label>
-                        <div className="h-12 sm:h-16 bg-black/50 border-white/10 rounded-xl sm:rounded-[1.5rem] flex items-center justify-center font-black text-lg sm:text-2xl text-primary shadow-inner">
-                            {lastDigitTicks.length} <span className="text-[8px] sm:text-[10px] opacity-40 ml-2 tracking-widest uppercase font-bold">TICKS</span>
+                    <div className="space-y-4 sm:space-y-6">
+                        <Label className="text-[12px] sm:text-[14px] font-black uppercase tracking-[0.4em] text-primary ml-2">NEXUS HORIZON</Label>
+                        <div className="h-16 sm:h-24 bg-black/60 border-white/10 rounded-[1.5rem] sm:rounded-[2.5rem] flex items-center justify-center font-black text-2xl sm:text-5xl text-primary shadow-[inset_0_4px_20px_rgba(0,0,0,0.5)] border border-primary/20">
+                            {lastDigitTicks.length} <span className="text-[10px] sm:text-[14px] opacity-40 ml-4 tracking-[0.2em] uppercase font-black">TICKS</span>
                         </div>
                     </div>
                 </CardContent>
