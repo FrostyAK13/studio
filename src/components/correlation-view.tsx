@@ -74,12 +74,12 @@ export const DigitFrequencyCircles = ({
                 className={cn(
                     "flex flex-col items-center relative cursor-pointer transition-all duration-500 p-2 sm:p-6 group",
                     isSelected 
-                        ? "bg-primary/20 rounded-[2rem] sm:rounded-[4rem] ring-[12px] ring-primary/80 scale-110 z-20 shadow-[0_0_60px_rgba(var(--primary),0.6)]" 
+                        ? "bg-primary/20 rounded-[2rem] sm:rounded-[4rem] ring-[16px] ring-primary/80 scale-110 z-20 shadow-[0_0_80px_rgba(var(--primary),0.8)]" 
                         : "hover:scale-105"
                 )}
                 onClick={() => onDigitSelect(digit)}
             >
-                <div className="relative w-24 h-24 sm:w-48 sm:h-48 flex items-center justify-center">
+                <div className="relative w-24 h-24 sm:w-64 sm:h-64 flex items-center justify-center">
                     <svg className="absolute inset-0 w-full h-full -rotate-90">
                         <circle
                             cx="50%"
@@ -95,28 +95,28 @@ export const DigitFrequencyCircles = ({
                             cy="50%"
                             r="42%"
                             stroke="currentColor"
-                            strokeWidth="10"
+                            strokeWidth="12"
                             fill="transparent"
                             strokeDasharray="100 100" 
                             strokeDashoffset={100 - percentage}
                             strokeLinecap="round"
-                            className={cn("transition-all duration-1000 ease-out", isSelected ? "text-primary drop-shadow-[0_0_25px_rgba(var(--primary),0.8)]" : colorClass)}
+                            className={cn("transition-all duration-1000 ease-out", isSelected ? "text-primary drop-shadow-[0_0_35px_rgba(var(--primary),1)]" : colorClass)}
                         />
                     </svg>
                     <div className="flex flex-col items-center justify-center z-10">
                         <span className={cn(
-                            "text-5xl sm:text-[9rem] font-black leading-none tracking-tighter transition-all duration-500 drop-shadow-2xl",
+                            "text-6xl sm:text-[11rem] font-black leading-none tracking-tighter transition-all duration-500 drop-shadow-2xl",
                             isSelected ? "text-white scale-110" : "text-foreground"
                         )}>{digit}</span>
-                        <span className="text-[14px] sm:text-[28px] font-black text-cyan-400 mt-2 uppercase tracking-widest drop-shadow-[0_4px_10px_rgba(0,0,0,1)]">
+                        <span className="text-[16px] sm:text-[32px] font-black text-cyan-400 mt-2 uppercase tracking-[0.2em] drop-shadow-[0_4px_15px_rgba(0,0,0,1)]">
                             {percentage.toFixed(0)}%
                         </span>
                     </div>
                 </div>
                 {isLast && (
                     <div className="absolute top-0 right-0">
-                        <div className="h-6 w-6 sm:h-12 sm:w-12 rounded-full bg-cyan-400 animate-ping shadow-[0_0_30px_cyan] absolute" />
-                        <div className="h-6 w-6 sm:h-12 sm:w-12 rounded-full bg-cyan-400 shadow-[0_0_20px_cyan] relative" />
+                        <div className="h-8 w-8 sm:h-16 sm:w-16 rounded-full bg-cyan-400 animate-ping shadow-[0_0_40px_cyan] absolute" />
+                        <div className="h-8 w-8 sm:h-16 sm:w-16 rounded-full bg-cyan-400 shadow-[0_0_30px_cyan] relative" />
                     </div>
                 )}
             </div>
@@ -359,3 +359,4 @@ export function CorrelationView({
         </div>
     );
 }
+

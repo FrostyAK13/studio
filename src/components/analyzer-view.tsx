@@ -6,7 +6,7 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { syntheticIndices } from '@/lib/mock-data';
 import { cn } from '@/lib/utils';
-import { Activity, Zap, TrendingUp, TrendingDown, Target, Crosshair, ArrowUp, ArrowDown } from 'lucide-react';
+import { Activity, Zap, TrendingUp, TrendingDown, Target, Crosshair, ArrowUp, ArrowDown, Hash, Layers } from 'lucide-react';
 import { Progress } from '@/components/ui/progress';
 import { Badge } from '@/components/ui/badge';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -94,7 +94,11 @@ export function AnalyzerView({
             val2,
             label1,
             label2,
-            delta: Math.abs(val1 - val2)
+            delta: Math.abs(val1 - val2),
+            overCount,
+            underCount,
+            overPerc: (overCount / total) * 100,
+            underPerc: (underCount / total) * 100
         };
     }, [lastDigitTicks, priceHistory, selectedDigit, tradeType]);
 
@@ -109,18 +113,18 @@ export function AnalyzerView({
             let colorClass = "bg-slate-800 text-white/40"; // Default
             
             if (isMatch) {
-                colorClass = "bg-blue-600 border-blue-400/30 text-white";
+                colorClass = "bg-blue-600 border-blue-400/30 text-white shadow-[0_0_20px_rgba(37,99,235,0.4)]";
             } else {
                 switch (tradeType) {
                     case 'even-odd':
                         colorClass = digit % 2 === 0 
-                            ? "bg-emerald-500 border-emerald-400/30 text-white" 
-                            : "bg-rose-500 border-rose-400/30 text-white";
+                            ? "bg-emerald-500 border-emerald-400/30 text-white shadow-[0_0_15px_rgba(16,185,129,0.3)]" 
+                            : "bg-rose-500 border-rose-400/30 text-white shadow-[0_0_15px_rgba(244,63,94,0.3)]";
                         break;
                     case 'over-under':
                         colorClass = digit > selectedDigit
-                            ? "bg-emerald-500 border-emerald-400/30 text-white"
-                            : "bg-rose-500 border-rose-400/30 text-white";
+                            ? "bg-emerald-500 border-emerald-400/30 text-white shadow-[0_0_15px_rgba(16,185,129,0.3)]"
+                            : "bg-rose-500 border-rose-400/30 text-white shadow-[0_0_15px_rgba(244,63,94,0.3)]";
                         break;
                     case 'rise-fall':
                         colorClass = digit % 2 === 0 
@@ -140,7 +144,7 @@ export function AnalyzerView({
                     animate={{ scale: 1, opacity: 1 }}
                     className={cn(
                         "w-10 h-10 sm:w-16 sm:h-16 rounded-full flex items-center justify-center font-black text-sm sm:text-2xl border transition-all duration-300 relative overflow-hidden group",
-                        isPivot ? "ring-4 ring-white ring-offset-4 ring-offset-slate-950 z-10 shadow-[0_0_40px_rgba(255,255,255,0.4)]" : colorClass
+                        isPivot ? "ring-4 ring-white ring-offset-4 ring-offset-slate-950 z-10 shadow-[0_0_40px_rgba(255,255,255,0.5)] bg-white text-black" : colorClass
                     )}
                 >
                     <span className="relative z-10">{digit}</span>
@@ -224,12 +228,12 @@ export function AnalyzerView({
                         <div className="flex gap-8 sm:gap-16 items-center justify-center">
                             <div className="text-center space-y-1">
                                 <p className="text-[9px] sm:text-xs font-black text-muted-foreground uppercase tracking-[0.2em]">LIVE PIVOT</p>
-                                <p className="text-3xl sm:text-6xl font-black text-white tabular-nums tracking-tighter">{price.toFixed(decimalPlaces)}</p>
+                                <p className="text-3xl sm:text-7xl font-black text-white tabular-nums tracking-tighter">{price.toFixed(decimalPlaces)}</p>
                             </div>
                             <div className="w-px h-16 sm:h-24 bg-white/10" />
                             <div className="text-center space-y-1">
                                 <p className="text-[9px] sm:text-xs font-black text-muted-foreground uppercase tracking-[0.2em]">TACTICAL DELTA</p>
-                                <p className="text-3xl sm:text-6xl font-black text-emerald-400 tabular-nums tracking-tighter">{stats.delta.toFixed(1)}%</p>
+                                <p className="text-3xl sm:text-7xl font-black text-emerald-400 tabular-nums tracking-tighter">{stats.delta.toFixed(1)}%</p>
                             </div>
                         </div>
                     </div>
@@ -289,3 +293,4 @@ export function AnalyzerView({
         </div>
     );
 }
+
