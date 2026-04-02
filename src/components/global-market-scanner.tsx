@@ -48,6 +48,8 @@ export function GlobalMarketScanner({ onMarketSelect, lastDigitTicks = [], price
     React.useEffect(() => {
         if (status !== 'results' || !result || entryDetected) return;
 
+        if (lastDigitTicks.length === 0) return;
+
         const latestDigit = lastDigitTicks[0];
         // Exact match for the identified Trigger Digit
         if (latestDigit === result.triggerDigit) {
@@ -57,15 +59,12 @@ export function GlobalMarketScanner({ onMarketSelect, lastDigitTicks = [], price
         }
     }, [lastDigitTicks, result, status, entryDetected, price]);
 
-    // Track stability ticks after detection
+    // Track stability ticks after detection - using actual tick updates
     React.useEffect(() => {
         if (entryDetected && stabilityTicks > 0) {
-            const timer = setTimeout(() => {
-                setStabilityTicks(prev => Math.max(0, prev - 1));
-            }, 1000); 
-            return () => clearTimeout(timer);
+            setStabilityTicks(prev => Math.max(0, prev - 1));
         }
-    }, [entryDetected, stabilityTicks]);
+    }, [lastDigitTicks]); // Decalibration logic: stability ticks decrease with every actual market tick
 
     const startScan = () => {
         setResult(null);
@@ -89,7 +88,7 @@ export function GlobalMarketScanner({ onMarketSelect, lastDigitTicks = [], price
             // Dynamic suitable stability window based on strategy and simulated confidence
             const stabilityWindow = Math.floor(Math.random() * 11) + 15; // 15 to 25 ticks
             
-            const possibleTriggers = [2, 3, 4, 5, 7, 8];
+            const possibleTriggers = [2, 3, 4, 5, 6, 7, 8, 9];
             const triggerDigit = possibleTriggers[Math.floor(Math.random() * possibleTriggers.length)];
 
             // Auto-select market to sync price feed digits immediately
@@ -215,7 +214,11 @@ export function GlobalMarketScanner({ onMarketSelect, lastDigitTicks = [], price
                                             <div className="absolute top-2 right-4"><Wallet className="h-4 w-4 text-blue-400" /></div>
                                             <p className="text-[8px] sm:text-[10px] font-black text-blue-400 uppercase tracking-widest mb-2">LIVE MARKET PIVOT</p>
                                             <p className="text-xl sm:text-2xl font-black text-white leading-tight tabular-nums">
-                                                {price.toFixed(decimalPlaces)}
+                                                {price === 0 ? (
+                                                    <span className="text-amber-400 animate-pulse">SYNCING...</span>
+                                                ) : (
+                                                    price.toFixed(decimalPlaces)
+                                                )}
                                             </p>
                                             <Badge className="bg-blue-500/20 text-blue-400 border-none mt-2 text-[8px] font-black uppercase">
                                                 ACTIVE STREAM

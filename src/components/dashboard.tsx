@@ -51,7 +51,7 @@ export function Dashboard() {
         ws.onopen = () => {
             ws.send(JSON.stringify({ 
                 "ticks_history": selectedMarket, 
-                "count": 500, // Reduced count for stability
+                "count": 500, // Reduced count for stability across all synthetic indices
                 "end": "latest", 
                 "style": "ticks", 
                 "subscribe": 1 
@@ -62,7 +62,6 @@ export function Dashboard() {
             const data = JSON.parse(event.data);
 
             if (data.error) {
-                // Centralized error handling without console.error to avoid UI error screens
                 setConnectionStatus('disconnected');
                 return;
             }
@@ -162,12 +161,7 @@ export function Dashboard() {
           <div className="flex-1 hidden md:block" />
 
           <div className="flex flex-1 justify-center w-full md:w-auto mt-0">
-            <a 
-              href="https://frostytraders.com"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="relative group transition-all duration-300 hover:scale-105 active:scale-95"
-            >
+            <div className="relative group transition-all duration-300 hover:scale-105 active:scale-95">
                 <div className={cn(
                     "absolute -inset-1 rounded-full blur opacity-25 group-hover:opacity-75 transition duration-1000",
                     statusBg[connectionStatus]
@@ -186,7 +180,7 @@ export function Dashboard() {
                         FROSTY HOLDINGS
                     </span>
                 </div>
-            </a>
+            </div>
           </div>
 
           <div className="flex-1 hidden md:block" />
