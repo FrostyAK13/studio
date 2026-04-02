@@ -1,4 +1,3 @@
-
 'use client';
 
 import * as React from 'react';
@@ -210,7 +209,12 @@ export function Dashboard() {
                 </TabsList>
 
                 <TabsContent value="global-scan" className="mt-0 animate-in fade-in zoom-in-95 duration-500 outline-none">
-                    <GlobalMarketScanner onMarketSelect={setSelectedMarket} lastDigitTicks={analyzedDigits} />
+                    <GlobalMarketScanner 
+                        onMarketSelect={setSelectedMarket} 
+                        lastDigitTicks={analyzedDigits} 
+                        price={price}
+                        decimalPlaces={decimalPlaces}
+                    />
                 </TabsContent>
 
                 <TabsContent value="scanner" className="mt-0 animate-in fade-in zoom-in-95 duration-500 outline-none">

@@ -1,4 +1,3 @@
-
 'use client';
 
 import * as React from 'react';
@@ -6,13 +5,15 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { Button } from '@/components/ui/button';
 import { syntheticIndices } from '@/lib/mock-data';
 import { cn } from '@/lib/utils';
-import { Search, Zap, Target, Crosshair, Loader2, Network, Cpu, Orbit, BarChart3 } from 'lucide-react';
+import { Search, Zap, Target, Crosshair, Loader2, Network, Cpu, Orbit, BarChart3, Wallet } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Badge } from '@/components/ui/badge';
 
 interface GlobalMarketScannerProps {
     onMarketSelect: (marketId: string) => void;
     lastDigitTicks?: number[];
+    price: number;
+    decimalPlaces: number;
 }
 
 type ScanStatus = 'idle' | 'scanning' | 'results';
@@ -34,7 +35,7 @@ const volatilityIndices = syntheticIndices.filter(m =>
     m.id.includes('HZ')
 );
 
-export function GlobalMarketScanner({ onMarketSelect, lastDigitTicks = [] }: GlobalMarketScannerProps) {
+export function GlobalMarketScanner({ onMarketSelect, lastDigitTicks = [], price, decimalPlaces }: GlobalMarketScannerProps) {
     const [status, setStatus] = React.useState<ScanStatus>('idle');
     const [currentScanIndex, setCurrentScanIndex] = React.useState(0);
     const [result, setResult] = React.useState<ScanResult | null>(null);
@@ -74,7 +75,7 @@ export function GlobalMarketScanner({ onMarketSelect, lastDigitTicks = [] }: Glo
     };
 
     return (
-        <div className="space-y-10 animate-in fade-in slide-in-from-bottom-5 duration-700 pb-24 max-w-5xl mx-auto">
+        <div className="space-y-10 animate-in fade-in slide-in-from-bottom-5 duration-700 pb-24 max-w-[1600px] mx-auto">
             <Card className="border-none shadow-2xl bg-slate-900/40 backdrop-blur-3xl overflow-hidden relative rounded-[2rem] sm:rounded-[4rem]">
                 <div className="absolute top-0 left-0 w-full h-[2px] bg-gradient-to-r from-transparent via-primary/60 to-transparent" />
                 <CardHeader className="text-center pt-10 px-6">
@@ -159,7 +160,7 @@ export function GlobalMarketScanner({ onMarketSelect, lastDigitTicks = [] }: Glo
                                     animate={{ opacity: 1, scale: 1, y: 0 }}
                                     className="w-full space-y-10"
                                 >
-                                    <div className="grid grid-cols-1 md:grid-cols-4 gap-4 sm:gap-6">
+                                    <div className="grid grid-cols-1 md:grid-cols-5 gap-4 sm:gap-6">
                                         <Card className="bg-emerald-500/10 border border-emerald-500/30 p-5 rounded-[2rem] relative group cursor-pointer hover:bg-emerald-500/20 transition-all" onClick={() => onMarketSelect(result.marketId)}>
                                             <div className="absolute top-2 right-4"><Crosshair className="h-4 w-4 text-emerald-400" /></div>
                                             <p className="text-[8px] sm:text-[10px] font-black text-emerald-400 uppercase tracking-widest mb-2">STABLE VECTOR</p>
@@ -172,6 +173,13 @@ export function GlobalMarketScanner({ onMarketSelect, lastDigitTicks = [] }: Glo
                                             <p className="text-[8px] sm:text-[10px] font-black text-primary uppercase tracking-widest mb-2">ENGAGEMENT</p>
                                             <p className="text-xl sm:text-2xl font-black text-white leading-tight">{result.strategy}</p>
                                             <Badge className="bg-primary/20 text-primary border-none mt-2 text-[8px] font-black uppercase">ZERO-ERROR ACTIVE</Badge>
+                                        </Card>
+
+                                        <Card className="bg-blue-600/20 border border-blue-500/30 p-5 rounded-[2rem] relative animate-in zoom-in-95 duration-700">
+                                            <div className="absolute top-2 right-4"><Wallet className="h-4 w-4 text-blue-400" /></div>
+                                            <p className="text-[8px] sm:text-[10px] font-black text-blue-400 uppercase tracking-widest mb-2">LIVE ENTRY PRICE</p>
+                                            <p className="text-xl sm:text-2xl font-black text-white leading-tight tabular-nums">{price.toFixed(decimalPlaces)}</p>
+                                            <Badge className="bg-blue-500/20 text-blue-400 border-none mt-2 text-[8px] font-black uppercase">SIGNAL SYNCED</Badge>
                                         </Card>
 
                                         <Card className="bg-cyan-500/10 border border-cyan-500/30 p-5 rounded-[2rem] relative">
