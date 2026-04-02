@@ -5,7 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { Button } from '@/components/ui/button';
 import { syntheticIndices } from '@/lib/mock-data';
 import { cn } from '@/lib/utils';
-import { Search, Zap, Target, Crosshair, Loader2, Network, Cpu, Orbit, BarChart3, Wallet } from 'lucide-react';
+import { Search, Zap, Target, Crosshair, Loader2, Network, Cpu, Orbit, BarChart3, Wallet, Activity, ShieldCheck, Flame } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Badge } from '@/components/ui/badge';
 
@@ -39,9 +39,36 @@ export function GlobalMarketScanner({ onMarketSelect, lastDigitTicks = [], price
     const [status, setStatus] = React.useState<ScanStatus>('idle');
     const [currentScanIndex, setCurrentScanIndex] = React.useState(0);
     const [result, setResult] = React.useState<ScanResult | null>(null);
+    const [entryDetected, setEntryDetected] = React.useState(false);
+    const [stabilityTicks, setStabilityTicks] = React.useState(0);
+    const [entryPrice, setEntryPrice] = React.useState<number | null>(null);
+
+    // Monitoring for Entry Point
+    React.useEffect(() => {
+        if (status !== 'results' || !result) return;
+
+        const latestDigit = lastDigitTicks[0];
+        if (latestDigit === result.triggerDigit) {
+            if (!entryDetected) {
+                setEntryDetected(true);
+                setEntryPrice(price);
+                setStabilityTicks(15); // Start 15-tick countdown
+            }
+        }
+
+        if (entryDetected && stabilityTicks > 0) {
+            setStabilityTicks(prev => Math.max(0, prev - 1));
+            if (stabilityTicks === 1) {
+                // Reset after 15 ticks or keep showing success
+            }
+        }
+    }, [lastDigitTicks, result, status]);
 
     const startScan = () => {
         setResult(null);
+        setEntryDetected(false);
+        setStabilityTicks(0);
+        setEntryPrice(null);
         setStatus('scanning');
         setCurrentScanIndex(0);
 
@@ -56,7 +83,6 @@ export function GlobalMarketScanner({ onMarketSelect, lastDigitTicks = [], price
             const strategy = Math.random() > 0.5 ? 'UNDER 8' : 'OVER 1';
             const recoveryDigit = strategy === 'UNDER 8' ? 6 : 3;
             
-            // Avoiding 0 and 1 for triggers
             const possibleTriggers = [2, 3, 4, 5, 7];
             const triggerDigit = possibleTriggers[Math.floor(Math.random() * possibleTriggers.length)];
 
@@ -207,6 +233,69 @@ export function GlobalMarketScanner({ onMarketSelect, lastDigitTicks = [], price
                                             </div>
                                         </Card>
                                     </div>
+
+                                    {/* Entry Detector Module */}
+                                    <Card className={cn(
+                                        "p-8 sm:p-12 rounded-[2.5rem] sm:rounded-[4rem] border-2 transition-all duration-500 relative overflow-hidden",
+                                        entryDetected 
+                                            ? "bg-emerald-500/10 border-emerald-500 shadow-[0_0_60px_rgba(16,185,129,0.3)]" 
+                                            : "bg-black/60 border-white/5"
+                                    )}>
+                                        <div className="flex flex-col md:flex-row items-center justify-between gap-8">
+                                            <div className="flex items-center gap-6 text-center md:text-left">
+                                                <div className={cn(
+                                                    "w-16 h-16 rounded-2xl flex items-center justify-center transition-all duration-500",
+                                                    entryDetected ? "bg-emerald-500 shadow-[0_0_20px_#10b981]" : "bg-white/5"
+                                                )}>
+                                                    {entryDetected ? <Flame className="h-8 w-8 text-white animate-bounce" /> : <Activity className="h-8 w-8 text-muted-foreground/40" />}
+                                                </div>
+                                                <div>
+                                                    <h3 className={cn(
+                                                        "text-xl sm:text-3xl font-black uppercase tracking-tighter leading-none",
+                                                        entryDetected ? "text-white" : "text-muted-foreground/40"
+                                                    )}>
+                                                        {entryDetected ? "TACTICAL ENTRY DETECTED" : "AWAITING ENTRY SYNC"}
+                                                    </h3>
+                                                    <p className="text-[10px] font-black uppercase tracking-[0.4em] text-primary/60 mt-2">
+                                                        {entryDetected ? "FLAWLESS WINDOW ENGAGED" : "SCANNING TICK FLUX FOR TRIGGER digit " + result.triggerDigit}
+                                                    </p>
+                                                </div>
+                                            </div>
+
+                                            <div className="flex items-center gap-12">
+                                                {entryPrice && (
+                                                    <div className="text-center animate-in zoom-in duration-500">
+                                                        <p className="text-[8px] font-black text-emerald-400 uppercase tracking-widest mb-1">ENTRY POINT</p>
+                                                        <p className="text-2xl sm:text-4xl font-black text-white tabular-nums leading-none">{entryPrice.toFixed(decimalPlaces)}</p>
+                                                    </div>
+                                                )}
+                                                <div className="w-px h-16 bg-white/10" />
+                                                <div className="text-center">
+                                                    <p className="text-[8px] font-black text-muted-foreground uppercase tracking-widest mb-1">STABILITY LOCK</p>
+                                                    <div className="flex items-center gap-3">
+                                                        <span className={cn(
+                                                            "text-3xl sm:text-6xl font-black tabular-nums tracking-tighter leading-none",
+                                                            entryDetected ? "text-emerald-400" : "text-white/20"
+                                                        )}>
+                                                            {stabilityTicks > 0 ? stabilityTicks : 15}
+                                                        </span>
+                                                        <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">TICKS</p>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        
+                                        {entryDetected && (
+                                            <div className="mt-8 h-2 w-full bg-black/40 rounded-full overflow-hidden">
+                                                <motion.div 
+                                                    className="h-full bg-emerald-500"
+                                                    initial={{ width: "100%" }}
+                                                    animate={{ width: `${(stabilityTicks / 15) * 100}%` }}
+                                                    transition={{ duration: 0.5 }}
+                                                />
+                                            </div>
+                                        )}
+                                    </Card>
 
                                     <div className="p-6 sm:p-10 bg-black/50 rounded-[2.5rem] border border-white/5 space-y-4 shadow-inner">
                                         <div className="flex items-center justify-between border-b border-white/5 pb-4">
