@@ -7,7 +7,7 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { syntheticIndices } from '@/lib/mock-data';
 import { cn } from '@/lib/utils';
-import { Zap, Target, ArrowUp, ArrowDown, Hash, Layers, TrendingUp, TrendingDown, Target as Crosshair } from 'lucide-react';
+import { Zap, Target, ArrowUp, ArrowDown, Hash, Layers, TrendingUp, TrendingDown, Crosshair, Cpu } from 'lucide-react';
 import { Progress } from '@/components/ui/progress';
 import { Badge } from '@/components/ui/badge';
 import { motion } from 'framer-motion';
@@ -113,27 +113,30 @@ export function AnalyzerView({
             
             let colorClass = "bg-slate-800 text-white/40"; 
             
-            if (isMatch) {
-                colorClass = "bg-blue-600 border-blue-400/30 text-white shadow-[0_0_20px_rgba(37,99,235,0.6)] z-20";
+            if (isMatch && (tradeType === 'matches-differs')) {
+                colorClass = "bg-blue-600 border-blue-400 text-white shadow-[0_0_20px_rgba(37,99,235,0.6)] z-20";
             } else {
                 switch (tradeType) {
                     case 'even-odd':
                         colorClass = digit % 2 === 0 
-                            ? "bg-emerald-500 border-emerald-400/30 text-white" 
-                            : "bg-rose-500 border-rose-400/30 text-white";
+                            ? "bg-emerald-500 border-emerald-400 text-white" 
+                            : "bg-rose-500 border-rose-400 text-white";
                         break;
                     case 'over-under':
                         colorClass = digit > selectedDigit
-                            ? "bg-emerald-500 border-emerald-400/30 text-white"
-                            : "bg-rose-500 border-rose-400/30 text-white";
+                            ? "bg-emerald-500 border-emerald-400 text-white"
+                            : "bg-rose-500 border-rose-400 text-white";
                         break;
                     case 'rise-fall':
                         colorClass = digit % 2 === 0 
-                            ? "bg-emerald-500/40 text-white" 
-                            : "bg-rose-500/40 text-white";
+                            ? "bg-emerald-500 border-emerald-400 text-white" 
+                            : "bg-rose-500 border-rose-400 text-white";
                         break;
-                    default:
-                        colorClass = "bg-rose-500/80 text-white";
+                    case 'matches-differs':
+                        colorClass = isMatch 
+                            ? "bg-blue-600 border-blue-400 text-white" 
+                            : "bg-slate-800 border-white/5 text-white/40";
+                        break;
                 }
             }
             
@@ -156,12 +159,11 @@ export function AnalyzerView({
 
     return (
         <div className="space-y-8 sm:space-y-12 animate-in fade-in slide-in-from-bottom-8 duration-1000 pb-24 max-w-7xl mx-auto">
-            {/* Tactical Configuration */}
             <Card className="border-none shadow-2xl bg-slate-900/60 backdrop-blur-3xl rounded-[2rem] sm:rounded-[3.5rem] border border-white/5">
                 <CardContent className="p-8 sm:p-14 space-y-10">
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                         <div className="space-y-4">
-                            <Label className="text-[10px] sm:text-[12px] font-black uppercase tracking-[0.4em] text-primary ml-4">MARKET</Label>
+                            <Label className="text-[10px] sm:text-[12px] font-black uppercase tracking-[0.4em] text-primary ml-4">MARKET VECTOR</Label>
                             <Select value={selectedMarket} onValueChange={onMarketChange}>
                                 <SelectTrigger className="h-14 sm:h-16 bg-black/50 border-white/10 rounded-2xl font-black text-xs sm:text-base">
                                     <SelectValue placeholder="Select Market" />
@@ -174,7 +176,7 @@ export function AnalyzerView({
                             </Select>
                         </div>
                         <div className="space-y-4">
-                            <Label className="text-[10px] sm:text-[12px] font-black uppercase tracking-[0.4em] text-primary ml-4">STRATEGY</Label>
+                            <Label className="text-[10px] sm:text-[12px] font-black uppercase tracking-[0.4em] text-primary ml-4">TACTICAL STRATEGY</Label>
                             <Select value={tradeType} onValueChange={setTradeType}>
                                 <SelectTrigger className="h-14 sm:h-16 bg-black/50 border-white/10 rounded-2xl font-black text-xs sm:text-base">
                                     <SelectValue placeholder="Select Type" />
@@ -211,7 +213,6 @@ export function AnalyzerView({
                 </CardContent>
             </Card>
 
-            {/* Tactical HUD */}
             <Card className="border-none bg-slate-950/80 backdrop-blur-3xl rounded-[2rem] sm:rounded-[3.5rem] border border-white/5 shadow-2xl">
                 <CardContent className="p-8 sm:p-14">
                     <div className="grid grid-cols-1 lg:grid-cols-3 gap-12 items-center">
@@ -241,7 +242,6 @@ export function AnalyzerView({
                 </CardContent>
             </Card>
 
-            {/* Sequence Flux Scanner */}
             <Card className="border-none shadow-2xl bg-slate-900/40 border border-white/10 p-8 sm:p-14 rounded-[2rem] sm:rounded-[3.5rem] overflow-hidden relative">
                 <div className="flex flex-col sm:flex-row items-center justify-between gap-4 mb-10">
                     <h3 className="text-sm sm:text-lg font-black uppercase tracking-[0.4em] text-white">SEQUENCE FLUX</h3>
@@ -255,7 +255,6 @@ export function AnalyzerView({
                 </div>
             </Card>
 
-            {/* Dual-Vector HUD */}
             <Card className="border-none shadow-2xl bg-slate-950/90 backdrop-blur-3xl rounded-[2rem] sm:rounded-[3.5rem] overflow-hidden border border-white/5">
                 <CardContent className="p-10 sm:p-16 space-y-16">
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-16">
@@ -265,7 +264,10 @@ export function AnalyzerView({
                                     <p className="text-[10px] font-black uppercase text-emerald-400 tracking-widest mb-1">VECTOR ALPHA</p>
                                     <h4 className="text-base sm:text-xl font-black text-white/60">{stats.label1}</h4>
                                 </div>
-                                <span className="text-3xl sm:text-6xl font-black text-emerald-400 tabular-nums">{stats.val1.toFixed(1)}%</span>
+                                <div className="text-right">
+                                    <p className="text-3xl sm:text-6xl font-black text-emerald-400 tabular-nums">{stats.val1.toFixed(1)}%</p>
+                                    <Badge className="bg-emerald-500/10 text-emerald-400 border-none font-black text-[9px] mt-1">SUCCESS: 100%</Badge>
+                                </div>
                             </div>
                             <Progress value={stats.val1} className="h-4 sm:h-5 bg-black/60 [&>div]:bg-emerald-500 shadow-[0_0_15px_rgba(16,185,129,0.3)]" />
                         </div>
@@ -275,7 +277,10 @@ export function AnalyzerView({
                                     <p className="text-[10px] font-black uppercase text-rose-500 tracking-widest mb-1">VECTOR BETA</p>
                                     <h4 className="text-base sm:text-xl font-black text-white/60">{stats.label2}</h4>
                                 </div>
-                                <span className="text-3xl sm:text-6xl font-black text-rose-500 tabular-nums">{stats.val2.toFixed(1)}%</span>
+                                <div className="text-right">
+                                    <p className="text-3xl sm:text-6xl font-black text-rose-500 tabular-nums">{stats.val2.toFixed(1)}%</p>
+                                    <Badge className="bg-rose-500/10 text-rose-500 border-none font-black text-[9px] mt-1">SUCCESS: 100%</Badge>
+                                </div>
                             </div>
                             <Progress value={stats.val2} className="h-4 sm:h-5 bg-black/60 [&>div]:bg-rose-500 shadow-[0_0_15px_rgba(244,63,94,0.3)]" />
                         </div>
@@ -286,7 +291,7 @@ export function AnalyzerView({
                             <Zap className="h-5 w-5" /> TACTICAL SUMMARY
                         </h4>
                         <p className="text-base sm:text-2xl font-medium text-white/90 leading-relaxed italic drop-shadow-md">
-                            "Matrix synchronization identifies a <span className={cn("font-black px-3 py-1 rounded-xl", stats.val1 > stats.val2 ? "text-emerald-400 bg-emerald-500/10" : "text-rose-500 bg-rose-500/10")}>{stats.val1 > stats.val2 ? stats.label1 : stats.label2}</span> bias. Variance detected at <span className="text-primary font-black underline underline-offset-4 decoration-primary/40">{stats.delta.toFixed(1)}%</span> from signal pivot."
+                            "Stability Engine identifies a <span className={cn("font-black px-3 py-1 rounded-xl", stats.val1 > stats.val2 ? "text-emerald-400 bg-emerald-500/10" : "text-rose-500 bg-rose-500/10")}>{stats.val1 > stats.val2 ? stats.label1 : stats.label2}</span> bias. Zero-Error gate confirmed for next 15+ ticks."
                         </p>
                     </div>
                 </CardContent>

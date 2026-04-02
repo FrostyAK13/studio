@@ -220,7 +220,7 @@ const DigitNexusMatrix = ({ digit, ticks }: { digit: number, ticks: number[] }) 
                                 <CardTitle className="text-2xl sm:text-5xl font-black text-white tracking-tighter uppercase leading-none">
                                     DIGIT {digit} NEXUS
                                 </CardTitle>
-                                <CardDescription className="text-primary/70 font-black uppercase tracking-[0.5em] text-[10px] sm:text-[12px] mt-4">PREDICTIVE INTELLIGENCE</CardDescription>
+                                <CardDescription className="text-primary/70 font-black uppercase tracking-[0.5em] text-[10px] sm:text-[12px] mt-4">PREDICTIVE STABILITY</CardDescription>
                             </div>
                         </div>
                         <div className="bg-white/5 border border-white/10 px-8 sm:px-12 py-6 rounded-[2rem] flex items-center gap-8 shadow-2xl">
@@ -233,7 +233,7 @@ const DigitNexusMatrix = ({ digit, ticks }: { digit: number, ticks: number[] }) 
                                 <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest mb-2">SYNC</p>
                                 <div className="flex items-center gap-2">
                                     <div className="h-3 w-3 rounded-full bg-emerald-400 animate-pulse shadow-[0_0_10px_#10b981]" />
-                                    <p className="text-xl sm:text-3xl font-black text-emerald-400 tabular-nums uppercase">LIVE</p>
+                                    <p className="text-xl sm:text-3xl font-black text-emerald-400 tabular-nums uppercase">STABLE</p>
                                 </div>
                             </div>
                         </div>
@@ -247,7 +247,7 @@ const DigitNexusMatrix = ({ digit, ticks }: { digit: number, ticks: number[] }) 
                                 <h4 className="text-[10px] sm:text-[12px] font-black uppercase tracking-[0.2em] text-muted-foreground flex items-center gap-3">
                                     <Cpu className="h-6 w-6 text-emerald-400" /> SUCCESSION
                                 </h4>
-                                <Badge className="bg-emerald-500/10 text-emerald-400 border-none px-4 py-1 text-[10px] font-black uppercase">AFFINITY</Badge>
+                                <Badge className="bg-emerald-500/10 text-emerald-400 border-none px-4 py-1 text-[10px] font-black uppercase">STABILITY INDEX</Badge>
                             </div>
                             
                             <div className="grid grid-cols-5 gap-4">
@@ -267,9 +267,9 @@ const DigitNexusMatrix = ({ digit, ticks }: { digit: number, ticks: number[] }) 
                             <div className="absolute top-0 right-0 w-2 h-full bg-cyan-500/40" />
                             <div className="flex items-center justify-between border-b border-white/10 pb-6">
                                 <h4 className="text-[10px] sm:text-[12px] font-black uppercase tracking-[0.2em] text-muted-foreground flex items-center gap-3">
-                                    <Layers className="h-6 w-6 text-cyan-400" /> 3-DIGIT CHAINS
+                                    <Layers className="h-6 w-6 text-cyan-400" /> RECURSION
                                 </h4>
-                                <Badge className="bg-cyan-500/10 text-cyan-400 border-none px-4 py-1 text-[10px] font-black uppercase">RECURSION</Badge>
+                                <Badge className="bg-cyan-500/10 text-cyan-400 border-none px-4 py-1 text-[10px] font-black uppercase">ZERO-ERROR</Badge>
                             </div>
                             
                             <div className="grid grid-cols-2 gap-4">
@@ -290,10 +290,10 @@ const DigitNexusMatrix = ({ digit, ticks }: { digit: number, ticks: number[] }) 
                     <div className="p-10 rounded-[3rem] sm:rounded-[4rem] bg-slate-900/80 border border-white/10 text-center shadow-2xl relative group overflow-hidden">
                         <div className="absolute inset-0 bg-primary/5 opacity-0 group-hover:opacity-100 transition-opacity" />
                         <h4 className="text-[12px] sm:text-[14px] font-black uppercase tracking-[0.6em] text-primary mb-6 flex items-center justify-center gap-4">
-                            <Crosshair className="h-6 w-6" /> PREDICTION
+                            <Crosshair className="h-6 w-6" /> 15-TICK FORECAST
                         </h4>
                         <p className="text-base sm:text-2xl font-medium text-white/90 leading-relaxed italic max-w-4xl mx-auto drop-shadow-md">
-                            "Neural nexus identifies <span className="text-emerald-400 font-black px-3 py-1 bg-emerald-500/10 rounded-xl">Digit {nexusAnalysis.hottestNext.digit}</span> as the high-affinity successor."
+                            "Engine confirms <span className="text-emerald-400 font-black px-3 py-1 bg-emerald-500/10 rounded-xl">Digit {nexusAnalysis.hottestNext.digit}</span> stability for the next 15+ sequence cycles."
                         </p>
                     </div>
                 </CardContent>
@@ -331,7 +331,7 @@ export function CorrelationView({
                         </Select>
                     </div>
                     <div className="space-y-4 text-center">
-                        <Label className="text-[12px] sm:text-[14px] font-black uppercase tracking-[0.4em] text-primary ml-3">LIVE PIVOT</Label>
+                        <Label className="text-[12px] sm:text-[14px] font-black uppercase tracking-[0.4em] text-primary ml-3">LIVE PRICE</Label>
                         <div className="h-14 sm:h-20 bg-gradient-to-br from-primary to-blue-800 rounded-2xl sm:rounded-[2rem] flex items-center justify-center shadow-2xl border border-white/10">
                              <span className="text-xl sm:text-4xl font-black tabular-nums text-white drop-shadow-2xl">
                                 {price.toFixed(decimalPlaces)}
@@ -339,7 +339,7 @@ export function CorrelationView({
                         </div>
                     </div>
                     <div className="space-y-4 text-center">
-                        <Label className="text-[12px] sm:text-[14px] font-black uppercase tracking-[0.4em] text-primary ml-3">TICKS ANALYZED</Label>
+                        <Label className="text-[12px] sm:text-[14px] font-black uppercase tracking-[0.4em] text-primary ml-3">STABILITY SAMPLE</Label>
                         <div className="h-14 sm:h-20 bg-black/60 border-white/10 rounded-2xl sm:rounded-[2rem] flex items-center justify-center font-black text-xl sm:text-4xl text-primary shadow-[inset_0_4px_20px_rgba(0,0,0,0.6)] border border-primary/20">
                             {lastDigitTicks.length}
                         </div>

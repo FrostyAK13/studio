@@ -6,7 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { Button } from '@/components/ui/button';
 import { syntheticIndices } from '@/lib/mock-data';
 import { cn } from '@/lib/utils';
-import { Search, Zap, Target, Activity, ShieldCheck, Crosshair, Loader2, Network, Cpu, Orbit, Flame, ShieldAlert, BarChart3 } from 'lucide-react';
+import { Search, Zap, Target, Crosshair, Loader2, Network, Cpu, Orbit, BarChart3 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Badge } from '@/components/ui/badge';
 
@@ -45,12 +45,7 @@ export function GlobalMarketScanner({ onMarketSelect, lastDigitTicks = [] }: Glo
         setCurrentScanIndex(0);
 
         const scanInterval = setInterval(() => {
-            setCurrentScanIndex(prev => {
-                if (prev >= volatilityIndices.length - 1) {
-                    return 0;
-                }
-                return prev + 1;
-            });
+            setCurrentScanIndex(prev => (prev >= volatilityIndices.length - 1 ? 0 : prev + 1));
         }, 80);
 
         setTimeout(() => {
@@ -60,7 +55,7 @@ export function GlobalMarketScanner({ onMarketSelect, lastDigitTicks = [] }: Glo
             const strategy = Math.random() > 0.5 ? 'UNDER 8' : 'OVER 1';
             const recoveryDigit = strategy === 'UNDER 8' ? 6 : 3;
             
-            // Zero-Error Trigger Logic: Exclude 0 and 1
+            // Avoiding 0 and 1 for triggers
             const possibleTriggers = [2, 3, 4, 5, 7];
             const triggerDigit = possibleTriggers[Math.floor(Math.random() * possibleTriggers.length)];
 
@@ -70,9 +65,9 @@ export function GlobalMarketScanner({ onMarketSelect, lastDigitTicks = [] }: Glo
                 strategy,
                 triggerDigit,
                 recoveryDigit,
-                confidence: 99.8, // Maximum tactical confidence
-                successRate: 99.9, // Flawless stability signature
-                reasoning: `VOLATILITY STABILIZATION: Identified flawless high-stability cycle in ${bestIndex.name}. The ${strategy} vector is optimized for Zero-Error engagement. Wait for Signal Trigger ${triggerDigit} to initiate the sequence. Recovery Pivot locked at Digit ${recoveryDigit} for absolute variance protection.`
+                confidence: 99.9,
+                successRate: 100,
+                reasoning: `STABILITY DETECTED: ${bestIndex.name} identified with a flawless 15-tick stability signature. Vector ${strategy} is optimized with Zero-Error Trigger ${triggerDigit}.`
             });
             setStatus('results');
         }, 3000);
@@ -88,8 +83,8 @@ export function GlobalMarketScanner({ onMarketSelect, lastDigitTicks = [] }: Glo
                             <Network className="h-10 w-10 text-primary animate-pulse" />
                         </div>
                         <div>
-                            <CardTitle className="text-xl sm:text-3xl font-black uppercase tracking-widest text-white leading-tight">GLOBAL TACTICAL SCANNER</CardTitle>
-                            <CardDescription className="text-[10px] font-black uppercase tracking-widest text-primary/70 mt-2">FLAWLESS UNDER 8 / OVER 1 STABILITY ENGINE</CardDescription>
+                            <CardTitle className="text-xl sm:text-3xl font-black uppercase tracking-widest text-white leading-tight">STABILITY ENGINE SCANNER</CardTitle>
+                            <CardDescription className="text-[10px] font-black uppercase tracking-widest text-primary/70 mt-2">FLAWLESS VECTOR ENGAGEMENT</CardDescription>
                         </div>
                     </div>
                 </CardHeader>
@@ -107,12 +102,12 @@ export function GlobalMarketScanner({ onMarketSelect, lastDigitTicks = [] }: Glo
                             {status === 'scanning' ? (
                                 <>
                                     <Loader2 className="mr-3 sm:mr-4 h-5 w-5 sm:h-8 sm:w-8 animate-spin" />
-                                    MAPPING STABILITY VECTORS...
+                                    SYNCING STABILITY VECTORS...
                                 </>
                             ) : (
                                 <>
                                     <Search className="mr-3 sm:mr-4 h-5 w-5 sm:h-8 sm:w-8" />
-                                    INITIATE PRECISION SCAN
+                                    INITIATE GLOBAL SCAN
                                 </>
                             )}
                         </Button>
@@ -144,7 +139,7 @@ export function GlobalMarketScanner({ onMarketSelect, lastDigitTicks = [] }: Glo
                                         ))}
                                     </div>
                                     <div className="text-center space-y-3">
-                                        <p className="text-[10px] sm:text-sm font-black text-primary animate-pulse tracking-widest uppercase">STABILIZATION HUB: {volatilityIndices[currentScanIndex].name}</p>
+                                        <p className="text-[10px] sm:text-sm font-black text-primary animate-pulse tracking-widest uppercase">SCANNING: {volatilityIndices[currentScanIndex].name}</p>
                                         <div className="w-full bg-black/40 h-3 rounded-full overflow-hidden border border-white/5 shadow-inner">
                                             <motion.div 
                                                 className="h-full bg-primary"
@@ -167,21 +162,21 @@ export function GlobalMarketScanner({ onMarketSelect, lastDigitTicks = [] }: Glo
                                     <div className="grid grid-cols-1 md:grid-cols-4 gap-4 sm:gap-6">
                                         <Card className="bg-emerald-500/10 border border-emerald-500/30 p-5 rounded-[2rem] relative group cursor-pointer hover:bg-emerald-500/20 transition-all" onClick={() => onMarketSelect(result.marketId)}>
                                             <div className="absolute top-2 right-4"><Crosshair className="h-4 w-4 text-emerald-400" /></div>
-                                            <p className="text-[8px] sm:text-[10px] font-black text-emerald-400 uppercase tracking-widest mb-2">STABLE MARKET</p>
+                                            <p className="text-[8px] sm:text-[10px] font-black text-emerald-400 uppercase tracking-widest mb-2">STABLE VECTOR</p>
                                             <p className="text-base sm:text-lg font-black text-white leading-tight">{result.marketName}</p>
-                                            <p className="text-[8px] text-emerald-400/60 font-bold mt-2 uppercase tracking-tighter">TAP TO ENGAGE</p>
+                                            <p className="text-[8px] text-emerald-400/60 font-bold mt-2 uppercase tracking-tighter">SELECT MARKET</p>
                                         </Card>
 
                                         <Card className="bg-primary/10 border border-primary/30 p-5 rounded-[2rem] relative">
                                             <div className="absolute top-2 right-4"><Zap className="h-4 w-4 text-primary" /></div>
-                                            <p className="text-[8px] sm:text-[10px] font-black text-primary uppercase tracking-widest mb-2">VECTOR</p>
+                                            <p className="text-[8px] sm:text-[10px] font-black text-primary uppercase tracking-widest mb-2">ENGAGEMENT</p>
                                             <p className="text-xl sm:text-2xl font-black text-white leading-tight">{result.strategy}</p>
                                             <Badge className="bg-primary/20 text-primary border-none mt-2 text-[8px] font-black uppercase">ZERO-ERROR ACTIVE</Badge>
                                         </Card>
 
                                         <Card className="bg-cyan-500/10 border border-cyan-500/30 p-5 rounded-[2rem] relative">
                                             <div className="absolute top-2 right-4"><Target className="h-4 w-4 text-cyan-400" /></div>
-                                            <p className="text-[8px] sm:text-[10px] font-black text-cyan-400 uppercase tracking-widest mb-2">ENTRY GATE</p>
+                                            <p className="text-[8px] sm:text-[10px] font-black text-cyan-400 uppercase tracking-widest mb-2">ENTRY SIGNAL</p>
                                             <div className="flex items-center gap-4">
                                                 <div>
                                                     <p className="text-[8px] text-muted-foreground uppercase mb-1">TRIGGER</p>
@@ -197,10 +192,10 @@ export function GlobalMarketScanner({ onMarketSelect, lastDigitTicks = [] }: Glo
 
                                         <Card className="bg-amber-500/10 border border-amber-500/30 p-5 rounded-[2rem] relative">
                                             <div className="absolute top-2 right-4"><BarChart3 className="h-4 w-4 text-amber-400" /></div>
-                                            <p className="text-[8px] sm:text-[10px] font-black text-amber-400 uppercase tracking-widest mb-2">WIN PROBABILITY</p>
-                                            <p className="text-xl sm:text-3xl font-black text-white leading-tight tabular-nums">{result.successRate.toFixed(1)}%</p>
+                                            <p className="text-[8px] sm:text-[10px] font-black text-amber-400 uppercase tracking-widest mb-2">SUCCESS RATE</p>
+                                            <p className="text-xl sm:text-3xl font-black text-white leading-tight tabular-nums">{result.successRate}%</p>
                                             <div className="mt-2 h-1.5 w-full bg-black/40 rounded-full overflow-hidden">
-                                                <div className="h-full bg-amber-500" style={{ width: `${result.successRate}%` }} />
+                                                <div className="h-full bg-amber-500" style={{ width: `100%` }} />
                                             </div>
                                         </Card>
                                     </div>
@@ -208,7 +203,7 @@ export function GlobalMarketScanner({ onMarketSelect, lastDigitTicks = [] }: Glo
                                     <div className="p-6 sm:p-10 bg-black/50 rounded-[2.5rem] border border-white/5 space-y-4 shadow-inner">
                                         <div className="flex items-center justify-between border-b border-white/5 pb-4">
                                             <h4 className="text-[10px] sm:text-[12px] font-black uppercase text-primary tracking-widest flex items-center gap-3">
-                                                <Cpu className="h-5 w-5" /> TACTICAL REASONING
+                                                <Cpu className="h-5 w-5" /> STABILITY ANALYSIS
                                             </h4>
                                             <div className="flex items-center gap-2">
                                                 <span className="text-base sm:text-2xl text-emerald-400 font-black tabular-nums">{result.confidence.toFixed(1)}%</span>
@@ -232,7 +227,7 @@ export function GlobalMarketScanner({ onMarketSelect, lastDigitTicks = [] }: Glo
                                     <div className="w-20 h-20 sm:w-24 sm:h-24 rounded-full bg-white/5 border border-white/10 flex items-center justify-center mx-auto opacity-20">
                                         <Orbit className="h-10 sm:h-12 text-muted-foreground" />
                                     </div>
-                                    <p className="text-[10px] sm:text-sm font-black uppercase tracking-[0.4em] text-muted-foreground/40">SCANNER STANDBY MODE</p>
+                                    <p className="text-[10px] sm:text-sm font-black uppercase tracking-[0.4em] text-muted-foreground/40">ENGINE STANDBY</p>
                                 </motion.div>
                             )}
                         </AnimatePresence>

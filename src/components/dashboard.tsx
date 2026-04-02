@@ -31,7 +31,7 @@ export function Dashboard() {
         setTickTimestamps([]);
         setConnectionStatus('connecting');
 
-        // app_id 1089 is Deriv's modern stable ID
+        // Using app_id 1089 for stable production access
         const ws = new WebSocket('wss://ws.binaryws.com/websockets/v3?app_id=1089');
 
         let pipSize: number | null = null;
@@ -52,7 +52,7 @@ export function Dashboard() {
         ws.onopen = () => {
             ws.send(JSON.stringify({ 
                 "ticks_history": selectedMarket, 
-                "count": 1000, 
+                "count": 500, // Reduced count for stability
                 "end": "latest", 
                 "style": "ticks", 
                 "subscribe": 1 
@@ -63,8 +63,7 @@ export function Dashboard() {
             const data = JSON.parse(event.data);
 
             if (data.error) {
-                // Defensive handling: only log errors, don't crash. 
-                // "Sorry, an error occurred" usually means count is too high or symbol restricted.
+                // Centralized error handling without console.error to avoid UI error screens
                 setConnectionStatus('disconnected');
                 return;
             }
