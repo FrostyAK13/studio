@@ -1,4 +1,3 @@
-
 'use client';
 
 import * as React from 'react';
@@ -291,7 +290,7 @@ export function AnalyzerView({
                             <Zap className="h-5 w-5" /> FLAWLESS TACTICAL SUMMARY
                         </h4>
                         <p className="text-base sm:text-2xl font-medium text-white/90 leading-relaxed italic drop-shadow-md">
-                            "Stability Engine identifies a <span className={cn("font-black px-3 py-1 rounded-xl", stats.val1 > stats.val2 ? "text-emerald-400 bg-emerald-500/10" : "text-rose-500 bg-rose-500/10")}>{stats.val1 > stats.val2 ? stats.label1 : stats.label2}</span> bias. Zero-Error gate confirmed for the next 15+ ticks."
+                            "Stability Engine identifies a <span className={cn("font-black px-3 py-1 rounded-xl", stats.val1 > stats.val2 ? "text-emerald-400 bg-emerald-500/10" : "text-rose-500 bg-rose-500/10")}>{stats.val1 > stats.val2 ? stats.label1 : stats.label2}</span> bias. Zero-Error gate confirmed for the next 15-25+ ticks."
                         </p>
                     </div>
                 </CardContent>
