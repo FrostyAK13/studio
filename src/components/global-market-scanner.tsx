@@ -213,12 +213,12 @@ export function GlobalMarketScanner({ onMarketSelect, lastDigitTicks = [], price
 
                                         <Card className="bg-blue-600/20 border border-blue-500/30 p-5 rounded-[2rem] relative animate-in zoom-in-95 duration-700">
                                             <div className="absolute top-2 right-4"><Wallet className="h-4 w-4 text-blue-400" /></div>
-                                            <p className="text-[8px] sm:text-[10px] font-black text-blue-400 uppercase tracking-widest mb-2">{entryDetected ? 'ENTRY PRICE' : 'LIVE PRICE'}</p>
+                                            <p className="text-[8px] sm:text-[10px] font-black text-blue-400 uppercase tracking-widest mb-2">LIVE MARKET PIVOT</p>
                                             <p className="text-xl sm:text-2xl font-black text-white leading-tight tabular-nums">
-                                                {entryPrice ? entryPrice.toFixed(decimalPlaces) : price.toFixed(decimalPlaces)}
+                                                {price.toFixed(decimalPlaces)}
                                             </p>
-                                            <Badge className={cn("border-none mt-2 text-[8px] font-black uppercase", entryDetected ? "bg-emerald-500/20 text-emerald-400" : "bg-blue-500/20 text-blue-400")}>
-                                                {entryDetected ? 'ENTRY LOCKED' : 'SIGNAL SYNCED'}
+                                            <Badge className="bg-blue-500/20 text-blue-400 border-none mt-2 text-[8px] font-black uppercase">
+                                                ACTIVE STREAM
                                             </Badge>
                                         </Card>
 
@@ -279,7 +279,7 @@ export function GlobalMarketScanner({ onMarketSelect, lastDigitTicks = [], price
                                             <div className="flex items-center gap-12">
                                                 {entryPrice && (
                                                     <div className="text-center animate-in zoom-in duration-500">
-                                                        <p className="text-[8px] font-black text-emerald-400 uppercase tracking-widest mb-1">ENTRY POINT</p>
+                                                        <p className="text-[8px] font-black text-emerald-400 uppercase tracking-widest mb-1">ENTRY PRICE</p>
                                                         <p className="text-2xl sm:text-4xl font-black text-white tabular-nums leading-none">{entryPrice.toFixed(decimalPlaces)}</p>
                                                     </div>
                                                 )}
