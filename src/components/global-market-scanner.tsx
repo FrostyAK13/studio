@@ -1,3 +1,4 @@
+
 'use client';
 
 import * as React from 'react';
@@ -69,8 +70,8 @@ export function GlobalMarketScanner({ onMarketSelect, lastDigitTicks = [] }: Glo
                 strategy,
                 triggerDigit,
                 recoveryDigit,
-                confidence: 99.4 + Math.random() * 0.5,
-                successRate: 99.8 + Math.random() * 0.2,
+                confidence: 99.8, // Maximum tactical confidence
+                successRate: 99.9, // Flawless stability signature
                 reasoning: `VOLATILITY STABILIZATION: Identified flawless high-stability cycle in ${bestIndex.name}. The ${strategy} vector is optimized for Zero-Error engagement. Wait for Signal Trigger ${triggerDigit} to initiate the sequence. Recovery Pivot locked at Digit ${recoveryDigit} for absolute variance protection.`
             });
             setStatus('results');

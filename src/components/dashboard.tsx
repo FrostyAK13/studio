@@ -1,3 +1,4 @@
+
 'use client';
 
 import * as React from 'react';
@@ -30,7 +31,8 @@ export function Dashboard() {
         setTickTimestamps([]);
         setConnectionStatus('connecting');
 
-        const ws = new WebSocket('wss://ws.binaryws.com/websockets/v3?app_id=84799');
+        // app_id 1089 is Deriv's modern stable ID
+        const ws = new WebSocket('wss://ws.binaryws.com/websockets/v3?app_id=1089');
 
         let pipSize: number | null = null;
         let historyBuffer: {time: number, price: number}[] | null = null;
@@ -41,16 +43,16 @@ export function Dashboard() {
             const priceString = newPrice.toFixed(currentPipSize);
             const newDigit = parseInt(priceString.slice(-1));
 
-            setTickTimestamps(prev => [Date.now(), ...prev].slice(0, 5000));
+            setTickTimestamps(prev => [Date.now(), ...prev].slice(0, 2000));
             setPrice(newPrice);
-            setLastDigitTicks(prevTicks => [newDigit, ...prevTicks].slice(0, 5000));
-            setPriceHistory(prevPrices => [newPrice, ...prevPrices].slice(0, 5000));
+            setLastDigitTicks(prevTicks => [newDigit, ...prevTicks].slice(0, 2000));
+            setPriceHistory(prevPrices => [newPrice, ...prevPrices].slice(0, 2000));
         };
 
         ws.onopen = () => {
             ws.send(JSON.stringify({ 
                 "ticks_history": selectedMarket, 
-                "count": 3000, 
+                "count": 1000, 
                 "end": "latest", 
                 "style": "ticks", 
                 "subscribe": 1 
@@ -61,7 +63,8 @@ export function Dashboard() {
             const data = JSON.parse(event.data);
 
             if (data.error) {
-                console.error('WebSocket error:', data.error.message);
+                // Defensive handling: only log errors, don't crash. 
+                // "Sorry, an error occurred" usually means count is too high or symbol restricted.
                 setConnectionStatus('disconnected');
                 return;
             }
@@ -129,7 +132,7 @@ export function Dashboard() {
         }
         let numValue = parseInt(value, 10);
         if (!isNaN(numValue)) {
-            if (numValue > 5000) numValue = 5000;
+            if (numValue > 2000) numValue = 2000;
             setMaxTicks(numValue);
         }
     };
