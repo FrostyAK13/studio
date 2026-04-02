@@ -43,23 +43,28 @@ export function GlobalMarketScanner({ onMarketSelect, lastDigitTicks = [], price
     const [stabilityTicks, setStabilityTicks] = React.useState(0);
     const [entryPrice, setEntryPrice] = React.useState<number | null>(null);
 
-    // Monitoring for Entry Point
+    // Monitoring for Entry Point with exact Trigger Digit sync
     React.useEffect(() => {
-        if (status !== 'results' || !result) return;
+        if (status !== 'results' || !result || entryDetected) return;
 
         const latestDigit = lastDigitTicks[0];
+        // Exact match for the identified Trigger Digit
         if (latestDigit === result.triggerDigit) {
-            if (!entryDetected) {
-                setEntryDetected(true);
-                setEntryPrice(price);
-                setStabilityTicks(15); // Start 15-tick countdown
-            }
+            setEntryDetected(true);
+            setEntryPrice(price);
+            setStabilityTicks(15);
         }
+    }, [lastDigitTicks, result, status, entryDetected, price]);
 
+    // Track stability ticks after detection
+    React.useEffect(() => {
         if (entryDetected && stabilityTicks > 0) {
-            setStabilityTicks(prev => Math.max(0, prev - 1));
+            const timer = setTimeout(() => {
+                setStabilityTicks(prev => Math.max(0, prev - 1));
+            }, 1000); // Approximate tick pace or per actual tick
+            return () => clearTimeout(timer);
         }
-    }, [lastDigitTicks, result, status, entryDetected, stabilityTicks, price]);
+    }, [entryDetected, stabilityTicks]);
 
     const startScan = () => {
         setResult(null);
@@ -80,10 +85,10 @@ export function GlobalMarketScanner({ onMarketSelect, lastDigitTicks = [], price
             const strategy = Math.random() > 0.5 ? 'UNDER 8' : 'OVER 1';
             const recoveryDigit = strategy === 'UNDER 8' ? 6 : 3;
             
-            const possibleTriggers = [2, 3, 4, 5, 7];
+            const possibleTriggers = [2, 3, 4, 5, 7, 8];
             const triggerDigit = possibleTriggers[Math.floor(Math.random() * possibleTriggers.length)];
 
-            // Auto-select market to sync price feed digits
+            // Auto-select market to sync price feed digits immediately
             onMarketSelect(bestIndex.id);
 
             setResult({
@@ -203,9 +208,13 @@ export function GlobalMarketScanner({ onMarketSelect, lastDigitTicks = [], price
 
                                         <Card className="bg-blue-600/20 border border-blue-500/30 p-5 rounded-[2rem] relative animate-in zoom-in-95 duration-700">
                                             <div className="absolute top-2 right-4"><Wallet className="h-4 w-4 text-blue-400" /></div>
-                                            <p className="text-[8px] sm:text-[10px] font-black text-blue-400 uppercase tracking-widest mb-2">LIVE ENTRY PRICE</p>
-                                            <p className="text-xl sm:text-2xl font-black text-white leading-tight tabular-nums">{price.toFixed(decimalPlaces)}</p>
-                                            <Badge className="bg-blue-500/20 text-blue-400 border-none mt-2 text-[8px] font-black uppercase">SIGNAL SYNCED</Badge>
+                                            <p className="text-[8px] sm:text-[10px] font-black text-blue-400 uppercase tracking-widest mb-2">{entryDetected ? 'ENTRY PRICE' : 'LIVE PRICE'}</p>
+                                            <p className="text-xl sm:text-2xl font-black text-white leading-tight tabular-nums">
+                                                {entryPrice ? entryPrice.toFixed(decimalPlaces) : price.toFixed(decimalPlaces)}
+                                            </p>
+                                            <Badge className={cn("border-none mt-2 text-[8px] font-black uppercase", entryDetected ? "bg-emerald-500/20 text-emerald-400" : "bg-blue-500/20 text-blue-400")}>
+                                                {entryDetected ? 'ENTRY LOCKED' : 'SIGNAL SYNCED'}
+                                            </Badge>
                                         </Card>
 
                                         <Card className="bg-cyan-500/10 border border-cyan-500/30 p-5 rounded-[2rem] relative">
@@ -257,7 +266,7 @@ export function GlobalMarketScanner({ onMarketSelect, lastDigitTicks = [], price
                                                         {entryDetected ? "TACTICAL ENTRY DETECTED" : "AWAITING ENTRY SYNC"}
                                                     </h3>
                                                     <p className="text-[10px] font-black uppercase tracking-[0.4em] text-primary/60 mt-2">
-                                                        {entryDetected ? "FLAWLESS WINDOW ENGAGED" : "SCANNING TICK FLUX FOR TRIGGER digit " + result.triggerDigit}
+                                                        {entryDetected ? "FLAWLESS WINDOW ENGAGED" : `SCANNING TICK FLUX FOR TRIGGER DIGIT ${result.triggerDigit}`}
                                                     </p>
                                                 </div>
                                             </div>
@@ -277,7 +286,7 @@ export function GlobalMarketScanner({ onMarketSelect, lastDigitTicks = [], price
                                                             "text-3xl sm:text-6xl font-black tabular-nums tracking-tighter leading-none",
                                                             entryDetected ? "text-emerald-400" : "text-white/20"
                                                         )}>
-                                                            {stabilityTicks > 0 ? stabilityTicks : 15}
+                                                            {stabilityTicks}
                                                         </span>
                                                         <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">TICKS</p>
                                                     </div>
