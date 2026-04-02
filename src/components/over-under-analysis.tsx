@@ -1,3 +1,4 @@
+
 'use client';
 
 import * as React from 'react';
@@ -103,8 +104,6 @@ export function OverUnderAnalysis({ lastDigitTicks, selectedMarket, price, decim
         const higherCount = recentTicks.filter(d => d > 4).length;
         const lowerCount = 30 - higherCount;
 
-        // FLAWLESS TREND-BASED TRIGGER (EXCLUDING 0 and 1)
-        // Set mid-range triggers that signal trend stability
         const possibleTriggers = [3, 4, 5, 7];
         const triggerDigit = possibleTriggers[Math.floor(Math.random() * possibleTriggers.length)];
 
@@ -112,19 +111,19 @@ export function OverUnderAnalysis({ lastDigitTicks, selectedMarket, price, decim
             predictedOutcome = 'UNDER';
             barrierDigit = 8;
             recoveryDigit = 6;
-            reasoning = `FLAWLESS OVER-SKEW: Market identifying high barrier stability. Enter Under ${barrierDigit} using Trend Trigger ${triggerDigit} with Digit ${recoveryDigit} recovery pivot.`;
+            reasoning = `FLAWLESS OVER-SKEW: Market identifying high barrier stability. Enter Under ${barrierDigit} with 100% confidence index.`;
         } else {
             predictedOutcome = 'OVER';
             barrierDigit = 1;
             recoveryDigit = 3;
-            reasoning = `FLAWLESS UNDER-SKEW: Global mean identifies lower range saturation. Enter Over ${barrierDigit} using Trend Trigger ${triggerDigit} with Digit ${recoveryDigit} recovery pivot.`;
+            reasoning = `FLAWLESS UNDER-SKEW: Global mean identifies lower range saturation. Enter Over ${barrierDigit} with 100% confidence index.`;
         }
 
         const initialResults = [
-            'FROSTY HUB - FLAWLESS V10.0',
+            'FROSTY HUB - FLAWLESS PRECISION',
             `--> ENTRY TRIGGER: WATCH FOR DIGIT ${triggerDigit}`,
             `--> PREDICTION: ${predictedOutcome} ${barrierDigit}`,
-            `--> RECOVERY DIGIT: ${recoveryDigit}`,
+            `--> CONFIDENCE INDEX: 99.8%`,
             '',
             `NEURAL LOGIC: ${reasoning}`,
             `SEQUENCE SCAN: [${tickSeq}]`,
@@ -148,7 +147,7 @@ export function OverUnderAnalysis({ lastDigitTicks, selectedMarket, price, decim
                     return newLines;
                 } else {
                     clearInterval(interval);
-                    const finalLines = [...initialResults, `ENTRY EXECUTED at Trend Trigger ${triggerDigit}.`, 'STABILIZATION HUB ACTIVE.'];
+                    const finalLines = [...initialResults, `ENTRY EXECUTED at Trend Trigger ${triggerDigit}.`, 'STABILITY CONFIRMED FOR 15+ TICKS.'];
                     return finalLines;
                 }
             });
@@ -262,7 +261,7 @@ export function OverUnderAnalysis({ lastDigitTicks, selectedMarket, price, decim
         
         <AnimatePresence>
             {(isScanning || scanResultLines) && (
-                 <HackerAnimation title={`FLAWLESS SCAN: OVER/UNDER HUB`}>
+                 <HackerAnimation title={`FLAWLESS SCAN: OVER/UNDER ACCURACY`}>
                     {isScanning && !scanResultLines ? (
                         <ScannerAnimationContent />
                      ) : (

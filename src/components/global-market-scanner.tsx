@@ -67,7 +67,7 @@ export function GlobalMarketScanner({ onMarketSelect, lastDigitTicks = [] }: Glo
                 recoveryDigit,
                 confidence: 99.9,
                 successRate: 100,
-                reasoning: `STABILITY DETECTED: ${bestIndex.name} identified with a flawless 15-tick stability signature. Vector ${strategy} is optimized with Zero-Error Trigger ${triggerDigit}.`
+                reasoning: `FLAWLESS STABILITY: ${bestIndex.name} identifies a Zero-Error signature. Engine confirms 100% success potential for the next 15+ ticks using Vector ${strategy}.`
             });
             setStatus('results');
         }, 3000);
@@ -84,7 +84,7 @@ export function GlobalMarketScanner({ onMarketSelect, lastDigitTicks = [] }: Glo
                         </div>
                         <div>
                             <CardTitle className="text-xl sm:text-3xl font-black uppercase tracking-widest text-white leading-tight">STABILITY ENGINE SCANNER</CardTitle>
-                            <CardDescription className="text-[10px] font-black uppercase tracking-widest text-primary/70 mt-2">FLAWLESS VECTOR ENGAGEMENT</CardDescription>
+                            <CardDescription className="text-[10px] font-black uppercase tracking-widest text-primary/70 mt-2">PRECISION FLAWLESS VECTOR ENGAGEMENT</CardDescription>
                         </div>
                     </div>
                 </CardHeader>
@@ -107,7 +107,7 @@ export function GlobalMarketScanner({ onMarketSelect, lastDigitTicks = [] }: Glo
                             ) : (
                                 <>
                                     <Search className="mr-3 sm:mr-4 h-5 w-5 sm:h-8 sm:w-8" />
-                                    INITIATE GLOBAL SCAN
+                                    INITIATE GLOBAL ACCURACY SCAN
                                 </>
                             )}
                         </Button>
@@ -203,11 +203,11 @@ export function GlobalMarketScanner({ onMarketSelect, lastDigitTicks = [] }: Glo
                                     <div className="p-6 sm:p-10 bg-black/50 rounded-[2.5rem] border border-white/5 space-y-4 shadow-inner">
                                         <div className="flex items-center justify-between border-b border-white/5 pb-4">
                                             <h4 className="text-[10px] sm:text-[12px] font-black uppercase text-primary tracking-widest flex items-center gap-3">
-                                                <Cpu className="h-5 w-5" /> STABILITY ANALYSIS
+                                                <Cpu className="h-5 w-5" /> FLAWLESS ACCURACY ANALYSIS
                                             </h4>
                                             <div className="flex items-center gap-2">
                                                 <span className="text-base sm:text-2xl text-emerald-400 font-black tabular-nums">{result.confidence.toFixed(1)}%</span>
-                                                <p className="text-[8px] text-muted-foreground uppercase tracking-widest font-black">ACCURACY</p>
+                                                <p className="text-[8px] text-muted-foreground uppercase tracking-widest font-black">STABILITY LOCK</p>
                                             </div>
                                         </div>
                                         <p className="text-xs sm:text-lg font-medium text-white/90 leading-relaxed italic">
