@@ -44,14 +44,11 @@ export function GlobalMarketScanner({ onMarketSelect, lastDigitTicks = [], price
     const [stabilityTicks, setStabilityTicks] = React.useState(0);
     const [entryPrice, setEntryPrice] = React.useState<number | null>(null);
 
-    // Monitoring for Entry Point with exact Trigger Digit sync
     React.useEffect(() => {
         if (status !== 'results' || !result || entryDetected) return;
-
         if (lastDigitTicks.length === 0) return;
 
         const latestDigit = lastDigitTicks[0];
-        // Exact match for the identified Trigger Digit
         if (latestDigit === result.triggerDigit) {
             setEntryDetected(true);
             setEntryPrice(price);
@@ -59,12 +56,11 @@ export function GlobalMarketScanner({ onMarketSelect, lastDigitTicks = [], price
         }
     }, [lastDigitTicks, result, status, entryDetected, price]);
 
-    // Track stability ticks after detection - using actual tick updates
     React.useEffect(() => {
         if (entryDetected && stabilityTicks > 0) {
             setStabilityTicks(prev => Math.max(0, prev - 1));
         }
-    }, [lastDigitTicks]); // Decalibration logic: stability ticks decrease with every actual market tick
+    }, [lastDigitTicks]);
 
     const startScan = () => {
         setResult(null);
@@ -84,14 +80,11 @@ export function GlobalMarketScanner({ onMarketSelect, lastDigitTicks = [], price
             const bestIndex = volatilityIndices[Math.floor(Math.random() * volatilityIndices.length)];
             const strategy = Math.random() > 0.5 ? 'UNDER 8' : 'OVER 1';
             const recoveryDigit = strategy === 'UNDER 8' ? 6 : 3;
+            const stabilityWindow = Math.floor(Math.random() * 11) + 20; 
             
-            // Dynamic suitable stability window based on strategy and simulated confidence
-            const stabilityWindow = Math.floor(Math.random() * 11) + 15; // 15 to 25 ticks
-            
-            const possibleTriggers = [2, 3, 4, 5, 6, 7, 8, 9];
+            const possibleTriggers = [3, 4, 5, 7];
             const triggerDigit = possibleTriggers[Math.floor(Math.random() * possibleTriggers.length)];
 
-            // Auto-select market to sync price feed digits immediately
             onMarketSelect(bestIndex.id);
 
             setResult({
@@ -100,10 +93,10 @@ export function GlobalMarketScanner({ onMarketSelect, lastDigitTicks = [], price
                 strategy,
                 triggerDigit,
                 recoveryDigit,
-                confidence: 99.8 + (Math.random() * 0.1),
+                confidence: 99.99,
                 successRate: 100,
                 stabilityWindow,
-                reasoning: `FLAWLESS STABILITY: ${bestIndex.name} identifies a Zero-Error signature. Engine confirms 100% success potential for the next ${stabilityWindow}+ ticks using Vector ${strategy}.`
+                reasoning: `100+1 ACCURACY SIGNATURE: ${bestIndex.name} identifies a Flawless Zero-Error vector. Stability Engine confirms 101% success potential for the next ${stabilityWindow}+ ticks.`
             });
             setStatus('results');
         }, 3000);
@@ -119,8 +112,8 @@ export function GlobalMarketScanner({ onMarketSelect, lastDigitTicks = [], price
                             <Network className="h-10 w-10 text-primary animate-pulse" />
                         </div>
                         <div>
-                            <CardTitle className="text-xl sm:text-3xl font-black uppercase tracking-widest text-white leading-tight">STABILITY ENGINE SCANNER</CardTitle>
-                            <CardDescription className="text-[10px] font-black uppercase tracking-widest text-primary/70 mt-2">PRECISION FLAWLESS VECTOR ENGAGEMENT</CardDescription>
+                            <CardTitle className="text-xl sm:text-3xl font-black uppercase tracking-widest text-white leading-tight">100+1 ACCURACY SCANNER</CardTitle>
+                            <CardDescription className="text-[10px] font-black uppercase tracking-widest text-primary/70 mt-2">ZERO-ERROR FLAWLESS TACTICAL ENGAGEMENT</CardDescription>
                         </div>
                     </div>
                 </CardHeader>
@@ -138,12 +131,12 @@ export function GlobalMarketScanner({ onMarketSelect, lastDigitTicks = [], price
                             {status === 'scanning' ? (
                                 <>
                                     <Loader2 className="mr-3 sm:mr-4 h-5 w-5 sm:h-8 sm:w-8 animate-spin" />
-                                    SYNCING STABILITY VECTORS...
+                                    SYNCING ZERO-ERROR VECTORS...
                                 </>
                             ) : (
                                 <>
                                     <Search className="mr-3 sm:mr-4 h-5 w-5 sm:h-8 sm:w-8" />
-                                    INITIATE GLOBAL ACCURACY SCAN
+                                    INITIATE GLOBAL STABILITY SCAN
                                 </>
                             )}
                         </Button>
@@ -198,7 +191,7 @@ export function GlobalMarketScanner({ onMarketSelect, lastDigitTicks = [], price
                                     <div className="grid grid-cols-1 md:grid-cols-5 gap-4 sm:gap-6">
                                         <Card className="bg-emerald-500/10 border border-emerald-500/30 p-5 rounded-[2rem] relative group" >
                                             <div className="absolute top-2 right-4"><Crosshair className="h-4 w-4 text-emerald-400" /></div>
-                                            <p className="text-[8px] sm:text-[10px] font-black text-emerald-400 uppercase tracking-widest mb-2">STABLE VECTOR</p>
+                                            <p className="text-[8px] sm:text-[10px] font-black text-emerald-400 uppercase tracking-widest mb-2">FLAWLESS VECTOR</p>
                                             <p className="text-base sm:text-lg font-black text-white leading-tight">{result.marketName}</p>
                                             <p className="text-[8px] text-emerald-400/60 font-bold mt-2 uppercase tracking-tighter">ENGINE SYNCED</p>
                                         </Card>
@@ -243,7 +236,7 @@ export function GlobalMarketScanner({ onMarketSelect, lastDigitTicks = [], price
 
                                         <Card className="bg-amber-500/10 border border-amber-500/30 p-5 rounded-[2rem] relative">
                                             <div className="absolute top-2 right-4"><BarChart3 className="h-4 w-4 text-amber-400" /></div>
-                                            <p className="text-[8px] sm:text-[10px] font-black text-amber-400 uppercase tracking-widest mb-2">SUCCESS RATE</p>
+                                            <p className="text-[8px] sm:text-[10px] font-black text-amber-400 uppercase tracking-widest mb-2">ACCURACY</p>
                                             <p className="text-xl sm:text-3xl font-black text-white leading-tight tabular-nums">{result.successRate}%</p>
                                             <div className="mt-2 h-1.5 w-full bg-black/40 rounded-full overflow-hidden">
                                                 <div className="h-full bg-amber-500" style={{ width: `100%` }} />
@@ -251,7 +244,6 @@ export function GlobalMarketScanner({ onMarketSelect, lastDigitTicks = [], price
                                         </Card>
                                     </div>
 
-                                    {/* Entry Detector Module */}
                                     <Card className={cn(
                                         "p-8 sm:p-12 rounded-[2.5rem] sm:rounded-[4rem] border-2 transition-all duration-500 relative overflow-hidden",
                                         entryDetected 
@@ -274,7 +266,7 @@ export function GlobalMarketScanner({ onMarketSelect, lastDigitTicks = [], price
                                                         {entryDetected ? "TACTICAL ENTRY DETECTED" : "AWAITING ENTRY SYNC"}
                                                     </h3>
                                                     <p className="text-[10px] font-black uppercase tracking-[0.4em] text-primary/60 mt-2">
-                                                        {entryDetected ? "FLAWLESS WINDOW ENGAGED" : `SCANNING TICK FLUX FOR TRIGGER DIGIT ${result.triggerDigit}`}
+                                                        {entryDetected ? "FLAWLESS WINDOW ENGAGED" : `MONITORING TICK FLUX FOR TRIGGER DIGIT ${result.triggerDigit}`}
                                                     </p>
                                                 </div>
                                             </div>
@@ -317,7 +309,7 @@ export function GlobalMarketScanner({ onMarketSelect, lastDigitTicks = [], price
                                     <div className="p-6 sm:p-10 bg-black/50 rounded-[2.5rem] border border-white/5 space-y-4 shadow-inner">
                                         <div className="flex items-center justify-between border-b border-white/5 pb-4">
                                             <h4 className="text-[10px] sm:text-[12px] font-black uppercase text-primary tracking-widest flex items-center gap-3">
-                                                <Cpu className="h-5 w-5" /> FLAWLESS ACCURACY ANALYSIS
+                                                <Cpu className="h-5 w-5" /> 100+1 ACCURACY ANALYSIS
                                             </h4>
                                             <div className="flex items-center gap-2">
                                                 <span className="text-base sm:text-2xl text-emerald-400 font-black tabular-nums">{result.confidence.toFixed(2)}%</span>

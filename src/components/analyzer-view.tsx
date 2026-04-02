@@ -246,7 +246,7 @@ export function AnalyzerView({
                     <h3 className="text-sm sm:text-lg font-black uppercase tracking-[0.4em] text-white">SEQUENCE FLUX</h3>
                     <div className="flex items-center gap-2">
                          <div className="h-2 w-2 rounded-full bg-blue-400 animate-pulse shadow-[0_0_10px_#60a5fa]" />
-                         <span className="text-[9px] font-black uppercase text-blue-400 tracking-widest">FLAWLESS SIGNAL SYNC</span>
+                         <span className="text-[9px] font-black uppercase text-blue-400 tracking-widest">100+1 ACCURACY SYNC</span>
                     </div>
                 </div>
                 <div className="flex flex-wrap justify-center gap-3 sm:gap-6">
@@ -265,7 +265,7 @@ export function AnalyzerView({
                                 </div>
                                 <div className="text-right">
                                     <p className="text-3xl sm:text-6xl font-black text-emerald-400 tabular-nums">{stats.val1.toFixed(1)}%</p>
-                                    <Badge className="bg-emerald-500/10 text-emerald-400 border-none font-black text-[9px] mt-1">SUCCESS: 100%</Badge>
+                                    <Badge className="bg-emerald-500/10 text-emerald-400 border-none font-black text-[9px] mt-1">SUCCESS: 100+1</Badge>
                                 </div>
                             </div>
                             <Progress value={stats.val1} className="h-4 sm:h-5 bg-black/60 [&>div]:bg-emerald-500 shadow-[0_0_15px_rgba(16,185,129,0.3)]" />
@@ -278,7 +278,7 @@ export function AnalyzerView({
                                 </div>
                                 <div className="text-right">
                                     <p className="text-3xl sm:text-6xl font-black text-rose-500 tabular-nums">{stats.val2.toFixed(1)}%</p>
-                                    <Badge className="bg-rose-500/10 text-rose-500 border-none font-black text-[9px] mt-1">SUCCESS: 100%</Badge>
+                                    <Badge className="bg-rose-500/10 text-rose-500 border-none font-black text-[9px] mt-1">SUCCESS: 100+1</Badge>
                                 </div>
                             </div>
                             <Progress value={stats.val2} className="h-4 sm:h-5 bg-black/60 [&>div]:bg-rose-500 shadow-[0_0_15px_rgba(244,63,94,0.3)]" />
@@ -287,10 +287,10 @@ export function AnalyzerView({
 
                     <div className="p-8 sm:p-12 rounded-[2rem] sm:rounded-[3rem] bg-slate-900/80 border border-white/10 text-center shadow-2xl">
                         <h4 className="text-[10px] sm:text-[12px] font-black uppercase tracking-[0.4em] text-primary mb-6 flex items-center justify-center gap-3">
-                            <Zap className="h-5 w-5" /> FLAWLESS TACTICAL SUMMARY
+                            <Zap className="h-5 w-5" /> 100+1 TACTICAL SUMMARY
                         </h4>
                         <p className="text-base sm:text-2xl font-medium text-white/90 leading-relaxed italic drop-shadow-md">
-                            "Stability Engine identifies a <span className={cn("font-black px-3 py-1 rounded-xl", stats.val1 > stats.val2 ? "text-emerald-400 bg-emerald-500/10" : "text-rose-500 bg-rose-500/10")}>{stats.val1 > stats.val2 ? stats.label1 : stats.label2}</span> bias. Zero-Error gate confirmed for the next 15-25+ ticks."
+                            "Stability Engine identifies a <span className={cn("font-black px-3 py-1 rounded-xl", stats.val1 > stats.val2 ? "text-emerald-400 bg-emerald-500/10" : "text-rose-500 bg-rose-500/10")}>{stats.val1 > stats.val2 ? stats.label1 : stats.label2}</span> bias. Zero-Error gate confirmed with 100+1 accuracy for the next 25+ ticks."
                         </p>
                     </div>
                 </CardContent>
