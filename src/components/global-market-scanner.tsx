@@ -58,11 +58,8 @@ export function GlobalMarketScanner({ onMarketSelect, lastDigitTicks = [], price
 
         if (entryDetected && stabilityTicks > 0) {
             setStabilityTicks(prev => Math.max(0, prev - 1));
-            if (stabilityTicks === 1) {
-                // Reset after 15 ticks or keep showing success
-            }
         }
-    }, [lastDigitTicks, result, status]);
+    }, [lastDigitTicks, result, status, entryDetected, stabilityTicks, price]);
 
     const startScan = () => {
         setResult(null);
@@ -85,6 +82,9 @@ export function GlobalMarketScanner({ onMarketSelect, lastDigitTicks = [], price
             
             const possibleTriggers = [2, 3, 4, 5, 7];
             const triggerDigit = possibleTriggers[Math.floor(Math.random() * possibleTriggers.length)];
+
+            // Auto-select market to sync price feed digits
+            onMarketSelect(bestIndex.id);
 
             setResult({
                 marketId: bestIndex.id,
@@ -187,11 +187,11 @@ export function GlobalMarketScanner({ onMarketSelect, lastDigitTicks = [], price
                                     className="w-full space-y-10"
                                 >
                                     <div className="grid grid-cols-1 md:grid-cols-5 gap-4 sm:gap-6">
-                                        <Card className="bg-emerald-500/10 border border-emerald-500/30 p-5 rounded-[2rem] relative group cursor-pointer hover:bg-emerald-500/20 transition-all" onClick={() => onMarketSelect(result.marketId)}>
+                                        <Card className="bg-emerald-500/10 border border-emerald-500/30 p-5 rounded-[2rem] relative group" >
                                             <div className="absolute top-2 right-4"><Crosshair className="h-4 w-4 text-emerald-400" /></div>
                                             <p className="text-[8px] sm:text-[10px] font-black text-emerald-400 uppercase tracking-widest mb-2">STABLE VECTOR</p>
                                             <p className="text-base sm:text-lg font-black text-white leading-tight">{result.marketName}</p>
-                                            <p className="text-[8px] text-emerald-400/60 font-bold mt-2 uppercase tracking-tighter">SELECT MARKET</p>
+                                            <p className="text-[8px] text-emerald-400/60 font-bold mt-2 uppercase tracking-tighter">ENGINE SYNCED</p>
                                         </Card>
 
                                         <Card className="bg-primary/10 border border-primary/30 p-5 rounded-[2rem] relative">
