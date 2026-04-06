@@ -168,7 +168,7 @@ export const DigitFrequencyCircles = ({
     );
 };
 
-const DigitNexusMatrix = ({ digit, ticks }: { digit: number, ticks: number[] }) => {
+export const DigitNexusMatrix = ({ digit, ticks }: { digit: number, ticks: number[] }) => {
     const nexusAnalysis = React.useMemo(() => {
         const followingDigits = Array(10).fill(0);
         const chain3Data: Record<string, number> = {};
@@ -315,7 +315,7 @@ export function CorrelationView({
             <Card className="border-none shadow-2xl bg-slate-900/60 backdrop-blur-3xl overflow-hidden relative rounded-[2rem] sm:rounded-[3.5rem] border border-white/5">
                 <CardContent className="p-4 sm:p-12 grid grid-cols-1 md:grid-cols-3 gap-8 items-center">
                     <div className="space-y-3">
-                        <Label className="text-[10px] sm:text-[12px] font-black uppercase tracking-[0.4em] text-primary ml-2">MARKET VECTOR</Label>
+                        <Label className="text-[10px] sm:text-[12px] font-black uppercase tracking-[0.4em] text-primary ml-2">MARKET VECTOR SELECT</Label>
                         <Select value={selectedMarket} onValueChange={onMarketChange}>
                             <SelectTrigger className="h-12 sm:h-16 bg-black/60 border-white/10 rounded-xl sm:rounded-[1.5rem] font-black text-xs sm:text-xl px-4 sm:px-8 shadow-[inset_0_4px_20px_rgba(0,0,0,0.6)]">
                                 <SelectValue placeholder="Select Index" />

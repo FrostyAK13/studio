@@ -10,10 +10,7 @@ import {
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { syntheticIndices } from '@/lib/mock-data';
-import { MatchesDiffersAnalysis } from './matches-differs-analysis';
-import { OverUnderAnalysis } from './over-under-analysis';
-import { EvenOddAnalysis } from './even-odd-analysis';
-import { RiseFallAnalysis } from './rise-fall-analysis';
+import { DigitFrequencyCircles, DigitNexusMatrix } from './correlation-view';
 import { Card, CardContent } from '@/components/ui/card';
 import { Activity, Zap, ShieldAlert, BarChart3, Radio } from 'lucide-react';
 import { cn } from '@/lib/utils';
@@ -42,6 +39,8 @@ export function ScannerView({
     onMarketChange,
     decimalPlaces,
 }: ScannerViewProps) {
+    const [selectedDigit, setSelectedDigit] = React.useState<number | null>(null);
+
     const globalBias = React.useMemo(() => {
         if (lastDigitTicks.length < 10) return 50;
         const over = lastDigitTicks.filter(d => d > 4).length;
@@ -121,29 +120,22 @@ export function ScannerView({
                 <div className="flex items-center gap-4 sm:gap-6 px-4 sm:px-10">
                     <div className="h-8 sm:h-12 w-1 sm:w-1.5 bg-primary rounded-full shadow-[0_0_15px_rgba(var(--primary),1)]" />
                     <div>
-                        <h2 className="text-lg sm:text-2xl font-black uppercase tracking-[0.3em] sm:tracking-[0.6em] text-white leading-tight">TECHNICAL ANALYSIS</h2>
-                        <p className="text-[8px] sm:text-[10px] font-black uppercase tracking-[0.3em] sm:tracking-[0.4em] text-primary/60 mt-1 sm:mt-2">Active Strategic Surveillance</p>
+                        <h2 className="text-lg sm:text-2xl font-black uppercase tracking-[0.3em] sm:tracking-[0.6em] text-white leading-tight">GLOBAL FREQUENCY ANALYSIS</h2>
+                        <p className="text-[8px] sm:text-[10px] font-black uppercase tracking-[0.3em] sm:tracking-[0.4em] text-primary/60 mt-1 sm:mt-2">Zero-Error Precision Surveillance</p>
                     </div>
                 </div>
 
-                <div className="grid grid-cols-1 gap-6 sm:gap-12">
-                    <div className="group transition-all hover:scale-[1.01]">
-                        <OverUnderAnalysis lastDigitTicks={lastDigitTicks} selectedMarket={selectedMarket} price={price} decimalPlaces={decimalPlaces} />
-                    </div>
-                    <div className="group transition-all hover:scale-[1.01]">
-                        <EvenOddAnalysis lastDigitTicks={lastDigitTicks} selectedMarket={selectedMarket} price={price} decimalPlaces={decimalPlaces} />
-                    </div>
-                    <div className="group transition-all hover:scale-[1.01]">
-                        <MatchesDiffersAnalysis lastDigitTicks={lastDigitTicks} selectedMarket={selectedMarket} price={price} decimalPlaces={decimalPlaces} />
-                    </div>
-                    <div className="group transition-all hover:scale-[1.01]">
-                        <RiseFallAnalysis 
-                            priceHistory={priceHistory}
-                            selectedMarket={selectedMarket}
-                            price={price}
-                            decimalPlaces={decimalPlaces}
-                        />
-                    </div>
+                <div className="grid grid-cols-1 gap-6 sm:gap-12 pb-32">
+                    <DigitFrequencyCircles 
+                        ticks={lastDigitTicks} 
+                        selectedDigit={selectedDigit}
+                        onDigitSelect={setSelectedDigit}
+                        selectedMarket={selectedMarket}
+                    />
+
+                    {selectedDigit !== null && (
+                        <DigitNexusMatrix digit={selectedDigit} ticks={lastDigitTicks} />
+                    )}
                 </div>
             </div>
         </div>
