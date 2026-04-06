@@ -10,7 +10,7 @@ import {
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { syntheticIndices } from '@/lib/mock-data';
-import { DigitFrequencyCircles, DigitNexusMatrix } from './correlation-view';
+import { DigitFrequencyCircles } from './correlation-view';
 import { Card, CardContent } from '@/components/ui/card';
 import { Activity, Zap, ShieldAlert, BarChart3, Radio } from 'lucide-react';
 import { cn } from '@/lib/utils';
@@ -132,10 +132,6 @@ export function ScannerView({
                         onDigitSelect={setSelectedDigit}
                         selectedMarket={selectedMarket}
                     />
-
-                    {selectedDigit !== null && (
-                        <DigitNexusMatrix digit={selectedDigit} ticks={lastDigitTicks} />
-                    )}
                 </div>
             </div>
         </div>
