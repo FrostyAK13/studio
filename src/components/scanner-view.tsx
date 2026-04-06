@@ -12,10 +12,11 @@ import { Label } from '@/components/ui/label';
 import { syntheticIndices } from '@/lib/mock-data';
 import { DigitFrequencyCircles } from './correlation-view';
 import { Card, CardContent } from '@/components/ui/card';
-import { Activity, Zap, ShieldAlert, BarChart3, Radio, TrendingUp, TrendingDown, Flame } from 'lucide-react';
+import { Activity, Zap, ShieldAlert, BarChart3, Radio, TrendingUp, TrendingDown, Flame, Crosshair } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Progress } from '@/components/ui/progress';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
+import { Badge } from '@/components/ui/badge';
 
 interface ScannerViewProps {
     price: number;
@@ -30,6 +31,8 @@ interface ScannerViewProps {
 }
 
 const TacticalHeatMap = ({ ticks }: { ticks: number[] }) => {
+    const latestDigit = ticks.length > 0 ? ticks[0] : null;
+
     const { highers, lowers } = React.useMemo(() => {
         const counts = Array(10).fill(0);
         ticks.forEach(d => counts[d]++);
@@ -50,15 +53,15 @@ const TacticalHeatMap = ({ ticks }: { ticks: number[] }) => {
     }, [ticks]);
 
     const GreenLevels = [
-        "bg-emerald-500 shadow-[0_0_20px_rgba(16,185,129,0.6)] text-white border-emerald-400/50",
-        "bg-emerald-500/80 shadow-[0_0_15px_rgba(16,185,129,0.4)] text-white/90 border-emerald-400/30",
+        "bg-emerald-500 shadow-[0_0_20px_rgba(16,185,129,0.4)] text-white border-emerald-400/50",
+        "bg-emerald-500/80 shadow-[0_0_15px_rgba(16,185,129,0.3)] text-white/90 border-emerald-400/30",
         "bg-emerald-500/60 shadow-[0_0_10px_rgba(16,185,129,0.2)] text-white/70 border-emerald-400/20",
         "bg-emerald-500/40 text-white/50 border-emerald-400/10"
     ];
 
     const RedLevels = [
-        "bg-rose-500 shadow-[0_0_20px_rgba(244,63,94,0.6)] text-white border-rose-400/50",
-        "bg-rose-500/80 shadow-[0_0_15px_rgba(244,63,94,0.4)] text-white/90 border-rose-400/30",
+        "bg-rose-500 shadow-[0_0_20px_rgba(244,63,94,0.4)] text-white border-rose-400/50",
+        "bg-rose-500/80 shadow-[0_0_15px_rgba(244,63,94,0.3)] text-white/90 border-rose-400/30",
         "bg-rose-500/60 shadow-[0_0_10px_rgba(244,63,94,0.2)] text-white/70 border-rose-400/20",
         "bg-rose-500/40 text-white/50 border-rose-400/10"
     ];
@@ -66,50 +69,102 @@ const TacticalHeatMap = ({ ticks }: { ticks: number[] }) => {
     return (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-8 mt-8 sm:mt-16">
             <div className="space-y-4">
-                <div className="flex items-center gap-2 mb-4 px-4">
-                    <TrendingUp className="h-5 w-5 text-emerald-400" />
-                    <h4 className="text-[10px] sm:text-[12px] font-black uppercase tracking-[0.4em] text-emerald-400">HIGHEST FREQUENCY</h4>
+                <div className="flex items-center justify-between mb-4 px-4">
+                    <div className="flex items-center gap-2">
+                        <TrendingUp className="h-5 w-5 text-emerald-400" />
+                        <h4 className="text-[10px] sm:text-[12px] font-black uppercase tracking-[0.4em] text-emerald-400">HIGHEST FREQUENCY</h4>
+                    </div>
+                    <Badge variant="outline" className="border-emerald-500/30 text-emerald-400 text-[8px] font-black uppercase px-2">VECTOR ALPHA</Badge>
                 </div>
                 <div className="grid grid-cols-4 gap-2 sm:gap-4">
-                    {highers.map((item, idx) => (
-                        <motion.div 
-                            key={item.digit}
-                            initial={{ scale: 0.9, opacity: 0 }}
-                            animate={{ scale: 1, opacity: 1 }}
-                            transition={{ delay: idx * 0.1 }}
-                            className={cn(
-                                "h-20 sm:h-32 rounded-[1.5rem] sm:rounded-[2.5rem] flex flex-col items-center justify-center border transition-all duration-500",
-                                GreenLevels[idx]
-                            )}
-                        >
-                            <span className="text-2xl sm:text-5xl font-black tabular-nums leading-none mb-1">{item.digit}</span>
-                            <span className="text-[8px] sm:text-[12px] font-black uppercase tracking-widest opacity-80">{item.percentage.toFixed(1)}%</span>
-                        </motion.div>
-                    ))}
+                    {highers.map((item, idx) => {
+                        const isLive = item.digit === latestDigit;
+                        return (
+                            <motion.div 
+                                key={item.digit}
+                                initial={{ scale: 0.9, opacity: 0 }}
+                                animate={{ scale: 1, opacity: 1 }}
+                                transition={{ delay: idx * 0.1 }}
+                                className={cn(
+                                    "h-24 sm:h-36 rounded-[1.5rem] sm:rounded-[2.5rem] flex flex-col items-center justify-center border transition-all duration-300 relative overflow-hidden",
+                                    GreenLevels[idx],
+                                    isLive ? "ring-4 ring-cyan-400 ring-offset-4 ring-offset-slate-950 z-20 shadow-[0_0_40px_rgba(34,211,238,0.6)]" : ""
+                                )}
+                            >
+                                <AnimatePresence>
+                                    {isLive && (
+                                        <motion.div 
+                                            initial={{ opacity: 0, y: 10 }}
+                                            animate={{ opacity: 1, y: 0 }}
+                                            exit={{ opacity: 0 }}
+                                            className="absolute top-2 flex items-center gap-1"
+                                        >
+                                            <div className="h-1.5 w-1.5 rounded-full bg-cyan-400 animate-ping" />
+                                            <span className="text-[8px] font-black text-cyan-400 uppercase tracking-widest">LIVE</span>
+                                        </motion.div>
+                                    )}
+                                </AnimatePresence>
+                                <span className={cn(
+                                    "text-3xl sm:text-6xl font-black tabular-nums leading-none mb-1 transition-all",
+                                    isLive ? "scale-110" : ""
+                                )}>{item.digit}</span>
+                                <span className="text-[8px] sm:text-[12px] font-black uppercase tracking-widest opacity-80">{item.percentage.toFixed(1)}%</span>
+                                {isLive && (
+                                    <div className="absolute inset-0 bg-cyan-400/10 pointer-events-none" />
+                                )}
+                            </motion.div>
+                        );
+                    })}
                 </div>
             </div>
 
             <div className="space-y-4">
-                <div className="flex items-center gap-2 mb-4 px-4">
-                    <TrendingDown className="h-5 w-5 text-rose-500" />
-                    <h4 className="text-[10px] sm:text-[12px] font-black uppercase tracking-[0.4em] text-rose-500">LOWEST FREQUENCY</h4>
+                <div className="flex items-center justify-between mb-4 px-4">
+                    <div className="flex items-center gap-2">
+                        <TrendingDown className="h-5 w-5 text-rose-500" />
+                        <h4 className="text-[10px] sm:text-[12px] font-black uppercase tracking-[0.4em] text-rose-500">LOWEST FREQUENCY</h4>
+                    </div>
+                    <Badge variant="outline" className="border-rose-500/30 text-rose-500 text-[8px] font-black uppercase px-2">VECTOR BETA</Badge>
                 </div>
                 <div className="grid grid-cols-4 gap-2 sm:gap-4">
-                    {lowers.map((item, idx) => (
-                        <motion.div 
-                            key={item.digit}
-                            initial={{ scale: 0.9, opacity: 0 }}
-                            animate={{ scale: 1, opacity: 1 }}
-                            transition={{ delay: idx * 0.1 }}
-                            className={cn(
-                                "h-20 sm:h-32 rounded-[1.5rem] sm:rounded-[2.5rem] flex flex-col items-center justify-center border transition-all duration-500",
-                                RedLevels[idx]
-                            )}
-                        >
-                            <span className="text-2xl sm:text-5xl font-black tabular-nums leading-none mb-1">{item.digit}</span>
-                            <span className="text-[8px] sm:text-[12px] font-black uppercase tracking-widest opacity-80">{item.percentage.toFixed(1)}%</span>
-                        </motion.div>
-                    ))}
+                    {lowers.map((item, idx) => {
+                        const isLive = item.digit === latestDigit;
+                        return (
+                            <motion.div 
+                                key={item.digit}
+                                initial={{ scale: 0.9, opacity: 0 }}
+                                animate={{ scale: 1, opacity: 1 }}
+                                transition={{ delay: idx * 0.1 }}
+                                className={cn(
+                                    "h-24 sm:h-36 rounded-[1.5rem] sm:rounded-[2.5rem] flex flex-col items-center justify-center border transition-all duration-300 relative overflow-hidden",
+                                    RedLevels[idx],
+                                    isLive ? "ring-4 ring-cyan-400 ring-offset-4 ring-offset-slate-950 z-20 shadow-[0_0_40px_rgba(34,211,238,0.6)]" : ""
+                                )}
+                            >
+                                <AnimatePresence>
+                                    {isLive && (
+                                        <motion.div 
+                                            initial={{ opacity: 0, y: 10 }}
+                                            animate={{ opacity: 1, y: 0 }}
+                                            exit={{ opacity: 0 }}
+                                            className="absolute top-2 flex items-center gap-1"
+                                        >
+                                            <div className="h-1.5 w-1.5 rounded-full bg-cyan-400 animate-ping" />
+                                            <span className="text-[8px] font-black text-cyan-400 uppercase tracking-widest">LIVE</span>
+                                        </motion.div>
+                                    )}
+                                </AnimatePresence>
+                                <span className={cn(
+                                    "text-3xl sm:text-6xl font-black tabular-nums leading-none mb-1 transition-all",
+                                    isLive ? "scale-110" : ""
+                                )}>{item.digit}</span>
+                                <span className="text-[8px] sm:text-[12px] font-black uppercase tracking-widest opacity-80">{item.percentage.toFixed(1)}%</span>
+                                {isLive && (
+                                    <div className="absolute inset-0 bg-cyan-400/10 pointer-events-none" />
+                                )}
+                            </motion.div>
+                        );
+                    })}
                 </div>
             </div>
         </div>
@@ -205,8 +260,8 @@ export function ScannerView({
                 <div className="flex items-center gap-4 sm:gap-6 px-4 sm:px-10">
                     <div className="h-8 sm:h-12 w-1 sm:w-1.5 bg-primary rounded-full shadow-[0_0_15px_rgba(var(--primary),1)]" />
                     <div>
-                        <h2 className="text-lg sm:text-2xl font-black uppercase tracking-[0.3em] sm:tracking-[0.6em] text-white leading-tight">GLOBAL FREQUENCY ANALYSIS</h2>
-                        <p className="text-[8px] sm:text-[10px] font-black uppercase tracking-[0.3em] text-primary/60 mt-1 sm:mt-2">Zero-Error Precision Surveillance</p>
+                        <h2 className="text-lg sm:text-2xl font-black uppercase tracking-[0.3em] sm:tracking-[0.6em] text-white leading-tight">ZERO-ERROR SURVEILLANCE</h2>
+                        <p className="text-[8px] sm:text-[10px] font-black uppercase tracking-[0.3em] text-primary/60 mt-1 sm:mt-2">Real-Time Tactical Active Cursor Engagement</p>
                     </div>
                 </div>
 
