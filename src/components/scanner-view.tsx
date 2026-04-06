@@ -12,9 +12,10 @@ import { Label } from '@/components/ui/label';
 import { syntheticIndices } from '@/lib/mock-data';
 import { DigitFrequencyCircles } from './correlation-view';
 import { Card, CardContent } from '@/components/ui/card';
-import { Activity, Zap, ShieldAlert, BarChart3, Radio } from 'lucide-react';
+import { Activity, Zap, ShieldAlert, BarChart3, Radio, TrendingUp, TrendingDown, Flame } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Progress } from '@/components/ui/progress';
+import { motion } from 'framer-motion';
 
 interface ScannerViewProps {
     price: number;
@@ -27,6 +28,93 @@ interface ScannerViewProps {
     onMarketChange: (market: string) => void;
     decimalPlaces: number;
 }
+
+const TacticalHeatMap = ({ ticks }: { ticks: number[] }) => {
+    const { highers, lowers } = React.useMemo(() => {
+        const counts = Array(10).fill(0);
+        ticks.forEach(d => counts[d]++);
+        const total = ticks.length || 1;
+        
+        const mapped = counts.map((count, index) => ({
+            digit: index,
+            count,
+            percentage: (count / total) * 100
+        }));
+
+        const sorted = [...mapped].sort((a, b) => b.percentage - a.percentage);
+        
+        return {
+            highers: sorted.slice(0, 4), // Top 4
+            lowers: [...sorted].reverse().slice(0, 4) // Bottom 4 (least frequent)
+        };
+    }, [ticks]);
+
+    const GreenLevels = [
+        "bg-emerald-500 shadow-[0_0_20px_rgba(16,185,129,0.6)] text-white border-emerald-400/50",
+        "bg-emerald-500/80 shadow-[0_0_15px_rgba(16,185,129,0.4)] text-white/90 border-emerald-400/30",
+        "bg-emerald-500/60 shadow-[0_0_10px_rgba(16,185,129,0.2)] text-white/70 border-emerald-400/20",
+        "bg-emerald-500/40 text-white/50 border-emerald-400/10"
+    ];
+
+    const RedLevels = [
+        "bg-rose-500 shadow-[0_0_20px_rgba(244,63,94,0.6)] text-white border-rose-400/50",
+        "bg-rose-500/80 shadow-[0_0_15px_rgba(244,63,94,0.4)] text-white/90 border-rose-400/30",
+        "bg-rose-500/60 shadow-[0_0_10px_rgba(244,63,94,0.2)] text-white/70 border-rose-400/20",
+        "bg-rose-500/40 text-white/50 border-rose-400/10"
+    ];
+
+    return (
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-8 mt-8 sm:mt-16">
+            <div className="space-y-4">
+                <div className="flex items-center gap-2 mb-4 px-4">
+                    <TrendingUp className="h-5 w-5 text-emerald-400" />
+                    <h4 className="text-[10px] sm:text-[12px] font-black uppercase tracking-[0.4em] text-emerald-400">HIGHEST FREQUENCY</h4>
+                </div>
+                <div className="grid grid-cols-4 gap-2 sm:gap-4">
+                    {highers.map((item, idx) => (
+                        <motion.div 
+                            key={item.digit}
+                            initial={{ scale: 0.9, opacity: 0 }}
+                            animate={{ scale: 1, opacity: 1 }}
+                            transition={{ delay: idx * 0.1 }}
+                            className={cn(
+                                "h-20 sm:h-32 rounded-[1.5rem] sm:rounded-[2.5rem] flex flex-col items-center justify-center border transition-all duration-500",
+                                GreenLevels[idx]
+                            )}
+                        >
+                            <span className="text-2xl sm:text-5xl font-black tabular-nums leading-none mb-1">{item.digit}</span>
+                            <span className="text-[8px] sm:text-[12px] font-black uppercase tracking-widest opacity-80">{item.percentage.toFixed(1)}%</span>
+                        </motion.div>
+                    ))}
+                </div>
+            </div>
+
+            <div className="space-y-4">
+                <div className="flex items-center gap-2 mb-4 px-4">
+                    <TrendingDown className="h-5 w-5 text-rose-500" />
+                    <h4 className="text-[10px] sm:text-[12px] font-black uppercase tracking-[0.4em] text-rose-500">LOWEST FREQUENCY</h4>
+                </div>
+                <div className="grid grid-cols-4 gap-2 sm:gap-4">
+                    {lowers.map((item, idx) => (
+                        <motion.div 
+                            key={item.digit}
+                            initial={{ scale: 0.9, opacity: 0 }}
+                            animate={{ scale: 1, opacity: 1 }}
+                            transition={{ delay: idx * 0.1 }}
+                            className={cn(
+                                "h-20 sm:h-32 rounded-[1.5rem] sm:rounded-[2.5rem] flex flex-col items-center justify-center border transition-all duration-500",
+                                RedLevels[idx]
+                            )}
+                        >
+                            <span className="text-2xl sm:text-5xl font-black tabular-nums leading-none mb-1">{item.digit}</span>
+                            <span className="text-[8px] sm:text-[12px] font-black uppercase tracking-widest opacity-80">{item.percentage.toFixed(1)}%</span>
+                        </motion.div>
+                    ))}
+                </div>
+            </div>
+        </div>
+    );
+};
 
 export function ScannerView({
     price,
@@ -51,18 +139,17 @@ export function ScannerView({
 
     return (
         <div className="space-y-6 sm:space-y-12 animate-in fade-in slide-in-from-bottom-8 duration-1000">
-            {/* Master Signal Hub */}
             <div className="grid grid-cols-1 xl:grid-cols-4 gap-4 sm:gap-8">
-                <Card className="xl:col-span-3 border-none shadow-[0_10px_40px_rgba(0,0,0,0.6)] sm:shadow-[0_20px_80px_rgba(0,0,0,0.6)] bg-slate-900/40 backdrop-blur-[60px] overflow-hidden relative rounded-[2rem] sm:rounded-[4rem]">
+                <Card className="xl:col-span-3 border-none shadow-[0_10px_40px_rgba(0,0,0,0.6)] bg-slate-900/40 backdrop-blur-[60px] overflow-hidden relative rounded-[2rem] sm:rounded-[4rem]">
                     <div className="absolute top-0 left-0 w-full h-[2px] bg-gradient-to-r from-transparent via-primary/50 to-transparent" />
                     <CardContent className="p-6 sm:p-14 grid grid-cols-1 md:grid-cols-3 gap-6 sm:gap-12 items-end">
                         <div className="space-y-4 sm:space-y-6">
-                            <Label className="text-[10px] sm:text-[12px] font-black uppercase tracking-[0.3em] sm:tracking-[0.5em] text-primary ml-2 sm:ml-4">MARKET VECTOR SELECT</Label>
+                            <Label className="text-[10px] sm:text-[12px] font-black uppercase tracking-[0.3em] text-primary ml-2 sm:ml-4">MARKET VECTOR SELECT</Label>
                             <Select value={selectedMarket} onValueChange={onMarketChange}>
-                                <SelectTrigger className="h-14 sm:h-20 bg-black/40 border-white/10 rounded-[1.5rem] sm:rounded-[2.5rem] font-black text-sm sm:text-xl shadow-[inset_0_2px_15px_rgba(0,0,0,0.5)] px-6 sm:px-10">
+                                <SelectTrigger className="h-14 sm:h-20 bg-black/40 border-white/10 rounded-[1.5rem] sm:rounded-[2.5rem] font-black text-sm sm:text-xl px-6 sm:px-10">
                                     <SelectValue placeholder="Select Index" />
                                 </SelectTrigger>
-                                <SelectContent side="bottom" position="popper" sideOffset={8} className="w-[var(--radix-select-trigger-width)] max-h-[300px] sm:max-h-[400px] rounded-[1.5rem] sm:rounded-[2.5rem] border-white/10 bg-slate-950 text-white z-[100] shadow-2xl">
+                                <SelectContent side="bottom" position="popper" sideOffset={8} className="w-[var(--radix-select-trigger-width)] max-h-[300px] rounded-[1.5rem] sm:rounded-[2.5rem] border-white/10 bg-slate-950 text-white z-[100] shadow-2xl">
                                     {syntheticIndices.map((index) => (
                                     <SelectItem key={index.id} value={index.id} className="focus:bg-primary/20 focus:text-white cursor-pointer py-3 sm:py-4 font-black text-xs sm:text-base">
                                         {index.name}
@@ -72,9 +159,8 @@ export function ScannerView({
                             </Select>
                         </div>
                         <div className="space-y-4 sm:space-y-6">
-                            <Label className="text-[10px] sm:text-[12px] font-black uppercase tracking-[0.3em] sm:tracking-[0.5em] text-primary ml-2 sm:ml-4">DATA HORIZON (TICKS)</Label>
+                            <Label className="text-[10px] sm:text-[12px] font-black uppercase tracking-[0.3em] text-primary ml-2 sm:ml-4">DATA HORIZON (TICKS)</Label>
                             <div className="relative group">
-                                <div className="absolute -inset-1 bg-primary/20 blur-xl opacity-0 group-hover:opacity-100 transition-opacity" />
                                 <Input
                                     type="number"
                                     min="1"
@@ -82,25 +168,24 @@ export function ScannerView({
                                     value={maxTicks === 0 ? '' : maxTicks}
                                     onChange={handleMaxTicksChange}
                                     onBlur={handleMaxTicksBlur}
-                                    className="h-14 sm:h-20 bg-black/40 border-white/10 rounded-[1.5rem] sm:rounded-[2.5rem] font-black text-xl sm:text-4xl text-primary text-center shadow-[inset_0_2px_15px_rgba(0,0,0,0.5)] relative z-10"
+                                    className="h-14 sm:h-20 bg-black/40 border-white/10 rounded-[1.5rem] sm:rounded-[2.5rem] font-black text-xl sm:text-4xl text-primary text-center relative z-10"
                                 />
                                 <div className="absolute right-4 sm:right-8 top-1/2 -translate-y-1/2 pointer-events-none opacity-20 z-20"><Activity size={24} className="sm:w-8 sm:h-8" /></div>
                             </div>
                         </div>
                         <div className="space-y-4 sm:space-y-6">
-                            <Label className="text-[10px] sm:text-[12px] font-black uppercase tracking-[0.3em] sm:tracking-[0.5em] text-primary ml-2 sm:ml-4">LIVE PIVOT PRICE</Label>
+                            <Label className="text-[10px] sm:text-[12px] font-black uppercase tracking-[0.3em] text-primary ml-2 sm:ml-4">LIVE PIVOT PRICE</Label>
                             <div className="h-14 sm:h-20 bg-gradient-to-br from-primary/80 to-blue-700 rounded-[1.5rem] sm:rounded-[2.5rem] flex items-center justify-center shadow-2xl px-6 sm:px-10 border border-white/10 relative overflow-hidden group">
-                                <div className="absolute inset-0 bg-white/10 animate-pulse opacity-0 group-hover:opacity-100" />
                                 <span className="text-xl sm:text-4xl font-black tabular-nums text-white drop-shadow-[0_0_12px_rgba(255,255,255,0.4)] relative">{price.toFixed(decimalPlaces)}</span>
                             </div>
                         </div>
                     </CardContent>
                 </Card>
 
-                <Card className="border-none shadow-[0_10px_40px_rgba(0,0,0,0.6)] sm:shadow-[0_20px_80px_rgba(0,0,0,0.6)] bg-slate-950/80 backdrop-blur-[60px] rounded-[2rem] sm:rounded-[4rem] p-6 sm:p-10 flex flex-col justify-between border-l border-white/5 relative overflow-hidden">
+                <Card className="border-none shadow-[0_10px_40px_rgba(0,0,0,0.6)] bg-slate-950/80 backdrop-blur-[60px] rounded-[2rem] sm:rounded-[4rem] p-6 sm:p-10 flex flex-col justify-between border-l border-white/5 relative overflow-hidden">
                     <div className="absolute top-0 right-0 p-4 sm:p-8 opacity-10"><Radio size={48} className="text-primary sm:w-20 sm:h-20" /></div>
                     <div>
-                        <p className="text-[8px] sm:text-[10px] font-black uppercase tracking-[0.3em] sm:tracking-[0.5em] text-primary mb-4 sm:mb-6 uppercase">GLOBAL BIAS HUD</p>
+                        <p className="text-[8px] sm:text-[10px] font-black uppercase tracking-[0.3em] text-primary mb-4 sm:mb-6 uppercase">GLOBAL BIAS HUD</p>
                         <div className="flex items-end gap-2 sm:gap-3">
                             <span className="text-4xl sm:text-6xl font-black text-white tracking-tighter tabular-nums">{globalBias.toFixed(0)}</span>
                             <span className="text-[10px] sm:text-sm font-black text-muted-foreground uppercase tracking-widest mb-1 sm:mb-2">VECTOR</span>
@@ -116,22 +201,24 @@ export function ScannerView({
                 </Card>
             </div>
 
-            <div className="space-y-6 sm:space-y-12">
+            <div className="space-y-6 sm:space-y-12 pb-32">
                 <div className="flex items-center gap-4 sm:gap-6 px-4 sm:px-10">
                     <div className="h-8 sm:h-12 w-1 sm:w-1.5 bg-primary rounded-full shadow-[0_0_15px_rgba(var(--primary),1)]" />
                     <div>
                         <h2 className="text-lg sm:text-2xl font-black uppercase tracking-[0.3em] sm:tracking-[0.6em] text-white leading-tight">GLOBAL FREQUENCY ANALYSIS</h2>
-                        <p className="text-[8px] sm:text-[10px] font-black uppercase tracking-[0.3em] sm:tracking-[0.4em] text-primary/60 mt-1 sm:mt-2">Zero-Error Precision Surveillance</p>
+                        <p className="text-[8px] sm:text-[10px] font-black uppercase tracking-[0.3em] text-primary/60 mt-1 sm:mt-2">Zero-Error Precision Surveillance</p>
                     </div>
                 </div>
 
-                <div className="grid grid-cols-1 gap-6 sm:gap-12 pb-32">
-                    <DigitFrequencyCircles 
-                        ticks={lastDigitTicks} 
-                        selectedDigit={selectedDigit}
-                        onDigitSelect={setSelectedDigit}
-                        selectedMarket={selectedMarket}
-                    />
+                <DigitFrequencyCircles 
+                    ticks={lastDigitTicks} 
+                    selectedDigit={selectedDigit}
+                    onDigitSelect={setSelectedDigit}
+                    selectedMarket={selectedMarket}
+                />
+
+                <div className="px-2 sm:px-10">
+                    <TacticalHeatMap ticks={lastDigitTicks} />
                 </div>
             </div>
         </div>
