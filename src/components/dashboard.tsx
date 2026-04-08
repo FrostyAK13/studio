@@ -15,7 +15,7 @@ import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
-import { KeyRound, ShieldCheck, Wallet, RefreshCw, LogOut } from 'lucide-react';
+import { KeyRound, ShieldCheck, Wallet, RefreshCw, LogOut, Activity } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 
 type ConnectionStatusType = 'connecting' | 'streaming' | 'disconnected' | 'authorized';
@@ -33,10 +33,13 @@ export function Dashboard() {
     // API & Auth State
     const [apiToken, setApiToken] = React.useState('');
     const [isAuthorized, setIsAuthorized] = React.useState(false);
-    const [balance, setBalance] = React.useState(10000); // Default virtual balance
+    const [balance, setBalance] = React.useState(10000);
     const [currency, setCurrency] = React.useState('USD');
     const [wsInstance, setWsInstance] = React.useState<WebSocket | null>(null);
     const { toast } = useToast();
+
+    // Trade Handling State
+    const [activeContract, setActiveContract] = React.useState<any>(null);
 
     React.useEffect(() => {
         setPrice(0);
@@ -45,7 +48,7 @@ export function Dashboard() {
         setTickTimestamps([]);
         setConnectionStatus('connecting');
 
-        // Using app_id 84799 for commission tracking and API access
+        // Core Configuration: App ID 84799 for tactical commission tracking
         const ws = new WebSocket('wss://ws.binaryws.com/websockets/v3?app_id=84799');
         setWsInstance(ws);
 
@@ -74,7 +77,6 @@ export function Dashboard() {
                 "subscribe": 1 
             }));
 
-            // Auto-authorize if token exists in session
             const savedToken = localStorage.getItem('frosty_api_token');
             if (savedToken) {
                 ws.send(JSON.stringify({ "authorize": savedToken }));
@@ -90,18 +92,15 @@ export function Dashboard() {
                     title: "DERIV API ERROR",
                     description: data.error.message
                 });
-                if (data.error.code === 'InvalidToken') {
-                    handleLogout();
-                }
                 return;
             }
 
+            // Authentication Handler
             if (data.msg_type === 'authorize') {
                 setIsAuthorized(true);
                 setConnectionStatus('authorized');
                 setCurrency(data.authorize.currency);
-                localStorage.setItem('frosty_api_token', apiToken);
-                // Subscribe to balance updates
+                localStorage.setItem('frosty_api_token', data.echo_req.authorize);
                 ws.send(JSON.stringify({ "balance": 1, "subscribe": 1 }));
                 toast({
                     title: "TACTICAL SYNC COMPLETE",
@@ -109,11 +108,13 @@ export function Dashboard() {
                 });
             }
 
+            // Balance Updates
             if (data.msg_type === 'balance') {
                 setBalance(data.balance.balance);
                 setCurrency(data.balance.currency);
             }
 
+            // Tick & History Stream
             if (data.msg_type === 'history') {
                 if (data.history && data.history.times && data.history.prices) {
                     historyBuffer = data.history.prices.map((price: number, index: number) => ({
@@ -135,7 +136,7 @@ export function Dashboard() {
             }
 
             if (data.msg_type === 'tick') {
-                if (connectionStatus !== 'authorized') setConnectionStatus('streaming');
+                if (!isAuthorized) setConnectionStatus('streaming');
                 if (data.tick && typeof data.tick.quote === 'number') {
                     if (pipSize === null) {
                         pipSize = data.tick.pip_size ?? 2;
@@ -145,16 +146,42 @@ export function Dashboard() {
                             const digits = historyBuffer.map(h => parseInt(h.price.toFixed(pipSize!).slice(-1)));
                             const prices = historyBuffer.map(h => h.price);
                             const times = historyBuffer.map(h => h.time);
-                            
                             setLastDigitTicks(digits);
                             setPriceHistory(prices);
                             setTickTimestamps(times);
                             setPrice(prices[0]);
-                            
                             historyBuffer = null;
                         }
                     }
                     prependTickToState(data.tick);
+                }
+            }
+
+            // Trade Execution Flow (Proposal -> Buy)
+            if (data.msg_type === 'proposal') {
+                if (data.proposal && data.proposal.id) {
+                    ws.send(JSON.stringify({
+                        "buy": data.proposal.id,
+                        "price": data.proposal.ask_price
+                    }));
+                }
+            }
+
+            if (data.msg_type === 'buy') {
+                if (data.buy && data.buy.contract_id) {
+                    ws.send(JSON.stringify({
+                        "proposal_open_contract": 1,
+                        "contract_id": data.buy.contract_id,
+                        "subscribe": 1
+                    }));
+                }
+            }
+
+            if (data.msg_type === 'proposal_open_contract') {
+                setActiveContract(data.proposal_open_contract);
+                if (data.proposal_open_contract.is_expired) {
+                    // Final contract outcome handled here
+                    setActiveContract(null);
                 }
             }
         };
@@ -179,10 +206,22 @@ export function Dashboard() {
         setIsAuthorized(false);
         setBalance(10000);
         setApiToken('');
-        if (wsInstance) {
-            // Reconnect to clear auth session on socket
-            window.location.reload();
-        }
+        window.location.reload();
+    };
+
+    const handleExecuteRealTrade = (params: any) => {
+        if (!wsInstance || !isAuthorized) return;
+        wsInstance.send(JSON.stringify({
+            "proposal": 1,
+            "amount": params.stake,
+            "barrier": params.barrier || "1",
+            "basis": "stake",
+            "contract_type": params.contract_type || "DIGITOVER",
+            "currency": currency,
+            "duration": 1,
+            "duration_unit": "t",
+            "symbol": selectedMarket
+        }));
     };
 
     const handleMaxTicksChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -239,7 +278,7 @@ export function Dashboard() {
                     <div className="space-y-6">
                         <div className="space-y-2">
                             <h4 className="text-xs font-black uppercase text-white tracking-widest">TACTICAL AUTHORIZATION</h4>
-                            <p className="text-[9px] font-bold text-muted-foreground uppercase leading-tight">Enter your Deriv API Token to enable real-market execution and commission tracking.</p>
+                            <p className="text-[9px] font-bold text-muted-foreground uppercase leading-tight">Enter your Deriv API Token to enable real-market execution and commission tracking via App ID 84799.</p>
                         </div>
                         {isAuthorized ? (
                             <div className="space-y-4">
@@ -333,6 +372,7 @@ export function Dashboard() {
                         balance={balance}
                         isAuthorized={isAuthorized}
                         currency={currency}
+                        onExecuteTrade={handleExecuteRealTrade}
                     />
                 </TabsContent>
 
