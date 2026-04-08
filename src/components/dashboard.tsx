@@ -15,7 +15,7 @@ import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
-import { KeyRound, ShieldCheck, Wallet, RefreshCw, LogOut, Activity } from 'lucide-react';
+import { KeyRound, ShieldCheck, Wallet, LogOut, Activity, Lock, RefreshCw } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 
 type ConnectionStatusType = 'connecting' | 'streaming' | 'disconnected' | 'authorized';
@@ -41,7 +41,7 @@ export function Dashboard() {
     // Trade Handling State
     const [activeContract, setActiveContract] = React.useState<any>(null);
 
-    // PERSISTENT WEBSOCKET INITIALIZATION
+    // PERSISTENT WEBSOCKET INITIALIZATION (ALWAYS LIVE)
     React.useEffect(() => {
         const ws = new WebSocket('wss://ws.derivws.com/websockets/v3?app_id=84799');
         setWsInstance(ws);
@@ -73,14 +73,13 @@ export function Dashboard() {
             const data = JSON.parse(event.data);
 
             if (data.error) {
-                // If authorization fails, clear it but keep socket for live data
                 if (data.msg_type === 'authorize') {
                     setIsAuthorized(false);
                     localStorage.removeItem('frosty_api_token');
                 }
                 toast({
                     variant: "destructive",
-                    title: "DERIV API ERROR",
+                    title: "TACTICAL API ERROR",
                     description: data.error.message
                 });
                 return;
@@ -181,7 +180,7 @@ export function Dashboard() {
         };
     }, []);
 
-    // Live market synchronization effect
+    // LIVE MARKET SYNCHRONIZATION (ALWAYS OPERATIONAL)
     React.useEffect(() => {
         if (!wsInstance || wsInstance.readyState !== WebSocket.OPEN) return;
         
@@ -191,10 +190,10 @@ export function Dashboard() {
         setPriceHistory([]);
         setTickTimestamps([]);
         
-        // Use forget_all to clear existing tick subscriptions on this app_id
+        // Clear existing subscriptions on this socket
         wsInstance.send(JSON.stringify({ "forget_all": "ticks" }));
         
-        // Initiate subscription for the selected market
+        // Initiate new market stream
         wsInstance.send(JSON.stringify({ 
             "ticks_history": selectedMarket, 
             "count": 500, 
@@ -285,7 +284,7 @@ export function Dashboard() {
                 <PopoverContent className="w-80 p-6 bg-slate-950 border-white/10 rounded-[2rem] shadow-2xl">
                     <div className="space-y-6">
                         <div className="space-y-2">
-                            <h4 className="text-xs font-black uppercase text-white tracking-widest">TACTICAL AUTHORIZATION</h4>
+                            <h4 className="text-xs font-black uppercase text-white tracking-widest">TACTICAL LOGIN</h4>
                             <p className="text-[9px] font-bold text-muted-foreground uppercase leading-tight">Enter your Deriv API Token to enable real-market execution via App ID 84799.</p>
                         </div>
                         {isAuthorized ? (
@@ -303,12 +302,16 @@ export function Dashboard() {
                             </div>
                         ) : (
                             <div className="space-y-4">
-                                <Input 
-                                    placeholder="Enter API Token..." 
-                                    value={apiToken}
-                                    onChange={(e) => setApiToken(e.target.value)}
-                                    className="h-12 bg-black/60 border-white/10 text-white font-bold rounded-xl focus:ring-primary/40"
-                                />
+                                <div className="relative">
+                                    <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-white/20" />
+                                    <Input 
+                                        placeholder="API Token..." 
+                                        type="password"
+                                        value={apiToken}
+                                        onChange={(e) => setApiToken(e.target.value)}
+                                        className="h-12 pl-10 bg-black/60 border-white/10 text-white font-bold rounded-xl focus:ring-primary/40"
+                                    />
+                                </div>
                                 <Button onClick={handleAuthorize} className="w-full h-12 rounded-xl font-black text-[10px] uppercase tracking-widest bg-primary hover:bg-primary/90">
                                     INITIATE SYNC
                                 </Button>

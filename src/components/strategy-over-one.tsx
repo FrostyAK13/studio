@@ -18,12 +18,8 @@ import {
     ArrowDownRight, 
     BarChart3, 
     Settings2, 
-    Lock, 
     Globe, 
     Circle,
-    CheckCircle,
-    XCircle,
-    Search,
     Loader2
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -35,7 +31,6 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { syntheticIndices } from '@/lib/mock-data';
 import { cn } from '@/lib/utils';
-import { motion, AnimatePresence } from 'framer-motion';
 
 interface StrategyOverOneProps {
     price: number;
@@ -94,12 +89,11 @@ export function StrategyOverOne({
         
         const timer = setTimeout(() => {
             if (isPendingExecution && !activeContract) {
-                console.warn("TACTICAL WATCHDOG: Execution reset due to timeout.");
                 setIsPendingExecution(false);
                 setStatusMessage('SYNC TIMEOUT. RE-ENGAGING.');
                 setTimeout(() => setIsRunning(true), 2000);
             }
-        }, 15000); // 15s watchdog for real-market latency
+        }, 10000); 
 
         return () => clearTimeout(timer);
     }, [isPendingExecution, activeContract]);
@@ -107,15 +101,15 @@ export function StrategyOverOne({
     const strategyAnalysis = React.useMemo(() => {
         if (lastDigitTicks.length < 20) return null;
 
-        // PRECISION WINDOW MAPPING (Based on user request)
-        // Alpha: Digit 0 has appeared within the last 3 to 5 ticks (indices 2 to 4)
-        const cond0 = lastDigitTicks.slice(2, 5).includes(0);
+        // PRECISE ENTRY WINDOW MAPPING
+        // Logic Alpha: Digit 0 has appeared within the last 3 to 5 ticks (indices 2 to 4)
+        const cond0 = [lastDigitTicks[2], lastDigitTicks[3], lastDigitTicks[4]].includes(0);
         
-        // Beta: Digit 1 has NOT appeared within the last 5 to 7 ticks (indices 4 to 6)
-        const cond1 = !lastDigitTicks.slice(4, 7).includes(1);
+        // Logic Beta: Digit 1 has not appeared within the last 5 to 7 ticks (indices 4 to 6)
+        const cond1 = ![lastDigitTicks[4], lastDigitTicks[5], lastDigitTicks[6]].includes(1);
         
-        // Gamma: At least one of digits 6 or 7 appeared in recent ticks (indices 0 to 2)
-        const cond67 = lastDigitTicks.slice(0, 3).some(t => t === 6 || t === 7);
+        // Logic Gamma: Digit 6 or 7 has appeared in the recent flux (indices 0 to 2)
+        const cond67 = [lastDigitTicks[0], lastDigitTicks[1], lastDigitTicks[2]].some(t => t === 6 || t === 7);
 
         // AVOIDANCE PROTOCOLS
         const slice20 = lastDigitTicks.slice(0, 20);
@@ -161,20 +155,25 @@ export function StrategyOverOne({
                 profit: prev.profit + profit
             }));
 
-            // Recovery logic: if win, reset recovery mode. if loss, enable recovery mode.
+            // Trade management: Win -> Reset. Loss -> Recovery Mode.
             if (result === 'WON') {
                 setIsRecoveryMode(false);
             } else {
-                setIsRecoveryMode(true);
+                // If it was already a recovery trade, we stop per protocol
+                if (isRecoveryMode) {
+                    setIsRecoveryMode(false);
+                } else {
+                    setIsRecoveryMode(true);
+                }
             }
             
             setIsPendingExecution(false);
-            setStatusMessage('CYCLE SETTLED. COOLDOWN...');
+            setStatusMessage('CYCLE SETTLED. STANDBY...');
             
             setTimeout(() => {
                 if (!sessionEnded) {
                     setIsRunning(true);
-                    setStatusMessage('MONITORING FLUX...');
+                    setStatusMessage('MONITORING TICKS...');
                 }
             }, 5000);
         }
@@ -196,14 +195,14 @@ export function StrategyOverOne({
             if (strategyAnalysis.avoidHighSeq) setStatusMessage('AVOIDING: HIGH SEQUENCE');
             else if (strategyAnalysis.avoidFreq1) setStatusMessage('AVOIDING: DIGIT 1 CLUSTER');
             else if (strategyAnalysis.avoidAbsent01) setStatusMessage('AVOIDING: DEAD ZONE');
-            else setStatusMessage('MONITORING TICK FLUX...');
+            else setStatusMessage('WAITING FOR ENTRY...');
         }
     }, [lastDigitTicks, isRunning, sessionEnded, sessionStats.profit, config.takeProfit, config.stopLoss, strategyAnalysis, isPendingExecution]);
 
     const handleTacticalExecution = () => {
         setIsRunning(false); 
         setIsPendingExecution(true);
-        setStatusMessage('SIGNAL ACTIVE: EXECUTING CONTRACT');
+        setStatusMessage('SIGNAL ACTIVE: EXECUTING');
 
         const currentStake = isRecoveryMode ? (config.stake * config.martingale) : config.stake;
 
@@ -221,9 +220,9 @@ export function StrategyOverOne({
                 contract_type: "DIGITOVER"
             });
         } else {
-            // SIMULATION MODE (Public feed always live)
+            // SIMULATION MODE
             setTimeout(() => {
-                const isWinner = Math.random() > 0.2; // 80% Sim Success
+                const isWinner = Math.random() > 0.2; 
                 const profit = isWinner ? currentStake * 0.25 : -currentStake;
                 const result = isWinner ? 'WON' : 'LOST';
                 
@@ -245,7 +244,10 @@ export function StrategyOverOne({
                     profit: prev.profit + profit
                 }));
 
-                setIsRecoveryMode(!isWinner);
+                if (isWinner) setIsRecoveryMode(false);
+                else if (!isRecoveryMode) setIsRecoveryMode(true);
+                else setIsRecoveryMode(false);
+
                 setIsPendingExecution(false);
                 setStatusMessage('SIM CYCLE SETTLED.');
                 setTimeout(() => setIsRunning(true), 5000);
@@ -281,7 +283,7 @@ export function StrategyOverOne({
                         </div>
                         <div>
                             <h3 className="text-xl font-black text-white uppercase tracking-widest">TACTICAL VECTOR</h3>
-                            <p className="text-[10px] font-black uppercase text-primary/60 mt-1 tracking-widest">Global Index Selection Hub</p>
+                            <p className="text-[10px] font-black uppercase text-primary/60 mt-1 tracking-widest">Always-Live Market Surveillance</p>
                         </div>
                     </div>
                     <div className="flex-1 max-w-md w-full">
@@ -307,7 +309,7 @@ export function StrategyOverOne({
                         <CardHeader className="space-y-8 pt-12 px-8">
                             <div className="text-center space-y-2">
                                 <p className="text-[10px] font-black text-primary uppercase tracking-[0.4em]">LIVE PIVOT</p>
-                                <p className="text-4xl font-black text-white tabular-nums tracking-tighter drop-shadow-[0_0_20px_rgba(255,255,255,0.2)]">{price.toFixed(decimalPlaces)}</p>
+                                <p className="text-4xl font-black text-white tabular-nums tracking-tighter">{price.toFixed(decimalPlaces)}</p>
                             </div>
 
                             <div className="text-center space-y-2">
@@ -336,7 +338,7 @@ export function StrategyOverOne({
                             </Button>
 
                             <div className="p-8 bg-slate-900/60 rounded-[2rem] border border-white/10 text-center relative overflow-hidden shadow-2xl">
-                                <p className="text-[8px] font-black text-muted-foreground uppercase mb-2 tracking-widest opacity-60">NET SESSION PROFIT</p>
+                                <p className="text-[8px] font-black text-muted-foreground uppercase mb-2 tracking-widest opacity-60">SESSION ROI</p>
                                 <p className={cn("text-4xl font-black tabular-nums tracking-tighter", sessionStats.profit >= 0 ? "text-emerald-400" : "text-rose-500")}>
                                     {sessionStats.profit >= 0 ? '+' : ''}{sessionStats.profit.toFixed(2)}
                                 </p>
@@ -365,7 +367,7 @@ export function StrategyOverOne({
                         </CardContent>
                     </Card>
 
-                    <Card className="border-2 border-primary/20 shadow-[0_0_30px_rgba(var(--primary),0.1)] bg-slate-950/80 backdrop-blur-xl rounded-[2.5rem] p-10 space-y-8 relative overflow-hidden group">
+                    <Card className="border-2 border-primary/20 shadow-[0_0_30px_rgba(var(--primary),0.1)] bg-slate-950/80 backdrop-blur-xl rounded-[2.5rem] p-10 space-y-8 relative overflow-hidden">
                         <div className="flex items-center justify-between border-b border-white/5 pb-4">
                             <h3 className="text-[11px] font-black uppercase text-primary tracking-[0.3em] flex items-center gap-3">
                                 <Settings2 className="h-5 w-5" /> TACTICAL CONFIG
@@ -501,9 +503,9 @@ export function StrategyOverOne({
                                     </p>
                                 </div>
                                 <div className="p-10 rounded-[3rem] bg-black/40 border border-white/5 text-center shadow-2xl">
-                                    <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest mb-4 opacity-60">SESSION ROI</p>
-                                    <p className={cn("text-4xl font-black tabular-nums tracking-tighter", sessionStats.profit >= 0 ? "text-emerald-400" : "text-rose-500")}>
-                                        {((sessionStats.profit / (config.stake || 1)) * 100).toFixed(1)}%
+                                    <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest mb-4 opacity-60">ACTIVE MODE</p>
+                                    <p className={cn("text-2xl font-black uppercase tracking-widest", isRecoveryMode ? "text-amber-400" : "text-emerald-400")}>
+                                        {isRecoveryMode ? 'RECOVERY' : 'NORMAL'}
                                     </p>
                                 </div>
                                 <div className="p-10 rounded-[3rem] bg-emerald-500/10 border border-emerald-500/20 text-center shadow-2xl col-span-1 lg:col-span-2">
@@ -543,7 +545,7 @@ export function StrategyOverOne({
                                     {trades.length === 0 ? (
                                         <div className="h-64 flex flex-col items-center justify-center opacity-20 space-y-8 border-2 border-dashed border-white/5 rounded-[3rem]">
                                             <RotateCcw className="h-16 w-16 animate-spin-slow" />
-                                            <p className="text-xs font-black uppercase tracking-[0.5em]">Awaiting Zero-Error Setup...</p>
+                                            <p className="text-xs font-black uppercase tracking-[0.5em]">Awaiting Strategic Handshake...</p>
                                         </div>
                                     ) : (
                                         trades.map((trade) => (
@@ -561,7 +563,7 @@ export function StrategyOverOne({
                                                     <div>
                                                         <div className="flex items-center gap-4">
                                                             <p className="text-base sm:text-lg font-black text-white">{trade.type}</p>
-                                                            <Badge variant="outline" className="border-white/10 text-[10px] font-black text-muted-foreground px-3">${trade.stake}</Badge>
+                                                            <Badge variant="outline" className="border-white/10 text-[10px] font-black text-muted-foreground px-3">${trade.stake.toFixed(2)}</Badge>
                                                             {trade.isRecovery && <Badge className="bg-amber-500/10 text-amber-400 border-none text-[8px] font-black uppercase px-3">RECOVERY</Badge>}
                                                         </div>
                                                         <p className="text-[10px] font-black text-muted-foreground uppercase mt-2 opacity-60 tracking-widest">{trade.time} • ID: {trade.id}</p>
