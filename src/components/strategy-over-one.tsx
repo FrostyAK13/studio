@@ -82,6 +82,9 @@ export function StrategyOverOne({
     const [sessionStats, setSessionStats] = React.useState({ wins: 0, losses: 0, profit: 0 });
     const [statusMessage, setStatusMessage] = React.useState('ENGINE STANDBY');
     const [isPendingExecution, setIsPendingExecution] = React.useState(false);
+    
+    // Guard to prevent duplicate processing of the same contract ID
+    const lastProcessedId = React.useRef<string | null>(null);
 
     // Watchdog to prevent execution deadlock
     React.useEffect(() => {
@@ -91,12 +94,14 @@ export function StrategyOverOne({
             if (isPendingExecution && !activeContract) {
                 setIsPendingExecution(false);
                 setStatusMessage('SYNC TIMEOUT. RE-ENGAGING.');
-                setTimeout(() => setIsRunning(true), 2000);
+                setTimeout(() => {
+                    if (!sessionEnded) setIsRunning(true);
+                }, 2000);
             }
-        }, 10000); 
+        }, 15000); 
 
         return () => clearTimeout(timer);
-    }, [isPendingExecution, activeContract]);
+    }, [isPendingExecution, activeContract, sessionEnded]);
 
     const strategyAnalysis = React.useMemo(() => {
         if (lastDigitTicks.length < 20) return null;
@@ -133,12 +138,17 @@ export function StrategyOverOne({
     React.useEffect(() => {
         if (!activeContract || !isPendingExecution) return;
 
-        if (activeContract.status === 'won' || activeContract.status === 'lost') {
+        const contractId = activeContract.contract_id.toString();
+        
+        // Only process if this is a final state and we haven't processed it yet
+        if ((activeContract.status === 'won' || activeContract.status === 'lost') && contractId !== lastProcessedId.current) {
+            lastProcessedId.current = contractId;
+            
             const result = activeContract.status.toUpperCase() as 'WON' | 'LOST';
             const profit = parseFloat(activeContract.profit);
             
             const newTrade: TradeLog = {
-                id: activeContract.contract_id.toString(),
+                id: contractId,
                 time: new Date().toLocaleTimeString(),
                 type: 'OVER 1',
                 trigger: lastDigitTicks.slice(0, 3).join(','),
@@ -228,6 +238,7 @@ export function StrategyOverOne({
         setSessionEnded(false);
         setIsPendingExecution(false);
         setStatusMessage('ENGINE STANDBY');
+        lastProcessedId.current = null;
     };
 
     const updateConfig = (field: keyof typeof config, value: string) => {
@@ -253,7 +264,7 @@ export function StrategyOverOne({
                                 The Over 1 strategy hub requires a secure API handshake to initiate Zero-Error market surveillance and real-time execution.
                             </p>
                         </div>
-                        <div className="p-6 bg-black/40 rounded-2xl border border-white/5 w-full max-w-sm">
+                        <div className="p-6 bg-black/40 rounded-2xl border border-white/5 w-full max-sm:max-w-sm">
                             <p className="text-[10px] font-black text-primary uppercase tracking-[0.4em] mb-2">REQUIRED PROTOCOL</p>
                             <p className="text-white font-bold text-xs uppercase">DERIV API TOKEN AUTHORIZATION</p>
                         </div>
