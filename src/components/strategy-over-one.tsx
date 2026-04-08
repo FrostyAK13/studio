@@ -27,7 +27,8 @@ import {
     Trash2,
     Crosshair,
     Network,
-    Orbit
+    Orbit,
+    TrendingUp
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
@@ -81,9 +82,9 @@ export function StrategyOverOne({
     executionStatus
 }: StrategyOverOneProps) {
     const [config, setConfig] = React.useState({
-        stake: 10,
-        stopLoss: 50,
-        takeProfit: 100,
+        stake: 2,
+        stopLoss: 10,
+        takeProfit: 5,
         martingale: 2.5
     });
 
@@ -397,7 +398,7 @@ export function StrategyOverOne({
                                 <p className="text-4xl font-black text-white tabular-nums tracking-tighter drop-shadow-md">{price.toFixed(decimalPlaces)}</p>
                             </div>
 
-                            <div className="grid grid-cols-1 gap-8">
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                                 <div className="space-y-4">
                                     <Label className="text-[10px] font-black uppercase text-white tracking-[0.2em] flex items-center gap-3">
                                         <DollarSign className="h-5 w-5 text-primary" /> INITIAL STAKE
@@ -419,6 +420,30 @@ export function StrategyOverOne({
                                         step="0.1"
                                         value={config.martingale} 
                                         onChange={(e) => updateConfig('martingale', e.target.value)}
+                                        disabled={isRunning || isPendingExecution}
+                                        className="h-16 bg-black/60 border-white/10 text-white text-2xl font-black rounded-2xl text-center focus:ring-2 focus:ring-primary/40 shadow-inner"
+                                    />
+                                </div>
+                                <div className="space-y-4">
+                                    <Label className="text-[10px] font-black uppercase text-white tracking-[0.2em] flex items-center gap-3">
+                                        <Target className="h-5 w-5 text-emerald-400" /> TAKE PROFIT
+                                    </Label>
+                                    <Input 
+                                        type="number" 
+                                        value={config.takeProfit} 
+                                        onChange={(e) => updateConfig('takeProfit', e.target.value)}
+                                        disabled={isRunning || isPendingExecution}
+                                        className="h-16 bg-black/60 border-white/10 text-white text-2xl font-black rounded-2xl text-center focus:ring-2 focus:ring-primary/40 shadow-inner"
+                                    />
+                                </div>
+                                <div className="space-y-4">
+                                    <Label className="text-[10px] font-black uppercase text-white tracking-[0.2em] flex items-center gap-3">
+                                        <ShieldAlert className="h-5 w-5 text-rose-500" /> STOP LOSS
+                                    </Label>
+                                    <Input 
+                                        type="number" 
+                                        value={config.stopLoss} 
+                                        onChange={(e) => updateConfig('stopLoss', e.target.value)}
                                         disabled={isRunning || isPendingExecution}
                                         className="h-16 bg-black/60 border-white/10 text-white text-2xl font-black rounded-2xl text-center focus:ring-2 focus:ring-primary/40 shadow-inner"
                                     />
