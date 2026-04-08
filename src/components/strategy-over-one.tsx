@@ -23,7 +23,8 @@ import {
     Lock,
     KeyRound,
     Radio,
-    Flame
+    Flame,
+    Trash2
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
@@ -238,6 +239,10 @@ export function StrategyOverOne({
         setIsPendingExecution(false);
         setStatusMessage('ENGINE STANDBY');
         lastProcessedId.current = null;
+    };
+
+    const clearHistory = () => {
+        setTrades([]);
     };
 
     const updateConfig = (field: keyof typeof config, value: string) => {
@@ -576,9 +581,20 @@ export function StrategyOverOne({
 
                             <div className="space-y-8">
                                 <div className="flex items-center justify-between">
-                                    <h4 className="text-[11px] font-black uppercase text-muted-foreground tracking-[0.3em] flex items-center gap-3">
-                                        <ShieldCheck className="h-6 w-6" /> EXECUTION LOG
-                                    </h4>
+                                    <div className="flex items-center gap-6">
+                                        <h4 className="text-[11px] font-black uppercase text-muted-foreground tracking-[0.3em] flex items-center gap-3">
+                                            <ShieldCheck className="h-6 w-6" /> EXECUTION LOG
+                                        </h4>
+                                        {trades.length > 0 && (
+                                            <Button 
+                                                variant="ghost" 
+                                                onClick={clearHistory}
+                                                className="h-8 px-4 rounded-full border border-rose-500/20 bg-rose-500/5 text-rose-400 font-black text-[8px] uppercase tracking-widest hover:bg-rose-500/10 hover:text-rose-300 transition-all gap-2"
+                                            >
+                                                <Trash2 className="h-3 w-3" /> PURGE HISTORY
+                                            </Button>
+                                        )}
+                                    </div>
                                     <Badge className="bg-white/5 text-muted-foreground/60 border-none text-[8px] font-black uppercase tracking-widest px-6 py-2">
                                         {isAuthorized ? 'REAL MARKET ENGAGED' : 'SURVEILLANCE MODE'}
                                     </Badge>
@@ -595,27 +611,31 @@ export function StrategyOverOne({
                                                 key={trade.id} 
                                                 className="flex items-center justify-between p-8 bg-black/40 border border-white/5 rounded-[2.5rem] shadow-2xl hover:bg-black/60 transition-all group"
                                             >
-                                                <div className="flex items-center gap-8">
+                                                <div className="flex items-center gap-10">
                                                     <div className={cn(
-                                                        "w-16 h-16 rounded-2xl flex items-center justify-center transition-all duration-500 shadow-xl",
+                                                        "w-20 h-20 rounded-[1.5rem] flex items-center justify-center transition-all duration-500 shadow-xl",
                                                         trade.result === 'WON' ? "bg-emerald-500/10 text-emerald-400" : trade.result === 'LOST' ? "bg-rose-500/10 text-rose-400" : "bg-amber-500/10 text-amber-400"
                                                     )}>
-                                                        {trade.result === 'WON' ? <ArrowUpRight className="h-8 w-8" /> : trade.result === 'LOST' ? <ArrowDownRight className="h-8 w-8" /> : <Activity className="h-8 w-8 animate-pulse" />}
+                                                        {trade.result === 'WON' ? <ArrowUpRight className="h-10 w-10" /> : trade.result === 'LOST' ? <ArrowDownRight className="h-10 w-10" /> : <Activity className="h-10 w-10 animate-pulse" />}
                                                     </div>
-                                                    <div>
+                                                    <div className="space-y-3">
                                                         <div className="flex items-center gap-4">
-                                                            <p className="text-base sm:text-lg font-black text-white">{trade.type}</p>
-                                                            <Badge variant="outline" className="border-white/10 text-[10px] font-black text-muted-foreground px-3">${trade.stake.toFixed(2)}</Badge>
+                                                            <p className="text-lg sm:text-xl font-black text-white">{trade.type}</p>
                                                             {trade.isRecovery && <Badge className="bg-amber-500/10 text-amber-400 border-none text-[8px] font-black uppercase px-3">RECOVERY</Badge>}
                                                         </div>
-                                                        <p className="text-[10px] font-black text-muted-foreground uppercase mt-2 opacity-60 tracking-widest">{trade.time} • ID: {trade.id}</p>
+                                                        <div className="flex items-center gap-3">
+                                                            <div className="bg-primary px-4 py-1.5 rounded-lg shadow-lg">
+                                                                <p className="text-[10px] font-black text-white uppercase tracking-widest">${trade.stake.toFixed(2)} STAKE</p>
+                                                            </div>
+                                                            <p className="text-[10px] font-black text-muted-foreground uppercase opacity-60 tracking-widest">{trade.time} • ID: {trade.id}</p>
+                                                        </div>
                                                     </div>
                                                 </div>
-                                                <div className="text-right">
-                                                    <p className={cn("text-2xl sm:text-3xl font-black tabular-nums tracking-tighter", trade.profit >= 0 ? "text-emerald-400" : "text-rose-500")}>
+                                                <div className="text-right space-y-3">
+                                                    <p className={cn("text-3xl sm:text-4xl font-black tabular-nums tracking-tighter", trade.profit >= 0 ? "text-emerald-400" : "text-rose-500")}>
                                                         {trade.profit >= 0 ? '+' : ''}{trade.profit.toFixed(2)}
                                                     </p>
-                                                    <Badge className={cn("text-[10px] font-black px-4 py-1 border-none shadow-lg mt-2", trade.result === 'WON' ? "bg-emerald-500/20 text-emerald-400" : trade.result === 'LOST' ? "bg-rose-500/20 text-rose-400" : "bg-amber-500/20 text-amber-400")}>
+                                                    <Badge className={cn("text-[10px] font-black px-6 py-1.5 border-none shadow-xl", trade.result === 'WON' ? "bg-emerald-500/20 text-emerald-400" : trade.result === 'LOST' ? "bg-rose-500/20 text-rose-400" : "bg-amber-500/20 text-amber-400")}>
                                                         {trade.result}
                                                     </Badge>
                                                 </div>
