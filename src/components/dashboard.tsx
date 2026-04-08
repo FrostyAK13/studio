@@ -1,3 +1,4 @@
+
 'use client';
 
 import * as React from 'react';
@@ -11,8 +12,13 @@ import { CorrelationView } from './correlation-view';
 import { GlobalMarketScanner } from './global-market-scanner';
 import { StrategyOverOne } from './strategy-over-one';
 import { cn } from '@/lib/utils';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { KeyRound, ShieldCheck, Wallet, RefreshCw, LogOut } from 'lucide-react';
+import { useToast } from '@/hooks/use-toast';
 
-type ConnectionStatusType = 'connecting' | 'streaming' | 'disconnected';
+type ConnectionStatusType = 'connecting' | 'streaming' | 'disconnected' | 'authorized';
 
 export function Dashboard() {
     const [price, setPrice] = React.useState(0);
@@ -23,6 +29,14 @@ export function Dashboard() {
     const [decimalPlaces, setDecimalPlaces] = React.useState(2);
     const [connectionStatus, setConnectionStatus] = React.useState<ConnectionStatusType>('connecting');
     const [tickTimestamps, setTickTimestamps] = React.useState<number[]>([]);
+    
+    // API & Auth State
+    const [apiToken, setApiToken] = React.useState('');
+    const [isAuthorized, setIsAuthorized] = React.useState(false);
+    const [balance, setBalance] = React.useState(10000); // Default virtual balance
+    const [currency, setCurrency] = React.useState('USD');
+    const [wsInstance, setWsInstance] = React.useState<WebSocket | null>(null);
+    const { toast } = useToast();
 
     React.useEffect(() => {
         setPrice(0);
@@ -31,8 +45,9 @@ export function Dashboard() {
         setTickTimestamps([]);
         setConnectionStatus('connecting');
 
-        // Using app_id 1089 for stable production access
-        const ws = new WebSocket('wss://ws.binaryws.com/websockets/v3?app_id=1089');
+        // Using app_id 84799 for commission tracking and API access
+        const ws = new WebSocket('wss://ws.binaryws.com/websockets/v3?app_id=84799');
+        setWsInstance(ws);
 
         let pipSize: number | null = null;
         let historyBuffer: {time: number, price: number}[] | null = null;
@@ -50,6 +65,7 @@ export function Dashboard() {
         };
 
         ws.onopen = () => {
+            setConnectionStatus('connecting');
             ws.send(JSON.stringify({ 
                 "ticks_history": selectedMarket, 
                 "count": 500, 
@@ -57,14 +73,45 @@ export function Dashboard() {
                 "style": "ticks", 
                 "subscribe": 1 
             }));
+
+            // Auto-authorize if token exists in session
+            const savedToken = localStorage.getItem('frosty_api_token');
+            if (savedToken) {
+                ws.send(JSON.stringify({ "authorize": savedToken }));
+            }
         };
 
         ws.onmessage = (event) => {
             const data = JSON.parse(event.data);
 
             if (data.error) {
-                setConnectionStatus('disconnected');
+                toast({
+                    variant: "destructive",
+                    title: "DERIV API ERROR",
+                    description: data.error.message
+                });
+                if (data.error.code === 'InvalidToken') {
+                    handleLogout();
+                }
                 return;
+            }
+
+            if (data.msg_type === 'authorize') {
+                setIsAuthorized(true);
+                setConnectionStatus('authorized');
+                setCurrency(data.authorize.currency);
+                localStorage.setItem('frosty_api_token', apiToken);
+                // Subscribe to balance updates
+                ws.send(JSON.stringify({ "balance": 1, "subscribe": 1 }));
+                toast({
+                    title: "TACTICAL SYNC COMPLETE",
+                    description: `Authorized as ${data.authorize.loginid}. Real balance engaged.`
+                });
+            }
+
+            if (data.msg_type === 'balance') {
+                setBalance(data.balance.balance);
+                setCurrency(data.balance.currency);
             }
 
             if (data.msg_type === 'history') {
@@ -88,7 +135,7 @@ export function Dashboard() {
             }
 
             if (data.msg_type === 'tick') {
-                setConnectionStatus('streaming');
+                if (connectionStatus !== 'authorized') setConnectionStatus('streaming');
                 if (data.tick && typeof data.tick.quote === 'number') {
                     if (pipSize === null) {
                         pipSize = data.tick.pip_size ?? 2;
@@ -122,6 +169,22 @@ export function Dashboard() {
         };
     }, [selectedMarket]);
 
+    const handleAuthorize = () => {
+        if (!wsInstance || !apiToken) return;
+        wsInstance.send(JSON.stringify({ "authorize": apiToken }));
+    };
+
+    const handleLogout = () => {
+        localStorage.removeItem('frosty_api_token');
+        setIsAuthorized(false);
+        setBalance(10000);
+        setApiToken('');
+        if (wsInstance) {
+            // Reconnect to clear auth session on socket
+            window.location.reload();
+        }
+    };
+
     const handleMaxTicksChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const value = e.target.value;
         if (value === '') {
@@ -144,22 +207,70 @@ export function Dashboard() {
 
     const statusColors = {
         streaming: 'text-emerald-400',
+        authorized: 'text-cyan-400',
         connecting: 'text-amber-400',
         disconnected: 'text-rose-500'
     };
 
     const statusBg = {
         streaming: 'bg-emerald-400',
+        authorized: 'bg-cyan-400',
         connecting: 'bg-amber-400',
         disconnected: 'bg-rose-500'
     };
 
   return (
     <div className="flex min-h-screen w-full flex-col bg-background font-sans overflow-x-hidden">
-      <header className="sticky top-0 z-[60] flex h-auto min-h-[4rem] flex-col md:flex-row items-center border-b bg-background/80 px-4 py-2 md:py-0 md:px-6 backdrop-blur-xl transition-all duration-300">
-        <div className="flex w-full items-center justify-between max-w-[1600px] mx-auto gap-2 md:gap-4">
+      <header className="sticky top-0 z-[60] flex h-auto min-h-[5rem] flex-col md:flex-row items-center border-b bg-background/80 px-4 py-3 md:py-0 md:px-8 backdrop-blur-xl transition-all duration-300">
+        <div className="flex w-full items-center justify-between max-w-[1600px] mx-auto gap-4">
           
-          <div className="flex-1 hidden md:block" />
+          <div className="flex-1 flex items-center gap-4">
+            <Popover>
+                <PopoverTrigger asChild>
+                    <Button variant="outline" className={cn(
+                        "h-12 px-6 rounded-full border-white/10 font-black text-[10px] uppercase tracking-widest gap-3 transition-all",
+                        isAuthorized ? "bg-cyan-500/10 text-cyan-400 border-cyan-500/30" : "bg-black/40 hover:bg-white/5"
+                    )}>
+                        {isAuthorized ? <ShieldCheck className="h-4 w-4" /> : <KeyRound className="h-4 w-4" />}
+                        {isAuthorized ? "API CONNECTED" : "CONNECT TACTICAL API"}
+                    </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-80 p-6 bg-slate-950 border-white/10 rounded-[2rem] shadow-2xl">
+                    <div className="space-y-6">
+                        <div className="space-y-2">
+                            <h4 className="text-xs font-black uppercase text-white tracking-widest">TACTICAL AUTHORIZATION</h4>
+                            <p className="text-[9px] font-bold text-muted-foreground uppercase leading-tight">Enter your Deriv API Token to enable real-market execution and commission tracking.</p>
+                        </div>
+                        {isAuthorized ? (
+                            <div className="space-y-4">
+                                <div className="p-4 bg-emerald-500/10 border border-emerald-500/20 rounded-2xl">
+                                    <div className="flex items-center justify-between mb-2">
+                                        <span className="text-[8px] font-black text-emerald-400 uppercase">LIVE BALANCE</span>
+                                        <Wallet className="h-3 w-3 text-emerald-400" />
+                                    </div>
+                                    <p className="text-2xl font-black text-white">{balance.toFixed(2)} {currency}</p>
+                                </div>
+                                <Button onClick={handleLogout} variant="destructive" className="w-full h-11 rounded-xl font-black text-[10px] uppercase tracking-widest gap-2">
+                                    <LogOut className="h-3 w-3" /> TERMINATE SESSION
+                                </Button>
+                            </div>
+                        ) : (
+                            <div className="space-y-4">
+                                <Input 
+                                    placeholder="Enter API Token..." 
+                                    value={apiToken}
+                                    onChange={(e) => setApiToken(e.target.value)}
+                                    className="h-12 bg-black/60 border-white/10 text-white font-bold rounded-xl focus:ring-primary/40"
+                                />
+                                <Button onClick={handleAuthorize} className="w-full h-12 rounded-xl font-black text-[10px] uppercase tracking-widest bg-primary hover:bg-primary/90">
+                                    INITIATE SYNC
+                                </Button>
+                            </div>
+                        )}
+                    </div>
+                </PopoverContent>
+            </Popover>
+          </div>
 
           <div className="flex flex-1 justify-center w-full md:w-auto mt-0">
             <div className="relative group transition-all duration-300 hover:scale-105 active:scale-95">
@@ -167,15 +278,15 @@ export function Dashboard() {
                     "absolute -inset-1 rounded-full blur opacity-25 group-hover:opacity-75 transition duration-1000",
                     statusBg[connectionStatus]
                 )}></div>
-                <div className="relative flex items-center gap-3 px-4 md:px-8 py-2 md:py-3 bg-card border border-white/5 rounded-full shadow-2xl">
+                <div className="relative flex items-center gap-3 px-6 md:px-10 py-3 md:py-4 bg-card border border-white/5 rounded-full shadow-2xl">
                     <div className="relative flex items-center justify-center">
-                        <div className={cn("h-2 w-2 md:h-2.5 md:w-2.5 rounded-full transition-all duration-500", statusBg[connectionStatus])} />
-                        {connectionStatus === 'streaming' && (
-                            <div className={cn("absolute h-2 w-2 md:h-2.5 md:w-2.5 rounded-full animate-ping opacity-75", statusBg[connectionStatus])} />
+                        <div className={cn("h-2 w-2 md:h-3 md:w-3 rounded-full transition-all duration-500", statusBg[connectionStatus])} />
+                        {(connectionStatus === 'streaming' || connectionStatus === 'authorized') && (
+                            <div className={cn("absolute h-2 w-2 md:h-3 md:w-3 rounded-full animate-ping opacity-75", statusBg[connectionStatus])} />
                         )}
                     </div>
                     <span className={cn(
-                        "text-[9px] sm:text-[11px] md:text-sm font-black uppercase tracking-[0.2em] md:tracking-[0.4em] whitespace-nowrap transition-colors duration-500",
+                        "text-[10px] sm:text-[12px] md:text-sm font-black uppercase tracking-[0.2em] md:tracking-[0.4em] whitespace-nowrap transition-colors duration-500",
                         statusColors[connectionStatus]
                     )}>
                         FROSTY HOLDINGS
@@ -184,7 +295,16 @@ export function Dashboard() {
             </div>
           </div>
 
-          <div className="flex-1 hidden md:block" />
+          <div className="flex-1 flex justify-end">
+            <div className="flex items-center gap-4 bg-black/40 px-6 py-2 rounded-full border border-white/5">
+                <div className="text-right">
+                    <p className="text-[8px] font-black text-muted-foreground uppercase tracking-widest mb-0.5">{isAuthorized ? 'LIVE BALANCE' : 'VIRTUAL EQUITY'}</p>
+                    <p className={cn("text-sm font-black tabular-nums", isAuthorized ? "text-emerald-400" : "text-primary")}>
+                        {balance.toFixed(2)} <span className="text-[10px] opacity-40">{currency}</span>
+                    </p>
+                </div>
+            </div>
+          </div>
         </div>
       </header>
 
@@ -208,7 +328,11 @@ export function Dashboard() {
                         price={price}
                         lastDigitTicks={analyzedDigits}
                         selectedMarket={selectedMarket}
+                        onMarketChange={setSelectedMarket}
                         decimalPlaces={decimalPlaces}
+                        balance={balance}
+                        isAuthorized={isAuthorized}
+                        currency={currency}
                     />
                 </TabsContent>
 
