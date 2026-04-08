@@ -14,8 +14,9 @@ import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
-import { KeyRound, ShieldCheck, Wallet, LogOut, Activity, Lock, RefreshCw, Cpu, Zap, Radio } from 'lucide-react';
+import { KeyRound, ShieldCheck, Wallet, LogOut, Activity, Lock, RefreshCw, Cpu, Zap, Radio, CircleUser } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import { Badge } from '@/components/ui/badge';
 
 type EngineStatus = 'offline' | 'active' | 'standby' | 'authorized' | 'executing';
 
@@ -29,13 +30,14 @@ export function Dashboard() {
     const [decimalPlaces, setDecimalPlaces] = React.useState(2);
     const [tickTimestamps, setTickTimestamps] = React.useState<number[]>([]);
     
-    // Dual Engine State - Alpha is Always Live
+    // Dual Engine State
     const [surveillanceStatus, setSurveillanceStatus] = React.useState<EngineStatus>('active');
     const [executionStatus, setExecutionStatus] = React.useState<EngineStatus>('standby');
     
     // API & Auth State
     const [apiToken, setApiToken] = React.useState('');
     const [isAuthorized, setIsAuthorized] = React.useState(false);
+    const [isVirtual, setIsVirtual] = React.useState(false);
     const [balance, setBalance] = React.useState(0);
     const [currency, setCurrency] = React.useState('USD');
     const [wsInstance, setWsInstance] = React.useState<WebSocket | null>(null);
@@ -100,11 +102,12 @@ export function Dashboard() {
                 setIsAuthorized(true);
                 setExecutionStatus('authorized');
                 setCurrency(data.authorize.currency);
+                setIsVirtual(data.authorize.is_virtual === 1);
                 localStorage.setItem('frosty_api_token', data.echo_req.authorize);
                 ws.send(JSON.stringify({ "balance": 1, "subscribe": 1 }));
                 toast({
                     title: "EXECUTION ENGINE ENGAGED",
-                    description: `Authorized via App ID 84799. Live balance active.`
+                    description: `Authorized via App ID 84799. ${data.authorize.is_virtual === 1 ? 'DEMO' : 'REAL'} account active.`
                 });
             }
 
@@ -273,17 +276,17 @@ export function Dashboard() {
 
   return (
     <div className="flex min-h-screen w-full flex-col bg-background font-sans overflow-x-hidden">
-      <header className="sticky top-0 z-[60] flex h-auto min-h-[5rem] flex-col md:flex-row items-center border-b bg-background/80 px-4 py-3 md:py-0 md:px-8 backdrop-blur-xl transition-all duration-300">
+      <header className="sticky top-0 z-[60] flex h-auto min-h-[6rem] flex-col md:flex-row items-center border-b bg-background/80 px-4 py-3 md:py-0 md:px-8 backdrop-blur-xl transition-all duration-300">
         <div className="flex w-full items-center justify-between max-w-[1600px] mx-auto gap-4">
           
-          <div className="flex-1 flex items-center gap-4">
+          <div className="flex-[1.5] flex items-center gap-6">
             <Popover>
                 <PopoverTrigger asChild>
                     <Button variant="outline" className={cn(
-                        "h-12 px-6 rounded-full border-white/10 font-black text-[10px] uppercase tracking-widest gap-3 transition-all",
+                        "h-14 px-8 rounded-full border-white/10 font-black text-[11px] uppercase tracking-widest gap-3 transition-all shadow-xl",
                         isAuthorized ? "bg-cyan-500/10 text-cyan-400 border-cyan-500/30" : "bg-black/40 hover:bg-white/5"
                     )}>
-                        {isAuthorized ? <ShieldCheck className="h-4 w-4" /> : <KeyRound className="h-4 w-4" />}
+                        {isAuthorized ? <ShieldCheck className="h-5 w-5" /> : <KeyRound className="h-5 w-5" />}
                         {isAuthorized ? "API CONNECTED" : "CONNECT TACTICAL API"}
                     </Button>
                 </PopoverTrigger>
@@ -326,6 +329,33 @@ export function Dashboard() {
                     </div>
                 </PopoverContent>
             </Popover>
+
+            {/* LIVE BALANCE BLOCK */}
+            {isAuthorized ? (
+                <div className="flex items-center gap-4 bg-black/40 px-8 py-3 rounded-full border border-white/10 animate-in fade-in slide-in-from-left-4 duration-500 shadow-xl group">
+                    <div className="text-left">
+                        <div className="flex items-center gap-2 mb-0.5">
+                            <p className="text-[9px] font-black text-primary uppercase tracking-[0.2em]">EQUITY STREAM</p>
+                            <Badge className={cn(
+                                "h-4 text-[7px] font-black uppercase px-1.5 border-none",
+                                isVirtual ? "bg-amber-500 text-white" : "bg-emerald-500 text-white"
+                            )}>
+                                {isVirtual ? 'DEMO' : 'REAL'}
+                            </Badge>
+                        </div>
+                        <p className="text-2xl font-black tabular-nums text-white group-hover:text-primary transition-colors">
+                            {balance.toFixed(2)} <span className="text-xs opacity-40 font-black">{currency}</span>
+                        </p>
+                    </div>
+                </div>
+            ) : (
+                <div className="flex items-center gap-4 bg-rose-500/5 px-8 py-3 rounded-full border border-rose-500/10 animate-pulse">
+                    <div className="text-left">
+                        <p className="text-[9px] font-black text-rose-400/60 uppercase tracking-[0.2em]">LIQUIDITY LOCKED</p>
+                        <p className="text-xl font-black text-rose-400/40 uppercase tracking-widest">CONNECT API</p>
+                    </div>
+                </div>
+            )}
           </div>
 
           <div className="flex flex-1 justify-center w-full md:w-auto mt-0">
@@ -352,29 +382,10 @@ export function Dashboard() {
           </div>
 
           <div className="flex-1 flex justify-end gap-4">
-            {/* Surveillance Status Mini-Indicator */}
-            <div className="hidden lg:flex items-center gap-3 px-4 py-2 bg-black/40 rounded-full border border-white/5">
-                <Radio className={cn("h-3 w-3", surveillanceStatus === 'active' ? 'text-emerald-400 animate-pulse' : 'text-rose-500')} />
-                <span className="text-[8px] font-black uppercase text-muted-foreground tracking-widest">SURVEILLANCE LIVE</span>
+            <div className="hidden lg:flex items-center gap-3 px-6 py-3 bg-black/40 rounded-full border border-white/5 shadow-xl">
+                <Radio className={cn("h-4 w-4", surveillanceStatus === 'active' ? 'text-emerald-400 animate-pulse' : 'text-rose-500')} />
+                <span className="text-[9px] font-black uppercase text-muted-foreground tracking-[0.3em]">SURVEILLANCE LIVE</span>
             </div>
-            
-            {isAuthorized ? (
-                <div className="flex items-center gap-4 bg-cyan-500/10 px-6 py-2 rounded-full border border-cyan-500/20 animate-in fade-in slide-in-from-right-4 duration-500">
-                    <div className="text-right">
-                        <p className="text-[8px] font-black text-cyan-400 uppercase tracking-widest mb-0.5">LIVE BALANCE</p>
-                        <p className="text-sm font-black tabular-nums text-white">
-                            {balance.toFixed(2)} <span className="text-[10px] opacity-40">{currency}</span>
-                        </p>
-                    </div>
-                </div>
-            ) : (
-                <div className="flex items-center gap-4 bg-rose-500/10 px-6 py-2 rounded-full border border-rose-500/20 animate-pulse">
-                    <div className="text-right">
-                        <p className="text-[8px] font-black text-rose-400 uppercase tracking-widest">OFFLINE</p>
-                        <p className="text-[10px] font-black text-white uppercase tracking-widest">CONNECT API</p>
-                    </div>
-                </div>
-            )}
           </div>
         </div>
       </header>
