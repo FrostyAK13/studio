@@ -9,6 +9,7 @@ import { DigitFrequencyView } from './digit-frequency-view';
 import { InsightView } from './insight-view';
 import { CorrelationView } from './correlation-view';
 import { GlobalMarketScanner } from './global-market-scanner';
+import { StrategyOverOne } from './strategy-over-one';
 import { cn } from '@/lib/utils';
 
 type ConnectionStatusType = 'connecting' | 'streaming' | 'disconnected';
@@ -51,7 +52,7 @@ export function Dashboard() {
         ws.onopen = () => {
             ws.send(JSON.stringify({ 
                 "ticks_history": selectedMarket, 
-                "count": 500, // Reduced count for stability across all synthetic indices
+                "count": 500, 
                 "end": "latest", 
                 "style": "ticks", 
                 "subscribe": 1 
@@ -189,18 +190,27 @@ export function Dashboard() {
 
       <main className="flex-1 flex flex-col max-w-[1600px] mx-auto w-full relative">
         <div className="flex-1 p-2 sm:p-4 md:p-6 lg:p-8">
-            <Tabs defaultValue="global-scan" className="w-full">
+            <Tabs defaultValue="strategy-over-one" className="w-full">
                 <TabsList className="flex items-center justify-start md:justify-center gap-1.5 md:gap-2 bg-transparent h-auto p-0 mb-4 md:mb-10 overflow-x-auto no-scrollbar pb-2 w-full">
-                    {['global-scan', 'scanner', 'analyzer', 'frequency', 'insight', 'circles'].map((tab) => (
+                    {['strategy-over-one', 'global-scan', 'scanner', 'analyzer', 'frequency', 'insight', 'circles'].map((tab) => (
                         <TabsTrigger 
                             key={tab} 
                             value={tab}
                             className="flex-shrink-0 px-3 sm:px-6 md:px-8 py-2 md:py-3 rounded-full border border-transparent data-[state=active]:border-primary/20 data-[state=active]:bg-primary/10 data-[state=active]:text-primary data-[state=active]:shadow-[0_0_20px_rgba(var(--primary),0.15)] text-muted-foreground font-black text-[8px] sm:text-[9px] md:text-[10px] uppercase tracking-[0.1em] sm:tracking-[0.2em] transition-all duration-300 hover:text-foreground hover:bg-muted/50"
                         >
-                            {tab === 'global-scan' ? 'GLOBAL SCAN' : tab.toUpperCase()}
+                            {tab === 'strategy-over-one' ? 'OVER 1' : tab === 'global-scan' ? 'GLOBAL SCAN' : tab.toUpperCase()}
                         </TabsTrigger>
                     ))}
                 </TabsList>
+
+                <TabsContent value="strategy-over-one" className="mt-0 animate-in fade-in zoom-in-95 duration-500 outline-none">
+                    <StrategyOverOne 
+                        price={price}
+                        lastDigitTicks={analyzedDigits}
+                        selectedMarket={selectedMarket}
+                        decimalPlaces={decimalPlaces}
+                    />
+                </TabsContent>
 
                 <TabsContent value="global-scan" className="mt-0 animate-in fade-in zoom-in-95 duration-500 outline-none">
                     <GlobalMarketScanner 
