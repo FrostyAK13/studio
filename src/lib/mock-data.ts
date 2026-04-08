@@ -10,6 +10,7 @@ export const syntheticIndices: SyntheticIndex[] = [
   { id: 'R_75', name: 'Volatility 75 Index', price: 834521.45, change: -0.56 },
   { id: 'R_50', name: 'Volatility 50 Index', price: 104.0489, change: 2.31 },
   { id: 'R_25', name: 'Volatility 25 Index', price: 616.25, change: -1.12 },
+  { id: 'R_15', name: 'Volatility 15 Index', price: 123.45, change: 0.88 },
   { id: 'R_10', name: 'Volatility 10 Index', price: 3456.78, change: 0.99 },
   { id: '1HZ100V', name: 'Volatility 100 (1s) Index', price: 12543.78, change: 1.25 },
   { id: '1HZ90V', name: 'Volatility 90 (1s) Index', price: 543.21, change: 0.45 },

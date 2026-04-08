@@ -148,6 +148,7 @@ export function StrategyOverOne({
 
         const contractId = activeContract.contract_id.toString();
         
+        // Strict guard against duplicate processing using both ref and trades membership
         if ((activeContract.status === 'won' || activeContract.status === 'lost') && contractId !== lastProcessedId.current) {
             lastProcessedId.current = contractId;
             const result = activeContract.status.toUpperCase() as 'WON' | 'LOST';
@@ -164,7 +165,12 @@ export function StrategyOverOne({
                 isRecovery: isRecoveryMode
             };
 
-            setTrades(prev => [newTrade, ...prev].slice(0, 50));
+            setTrades(prev => {
+                // Final shield against duplicate keys in array
+                if (prev.some(t => t.id === contractId)) return prev;
+                return [newTrade, ...prev].slice(0, 50);
+            });
+
             setSessionStats(prev => ({
                 wins: result === 'WON' ? prev.wins + 1 : prev.wins,
                 losses: result === 'LOST' ? prev.losses + 1 : prev.losses,
