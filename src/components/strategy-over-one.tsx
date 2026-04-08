@@ -1,13 +1,16 @@
+
 'use client';
 
 import * as React from 'react';
-import { ShieldCheck, AlertCircle, Target, Zap, TrendingUp, RotateCcw, Play, Square, Activity, Cpu, ShieldAlert, CheckCircle2, Timer, Settings2, DollarSign, ArrowUpRight, ArrowDownRight, BarChart3, Gauge } from 'lucide-react';
+import { ShieldCheck, AlertCircle, Target, Zap, TrendingUp, RotateCcw, Play, Square, Activity, Cpu, ShieldAlert, CheckCircle2, Timer, Settings2, DollarSign, ArrowUpRight, ArrowDownRight, BarChart3, Gauge, Layers } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { syntheticIndices } from '@/lib/mock-data';
 import { cn } from '@/lib/utils';
 import { motion, AnimatePresence } from 'framer-motion';
 
@@ -15,6 +18,7 @@ interface StrategyOverOneProps {
     price: number;
     lastDigitTicks: number[];
     selectedMarket: string;
+    onMarketChange: (market: string) => void;
     decimalPlaces: number;
 }
 
@@ -29,7 +33,7 @@ interface TradeLog {
     isRecovery: boolean;
 }
 
-export function StrategyOverOne({ price, lastDigitTicks, selectedMarket, decimalPlaces }: StrategyOverOneProps) {
+export function StrategyOverOne({ price, lastDigitTicks, selectedMarket, onMarketChange, decimalPlaces }: StrategyOverOneProps) {
     // Editable Configuration
     const [config, setConfig] = React.useState({
         stake: 10,
@@ -160,6 +164,28 @@ export function StrategyOverOne({ price, lastDigitTicks, selectedMarket, decimal
     return (
         <div className="grid grid-cols-1 xl:grid-cols-4 gap-6 animate-in fade-in slide-in-from-bottom-5 duration-700 pb-24 max-w-[1600px] mx-auto">
             <div className="xl:col-span-1 space-y-6">
+                {/* Market Selection Card */}
+                <Card className="border-none shadow-[0_20px_50px_rgba(0,0,0,0.5)] bg-slate-900/40 backdrop-blur-2xl overflow-hidden relative border border-white/5 rounded-[2rem]">
+                    <div className="absolute top-0 left-0 w-full h-[2px] bg-gradient-to-r from-transparent via-primary/50 to-transparent" />
+                    <CardHeader className="pt-8 pb-4">
+                        <Label className="text-[10px] font-black uppercase tracking-[0.3em] text-primary ml-4">MARKET VECTOR SELECT</Label>
+                    </CardHeader>
+                    <CardContent className="px-8 pb-8">
+                        <Select value={selectedMarket} onValueChange={onMarketChange}>
+                            <SelectTrigger className="h-14 bg-black/40 border-white/10 rounded-[1.5rem] font-black text-xs sm:text-base px-6">
+                                <SelectValue placeholder="Select Index" />
+                            </SelectTrigger>
+                            <SelectContent side="bottom" position="popper" sideOffset={8} className="w-[var(--radix-select-trigger-width)] max-h-[300px] rounded-[1.5rem] border-white/10 bg-slate-950 text-white z-[100] shadow-2xl">
+                                {syntheticIndices.map((index) => (
+                                <SelectItem key={index.id} value={index.id} className="focus:bg-primary/20 focus:text-white cursor-pointer py-3 font-black text-xs sm:text-sm">
+                                    {index.name}
+                                </SelectItem>
+                                ))}
+                            </SelectContent>
+                        </Select>
+                    </CardContent>
+                </Card>
+
                 {/* Account Overview */}
                 <Card className="border-none shadow-[0_20px_50px_rgba(0,0,0,0.5)] bg-slate-950/90 backdrop-blur-2xl overflow-hidden relative border border-white/5 rounded-[2rem]">
                     <div className="absolute top-0 left-0 w-full h-[3px] bg-gradient-to-r from-primary via-cyan-400 to-primary shadow-[0_0_15px_rgba(var(--primary),0.5)]" />
@@ -224,7 +250,7 @@ export function StrategyOverOne({ price, lastDigitTicks, selectedMarket, decimal
                     </CardContent>
                 </Card>
 
-                {/* Tactical Config - High Visibility Version */}
+                {/* Tactical Config */}
                 <Card className="border-2 border-primary/20 shadow-[0_0_30px_rgba(var(--primary),0.1)] bg-slate-950/80 backdrop-blur-xl rounded-[2rem] p-8 space-y-8 relative overflow-hidden group">
                     <div className="absolute -right-12 -top-12 w-32 h-32 bg-primary/10 rounded-full blur-3xl group-hover:bg-primary/20 transition-all duration-1000" />
                     <div className="flex items-center justify-between border-b border-white/5 pb-4">
@@ -244,7 +270,7 @@ export function StrategyOverOne({ price, lastDigitTicks, selectedMarket, decimal
                                 value={config.stake} 
                                 onChange={(e) => updateConfig('stake', e.target.value)}
                                 disabled={isRunning}
-                                className="h-14 bg-black/60 border-white/10 text-base font-black rounded-2xl text-center focus:border-primary/50 focus:ring-primary/20 transition-all shadow-inner"
+                                className="h-14 bg-black/60 border-white/10 text-white text-base font-black rounded-2xl text-center focus:border-primary/50 focus:ring-primary/20 transition-all shadow-inner"
                             />
                         </div>
                         <div className="space-y-3">
@@ -257,7 +283,7 @@ export function StrategyOverOne({ price, lastDigitTicks, selectedMarket, decimal
                                 value={config.martingale} 
                                 onChange={(e) => updateConfig('martingale', e.target.value)}
                                 disabled={isRunning}
-                                className="h-14 bg-black/60 border-white/10 text-base font-black rounded-2xl text-center focus:border-primary/50 focus:ring-primary/20 transition-all shadow-inner"
+                                className="h-14 bg-black/60 border-white/10 text-white text-base font-black rounded-2xl text-center focus:border-primary/50 focus:ring-primary/20 transition-all shadow-inner"
                             />
                         </div>
                         
@@ -271,7 +297,7 @@ export function StrategyOverOne({ price, lastDigitTicks, selectedMarket, decimal
                                     value={config.stopLoss} 
                                     onChange={(e) => updateConfig('stopLoss', e.target.value)}
                                     disabled={isRunning}
-                                    className="h-14 bg-black/60 border-rose-500/20 text-base font-black rounded-2xl text-center focus:border-rose-500/50 shadow-inner"
+                                    className="h-14 bg-black/60 border-rose-500/20 text-white text-base font-black rounded-2xl text-center focus:border-rose-500/50 shadow-inner"
                                 />
                             </div>
                             <div className="space-y-3">
@@ -283,15 +309,10 @@ export function StrategyOverOne({ price, lastDigitTicks, selectedMarket, decimal
                                     value={config.takeProfit} 
                                     onChange={(e) => updateConfig('takeProfit', e.target.value)}
                                     disabled={isRunning}
-                                    className="h-14 bg-black/60 border-emerald-500/20 text-base font-black rounded-2xl text-center focus:border-emerald-500/50 shadow-inner"
+                                    className="h-14 bg-black/60 border-emerald-500/20 text-white text-base font-black rounded-2xl text-center focus:border-emerald-500/50 shadow-inner"
                                 />
                             </div>
                         </div>
-                    </div>
-                    
-                    <div className="pt-4 flex items-center gap-3 text-muted-foreground/40 font-black text-[8px] uppercase tracking-widest border-t border-white/5">
-                        <Gauge className="h-4 w-4" />
-                        AUTO-TERMINATION ACTIVE
                     </div>
                 </Card>
 
