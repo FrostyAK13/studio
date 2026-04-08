@@ -106,8 +106,7 @@ export function Dashboard() {
                 localStorage.setItem('frosty_api_token', data.echo_req.authorize);
                 ws.send(JSON.stringify({ "balance": 1, "subscribe": 1 }));
                 toast({
-                    title: "EXECUTION ENGINE ENGAGED",
-                    description: `Authorized via App ID 84799. ${data.authorize.is_virtual === 1 ? 'DEMO' : 'REAL'} account active.`
+                    title: "CONNECTED",
                 });
             }
 
