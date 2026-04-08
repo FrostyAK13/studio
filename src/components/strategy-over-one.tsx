@@ -30,8 +30,7 @@ import {
     Orbit,
     TrendingUp,
     Trophy,
-    Skull,
-    RefreshCw
+    Skull
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
@@ -235,10 +234,6 @@ export function StrategyOverOne({
         lastProcessedId.current = null;
     };
 
-    const handleSystemReload = () => {
-        window.location.reload();
-    };
-
     const updateConfig = (field: keyof typeof config, value: string) => {
         const num = parseFloat(value);
         if (!isNaN(num)) setConfig(prev => ({ ...prev, [field]: num }));
@@ -394,13 +389,6 @@ export function StrategyOverOne({
                             <div className="space-y-4">
                                 <Button variant="outline" onClick={resetSession} className="w-full h-16 border-white/10 hover:bg-white/5 font-black text-[11px] uppercase tracking-[0.3em] rounded-2xl transition-all duration-300">
                                     <RotateCcw className="mr-3 h-5 w-5" /> REBOOT CORE
-                                </Button>
-                                <Button 
-                                    variant="outline" 
-                                    onClick={handleSystemReload} 
-                                    className="w-full h-16 border-white/10 hover:bg-white/5 font-black text-[11px] uppercase tracking-[0.3em] rounded-2xl transition-all duration-300 text-primary border-primary/20"
-                                >
-                                    <RefreshCw className="mr-3 h-5 w-5" /> SYSTEM RELOAD
                                 </Button>
                             </div>
                         </CardContent>

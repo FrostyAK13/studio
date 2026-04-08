@@ -238,6 +238,10 @@ export function Dashboard() {
         window.location.reload();
     };
 
+    const handleSystemReload = () => {
+        window.location.reload();
+    };
+
     const handleExecuteRealTrade = (params: any) => {
         if (!wsInstance || !isAuthorized) return;
         wsInstance.send(JSON.stringify({
@@ -279,6 +283,14 @@ export function Dashboard() {
         <div className="flex w-full items-center justify-between max-w-[1600px] mx-auto gap-4">
           
           <div className="flex-[2] flex items-center gap-6">
+            <Button 
+                variant="outline" 
+                onClick={handleSystemReload}
+                className="h-14 w-14 rounded-full border-white/10 bg-black/40 hover:bg-white/5 flex items-center justify-center shadow-xl group transition-all active:scale-95"
+            >
+                <RefreshCw className="h-5 w-5 text-primary group-hover:rotate-180 transition-transform duration-500" />
+            </Button>
+
             <Popover>
                 <PopoverTrigger asChild>
                     <Button variant="outline" className={cn(
