@@ -279,30 +279,31 @@ export function Dashboard() {
 
   return (
     <div className="flex min-h-screen w-full flex-col bg-background font-sans overflow-x-hidden">
-      <header className="sticky top-0 z-[60] flex h-auto min-h-[6rem] flex-col md:flex-row items-center border-b bg-background/80 px-4 py-3 md:py-0 md:px-8 backdrop-blur-xl transition-all duration-300">
-        <div className="flex w-full items-center justify-between max-w-[1600px] mx-auto gap-4">
+      <header className="sticky top-0 z-[60] flex h-auto min-h-[4rem] sm:min-h-[6rem] flex-col items-center border-b bg-background/80 px-2 sm:px-8 backdrop-blur-xl transition-all duration-300">
+        <div className="flex w-full items-center justify-between max-w-[1600px] mx-auto gap-2 sm:gap-4 py-2 sm:py-0">
           
-          <div className="flex-[2] flex items-center gap-6">
+          <div className="flex items-center gap-2 sm:gap-6">
             <Button 
                 variant="outline" 
                 onClick={handleSystemReload}
-                className="h-14 w-14 rounded-full border-white/10 bg-black/40 hover:bg-white/5 flex items-center justify-center shadow-xl group transition-all active:scale-95"
+                className="h-10 w-10 sm:h-14 sm:w-14 rounded-full border-white/10 bg-black/40 hover:bg-white/5 flex items-center justify-center shadow-xl group transition-all active:scale-95"
             >
-                <RefreshCw className="h-5 w-5 text-primary group-hover:rotate-180 transition-transform duration-500" />
+                <RefreshCw className="h-4 w-4 sm:h-5 sm:w-5 text-primary group-hover:rotate-180 transition-transform duration-500" />
             </Button>
 
             <Popover>
                 <PopoverTrigger asChild>
                     <Button variant="outline" className={cn(
-                        "h-14 px-8 rounded-full border-white/10 font-black text-[11px] uppercase tracking-widest gap-3 transition-all shadow-xl",
+                        "h-10 sm:h-14 px-3 sm:px-8 rounded-full border-white/10 font-black text-[9px] sm:text-[11px] uppercase tracking-widest gap-2 sm:gap-3 transition-all shadow-xl",
                         isAuthorized ? "bg-cyan-500/10 text-cyan-400 border-cyan-500/30" : "bg-black/40 hover:bg-white/5"
                     )}>
-                        {isAuthorized ? <ShieldCheck className="h-5 w-5" /> : <KeyRound className="h-5 w-5" />}
-                        {isAuthorized ? "API CONNECTED" : "CONNECT TACTICAL API"}
+                        {isAuthorized ? <ShieldCheck className="h-4 w-4 sm:h-5 sm:w-5" /> : <KeyRound className="h-4 w-4 sm:h-5 sm:w-5" />}
+                        <span className="hidden xs:inline">{isAuthorized ? "CONNECTED" : "API"}</span>
+                        <span className="inline xs:hidden">{isAuthorized ? "OK" : "KEY"}</span>
                     </Button>
                 </PopoverTrigger>
-                <PopoverContent className="w-80 p-6 bg-slate-950 border-white/10 rounded-[2rem] shadow-2xl">
-                    <div className="space-y-6">
+                <PopoverContent className="w-[280px] sm:w-80 p-4 sm:p-6 bg-slate-950 border-white/10 rounded-[1.5rem] sm:rounded-[2rem] shadow-2xl">
+                    <div className="space-y-4 sm:space-y-6">
                         <div className="space-y-2">
                             <h4 className="text-xs font-black uppercase text-white tracking-widest">TACTICAL LOGIN</h4>
                             <p className="text-[9px] font-bold text-muted-foreground uppercase leading-tight">Enter your Deriv API Token to enable real-market execution via App ID 84799.</p>
@@ -314,7 +315,7 @@ export function Dashboard() {
                                         <span className="text-[8px] font-black text-emerald-400 uppercase">LIVE BALANCE</span>
                                         <Wallet className="h-3 w-3 text-emerald-400" />
                                     </div>
-                                    <p className="text-2xl font-black text-white">{balance.toFixed(2)} {currency}</p>
+                                    <p className="text-xl sm:text-2xl font-black text-white">{balance.toFixed(2)} {currency}</p>
                                 </div>
                                 <Button onClick={handleLogout} variant="destructive" className="w-full h-11 rounded-xl font-black text-[10px] uppercase tracking-widest gap-2">
                                     <LogOut className="h-3 w-3" /> TERMINATE SESSION
@@ -343,57 +344,55 @@ export function Dashboard() {
 
             {/* LIVE BALANCE BLOCK */}
             {isAuthorized ? (
-                <div className="flex items-center gap-6 bg-black/40 px-10 py-4 rounded-full border border-white/10 animate-in fade-in slide-in-from-left-4 duration-500 shadow-xl group">
+                <div className="flex items-center gap-3 sm:gap-6 bg-black/40 px-4 sm:px-10 py-2 sm:py-4 rounded-full border border-white/10 animate-in fade-in slide-in-from-left-4 duration-500 shadow-xl group">
                     <div className="text-left">
-                        <div className="flex items-center gap-3 mb-0.5">
-                            <p className="text-[10px] font-black text-primary uppercase tracking-[0.2em]">EQUITY STREAM</p>
+                        <div className="flex items-center gap-2 sm:gap-3 mb-0.5">
+                            <p className="hidden xs:block text-[8px] sm:text-[10px] font-black text-primary uppercase tracking-[0.2em]">EQUITY</p>
                             <Badge className={cn(
-                                "h-5 text-[8px] font-black uppercase px-2 border-none",
+                                "h-4 sm:h-5 text-[7px] sm:text-[8px] font-black uppercase px-1.5 sm:px-2 border-none",
                                 isVirtual ? "bg-amber-500 text-white" : "bg-emerald-500 text-white"
                             )}>
                                 {isVirtual ? 'DEMO' : 'REAL'}
                             </Badge>
                         </div>
-                        <p className="text-3xl font-black tabular-nums text-white group-hover:text-primary transition-colors">
-                            {balance.toFixed(2)} <span className="text-sm opacity-40 font-black">{currency}</span>
+                        <p className="text-sm sm:text-3xl font-black tabular-nums text-white group-hover:text-primary transition-colors">
+                            {balance.toFixed(2)} <span className="text-[10px] sm:text-sm opacity-40 font-black">{currency}</span>
                         </p>
                     </div>
                 </div>
             ) : (
-                <div className="flex items-center gap-4 bg-rose-500/5 px-8 py-3 rounded-full border border-rose-500/10 animate-pulse">
+                <div className="flex items-center gap-2 sm:gap-4 bg-rose-500/5 px-3 sm:px-8 py-2 sm:py-3 rounded-full border border-rose-500/10 animate-pulse">
                     <div className="text-left">
-                        <p className="text-[9px] font-black text-rose-400/60 uppercase tracking-[0.2em]">LIQUIDITY LOCKED</p>
-                        <p className="text-xl font-black text-rose-400/40 uppercase tracking-widest">CONNECT API</p>
+                        <p className="hidden xs:block text-[7px] sm:text-[9px] font-black text-rose-400/60 uppercase tracking-[0.2em]">LIQUIDITY LOCKED</p>
+                        <p className="text-[10px] sm:text-xl font-black text-rose-400/40 uppercase tracking-widest">CONNECT</p>
                     </div>
                 </div>
             )}
           </div>
 
-          <div className="flex flex-1 justify-center w-full md:w-auto mt-0">
+          <div className="flex items-center gap-2 sm:gap-4">
             <div className="relative group transition-all duration-300 hover:scale-105 active:scale-95">
                 <div className={cn(
                     "absolute -inset-1 rounded-full blur opacity-25 group-hover:opacity-75 transition duration-1000",
                     surveillanceStatus === 'active' ? 'bg-emerald-400' : 'bg-rose-500'
                 )}></div>
-                <div className="relative flex items-center gap-3 px-6 md:px-10 py-3 md:py-4 bg-card border border-white/5 rounded-full shadow-2xl">
+                <div className="relative flex items-center gap-2 sm:gap-3 px-3 sm:px-10 py-2 sm:py-4 bg-card border border-white/5 rounded-full shadow-2xl">
                     <div className="relative flex items-center justify-center">
-                        <div className={cn("h-2 w-2 md:h-3 md:w-3 rounded-full transition-all duration-500", surveillanceStatus === 'active' ? 'bg-emerald-400' : 'bg-rose-500')} />
+                        <div className={cn("h-1.5 w-1.5 sm:h-3 sm:w-3 rounded-full transition-all duration-500", surveillanceStatus === 'active' ? 'bg-emerald-400' : 'bg-rose-500')} />
                         {surveillanceStatus === 'active' && (
-                            <div className={cn("absolute h-2 w-2 md:h-3 md:w-3 rounded-full animate-ping opacity-75 bg-emerald-400")} />
+                            <div className={cn("absolute h-1.5 w-1.5 sm:h-3 sm:w-3 rounded-full animate-ping opacity-75 bg-emerald-400")} />
                         )}
                     </div>
                     <span className={cn(
-                        "text-[10px] sm:text-[12px] md:text-sm font-black uppercase tracking-[0.2em] md:tracking-[0.4em] whitespace-nowrap transition-colors duration-500",
+                        "text-[8px] sm:text-sm font-black uppercase tracking-[0.1em] sm:tracking-[0.4em] whitespace-nowrap transition-colors duration-500",
                         surveillanceStatus === 'active' ? 'text-emerald-400' : 'text-rose-500'
                     )}>
-                        FROSTY HOLDINGS
+                        FROSTY
                     </span>
                 </div>
             </div>
-          </div>
-
-          <div className="flex-1 flex justify-end gap-4">
-            <div className="hidden lg:flex items-center gap-3 px-6 py-3 bg-black/40 rounded-full border border-white/5 shadow-xl">
+            
+            <div className="hidden md:flex items-center gap-3 px-6 py-3 bg-black/40 rounded-full border border-white/5 shadow-xl">
                 <Radio className={cn("h-4 w-4", surveillanceStatus === 'active' ? 'text-emerald-400 animate-pulse' : 'text-rose-500')} />
                 <span className="text-[9px] font-black uppercase text-muted-foreground tracking-[0.3em]">SURVEILLANCE LIVE</span>
             </div>
@@ -404,14 +403,14 @@ export function Dashboard() {
       <main className="flex-1 flex flex-col max-w-[1600px] mx-auto w-full relative">
         <div className="flex-1 p-2 sm:p-4 md:p-6 lg:p-8">
             <Tabs defaultValue="strategy-over-one" className="w-full">
-                <TabsList className="flex items-center justify-start md:justify-center gap-1.5 md:gap-2 bg-transparent h-auto p-0 mb-4 md:mb-10 overflow-x-auto no-scrollbar pb-2 w-full">
+                <TabsList className="flex items-center justify-start md:justify-center gap-1 sm:gap-2 bg-transparent h-auto p-0 mb-4 sm:mb-10 overflow-x-auto no-scrollbar pb-2 w-full">
                     {['strategy-over-one', 'global-scan', 'scanner', 'analyzer', 'frequency', 'insight', 'circles'].map((tab) => (
                         <TabsTrigger 
                             key={tab} 
                             value={tab}
-                            className="flex-shrink-0 px-3 sm:px-6 md:px-8 py-2 md:py-3 rounded-full border border-transparent data-[state=active]:border-primary/20 data-[state=active]:bg-primary/10 data-[state=active]:text-primary data-[state=active]:shadow-[0_0_20px_rgba(var(--primary),0.15)] text-muted-foreground font-black text-[8px] sm:text-[9px] md:text-[10px] uppercase tracking-[0.1em] sm:tracking-[0.2em] transition-all duration-300 hover:text-foreground hover:bg-muted/50"
+                            className="flex-shrink-0 px-3 sm:px-8 py-2 sm:py-3 rounded-full border border-transparent data-[state=active]:border-primary/20 data-[state=active]:bg-primary/10 data-[state=active]:text-primary data-[state=active]:shadow-[0_0_20px_rgba(var(--primary),0.15)] text-muted-foreground font-black text-[8px] sm:text-[10px] uppercase tracking-[0.1em] sm:tracking-[0.2em] transition-all duration-300 hover:text-foreground hover:bg-muted/50"
                         >
-                            {tab === 'strategy-over-one' ? 'OVER 1' : tab === 'global-scan' ? 'GLOBAL SCAN' : tab.toUpperCase()}
+                            {tab === 'strategy-over-one' ? 'OVER 1' : tab === 'global-scan' ? 'GLOBAL SCAN' : tab.toUpperCase().replace('-', ' ')}
                         </TabsTrigger>
                     ))}
                 </TabsList>
