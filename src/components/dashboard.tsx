@@ -41,14 +41,8 @@ export function Dashboard() {
     // Trade Handling State
     const [activeContract, setActiveContract] = React.useState<any>(null);
 
+    // PERSISTENT WEBSOCKET INITIALIZATION
     React.useEffect(() => {
-        setPrice(0);
-        setLastDigitTicks([]);
-        setPriceHistory([]);
-        setTickTimestamps([]);
-        setConnectionStatus('connecting');
-
-        // Core Configuration: App ID 84799 for tactical commission tracking
         const ws = new WebSocket('wss://ws.derivws.com/websockets/v3?app_id=84799');
         setWsInstance(ws);
 
@@ -69,18 +63,14 @@ export function Dashboard() {
 
         ws.onopen = () => {
             setConnectionStatus('connecting');
-            ws.send(JSON.stringify({ 
-                "ticks_history": selectedMarket, 
-                "count": 500, 
-                "end": "latest", 
-                "style": "ticks", 
-                "subscribe": 1 
-            }));
-
+            
+            // Check for saved token and authorize immediately
             const savedToken = localStorage.getItem('frosty_api_token');
             if (savedToken) {
                 ws.send(JSON.stringify({ "authorize": savedToken }));
             }
+
+            // Initial market subscription logic is handled by the separate useEffect listening to selectedMarket
         };
 
         ws.onmessage = (event) => {
@@ -95,7 +85,6 @@ export function Dashboard() {
                 return;
             }
 
-            // Authentication Handler
             if (data.msg_type === 'authorize') {
                 setIsAuthorized(true);
                 setConnectionStatus('authorized');
@@ -108,13 +97,11 @@ export function Dashboard() {
                 });
             }
 
-            // Balance Updates
             if (data.msg_type === 'balance') {
                 setBalance(data.balance.balance);
                 setCurrency(data.balance.currency);
             }
 
-            // Tick & History Stream
             if (data.msg_type === 'history') {
                 if (data.history && data.history.times && data.history.prices) {
                     historyBuffer = data.history.prices.map((price: number, index: number) => ({
@@ -136,7 +123,10 @@ export function Dashboard() {
             }
 
             if (data.msg_type === 'tick') {
-                if (!isAuthorized) setConnectionStatus('streaming');
+                if (ws.readyState === WebSocket.OPEN) {
+                    setConnectionStatus(prev => prev === 'authorized' ? 'authorized' : 'streaming');
+                }
+                
                 if (data.tick && typeof data.tick.quote === 'number') {
                     if (pipSize === null) {
                         pipSize = data.tick.pip_size ?? 2;
@@ -157,23 +147,15 @@ export function Dashboard() {
                 }
             }
 
-            // Trade Execution Flow (Proposal -> Buy)
             if (data.msg_type === 'proposal') {
                 if (data.proposal && data.proposal.id) {
-                    ws.send(JSON.stringify({
-                        "buy": data.proposal.id,
-                        "price": data.proposal.ask_price
-                    }));
+                    ws.send(JSON.stringify({ "buy": data.proposal.id, "price": data.proposal.ask_price }));
                 }
             }
 
             if (data.msg_type === 'buy') {
                 if (data.buy && data.buy.contract_id) {
-                    ws.send(JSON.stringify({
-                        "proposal_open_contract": 1,
-                        "contract_id": data.buy.contract_id,
-                        "subscribe": 1
-                    }));
+                    ws.send(JSON.stringify({ "proposal_open_contract": 1, "contract_id": data.buy.contract_id, "subscribe": 1 }));
                 }
             }
 
@@ -181,11 +163,9 @@ export function Dashboard() {
                 const contract = data.proposal_open_contract;
                 setActiveContract(contract);
                 if (contract.is_expired) {
-                    // Contract finalized
                     setActiveContract(null);
-                    // Explicitly fetch balance after trade settlement
-                    if (wsInstance && wsInstance.readyState === WebSocket.OPEN) {
-                        wsInstance.send(JSON.stringify({ "balance": 1 }));
+                    if (ws.readyState === WebSocket.OPEN) {
+                        ws.send(JSON.stringify({ "balance": 1 }));
                     }
                 }
             }
@@ -199,7 +179,31 @@ export function Dashboard() {
              ws.close();
            }
         };
-    }, [selectedMarket]);
+    }, []);
+
+    // SMOOTH MARKET SWITCHING LOGIC
+    React.useEffect(() => {
+        if (!wsInstance || wsInstance.readyState !== WebSocket.OPEN) return;
+
+        // Reset local stream states
+        setPrice(0);
+        setLastDigitTicks([]);
+        setPriceHistory([]);
+        setTickTimestamps([]);
+
+        // Forget all previous tick subscriptions to prevent channel noise
+        wsInstance.send(JSON.stringify({ "forget_all": "ticks" }));
+
+        // Initiate new market stream
+        wsInstance.send(JSON.stringify({ 
+            "ticks_history": selectedMarket, 
+            "count": 500, 
+            "end": "latest", 
+            "style": "ticks", 
+            "subscribe": 1 
+        }));
+
+    }, [selectedMarket, wsInstance]);
 
     const handleAuthorize = () => {
         if (!wsInstance || !apiToken) return;
