@@ -49,7 +49,7 @@ export function Dashboard() {
         setConnectionStatus('connecting');
 
         // Core Configuration: App ID 84799 for tactical commission tracking
-        const ws = new WebSocket('wss://ws.binaryws.com/websockets/v3?app_id=84799');
+        const ws = new WebSocket('wss://ws.derivws.com/websockets/v3?app_id=84799');
         setWsInstance(ws);
 
         let pipSize: number | null = null;
@@ -178,10 +178,15 @@ export function Dashboard() {
             }
 
             if (data.msg_type === 'proposal_open_contract') {
-                setActiveContract(data.proposal_open_contract);
-                if (data.proposal_open_contract.is_expired) {
-                    // Final contract outcome handled here
+                const contract = data.proposal_open_contract;
+                setActiveContract(contract);
+                if (contract.is_expired) {
+                    // Contract finalized
                     setActiveContract(null);
+                    // Explicitly fetch balance after trade settlement
+                    if (wsInstance && wsInstance.readyState === WebSocket.OPEN) {
+                        wsInstance.send(JSON.stringify({ "balance": 1 }));
+                    }
                 }
             }
         };
@@ -373,6 +378,7 @@ export function Dashboard() {
                         isAuthorized={isAuthorized}
                         currency={currency}
                         onExecuteTrade={handleExecuteRealTrade}
+                        activeContract={activeContract}
                     />
                 </TabsContent>
 

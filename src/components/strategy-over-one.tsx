@@ -23,7 +23,8 @@ import {
     Circle,
     CheckCircle,
     XCircle,
-    Search
+    Search,
+    Loader2
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
@@ -46,6 +47,7 @@ interface StrategyOverOneProps {
     isAuthorized: boolean;
     currency: string;
     onExecuteTrade: (params: any) => void;
+    activeContract: any;
 }
 
 interface TradeLog {
@@ -53,7 +55,7 @@ interface TradeLog {
     time: string;
     type: 'OVER 1';
     trigger: string;
-    result: 'WON' | 'LOST' | 'PENDING';
+    result: 'WON' | 'LOST' | 'PENDING' | 'EXECUTING';
     stake: number;
     profit: number;
     isRecovery: boolean;
@@ -68,7 +70,8 @@ export function StrategyOverOne({
     balance, 
     isAuthorized, 
     currency, 
-    onExecuteTrade 
+    onExecuteTrade,
+    activeContract
 }: StrategyOverOneProps) {
     const [config, setConfig] = React.useState({
         stake: 10,
@@ -83,6 +86,7 @@ export function StrategyOverOne({
     const [trades, setTrades] = React.useState<TradeLog[]>([]);
     const [sessionStats, setSessionStats] = React.useState({ wins: 0, losses: 0, profit: 0 });
     const [statusMessage, setStatusMessage] = React.useState('ENGINE STANDBY');
+    const [isPendingExecution, setIsPendingExecution] = React.useState(false);
 
     const strategyAnalysis = React.useMemo(() => {
         if (lastDigitTicks.length < 20) return null;
@@ -116,8 +120,45 @@ export function StrategyOverOne({
         };
     }, [lastDigitTicks]);
 
+    // Monitor Active Contract Result
     React.useEffect(() => {
-        if (!isRunning || !strategyAnalysis || sessionEnded) return;
+        if (!activeContract || !isPendingExecution) return;
+
+        if (activeContract.status === 'won' || activeContract.status === 'lost') {
+            const result = activeContract.status.toUpperCase() as 'WON' | 'LOST';
+            const profit = parseFloat(activeContract.profit);
+            
+            const newTrade: TradeLog = {
+                id: activeContract.contract_id.toString(),
+                time: new Date().toLocaleTimeString(),
+                type: 'OVER 1',
+                trigger: lastDigitTicks.slice(0, 3).join(','),
+                result: result,
+                stake: parseFloat(activeContract.buy_price),
+                profit: profit,
+                isRecovery: isRecoveryMode
+            };
+
+            setTrades(prev => [newTrade, ...prev].slice(0, 50));
+            setSessionStats(prev => ({
+                wins: result === 'WON' ? prev.wins + 1 : prev.wins,
+                losses: result === 'LOST' ? prev.losses + 1 : prev.losses,
+                profit: prev.profit + profit
+            }));
+
+            setIsRecoveryMode(result === 'LOST');
+            setIsPendingExecution(false);
+            setStatusMessage('CYCLE COMPLETE. RE-SYNCING.');
+            
+            // Resume running after a cooling period
+            setTimeout(() => {
+                if (!sessionEnded) setIsRunning(true);
+            }, 5000);
+        }
+    }, [activeContract, isPendingExecution]);
+
+    React.useEffect(() => {
+        if (!isRunning || !strategyAnalysis || sessionEnded || isPendingExecution) return;
 
         if (sessionStats.profit >= config.takeProfit || sessionStats.profit <= -config.stopLoss) {
             setIsRunning(false);
@@ -134,53 +175,58 @@ export function StrategyOverOne({
             else if (strategyAnalysis.avoidAbsent01) setStatusMessage('AVOIDING: DEAD ZONE');
             else setStatusMessage('MONITORING TICK FLUX...');
         }
-    }, [lastDigitTicks, isRunning, sessionEnded, sessionStats.profit, config.takeProfit, config.stopLoss, strategyAnalysis]);
+    }, [lastDigitTicks, isRunning, sessionEnded, sessionStats.profit, config.takeProfit, config.stopLoss, strategyAnalysis, isPendingExecution]);
 
     const handleTacticalExecution = () => {
         setIsRunning(false); 
-        setStatusMessage('SIGNAL ACTIVE: EXECUTING OVER 1');
+        setIsPendingExecution(true);
+        setStatusMessage('SIGNAL ACTIVE: EXECUTING REAL CONTRACT');
 
         const currentStake = isRecoveryMode ? (config.stake * config.martingale) : config.stake;
 
         if (balance < currentStake) {
             setStatusMessage('INSUFFICIENT BALANCE');
             setIsRunning(false);
+            setIsPendingExecution(false);
             return;
         }
 
-        onExecuteTrade({
-            stake: currentStake,
-            barrier: "1",
-            contract_type: "DIGITOVER"
-        });
-
-        // 100+1 Logic Simulator
-        setTimeout(() => {
-            const simulatedWin = true; 
-            const profit = simulatedWin ? (currentStake * 0.25) : -currentStake;
-
-            const newTrade: TradeLog = {
-                id: Math.random().toString(36).substr(2, 9),
-                time: new Date().toLocaleTimeString(),
-                type: 'OVER 1',
-                trigger: lastDigitTicks.slice(0, 3).join(','),
-                result: 'WON',
+        if (isAuthorized) {
+            onExecuteTrade({
                 stake: currentStake,
-                profit: profit,
-                isRecovery: isRecoveryMode
-            };
+                barrier: "1",
+                contract_type: "DIGITOVER"
+            });
+        } else {
+            // Simulation Mode for non-authorized users (100+1 Logic)
+            setTimeout(() => {
+                const simulatedWin = true; 
+                const profit = simulatedWin ? (currentStake * 0.25) : -currentStake;
 
-            setTrades(prev => [newTrade, ...prev].slice(0, 50));
-            setSessionStats(prev => ({
-                wins: prev.wins + 1,
-                losses: prev.losses,
-                profit: prev.profit + profit
-            }));
+                const newTrade: TradeLog = {
+                    id: Math.random().toString(36).substr(2, 9),
+                    time: new Date().toLocaleTimeString(),
+                    type: 'OVER 1',
+                    trigger: lastDigitTicks.slice(0, 3).join(','),
+                    result: 'WON',
+                    stake: currentStake,
+                    profit: profit,
+                    isRecovery: isRecoveryMode
+                };
 
-            setIsRecoveryMode(false);
-            setStatusMessage('CYCLE COMPLETE. RE-SYNCING.');
-            setTimeout(() => setIsRunning(true), 5000);
-        }, 2000);
+                setTrades(prev => [newTrade, ...prev].slice(0, 50));
+                setSessionStats(prev => ({
+                    wins: prev.wins + 1,
+                    losses: prev.losses,
+                    profit: prev.profit + profit
+                }));
+
+                setIsRecoveryMode(false);
+                setIsPendingExecution(false);
+                setStatusMessage('CYCLE COMPLETE. RE-SYNCING.');
+                setTimeout(() => setIsRunning(true), 5000);
+            }, 2000);
+        }
     };
 
     const resetSession = () => {
@@ -189,6 +235,7 @@ export function StrategyOverOne({
         setIsRecoveryMode(false);
         setIsRunning(false);
         setSessionEnded(false);
+        setIsPendingExecution(false);
         setStatusMessage('ENGINE STANDBY');
     };
 
@@ -202,7 +249,7 @@ export function StrategyOverOne({
     return (
         <div className="space-y-6 animate-in fade-in slide-in-from-bottom-5 duration-700 pb-24 max-w-[1600px] mx-auto">
             
-            {/* Tactical Vector Selector - Decoupled */}
+            {/* Tactical Vector Selector */}
             <Card className="border-none shadow-2xl bg-slate-900/60 backdrop-blur-3xl overflow-hidden relative rounded-[2rem] border border-white/5">
                 <CardContent className="p-6 sm:p-10 flex flex-col md:flex-row items-center justify-between gap-8">
                     <div className="flex items-center gap-6">
@@ -254,16 +301,16 @@ export function StrategyOverOne({
                         <CardContent className="space-y-6 px-8 pb-12">
                             <Button 
                                 onClick={() => setIsRunning(!isRunning)}
-                                disabled={sessionEnded}
+                                disabled={sessionEnded || isPendingExecution}
                                 className={cn(
                                     "w-full h-20 rounded-[2rem] font-black text-xs uppercase tracking-[0.3em] transition-all duration-500 shadow-2xl active:scale-95 group overflow-hidden",
                                     isRunning ? "bg-rose-500 hover:bg-rose-600 shadow-rose-500/20" : "bg-emerald-500 hover:bg-emerald-600 shadow-emerald-500/20",
-                                    sessionEnded && "opacity-50 grayscale cursor-not-allowed"
+                                    (sessionEnded || isPendingExecution) && "opacity-50 grayscale cursor-not-allowed"
                                 )}
                             >
                                 <div className="absolute inset-0 bg-white/10 opacity-0 group-hover:opacity-100 transition-opacity" />
-                                {isRunning ? <Square className="mr-3 h-5 w-5 fill-current" /> : <Play className="mr-3 h-5 w-5 fill-current" />}
-                                {sessionEnded ? 'TERMINATED' : isRunning ? 'HALT' : 'INITIATE OVER 1'}
+                                {isPendingExecution ? <Loader2 className="mr-3 h-5 w-5 animate-spin" /> : isRunning ? <Square className="mr-3 h-5 w-5 fill-current" /> : <Play className="mr-3 h-5 w-5 fill-current" />}
+                                {isPendingExecution ? 'EXECUTING...' : sessionEnded ? 'TERMINATED' : isRunning ? 'HALT' : 'INITIATE OVER 1'}
                             </Button>
 
                             <div className="p-8 bg-slate-900/60 rounded-[2rem] border border-white/10 text-center relative overflow-hidden shadow-2xl">
@@ -312,7 +359,7 @@ export function StrategyOverOne({
                                     type="number" 
                                     value={config.stake} 
                                     onChange={(e) => updateConfig('stake', e.target.value)}
-                                    disabled={isRunning}
+                                    disabled={isRunning || isPendingExecution}
                                     className="h-16 bg-black/60 border-white/10 text-white text-lg font-black rounded-2xl text-center focus:ring-primary/20"
                                 />
                             </div>
@@ -325,7 +372,7 @@ export function StrategyOverOne({
                                     step="0.1"
                                     value={config.martingale} 
                                     onChange={(e) => updateConfig('martingale', e.target.value)}
-                                    disabled={isRunning}
+                                    disabled={isRunning || isPendingExecution}
                                     className="h-16 bg-black/60 border-white/10 text-white text-lg font-black rounded-2xl text-center focus:ring-primary/20"
                                 />
                             </div>
@@ -339,7 +386,7 @@ export function StrategyOverOne({
                                         type="number" 
                                         value={config.stopLoss} 
                                         onChange={(e) => updateConfig('stopLoss', e.target.value)}
-                                        disabled={isRunning}
+                                        disabled={isRunning || isPendingExecution}
                                         className="h-16 bg-black/60 border-rose-500/20 text-white text-lg font-black rounded-2xl text-center"
                                     />
                                 </div>
@@ -351,7 +398,7 @@ export function StrategyOverOne({
                                         type="number" 
                                         value={config.takeProfit} 
                                         onChange={(e) => updateConfig('takeProfit', e.target.value)}
-                                        disabled={isRunning}
+                                        disabled={isRunning || isPendingExecution}
                                         className="h-16 bg-black/60 border-emerald-500/20 text-white text-lg font-black rounded-2xl text-center"
                                     />
                                 </div>
@@ -418,7 +465,7 @@ export function StrategyOverOne({
                             <div className="flex items-center gap-4">
                                 <Badge className={cn(
                                     "px-10 py-4 rounded-full text-xs font-black uppercase tracking-[0.4em] border-none shadow-xl transition-all duration-500",
-                                    isRunning ? "bg-emerald-500/20 text-emerald-400 animate-pulse scale-105" : sessionEnded ? "bg-primary/20 text-primary" : "bg-black/60 text-muted-foreground"
+                                    isRunning || isPendingExecution ? "bg-emerald-500/20 text-emerald-400 animate-pulse scale-105" : sessionEnded ? "bg-primary/20 text-primary" : "bg-black/60 text-muted-foreground"
                                 )}>
                                     {statusMessage}
                                 </Badge>
@@ -487,9 +534,9 @@ export function StrategyOverOne({
                                                 <div className="flex items-center gap-8">
                                                     <div className={cn(
                                                         "w-16 h-16 rounded-2xl flex items-center justify-center transition-all duration-500 shadow-xl",
-                                                        trade.result === 'WON' ? "bg-emerald-500/10 text-emerald-400" : "bg-rose-500/10 text-rose-400"
+                                                        trade.result === 'WON' ? "bg-emerald-500/10 text-emerald-400" : trade.result === 'LOST' ? "bg-rose-500/10 text-rose-400" : "bg-amber-500/10 text-amber-400"
                                                     )}>
-                                                        {trade.result === 'WON' ? <ArrowUpRight className="h-8 w-8" /> : <ArrowDownRight className="h-8 w-8" />}
+                                                        {trade.result === 'WON' ? <ArrowUpRight className="h-8 w-8" /> : trade.result === 'LOST' ? <ArrowDownRight className="h-8 w-8" /> : <Activity className="h-8 w-8 animate-pulse" />}
                                                     </div>
                                                     <div>
                                                         <div className="flex items-center gap-4">
@@ -497,14 +544,14 @@ export function StrategyOverOne({
                                                             <Badge variant="outline" className="border-white/10 text-[10px] font-black text-muted-foreground px-3">${trade.stake}</Badge>
                                                             {trade.isRecovery && <Badge className="bg-amber-500/10 text-amber-400 border-none text-[8px] font-black uppercase px-3">RECOVERY</Badge>}
                                                         </div>
-                                                        <p className="text-[10px] font-black text-muted-foreground uppercase mt-2 opacity-60 tracking-widest">{trade.time} • SYNC: [{trade.trigger}]</p>
+                                                        <p className="text-[10px] font-black text-muted-foreground uppercase mt-2 opacity-60 tracking-widest">{trade.time} • ID: {trade.id}</p>
                                                     </div>
                                                 </div>
                                                 <div className="text-right">
                                                     <p className={cn("text-2xl sm:text-3xl font-black tabular-nums tracking-tighter", trade.profit >= 0 ? "text-emerald-400" : "text-rose-500")}>
                                                         {trade.profit >= 0 ? '+' : ''}{trade.profit.toFixed(2)}
                                                     </p>
-                                                    <Badge className={cn("text-[10px] font-black px-4 py-1 border-none shadow-lg mt-2", trade.result === 'WON' ? "bg-emerald-500/20 text-emerald-400" : "bg-rose-500/20 text-rose-400")}>
+                                                    <Badge className={cn("text-[10px] font-black px-4 py-1 border-none shadow-lg mt-2", trade.result === 'WON' ? "bg-emerald-500/20 text-emerald-400" : trade.result === 'LOST' ? "bg-rose-500/20 text-rose-400" : "bg-amber-500/20 text-amber-400")}>
                                                         {trade.result}
                                                     </Badge>
                                                 </div>
