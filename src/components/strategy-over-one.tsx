@@ -20,7 +20,8 @@ import {
     Globe, 
     Circle,
     Loader2,
-    Lock
+    Lock,
+    KeyRound
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
@@ -190,7 +191,7 @@ export function StrategyOverOne({
     }, [activeContract, isPendingExecution, lastDigitTicks, isRecoveryMode, sessionEnded]);
 
     React.useEffect(() => {
-        if (!isRunning || !strategyAnalysis || sessionEnded || isPendingExecution) return;
+        if (!isRunning || !strategyAnalysis || sessionEnded || isPendingExecution || !isAuthorized) return;
 
         if (sessionStats.profit >= config.takeProfit || sessionStats.profit <= -config.stopLoss) {
             setIsRunning(false);
@@ -207,9 +208,11 @@ export function StrategyOverOne({
             else if (strategyAnalysis.avoidAbsent01) setStatusMessage('AVOIDING: DEAD ZONE');
             else setStatusMessage('WAITING FOR ENTRY...');
         }
-    }, [lastDigitTicks, isRunning, sessionEnded, sessionStats.profit, config.takeProfit, config.stopLoss, strategyAnalysis, isPendingExecution]);
+    }, [lastDigitTicks, isRunning, sessionEnded, sessionStats.profit, config.takeProfit, config.stopLoss, strategyAnalysis, isPendingExecution, isAuthorized]);
 
     const handleTacticalExecution = () => {
+        if (!isAuthorized) return;
+        
         setIsRunning(false); 
         setIsPendingExecution(true);
         setStatusMessage('SIGNAL ACTIVE: EXECUTING');
@@ -247,33 +250,6 @@ export function StrategyOverOne({
             setConfig(prev => ({ ...prev, [field]: num }));
         }
     };
-
-    if (!isAuthorized) {
-        return (
-            <div className="flex items-center justify-center min-h-[60vh] animate-in fade-in zoom-in-95 duration-700">
-                <Card className="max-w-2xl w-full border-none shadow-2xl bg-slate-900/60 backdrop-blur-3xl rounded-[3rem] p-12 sm:p-20 text-center border border-white/5 relative overflow-hidden">
-                    <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-rose-500 via-primary to-rose-500" />
-                    <div className="flex flex-col items-center gap-8">
-                        <div className="w-24 h-24 rounded-[2.5rem] bg-rose-500/10 flex items-center justify-center border border-rose-500/20 relative">
-                            <Lock className="h-10 w-10 text-rose-500" />
-                            <div className="absolute inset-0 bg-rose-500/20 blur-2xl rounded-full" />
-                        </div>
-                        <div className="space-y-4">
-                            <h3 className="text-2xl sm:text-4xl font-black text-white uppercase tracking-tighter">TACTICAL ENGINE LOCKED</h3>
-                            <p className="text-muted-foreground font-medium text-base sm:text-lg leading-relaxed max-w-md mx-auto">
-                                The Over 1 strategy hub requires a secure API handshake to initiate Zero-Error market surveillance and real-time execution.
-                            </p>
-                        </div>
-                        <div className="p-6 bg-black/40 rounded-2xl border border-white/5 w-full max-sm:max-w-sm">
-                            <p className="text-[10px] font-black text-primary uppercase tracking-[0.4em] mb-2">REQUIRED PROTOCOL</p>
-                            <p className="text-white font-bold text-xs uppercase">DERIV API TOKEN AUTHORIZATION</p>
-                        </div>
-                        <p className="text-[9px] font-black text-muted-foreground uppercase tracking-[0.3em] animate-pulse">Connect via the top header to unlock real-market engagement</p>
-                    </div>
-                </Card>
-            </div>
-        );
-    }
 
     return (
         <div className="space-y-6 animate-in fade-in slide-in-from-bottom-5 duration-700 pb-24 max-w-[1600px] mx-auto">
@@ -318,21 +294,39 @@ export function StrategyOverOne({
                             <div className="text-center space-y-2">
                                 <div className="flex items-center justify-center gap-2">
                                     <p className="text-[10px] font-black text-primary uppercase tracking-[0.3em]">LIVE BALANCE</p>
-                                    <Badge className="bg-emerald-500/20 text-emerald-400 border-none px-2 py-0 text-[7px] font-black">SYNCED</Badge>
+                                    <Badge className={cn("border-none px-2 py-0 text-[7px] font-black", isAuthorized ? "bg-emerald-500/20 text-emerald-400" : "bg-rose-500/20 text-rose-400")}>
+                                        {isAuthorized ? 'SYNCED' : 'OFFLINE'}
+                                    </Badge>
                                 </div>
                                 <p className="text-3xl font-black text-white tabular-nums tracking-tighter">
-                                    {balance.toFixed(2)} <span className="text-xs opacity-40 font-bold">{currency}</span>
+                                    {isAuthorized ? (
+                                        <>{balance.toFixed(2)} <span className="text-xs opacity-40 font-bold">{currency}</span></>
+                                    ) : (
+                                        <span className="text-rose-500 opacity-40 text-xl uppercase tracking-widest">Connect API</span>
+                                    )}
                                 </p>
                             </div>
                         </CardHeader>
-                        <CardContent className="space-y-6 px-8 pb-12">
+                        <CardContent className="space-y-6 px-8 pb-12 relative">
+                            {/* Execution Lock Overlay */}
+                            {!isAuthorized && (
+                                <div className="absolute inset-0 z-20 bg-slate-950/60 backdrop-blur-sm flex flex-col items-center justify-center p-8 text-center rounded-[2.5rem]">
+                                    <div className="w-16 h-16 rounded-full bg-rose-500/20 flex items-center justify-center mb-4 border border-rose-500/30">
+                                        <KeyRound className="h-8 w-8 text-rose-500" />
+                                    </div>
+                                    <p className="text-white font-black text-xs uppercase tracking-widest leading-relaxed">
+                                        AUTHORIZATION REQUIRED<br/>FOR REAL EXECUTION
+                                    </p>
+                                </div>
+                            )}
+
                             <Button 
                                 onClick={() => setIsRunning(!isRunning)}
-                                disabled={sessionEnded || isPendingExecution}
+                                disabled={sessionEnded || isPendingExecution || !isAuthorized}
                                 className={cn(
                                     "w-full h-20 rounded-[2rem] font-black text-xs uppercase tracking-[0.3em] transition-all duration-500 shadow-2xl active:scale-95 group overflow-hidden",
                                     isRunning ? "bg-rose-500 hover:bg-rose-600 shadow-rose-500/20" : "bg-emerald-500 hover:bg-emerald-600 shadow-emerald-500/20",
-                                    (sessionEnded || isPendingExecution) && "opacity-50 grayscale cursor-not-allowed"
+                                    (sessionEnded || isPendingExecution || !isAuthorized) && "opacity-50 grayscale cursor-not-allowed"
                                 )}
                             >
                                 <div className="absolute inset-0 bg-white/10 opacity-0 group-hover:opacity-100 transition-opacity" />
@@ -370,7 +364,9 @@ export function StrategyOverOne({
                         </CardContent>
                     </Card>
 
-                    <Card className="border-2 border-primary/20 shadow-[0_0_30px_rgba(var(--primary),0.1)] bg-slate-950/80 backdrop-blur-xl rounded-[2.5rem] p-10 space-y-8 relative overflow-hidden">
+                    <Card className="border-2 border-primary/20 shadow-[0_0_30px_rgba(0,0,0,0.3)] bg-slate-950/80 backdrop-blur-xl rounded-[2.5rem] p-10 space-y-8 relative overflow-hidden">
+                        {/* Config Lock Overlay */}
+                        {!isAuthorized && <div className="absolute inset-0 z-20 bg-slate-950/40 backdrop-blur-[2px]" />}
                         <div className="flex items-center justify-between border-b border-white/5 pb-4">
                             <h3 className="text-[11px] font-black uppercase text-primary tracking-[0.3em] flex items-center gap-3">
                                 <Settings2 className="h-5 w-5" /> TACTICAL CONFIG
@@ -386,7 +382,7 @@ export function StrategyOverOne({
                                     type="number" 
                                     value={config.stake} 
                                     onChange={(e) => updateConfig('stake', e.target.value)}
-                                    disabled={isRunning || isPendingExecution}
+                                    disabled={isRunning || isPendingExecution || !isAuthorized}
                                     className="h-16 bg-black/60 border-white/10 text-white text-lg font-black rounded-2xl text-center focus:ring-primary/20"
                                 />
                             </div>
@@ -399,7 +395,7 @@ export function StrategyOverOne({
                                     step="0.1"
                                     value={config.martingale} 
                                     onChange={(e) => updateConfig('martingale', e.target.value)}
-                                    disabled={isRunning || isPendingExecution}
+                                    disabled={isRunning || isPendingExecution || !isAuthorized}
                                     className="h-16 bg-black/60 border-white/10 text-white text-lg font-black rounded-2xl text-center focus:ring-primary/20"
                                 />
                             </div>
@@ -413,7 +409,7 @@ export function StrategyOverOne({
                                         type="number" 
                                         value={config.stopLoss} 
                                         onChange={(e) => updateConfig('stopLoss', e.target.value)}
-                                        disabled={isRunning || isPendingExecution}
+                                        disabled={isRunning || isPendingExecution || !isAuthorized}
                                         className="h-16 bg-black/60 border-rose-500/20 text-white text-lg font-black rounded-2xl text-center"
                                     />
                                 </div>
@@ -425,7 +421,7 @@ export function StrategyOverOne({
                                         type="number" 
                                         value={config.takeProfit} 
                                         onChange={(e) => updateConfig('takeProfit', e.target.value)}
-                                        disabled={isRunning || isPendingExecution}
+                                        disabled={isRunning || isPendingExecution || !isAuthorized}
                                         className="h-16 bg-black/60 border-emerald-500/20 text-white text-lg font-black rounded-2xl text-center"
                                     />
                                 </div>
@@ -485,14 +481,14 @@ export function StrategyOverOne({
                                     <Zap className="h-8 w-8 text-primary drop-shadow-[0_0_12px_rgba(var(--primary),0.8)]" /> 
                                     OVER 1 ENGINE HUB
                                 </CardTitle>
-                                <CardDescription className="text-[10px] font-black uppercase text-primary/60 mt-4 tracking-widest">100+1 ACCURACY ZERO-ERROR EXECUTION ACTIVE</CardDescription>
+                                <CardDescription className="text-[10px] font-black uppercase text-primary/60 mt-4 tracking-widest">100+1 ACCURACY ZERO-ERROR SURVEILLANCE ACTIVE</CardDescription>
                             </div>
                             <div className="flex items-center gap-4">
                                 <Badge className={cn(
                                     "px-10 py-4 rounded-full text-xs font-black uppercase tracking-[0.4em] border-none shadow-xl transition-all duration-500",
                                     isRunning || isPendingExecution ? "bg-emerald-500/20 text-emerald-400 animate-pulse scale-105" : sessionEnded ? "bg-primary/20 text-primary" : "bg-black/60 text-muted-foreground"
                                 )}>
-                                    {statusMessage}
+                                    {!isAuthorized ? 'AWAITING KEY' : statusMessage}
                                 </Badge>
                             </div>
                         </CardHeader>
@@ -542,7 +538,9 @@ export function StrategyOverOne({
                                     <h4 className="text-[11px] font-black uppercase text-muted-foreground tracking-[0.3em] flex items-center gap-3">
                                         <ShieldCheck className="h-6 w-6" /> EXECUTION LOG
                                     </h4>
-                                    <Badge className="bg-white/5 text-muted-foreground/60 border-none text-[8px] font-black uppercase tracking-widest px-6 py-2">ZERO-ERROR ACTIVE</Badge>
+                                    <Badge className="bg-white/5 text-muted-foreground/60 border-none text-[8px] font-black uppercase tracking-widest px-6 py-2">
+                                        {isAuthorized ? 'REAL MARKET ENGAGED' : 'SURVEILLANCE MODE'}
+                                    </Badge>
                                 </div>
                                 <div className="space-y-5 max-h-[600px] overflow-y-auto custom-scrollbar pr-6 pb-12">
                                     {trades.length === 0 ? (
