@@ -1,4 +1,3 @@
-
 'use client';
 
 import * as React from 'react';
@@ -20,7 +19,8 @@ import {
     Settings2, 
     Globe, 
     Circle,
-    Loader2
+    Loader2,
+    Lock
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
@@ -177,7 +177,7 @@ export function StrategyOverOne({
                 }
             }, 5000);
         }
-    }, [activeContract, isPendingExecution]);
+    }, [activeContract, isPendingExecution, lastDigitTicks, isRecoveryMode, sessionEnded]);
 
     React.useEffect(() => {
         if (!isRunning || !strategyAnalysis || sessionEnded || isPendingExecution) return;
@@ -206,53 +206,18 @@ export function StrategyOverOne({
 
         const currentStake = isRecoveryMode ? (config.stake * config.martingale) : config.stake;
 
-        if (balance < currentStake && isAuthorized) {
+        if (balance < currentStake) {
             setStatusMessage('INSUFFICIENT BALANCE');
             setIsRunning(false);
             setIsPendingExecution(false);
             return;
         }
 
-        if (isAuthorized) {
-            onExecuteTrade({
-                stake: currentStake,
-                barrier: "1",
-                contract_type: "DIGITOVER"
-            });
-        } else {
-            // SIMULATION MODE
-            setTimeout(() => {
-                const isWinner = Math.random() > 0.2; 
-                const profit = isWinner ? currentStake * 0.25 : -currentStake;
-                const result = isWinner ? 'WON' : 'LOST';
-                
-                const newTrade: TradeLog = {
-                    id: Math.random().toString(36).substr(2, 9),
-                    time: new Date().toLocaleTimeString(),
-                    type: 'OVER 1',
-                    trigger: lastDigitTicks.slice(0, 3).join(','),
-                    result: result as any,
-                    stake: currentStake,
-                    profit: profit,
-                    isRecovery: isRecoveryMode
-                };
-
-                setTrades(prev => [newTrade, ...prev].slice(0, 50));
-                setSessionStats(prev => ({
-                    wins: isWinner ? prev.wins + 1 : prev.wins,
-                    losses: !isWinner ? prev.losses + 1 : prev.losses,
-                    profit: prev.profit + profit
-                }));
-
-                if (isWinner) setIsRecoveryMode(false);
-                else if (!isRecoveryMode) setIsRecoveryMode(true);
-                else setIsRecoveryMode(false);
-
-                setIsPendingExecution(false);
-                setStatusMessage('SIM CYCLE SETTLED.');
-                setTimeout(() => setIsRunning(true), 5000);
-            }, 2000);
-        }
+        onExecuteTrade({
+            stake: currentStake,
+            barrier: "1",
+            contract_type: "DIGITOVER"
+        });
     };
 
     const resetSession = () => {
@@ -271,6 +236,33 @@ export function StrategyOverOne({
             setConfig(prev => ({ ...prev, [field]: num }));
         }
     };
+
+    if (!isAuthorized) {
+        return (
+            <div className="flex items-center justify-center min-h-[60vh] animate-in fade-in zoom-in-95 duration-700">
+                <Card className="max-w-2xl w-full border-none shadow-2xl bg-slate-900/60 backdrop-blur-3xl rounded-[3rem] p-12 sm:p-20 text-center border border-white/5 relative overflow-hidden">
+                    <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-rose-500 via-primary to-rose-500" />
+                    <div className="flex flex-col items-center gap-8">
+                        <div className="w-24 h-24 rounded-[2.5rem] bg-rose-500/10 flex items-center justify-center border border-rose-500/20 relative">
+                            <Lock className="h-10 w-10 text-rose-500" />
+                            <div className="absolute inset-0 bg-rose-500/20 blur-2xl rounded-full" />
+                        </div>
+                        <div className="space-y-4">
+                            <h3 className="text-2xl sm:text-4xl font-black text-white uppercase tracking-tighter">TACTICAL ENGINE LOCKED</h3>
+                            <p className="text-muted-foreground font-medium text-base sm:text-lg leading-relaxed max-w-md mx-auto">
+                                The Over 1 strategy hub requires a secure API handshake to initiate Zero-Error market surveillance and real-time execution.
+                            </p>
+                        </div>
+                        <div className="p-6 bg-black/40 rounded-2xl border border-white/5 w-full max-w-sm">
+                            <p className="text-[10px] font-black text-primary uppercase tracking-[0.4em] mb-2">REQUIRED PROTOCOL</p>
+                            <p className="text-white font-bold text-xs uppercase">DERIV API TOKEN AUTHORIZATION</p>
+                        </div>
+                        <p className="text-[9px] font-black text-muted-foreground uppercase tracking-[0.3em] animate-pulse">Connect via the top header to unlock real-market engagement</p>
+                    </div>
+                </Card>
+            </div>
+        );
+    }
 
     return (
         <div className="space-y-6 animate-in fade-in slide-in-from-bottom-5 duration-700 pb-24 max-w-[1600px] mx-auto">
@@ -314,8 +306,8 @@ export function StrategyOverOne({
 
                             <div className="text-center space-y-2">
                                 <div className="flex items-center justify-center gap-2">
-                                    <p className="text-[10px] font-black text-primary uppercase tracking-[0.3em]">{isAuthorized ? 'LIVE BALANCE' : 'VIRTUAL EQUITY'}</p>
-                                    {isAuthorized && <Badge className="bg-emerald-500/20 text-emerald-400 border-none px-2 py-0 text-[7px] font-black">SYNCED</Badge>}
+                                    <p className="text-[10px] font-black text-primary uppercase tracking-[0.3em]">LIVE BALANCE</p>
+                                    <Badge className="bg-emerald-500/20 text-emerald-400 border-none px-2 py-0 text-[7px] font-black">SYNCED</Badge>
                                 </div>
                                 <p className="text-3xl font-black text-white tabular-nums tracking-tighter">
                                     {balance.toFixed(2)} <span className="text-xs opacity-40 font-bold">{currency}</span>

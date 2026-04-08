@@ -33,7 +33,7 @@ export function Dashboard() {
     // API & Auth State
     const [apiToken, setApiToken] = React.useState('');
     const [isAuthorized, setIsAuthorized] = React.useState(false);
-    const [balance, setBalance] = React.useState(10000);
+    const [balance, setBalance] = React.useState(0);
     const [currency, setCurrency] = React.useState('USD');
     const [wsInstance, setWsInstance] = React.useState<WebSocket | null>(null);
     const { toast } = useToast();
@@ -227,7 +227,7 @@ export function Dashboard() {
     const handleLogout = () => {
         localStorage.removeItem('frosty_api_token');
         setIsAuthorized(false);
-        setBalance(10000);
+        setBalance(0);
         setApiToken('');
         window.location.reload();
     };
@@ -362,14 +362,23 @@ export function Dashboard() {
           </div>
 
           <div className="flex-1 flex justify-end">
-            <div className="flex items-center gap-4 bg-black/40 px-6 py-2 rounded-full border border-white/5">
-                <div className="text-right">
-                    <p className="text-[8px] font-black text-muted-foreground uppercase tracking-widest mb-0.5">{isAuthorized ? 'LIVE BALANCE' : 'VIRTUAL EQUITY'}</p>
-                    <p className={cn("text-sm font-black tabular-nums", isAuthorized ? "text-emerald-400" : "text-primary")}>
-                        {balance.toFixed(2)} <span className="text-[10px] opacity-40">{currency}</span>
-                    </p>
+            {isAuthorized ? (
+                <div className="flex items-center gap-4 bg-black/40 px-6 py-2 rounded-full border border-white/5 animate-in fade-in slide-in-from-right-4 duration-500">
+                    <div className="text-right">
+                        <p className="text-[8px] font-black text-muted-foreground uppercase tracking-widest mb-0.5">LIVE BALANCE</p>
+                        <p className="text-sm font-black tabular-nums text-emerald-400">
+                            {balance.toFixed(2)} <span className="text-[10px] opacity-40">{currency}</span>
+                        </p>
+                    </div>
                 </div>
-            </div>
+            ) : (
+                <div className="flex items-center gap-4 bg-rose-500/10 px-6 py-2 rounded-full border border-rose-500/20 animate-pulse">
+                    <div className="text-right">
+                        <p className="text-[8px] font-black text-rose-400 uppercase tracking-widest">OFFLINE</p>
+                        <p className="text-[10px] font-black text-white uppercase tracking-widest">CONNECT WITH API</p>
+                    </div>
+                </div>
+            )}
           </div>
         </div>
       </header>
