@@ -73,6 +73,11 @@ export function Dashboard() {
             const data = JSON.parse(event.data);
 
             if (data.error) {
+                // If authorization fails, clear it but keep socket for live data
+                if (data.msg_type === 'authorize') {
+                    setIsAuthorized(false);
+                    localStorage.removeItem('frosty_api_token');
+                }
                 toast({
                     variant: "destructive",
                     title: "DERIV API ERROR",
@@ -100,8 +105,8 @@ export function Dashboard() {
 
             if (data.msg_type === 'history') {
                 if (data.history && data.history.times && data.history.prices) {
-                    historyBuffer = data.history.prices.map((price: number, index: number) => ({
-                        price: price,
+                    historyBuffer = data.history.prices.map((p: number, index: number) => ({
+                        price: p,
                         time: data.history.times[index] * 1000 
                     })).reverse();
                     
@@ -176,13 +181,20 @@ export function Dashboard() {
         };
     }, []);
 
+    // Live market synchronization effect
     React.useEffect(() => {
         if (!wsInstance || wsInstance.readyState !== WebSocket.OPEN) return;
+        
+        // Reset state for new market but keep connection
         setPrice(0);
         setLastDigitTicks([]);
         setPriceHistory([]);
         setTickTimestamps([]);
+        
+        // Use forget_all to clear existing tick subscriptions on this app_id
         wsInstance.send(JSON.stringify({ "forget_all": "ticks" }));
+        
+        // Initiate subscription for the selected market
         wsInstance.send(JSON.stringify({ 
             "ticks_history": selectedMarket, 
             "count": 500, 

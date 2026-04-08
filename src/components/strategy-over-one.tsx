@@ -99,7 +99,7 @@ export function StrategyOverOne({
                 setStatusMessage('SYNC TIMEOUT. RE-ENGAGING.');
                 setTimeout(() => setIsRunning(true), 2000);
             }
-        }, 10000);
+        }, 15000); // 15s watchdog for real-market latency
 
         return () => clearTimeout(timer);
     }, [isPendingExecution, activeContract]);
@@ -107,12 +107,14 @@ export function StrategyOverOne({
     const strategyAnalysis = React.useMemo(() => {
         if (lastDigitTicks.length < 20) return null;
 
-        // PRECISION WINDOW MAPPING
-        // Alpha: Digit 0 between 3rd and 5th tick (index 2 to 4)
+        // PRECISION WINDOW MAPPING (Based on user request)
+        // Alpha: Digit 0 has appeared within the last 3 to 5 ticks (indices 2 to 4)
         const cond0 = lastDigitTicks.slice(2, 5).includes(0);
-        // Beta: Digit 1 NOT between 5th and 7th tick (index 4 to 6)
+        
+        // Beta: Digit 1 has NOT appeared within the last 5 to 7 ticks (indices 4 to 6)
         const cond1 = !lastDigitTicks.slice(4, 7).includes(1);
-        // Gamma: 6 or 7 in immediate recent flux (index 0 to 2)
+        
+        // Gamma: At least one of digits 6 or 7 appeared in recent ticks (indices 0 to 2)
         const cond67 = lastDigitTicks.slice(0, 3).some(t => t === 6 || t === 7);
 
         // AVOIDANCE PROTOCOLS
@@ -159,7 +161,13 @@ export function StrategyOverOne({
                 profit: prev.profit + profit
             }));
 
-            setIsRecoveryMode(result === 'LOST');
+            // Recovery logic: if win, reset recovery mode. if loss, enable recovery mode.
+            if (result === 'WON') {
+                setIsRecoveryMode(false);
+            } else {
+                setIsRecoveryMode(true);
+            }
+            
             setIsPendingExecution(false);
             setStatusMessage('CYCLE SETTLED. COOLDOWN...');
             
@@ -199,7 +207,7 @@ export function StrategyOverOne({
 
         const currentStake = isRecoveryMode ? (config.stake * config.martingale) : config.stake;
 
-        if (balance < currentStake) {
+        if (balance < currentStake && isAuthorized) {
             setStatusMessage('INSUFFICIENT BALANCE');
             setIsRunning(false);
             setIsPendingExecution(false);
@@ -213,15 +221,18 @@ export function StrategyOverOne({
                 contract_type: "DIGITOVER"
             });
         } else {
-            // SIMULATION MODE (100+1 LOGIC)
+            // SIMULATION MODE (Public feed always live)
             setTimeout(() => {
-                const profit = currentStake * 0.25;
+                const isWinner = Math.random() > 0.2; // 80% Sim Success
+                const profit = isWinner ? currentStake * 0.25 : -currentStake;
+                const result = isWinner ? 'WON' : 'LOST';
+                
                 const newTrade: TradeLog = {
                     id: Math.random().toString(36).substr(2, 9),
                     time: new Date().toLocaleTimeString(),
                     type: 'OVER 1',
                     trigger: lastDigitTicks.slice(0, 3).join(','),
-                    result: 'WON',
+                    result: result as any,
                     stake: currentStake,
                     profit: profit,
                     isRecovery: isRecoveryMode
@@ -229,12 +240,12 @@ export function StrategyOverOne({
 
                 setTrades(prev => [newTrade, ...prev].slice(0, 50));
                 setSessionStats(prev => ({
-                    wins: prev.wins + 1,
-                    losses: prev.losses,
+                    wins: isWinner ? prev.wins + 1 : prev.wins,
+                    losses: !isWinner ? prev.losses + 1 : prev.losses,
                     profit: prev.profit + profit
                 }));
 
-                setIsRecoveryMode(false);
+                setIsRecoveryMode(!isWinner);
                 setIsPendingExecution(false);
                 setStatusMessage('SIM CYCLE SETTLED.');
                 setTimeout(() => setIsRunning(true), 5000);
