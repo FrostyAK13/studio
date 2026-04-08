@@ -93,7 +93,7 @@ export function StrategyOverOne({
     
     const lastProcessedId = React.useRef<string | null>(null);
 
-    // Watchdog
+    // Tactical Watchdog: Prevents engine lockup
     React.useEffect(() => {
         if (!isPendingExecution) return;
         
@@ -113,11 +113,17 @@ export function StrategyOverOne({
     const strategyAnalysis = React.useMemo(() => {
         if (lastDigitTicks.length < 20) return null;
 
-        // PRECISE ENTRY WINDOW MAPPING
+        // STRICT OVER 1 ENTRY WINDOW MAPPING
+        // Logic Alpha: 0 in ticks 3, 4, or 5 (indices 2, 3, 4)
         const cond0 = [lastDigitTicks[2], lastDigitTicks[3], lastDigitTicks[4]].includes(0);
+        
+        // Logic Beta: NO 1 in ticks 5, 6, or 7 (indices 4, 5, 6)
         const cond1 = ![lastDigitTicks[4], lastDigitTicks[5], lastDigitTicks[6]].includes(1);
+        
+        // Logic Gamma: 6 or 7 in ticks 1, 2, or 3 (indices 0, 1, 2)
         const cond67 = [lastDigitTicks[0], lastDigitTicks[1], lastDigitTicks[2]].some(t => t === 6 || t === 7);
 
+        // Avoidance Protocols
         const slice20 = lastDigitTicks.slice(0, 20);
         const avoidAbsent01 = !slice20.includes(0) && !slice20.includes(1);
         const avoidFreq1 = lastDigitTicks.slice(0, 10).filter(t => t === 1).length > 2;
@@ -165,11 +171,12 @@ export function StrategyOverOne({
                 profit: prev.profit + profit
             }));
 
+            // Recovery Logic: Strictly Over 1 Martingale
             if (result === 'WON') {
                 setIsRecoveryMode(false);
             } else {
                 if (isRecoveryMode) {
-                    setIsRecoveryMode(false);
+                    setIsRecoveryMode(false); // Max 1 recovery attempt for 100+1 safety
                 } else {
                     setIsRecoveryMode(true);
                 }
@@ -212,7 +219,7 @@ export function StrategyOverOne({
         
         setIsRunning(false); 
         setIsPendingExecution(true);
-        setStatusMessage('SIGNAL ACTIVE: EXECUTING');
+        setStatusMessage('SIGNAL ACTIVE: EXECUTING OVER 1');
 
         const currentStake = isRecoveryMode ? (config.stake * config.martingale) : config.stake;
 
@@ -265,7 +272,7 @@ export function StrategyOverOne({
                         </div>
                         <div>
                             <p className="text-[8px] font-black uppercase text-emerald-400/60 tracking-widest leading-none mb-1">ENGINE ALPHA (APP ID 84799)</p>
-                            <h3 className="text-sm font-black text-white uppercase tracking-widest">MARKET SURVEILLANCE CORE</h3>
+                            <h3 className="text-sm font-black text-white uppercase tracking-widest">SURVEILLANCE CORE</h3>
                         </div>
                     </div>
                     <Badge className={cn(
@@ -290,7 +297,7 @@ export function StrategyOverOne({
                         </div>
                         <div>
                             <p className={cn("text-[8px] font-black uppercase tracking-widest leading-none mb-1", isAuthorized ? "text-cyan-400/60" : "text-white/20")}>ENGINE BETA (API TOKEN)</p>
-                            <h3 className={cn("text-sm font-black uppercase tracking-widest", isAuthorized ? "text-white" : "text-white/20")}>TACTICAL EXECUTION CORE</h3>
+                            <h3 className={cn("text-sm font-black uppercase tracking-widest", isAuthorized ? "text-white" : "text-white/20")}>EXECUTION CORE</h3>
                         </div>
                     </div>
                     <Badge className={cn(
@@ -302,6 +309,7 @@ export function StrategyOverOne({
                 </Card>
             </div>
 
+            {/* DECOUPLED MARKET VECTOR SELECTOR */}
             <Card className="border-none shadow-2xl bg-slate-900/60 backdrop-blur-3xl overflow-hidden relative rounded-[2rem] border border-white/5">
                 <CardContent className="p-6 sm:p-10 flex flex-col md:flex-row items-center justify-between gap-8">
                     <div className="flex items-center gap-6">
@@ -330,6 +338,7 @@ export function StrategyOverOne({
 
             <div className="grid grid-cols-1 xl:grid-cols-4 gap-6">
                 
+                {/* ACCOUNT & CONFIG COLUMN */}
                 <div className="xl:col-span-1 space-y-6">
                     <Card className="border-none shadow-[0_20px_50px_rgba(0,0,0,0.5)] bg-slate-950/90 backdrop-blur-2xl overflow-hidden relative border border-white/5 rounded-[2.5rem]">
                         <div className="absolute top-0 left-0 w-full h-[3px] bg-primary shadow-[0_0_15px_rgba(var(--primary),0.5)]" />
@@ -411,11 +420,12 @@ export function StrategyOverOne({
                         </CardContent>
                     </Card>
 
+                    {/* TACTICAL CONFIG - BOLD WHITE INPUTS */}
                     <Card className="border-2 border-primary/20 shadow-[0_0_30px_rgba(0,0,0,0.3)] bg-slate-950/80 backdrop-blur-xl rounded-[2.5rem] p-10 space-y-8 relative overflow-hidden">
                         {!isAuthorized && <div className="absolute inset-0 z-20 bg-slate-950/40 backdrop-blur-[2px]" />}
                         <div className="flex items-center justify-between border-b border-white/5 pb-4">
                             <h3 className="text-[11px] font-black uppercase text-primary tracking-[0.3em] flex items-center gap-3">
-                                <Settings2 className="h-5 w-5" /> TACTICAL CONFIG
+                                <Settings2 className="h-5 w-5" /> OVER 1 CONFIG
                             </h3>
                         </div>
 
@@ -476,12 +486,14 @@ export function StrategyOverOne({
                     </Card>
                 </div>
 
+                {/* STRATEGY & LOGS COLUMN */}
                 <div className="xl:col-span-3 space-y-6">
                     
+                    {/* CONDITION SYNCHRONIZATION PANEL */}
                     <Card className="border-none shadow-2xl bg-slate-900/40 backdrop-blur-3xl overflow-hidden relative rounded-[2.5rem] border border-white/5">
                         <CardHeader className="pb-4 pt-10 px-10">
                             <h4 className="text-[11px] font-black uppercase text-primary tracking-[0.4em] flex items-center gap-3">
-                                <Cpu className="h-5 w-5" /> CONDITION SYNCHRONIZATION
+                                <Cpu className="h-5 w-5" /> OVER 1 CONDITION SYNCHRONIZATION
                             </h4>
                         </CardHeader>
                         <CardContent className="px-10 pb-10 grid grid-cols-1 md:grid-cols-3 gap-6">
@@ -525,7 +537,7 @@ export function StrategyOverOne({
                             <div className="text-center md:text-left">
                                 <CardTitle className="text-xl sm:text-2xl font-black uppercase tracking-[0.5em] text-white flex items-center justify-center md:justify-start gap-4">
                                     <Zap className="h-8 w-8 text-primary drop-shadow-[0_0_12px_rgba(var(--primary),0.8)]" /> 
-                                    OVER 1 ENGINE HUB
+                                    OVER 1 STRATEGY CORE
                                 </CardTitle>
                                 <CardDescription className="text-[10px] font-black uppercase text-primary/60 mt-4 tracking-widest">100+1 ACCURACY ZERO-ERROR SURVEILLANCE ACTIVE</CardDescription>
                             </div>
@@ -561,7 +573,7 @@ export function StrategyOverOne({
 
                             <div className="space-y-8">
                                 <h4 className="text-[11px] font-black uppercase text-muted-foreground tracking-[0.3em] flex items-center gap-3">
-                                    <Activity className="h-6 w-6" /> LIVE TICK FLUX
+                                    <Activity className="h-6 w-6" /> LIVE TICK FLUX (OVER 1 MONITOR)
                                 </h4>
                                 <div className="flex flex-wrap gap-4">
                                     {lastDigitTicks.slice(0, 16).map((digit, idx) => (
@@ -579,11 +591,12 @@ export function StrategyOverOne({
                                 </div>
                             </div>
 
+                            {/* EXECUTION LOG WITH CLEAR HISTORY & VISIBLE STAKE */}
                             <div className="space-y-8">
                                 <div className="flex items-center justify-between">
                                     <div className="flex items-center gap-6">
                                         <h4 className="text-[11px] font-black uppercase text-muted-foreground tracking-[0.3em] flex items-center gap-3">
-                                            <ShieldCheck className="h-6 w-6" /> EXECUTION LOG
+                                            <ShieldCheck className="h-6 w-6" /> EXECUTION LOG (OVER 1)
                                         </h4>
                                         {trades.length > 0 && (
                                             <Button 
@@ -624,6 +637,7 @@ export function StrategyOverOne({
                                                             {trade.isRecovery && <Badge className="bg-amber-500/10 text-amber-400 border-none text-[8px] font-black uppercase px-3">RECOVERY</Badge>}
                                                         </div>
                                                         <div className="flex items-center gap-3">
+                                                            {/* HIGH VISIBILITY STAKE */}
                                                             <div className="bg-primary px-4 py-1.5 rounded-lg shadow-lg">
                                                                 <p className="text-[10px] font-black text-white uppercase tracking-widest">${trade.stake.toFixed(2)} STAKE</p>
                                                             </div>
