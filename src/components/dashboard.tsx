@@ -63,14 +63,10 @@ export function Dashboard() {
 
         ws.onopen = () => {
             setConnectionStatus('connecting');
-            
-            // Check for saved token and authorize immediately
             const savedToken = localStorage.getItem('frosty_api_token');
             if (savedToken) {
                 ws.send(JSON.stringify({ "authorize": savedToken }));
             }
-
-            // Initial market subscription logic is handled by the separate useEffect listening to selectedMarket
         };
 
         ws.onmessage = (event) => {
@@ -163,7 +159,6 @@ export function Dashboard() {
                 const contract = data.proposal_open_contract;
                 setActiveContract(contract);
                 if (contract.is_expired) {
-                    setActiveContract(null);
                     if (ws.readyState === WebSocket.OPEN) {
                         ws.send(JSON.stringify({ "balance": 1 }));
                     }
@@ -181,20 +176,13 @@ export function Dashboard() {
         };
     }, []);
 
-    // SMOOTH MARKET SWITCHING LOGIC
     React.useEffect(() => {
         if (!wsInstance || wsInstance.readyState !== WebSocket.OPEN) return;
-
-        // Reset local stream states
         setPrice(0);
         setLastDigitTicks([]);
         setPriceHistory([]);
         setTickTimestamps([]);
-
-        // Forget all previous tick subscriptions to prevent channel noise
         wsInstance.send(JSON.stringify({ "forget_all": "ticks" }));
-
-        // Initiate new market stream
         wsInstance.send(JSON.stringify({ 
             "ticks_history": selectedMarket, 
             "count": 500, 
@@ -202,7 +190,6 @@ export function Dashboard() {
             "style": "ticks", 
             "subscribe": 1 
         }));
-
     }, [selectedMarket, wsInstance]);
 
     const handleAuthorize = () => {
@@ -287,7 +274,7 @@ export function Dashboard() {
                     <div className="space-y-6">
                         <div className="space-y-2">
                             <h4 className="text-xs font-black uppercase text-white tracking-widest">TACTICAL AUTHORIZATION</h4>
-                            <p className="text-[9px] font-bold text-muted-foreground uppercase leading-tight">Enter your Deriv API Token to enable real-market execution and commission tracking via App ID 84799.</p>
+                            <p className="text-[9px] font-bold text-muted-foreground uppercase leading-tight">Enter your Deriv API Token to enable real-market execution via App ID 84799.</p>
                         </div>
                         {isAuthorized ? (
                             <div className="space-y-4">

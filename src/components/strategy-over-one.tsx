@@ -88,24 +88,38 @@ export function StrategyOverOne({
     const [statusMessage, setStatusMessage] = React.useState('ENGINE STANDBY');
     const [isPendingExecution, setIsPendingExecution] = React.useState(false);
 
+    // Watchdog to prevent execution deadlock
+    React.useEffect(() => {
+        if (!isPendingExecution) return;
+        
+        const timer = setTimeout(() => {
+            if (isPendingExecution && !activeContract) {
+                console.warn("TACTICAL WATCHDOG: Execution reset due to timeout.");
+                setIsPendingExecution(false);
+                setStatusMessage('SYNC TIMEOUT. RE-ENGAGING.');
+                setTimeout(() => setIsRunning(true), 2000);
+            }
+        }, 10000);
+
+        return () => clearTimeout(timer);
+    }, [isPendingExecution, activeContract]);
+
     const strategyAnalysis = React.useMemo(() => {
         if (lastDigitTicks.length < 20) return null;
 
-        const slice3 = lastDigitTicks.slice(0, 3);
-        const slice5 = lastDigitTicks.slice(0, 5);
-        const slice7 = lastDigitTicks.slice(0, 7);
+        // PRECISION WINDOW MAPPING
+        // Alpha: Digit 0 between 3rd and 5th tick (index 2 to 4)
+        const cond0 = lastDigitTicks.slice(2, 5).includes(0);
+        // Beta: Digit 1 NOT between 5th and 7th tick (index 4 to 6)
+        const cond1 = !lastDigitTicks.slice(4, 7).includes(1);
+        // Gamma: 6 or 7 in immediate recent flux (index 0 to 2)
+        const cond67 = lastDigitTicks.slice(0, 3).some(t => t === 6 || t === 7);
+
+        // AVOIDANCE PROTOCOLS
         const slice20 = lastDigitTicks.slice(0, 20);
-
-        // Condition Alpha: Digit 0 in last 3-5 ticks
-        const cond0 = slice5.includes(0);
-        // Condition Beta: Digit 1 not in last 5-7 ticks
-        const cond1 = !slice7.includes(1);
-        // Condition Gamma: Digit 6 or 7 in recent ticks
-        const cond67 = slice5.some(t => t === 6 || t === 7);
-
         const avoidAbsent01 = !slice20.includes(0) && !slice20.includes(1);
         const avoidFreq1 = lastDigitTicks.slice(0, 10).filter(t => t === 1).length > 2;
-        const avoidHighSeq = slice5.every(t => t >= 7);
+        const avoidHighSeq = lastDigitTicks.slice(0, 5).every(t => t >= 7);
 
         const allSystemsGo = cond0 && cond1 && cond67 && !avoidAbsent01 && !avoidFreq1 && !avoidHighSeq;
 
@@ -120,7 +134,6 @@ export function StrategyOverOne({
         };
     }, [lastDigitTicks]);
 
-    // Monitor Active Contract Result
     React.useEffect(() => {
         if (!activeContract || !isPendingExecution) return;
 
@@ -148,11 +161,13 @@ export function StrategyOverOne({
 
             setIsRecoveryMode(result === 'LOST');
             setIsPendingExecution(false);
-            setStatusMessage('CYCLE COMPLETE. RE-SYNCING.');
+            setStatusMessage('CYCLE SETTLED. COOLDOWN...');
             
-            // Resume running after a cooling period
             setTimeout(() => {
-                if (!sessionEnded) setIsRunning(true);
+                if (!sessionEnded) {
+                    setIsRunning(true);
+                    setStatusMessage('MONITORING FLUX...');
+                }
             }, 5000);
         }
     }, [activeContract, isPendingExecution]);
@@ -180,7 +195,7 @@ export function StrategyOverOne({
     const handleTacticalExecution = () => {
         setIsRunning(false); 
         setIsPendingExecution(true);
-        setStatusMessage('SIGNAL ACTIVE: EXECUTING REAL CONTRACT');
+        setStatusMessage('SIGNAL ACTIVE: EXECUTING CONTRACT');
 
         const currentStake = isRecoveryMode ? (config.stake * config.martingale) : config.stake;
 
@@ -198,11 +213,9 @@ export function StrategyOverOne({
                 contract_type: "DIGITOVER"
             });
         } else {
-            // Simulation Mode for non-authorized users (100+1 Logic)
+            // SIMULATION MODE (100+1 LOGIC)
             setTimeout(() => {
-                const simulatedWin = true; 
-                const profit = simulatedWin ? (currentStake * 0.25) : -currentStake;
-
+                const profit = currentStake * 0.25;
                 const newTrade: TradeLog = {
                     id: Math.random().toString(36).substr(2, 9),
                     time: new Date().toLocaleTimeString(),
@@ -223,7 +236,7 @@ export function StrategyOverOne({
 
                 setIsRecoveryMode(false);
                 setIsPendingExecution(false);
-                setStatusMessage('CYCLE COMPLETE. RE-SYNCING.');
+                setStatusMessage('SIM CYCLE SETTLED.');
                 setTimeout(() => setIsRunning(true), 5000);
             }, 2000);
         }
@@ -249,7 +262,6 @@ export function StrategyOverOne({
     return (
         <div className="space-y-6 animate-in fade-in slide-in-from-bottom-5 duration-700 pb-24 max-w-[1600px] mx-auto">
             
-            {/* Tactical Vector Selector */}
             <Card className="border-none shadow-2xl bg-slate-900/60 backdrop-blur-3xl overflow-hidden relative rounded-[2rem] border border-white/5">
                 <CardContent className="p-6 sm:p-10 flex flex-col md:flex-row items-center justify-between gap-8">
                     <div className="flex items-center gap-6">
@@ -278,7 +290,6 @@ export function StrategyOverOne({
 
             <div className="grid grid-cols-1 xl:grid-cols-4 gap-6">
                 
-                {/* Account & Config Sidebar */}
                 <div className="xl:col-span-1 space-y-6">
                     <Card className="border-none shadow-[0_20px_50px_rgba(0,0,0,0.5)] bg-slate-950/90 backdrop-blur-2xl overflow-hidden relative border border-white/5 rounded-[2.5rem]">
                         <div className="absolute top-0 left-0 w-full h-[3px] bg-primary shadow-[0_0_15px_rgba(var(--primary),0.5)]" />
@@ -407,10 +418,8 @@ export function StrategyOverOne({
                     </Card>
                 </div>
 
-                {/* Main Engine Output */}
                 <div className="xl:col-span-3 space-y-6">
                     
-                    {/* Condition Synchronization Panel */}
                     <Card className="border-none shadow-2xl bg-slate-900/40 backdrop-blur-3xl overflow-hidden relative rounded-[2.5rem] border border-white/5">
                         <CardHeader className="pb-4 pt-10 px-10">
                             <h4 className="text-[11px] font-black uppercase text-primary tracking-[0.4em] flex items-center gap-3">
@@ -424,7 +433,7 @@ export function StrategyOverOne({
                             )}>
                                 <div className="space-y-1">
                                     <p className="text-[8px] font-black uppercase tracking-widest">LOGIC ALPHA</p>
-                                    <p className="text-xs font-bold uppercase">Digit 0 (3-5 Ticks)</p>
+                                    <p className="text-xs font-bold uppercase">Digit 0 (3-5 Tick Window)</p>
                                 </div>
                                 {strategyAnalysis?.cond0 ? <CheckCircle2 className="h-6 w-6" /> : <Circle className="h-6 w-6 opacity-20" />}
                             </div>
@@ -435,7 +444,7 @@ export function StrategyOverOne({
                             )}>
                                 <div className="space-y-1">
                                     <p className="text-[8px] font-black uppercase tracking-widest">LOGIC BETA</p>
-                                    <p className="text-xs font-bold uppercase">No Digit 1 (7 Ticks)</p>
+                                    <p className="text-xs font-bold uppercase">No Digit 1 (5-7 Tick Window)</p>
                                 </div>
                                 {strategyAnalysis?.cond1 ? <CheckCircle2 className="h-6 w-6" /> : <Circle className="h-6 w-6 opacity-20" />}
                             </div>
@@ -446,7 +455,7 @@ export function StrategyOverOne({
                             )}>
                                 <div className="space-y-1">
                                     <p className="text-[8px] font-black uppercase tracking-widest">LOGIC GAMMA</p>
-                                    <p className="text-xs font-bold uppercase">Digit 6 or 7 Detected</p>
+                                    <p className="text-xs font-bold uppercase">Digit 6 or 7 (Recent flux)</p>
                                 </div>
                                 {strategyAnalysis?.cond67 ? <CheckCircle2 className="h-6 w-6" /> : <Circle className="h-6 w-6 opacity-20" />}
                             </div>
