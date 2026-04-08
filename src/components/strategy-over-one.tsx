@@ -309,45 +309,13 @@ export function StrategyOverOne({
                 </Card>
             </div>
 
-            {/* DECOUPLED MARKET VECTOR SELECTOR */}
-            <Card className="border-none shadow-2xl bg-slate-900/60 backdrop-blur-3xl overflow-hidden relative rounded-[2rem] border border-white/5">
-                <CardContent className="p-6 sm:p-10 flex flex-col md:flex-row items-center justify-between gap-8">
-                    <div className="flex items-center gap-6">
-                        <div className="w-14 h-14 rounded-2xl bg-primary/20 flex items-center justify-center border border-primary/30 shadow-[0_0_20px_rgba(var(--primary),0.3)]">
-                            <Globe className="h-8 w-8 text-primary" />
-                        </div>
-                        <div>
-                            <h3 className="text-xl font-black text-white uppercase tracking-widest">TACTICAL VECTOR</h3>
-                            <p className="text-[10px] font-black uppercase text-primary/60 mt-1 tracking-widest">Always-Live Market Surveillance</p>
-                        </div>
-                    </div>
-                    <div className="flex-1 max-w-md w-full">
-                        <Select value={selectedMarket} onValueChange={onMarketChange}>
-                            <SelectTrigger className="h-16 bg-black/60 border-white/10 rounded-[1.5rem] font-black text-sm text-white px-8 focus:ring-primary/40">
-                                <SelectValue placeholder="Select Index" />
-                            </SelectTrigger>
-                            <SelectContent className="bg-slate-950 border-white/10 text-white rounded-2xl">
-                                {syntheticIndices.map((index) => (
-                                    <SelectItem key={index.id} value={index.id} className="font-bold py-3">{index.name}</SelectItem>
-                                ))}
-                            </SelectContent>
-                        </Select>
-                    </div>
-                </CardContent>
-            </Card>
-
             <div className="grid grid-cols-1 xl:grid-cols-4 gap-6">
                 
                 {/* ACCOUNT & CONFIG COLUMN */}
                 <div className="xl:col-span-1 space-y-6">
-                    <Card className="border-none shadow-[0_20px_50px_rgba(0,0,0,0.5)] bg-slate-950/90 backdrop-blur-2xl overflow-hidden relative border border-white/5 rounded-[2.5rem]">
+                    <Card className="border-none shadow-2xl bg-slate-950/90 backdrop-blur-2xl overflow-hidden relative border border-white/5 rounded-[2.5rem]">
                         <div className="absolute top-0 left-0 w-full h-[3px] bg-primary shadow-[0_0_15px_rgba(var(--primary),0.5)]" />
-                        <CardHeader className="space-y-8 pt-12 px-8">
-                            <div className="text-center space-y-2">
-                                <p className="text-[10px] font-black text-primary uppercase tracking-[0.4em]">LIVE PIVOT</p>
-                                <p className="text-4xl font-black text-white tabular-nums tracking-tighter">{price.toFixed(decimalPlaces)}</p>
-                            </div>
-
+                        <CardHeader className="pt-8 px-8">
                             <div className="text-center space-y-2">
                                 <div className="flex items-center justify-center gap-2">
                                     <p className="text-[10px] font-black text-primary uppercase tracking-[0.3em]">LIVE BALANCE</p>
@@ -364,7 +332,7 @@ export function StrategyOverOne({
                                 </p>
                             </div>
                         </CardHeader>
-                        <CardContent className="space-y-6 px-8 pb-12 relative">
+                        <CardContent className="space-y-6 px-8 pb-10 relative">
                             {!isAuthorized && (
                                 <div className="absolute inset-0 z-20 bg-slate-950/60 backdrop-blur-sm flex flex-col items-center justify-center p-8 text-center rounded-[2.5rem]">
                                     <div className="w-16 h-16 rounded-full bg-rose-500/20 flex items-center justify-center mb-4 border border-rose-500/30">
@@ -420,66 +388,90 @@ export function StrategyOverOne({
                         </CardContent>
                     </Card>
 
-                    {/* TACTICAL CONFIG - BOLD WHITE INPUTS */}
-                    <Card className="border-2 border-primary/20 shadow-[0_0_30px_rgba(0,0,0,0.3)] bg-slate-950/80 backdrop-blur-xl rounded-[2.5rem] p-10 space-y-8 relative overflow-hidden">
-                        {!isAuthorized && <div className="absolute inset-0 z-20 bg-slate-950/40 backdrop-blur-[2px]" />}
+                    {/* TACTICAL CONFIG HUB - CONSOLIDATED */}
+                    <Card className="border-2 border-primary/20 shadow-[0_0_30px_rgba(0,0,0,0.3)] bg-slate-950/80 backdrop-blur-xl rounded-[2.5rem] p-8 space-y-8 relative overflow-hidden">
                         <div className="flex items-center justify-between border-b border-white/5 pb-4">
                             <h3 className="text-[11px] font-black uppercase text-primary tracking-[0.3em] flex items-center gap-3">
                                 <Settings2 className="h-5 w-5" /> OVER 1 CONFIG
                             </h3>
                         </div>
 
-                        <div className="grid grid-cols-1 gap-8">
-                            <div className="space-y-4">
+                        <div className="space-y-6">
+                            {/* MARKET VECTOR */}
+                            <div className="space-y-3">
                                 <Label className="text-[9px] font-black uppercase text-white tracking-widest flex items-center gap-2">
-                                    <DollarSign className="h-4 w-4 text-primary" /> INITIAL STAKE
+                                    <Globe className="h-4 w-4 text-primary" /> MARKET VECTOR
                                 </Label>
-                                <Input 
-                                    type="number" 
-                                    value={config.stake} 
-                                    onChange={(e) => updateConfig('stake', e.target.value)}
-                                    disabled={isRunning || isPendingExecution || !isAuthorized}
-                                    className="h-16 bg-black/60 border-white/10 text-white text-lg font-black rounded-2xl text-center focus:ring-primary/20"
-                                />
+                                <Select value={selectedMarket} onValueChange={onMarketChange}>
+                                    <SelectTrigger className="h-14 bg-black/60 border-white/10 rounded-2xl font-black text-white px-6 focus:ring-primary/20">
+                                        <SelectValue placeholder="Select Index" />
+                                    </SelectTrigger>
+                                    <SelectContent className="bg-slate-950 border-white/10 text-white rounded-2xl">
+                                        {syntheticIndices.map((index) => (
+                                            <SelectItem key={index.id} value={index.id} className="font-bold py-2">{index.name}</SelectItem>
+                                        ))}
+                                    </SelectContent>
+                                </Select>
                             </div>
-                            <div className="space-y-4">
-                                <Label className="text-[9px] font-black uppercase text-white tracking-widest flex items-center gap-2">
-                                    <BarChart3 className="h-4 w-4 text-primary" /> MARTINGALE MULTIPLIER
-                                </Label>
-                                <Input 
-                                    type="number" 
-                                    step="0.1"
-                                    value={config.martingale} 
-                                    onChange={(e) => updateConfig('martingale', e.target.value)}
-                                    disabled={isRunning || isPendingExecution || !isAuthorized}
-                                    className="h-16 bg-black/60 border-white/10 text-white text-lg font-black rounded-2xl text-center focus:ring-primary/20"
-                                />
+
+                            {/* LIVE PRICE Readout */}
+                            <div className="p-5 bg-primary/10 border border-primary/20 rounded-2xl text-center shadow-inner">
+                                <p className="text-[8px] font-black text-primary uppercase tracking-widest mb-1 opacity-80">LIVE PRICE PIVOT</p>
+                                <p className="text-2xl font-black text-white tabular-nums tracking-tighter">{price.toFixed(decimalPlaces)}</p>
                             </div>
-                            
-                            <div className="grid grid-cols-2 gap-4">
-                                <div className="space-y-4">
-                                    <Label className="text-[9px] font-black uppercase text-rose-500 tracking-widest flex items-center gap-2">
-                                        <ShieldAlert className="h-3 w-3" /> STOP LOSS
+
+                            <div className="grid grid-cols-1 gap-6">
+                                <div className="space-y-3">
+                                    <Label className="text-[9px] font-black uppercase text-white tracking-widest flex items-center gap-2">
+                                        <DollarSign className="h-4 w-4 text-primary" /> INITIAL STAKE
                                     </Label>
                                     <Input 
                                         type="number" 
-                                        value={config.stopLoss} 
-                                        onChange={(e) => updateConfig('stopLoss', e.target.value)}
-                                        disabled={isRunning || isPendingExecution || !isAuthorized}
-                                        className="h-16 bg-black/60 border-rose-500/20 text-white text-lg font-black rounded-2xl text-center"
+                                        value={config.stake} 
+                                        onChange={(e) => updateConfig('stake', e.target.value)}
+                                        disabled={isRunning || isPendingExecution}
+                                        className="h-14 bg-black/60 border-white/10 text-white text-lg font-black rounded-2xl text-center focus:ring-primary/20"
                                     />
                                 </div>
-                                <div className="space-y-4">
-                                    <Label className="text-[9px] font-black uppercase text-emerald-500 tracking-widest flex items-center gap-2">
-                                        <Target className="h-3 w-3" /> TAKE PROFIT
+                                <div className="space-y-3">
+                                    <Label className="text-[9px] font-black uppercase text-white tracking-widest flex items-center gap-2">
+                                        <BarChart3 className="h-4 w-4 text-primary" /> MARTINGALE MULTIPLIER
                                     </Label>
                                     <Input 
                                         type="number" 
-                                        value={config.takeProfit} 
-                                        onChange={(e) => updateConfig('takeProfit', e.target.value)}
-                                        disabled={isRunning || isPendingExecution || !isAuthorized}
-                                        className="h-16 bg-black/60 border-emerald-500/20 text-white text-lg font-black rounded-2xl text-center"
+                                        step="0.1"
+                                        value={config.martingale} 
+                                        onChange={(e) => updateConfig('martingale', e.target.value)}
+                                        disabled={isRunning || isPendingExecution}
+                                        className="h-14 bg-black/60 border-white/10 text-white text-lg font-black rounded-2xl text-center focus:ring-primary/20"
                                     />
+                                </div>
+                                
+                                <div className="grid grid-cols-2 gap-4">
+                                    <div className="space-y-3">
+                                        <Label className="text-[9px] font-black uppercase text-rose-500 tracking-widest flex items-center gap-2">
+                                            <ShieldAlert className="h-3 w-3" /> STOP LOSS
+                                        </Label>
+                                        <Input 
+                                            type="number" 
+                                            value={config.stopLoss} 
+                                            onChange={(e) => updateConfig('stopLoss', e.target.value)}
+                                            disabled={isRunning || isPendingExecution}
+                                            className="h-14 bg-black/60 border-rose-500/20 text-white text-lg font-black rounded-2xl text-center"
+                                        />
+                                    </div>
+                                    <div className="space-y-3">
+                                        <Label className="text-[9px] font-black uppercase text-emerald-500 tracking-widest flex items-center gap-2">
+                                            <Target className="h-3 w-3" /> TAKE PROFIT
+                                        </Label>
+                                        <Input 
+                                            type="number" 
+                                            value={config.takeProfit} 
+                                            onChange={(e) => updateConfig('takeProfit', e.target.value)}
+                                            disabled={isRunning || isPendingExecution}
+                                            className="h-14 bg-black/60 border-emerald-500/20 text-white text-lg font-black rounded-2xl text-center"
+                                        />
+                                    </div>
                                 </div>
                             </div>
                         </div>
@@ -591,7 +583,6 @@ export function StrategyOverOne({
                                 </div>
                             </div>
 
-                            {/* EXECUTION LOG WITH CLEAR HISTORY & VISIBLE STAKE */}
                             <div className="space-y-8">
                                 <div className="flex items-center justify-between">
                                     <div className="flex items-center gap-6">
@@ -637,7 +628,6 @@ export function StrategyOverOne({
                                                             {trade.isRecovery && <Badge className="bg-amber-500/10 text-amber-400 border-none text-[8px] font-black uppercase px-3">RECOVERY</Badge>}
                                                         </div>
                                                         <div className="flex items-center gap-3">
-                                                            {/* HIGH VISIBILITY STAKE */}
                                                             <div className="bg-primary px-4 py-1.5 rounded-lg shadow-lg">
                                                                 <p className="text-[10px] font-black text-white uppercase tracking-widest">${trade.stake.toFixed(2)} STAKE</p>
                                                             </div>

@@ -29,8 +29,8 @@ export function Dashboard() {
     const [decimalPlaces, setDecimalPlaces] = React.useState(2);
     const [tickTimestamps, setTickTimestamps] = React.useState<number[]>([]);
     
-    // Dual Engine State
-    const [surveillanceStatus, setSurveillanceStatus] = React.useState<EngineStatus>('offline');
+    // Dual Engine State - Alpha is Always Live
+    const [surveillanceStatus, setSurveillanceStatus] = React.useState<EngineStatus>('active');
     const [executionStatus, setExecutionStatus] = React.useState<EngineStatus>('standby');
     
     // API & Auth State
