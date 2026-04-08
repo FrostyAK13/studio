@@ -14,10 +14,10 @@ import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
-import { KeyRound, ShieldCheck, Wallet, LogOut, Activity, Lock, RefreshCw } from 'lucide-react';
+import { KeyRound, ShieldCheck, Wallet, LogOut, Activity, Lock, RefreshCw, Cpu, Zap, Radio } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 
-type ConnectionStatusType = 'connecting' | 'streaming' | 'disconnected' | 'authorized';
+type EngineStatus = 'offline' | 'active' | 'standby' | 'authorized' | 'executing';
 
 export function Dashboard() {
     const [mounted, setMounted] = React.useState(false);
@@ -27,8 +27,11 @@ export function Dashboard() {
     const [maxTicks, setMaxTicks] = React.useState(1000); 
     const [selectedMarket, setSelectedMarket] = React.useState(syntheticIndices[0].id);
     const [decimalPlaces, setDecimalPlaces] = React.useState(2);
-    const [connectionStatus, setConnectionStatus] = React.useState<ConnectionStatusType>('connecting');
     const [tickTimestamps, setTickTimestamps] = React.useState<number[]>([]);
+    
+    // Dual Engine State
+    const [surveillanceStatus, setSurveillanceStatus] = React.useState<EngineStatus>('offline');
+    const [executionStatus, setExecutionStatus] = React.useState<EngineStatus>('standby');
     
     // API & Auth State
     const [apiToken, setApiToken] = React.useState('');
@@ -41,12 +44,12 @@ export function Dashboard() {
     // Trade Handling State
     const [activeContract, setActiveContract] = React.useState<any>(null);
 
-    // Initial mounting guard to prevent hydration errors
+    // Initial mounting guard
     React.useEffect(() => {
         setMounted(true);
     }, []);
 
-    // PERSISTENT WEBSOCKET INITIALIZATION (ALWAYS LIVE)
+    // PERSISTENT WEBSOCKET INITIALIZATION
     React.useEffect(() => {
         if (!mounted) return;
 
@@ -69,7 +72,7 @@ export function Dashboard() {
         };
 
         ws.onopen = () => {
-            setConnectionStatus('connecting');
+            setSurveillanceStatus('active');
             const savedToken = localStorage.getItem('frosty_api_token');
             if (savedToken) {
                 ws.send(JSON.stringify({ "authorize": savedToken }));
@@ -82,11 +85,12 @@ export function Dashboard() {
             if (data.error) {
                 if (data.msg_type === 'authorize') {
                     setIsAuthorized(false);
+                    setExecutionStatus('standby');
                     localStorage.removeItem('frosty_api_token');
                 }
                 toast({
                     variant: "destructive",
-                    title: "TACTICAL API ERROR",
+                    title: "TACTICAL ERROR",
                     description: data.error.message
                 });
                 return;
@@ -94,13 +98,13 @@ export function Dashboard() {
 
             if (data.msg_type === 'authorize') {
                 setIsAuthorized(true);
-                setConnectionStatus('authorized');
+                setExecutionStatus('authorized');
                 setCurrency(data.authorize.currency);
                 localStorage.setItem('frosty_api_token', data.echo_req.authorize);
                 ws.send(JSON.stringify({ "balance": 1, "subscribe": 1 }));
                 toast({
-                    title: "TACTICAL SYNC COMPLETE",
-                    description: `Authorized as ${data.authorize.loginid}. Real balance engaged.`
+                    title: "EXECUTION ENGINE ENGAGED",
+                    description: `Authorized via App ID 84799. Live balance active.`
                 });
             }
 
@@ -130,10 +134,6 @@ export function Dashboard() {
             }
 
             if (data.msg_type === 'tick') {
-                if (ws.readyState === WebSocket.OPEN) {
-                    setConnectionStatus(prev => prev === 'authorized' ? 'authorized' : 'streaming');
-                }
-                
                 if (data.tick && typeof data.tick.quote === 'number') {
                     if (pipSize === null) {
                         pipSize = data.tick.pip_size ?? 2;
@@ -162,6 +162,7 @@ export function Dashboard() {
 
             if (data.msg_type === 'buy') {
                 if (data.buy && data.buy.contract_id) {
+                    setExecutionStatus('executing');
                     ws.send(JSON.stringify({ "proposal_open_contract": 1, "contract_id": data.buy.contract_id, "subscribe": 1 }));
                 }
             }
@@ -170,6 +171,7 @@ export function Dashboard() {
                 const contract = data.proposal_open_contract;
                 setActiveContract(contract);
                 if (contract.is_expired) {
+                    setExecutionStatus('authorized');
                     if (ws.readyState === WebSocket.OPEN) {
                         ws.send(JSON.stringify({ "balance": 1 }));
                     }
@@ -177,8 +179,14 @@ export function Dashboard() {
             }
         };
 
-        ws.onclose = () => setConnectionStatus('disconnected');
-        ws.onerror = () => setConnectionStatus('disconnected');
+        ws.onclose = () => {
+            setSurveillanceStatus('offline');
+            setExecutionStatus('standby');
+        };
+        ws.onerror = () => {
+            setSurveillanceStatus('offline');
+            setExecutionStatus('standby');
+        };
 
         return () => {
            if(ws.readyState === WebSocket.OPEN || ws.readyState === WebSocket.CONNECTING) {
@@ -187,20 +195,16 @@ export function Dashboard() {
         };
     }, [mounted, toast]);
 
-    // LIVE MARKET SYNCHRONIZATION (ALWAYS OPERATIONAL)
+    // LIVE MARKET SYNCHRONIZATION
     React.useEffect(() => {
         if (!wsInstance || wsInstance.readyState !== WebSocket.OPEN) return;
         
-        // Reset state for new market but keep connection
         setPrice(0);
         setLastDigitTicks([]);
         setPriceHistory([]);
         setTickTimestamps([]);
         
-        // Clear existing subscriptions on this socket
         wsInstance.send(JSON.stringify({ "forget_all": "ticks" }));
-        
-        // Initiate new market stream
         wsInstance.send(JSON.stringify({ 
             "ticks_history": selectedMarket, 
             "count": 500, 
@@ -267,20 +271,6 @@ export function Dashboard() {
     const analyzedDigits = lastDigitTicks.slice(0, maxTicks);
     const analyzedPrices = priceHistory.slice(0, maxTicks);
 
-    const statusColors = {
-        streaming: 'text-emerald-400',
-        authorized: 'text-cyan-400',
-        connecting: 'text-amber-400',
-        disconnected: 'text-rose-500'
-    };
-
-    const statusBg = {
-        streaming: 'bg-emerald-400',
-        authorized: 'bg-cyan-400',
-        connecting: 'bg-amber-400',
-        disconnected: 'bg-rose-500'
-    };
-
   return (
     <div className="flex min-h-screen w-full flex-col bg-background font-sans overflow-x-hidden">
       <header className="sticky top-0 z-[60] flex h-auto min-h-[5rem] flex-col md:flex-row items-center border-b bg-background/80 px-4 py-3 md:py-0 md:px-8 backdrop-blur-xl transition-all duration-300">
@@ -342,18 +332,18 @@ export function Dashboard() {
             <div className="relative group transition-all duration-300 hover:scale-105 active:scale-95">
                 <div className={cn(
                     "absolute -inset-1 rounded-full blur opacity-25 group-hover:opacity-75 transition duration-1000",
-                    statusBg[connectionStatus]
+                    surveillanceStatus === 'active' ? 'bg-emerald-400' : 'bg-rose-500'
                 )}></div>
                 <div className="relative flex items-center gap-3 px-6 md:px-10 py-3 md:py-4 bg-card border border-white/5 rounded-full shadow-2xl">
                     <div className="relative flex items-center justify-center">
-                        <div className={cn("h-2 w-2 md:h-3 md:w-3 rounded-full transition-all duration-500", statusBg[connectionStatus])} />
-                        {(connectionStatus === 'streaming' || connectionStatus === 'authorized') && (
-                            <div className={cn("absolute h-2 w-2 md:h-3 md:w-3 rounded-full animate-ping opacity-75", statusBg[connectionStatus])} />
+                        <div className={cn("h-2 w-2 md:h-3 md:w-3 rounded-full transition-all duration-500", surveillanceStatus === 'active' ? 'bg-emerald-400' : 'bg-rose-500')} />
+                        {surveillanceStatus === 'active' && (
+                            <div className={cn("absolute h-2 w-2 md:h-3 md:w-3 rounded-full animate-ping opacity-75 bg-emerald-400")} />
                         )}
                     </div>
                     <span className={cn(
                         "text-[10px] sm:text-[12px] md:text-sm font-black uppercase tracking-[0.2em] md:tracking-[0.4em] whitespace-nowrap transition-colors duration-500",
-                        statusColors[connectionStatus]
+                        surveillanceStatus === 'active' ? 'text-emerald-400' : 'text-rose-500'
                     )}>
                         FROSTY HOLDINGS
                     </span>
@@ -361,12 +351,18 @@ export function Dashboard() {
             </div>
           </div>
 
-          <div className="flex-1 flex justify-end">
+          <div className="flex-1 flex justify-end gap-4">
+            {/* Surveillance Status Mini-Indicator */}
+            <div className="hidden lg:flex items-center gap-3 px-4 py-2 bg-black/40 rounded-full border border-white/5">
+                <Radio className={cn("h-3 w-3", surveillanceStatus === 'active' ? 'text-emerald-400 animate-pulse' : 'text-rose-500')} />
+                <span className="text-[8px] font-black uppercase text-muted-foreground tracking-widest">SURVEILLANCE LIVE</span>
+            </div>
+            
             {isAuthorized ? (
-                <div className="flex items-center gap-4 bg-black/40 px-6 py-2 rounded-full border border-white/5 animate-in fade-in slide-in-from-right-4 duration-500">
+                <div className="flex items-center gap-4 bg-cyan-500/10 px-6 py-2 rounded-full border border-cyan-500/20 animate-in fade-in slide-in-from-right-4 duration-500">
                     <div className="text-right">
-                        <p className="text-[8px] font-black text-muted-foreground uppercase tracking-widest mb-0.5">LIVE BALANCE</p>
-                        <p className="text-sm font-black tabular-nums text-emerald-400">
+                        <p className="text-[8px] font-black text-cyan-400 uppercase tracking-widest mb-0.5">LIVE BALANCE</p>
+                        <p className="text-sm font-black tabular-nums text-white">
                             {balance.toFixed(2)} <span className="text-[10px] opacity-40">{currency}</span>
                         </p>
                     </div>
@@ -375,7 +371,7 @@ export function Dashboard() {
                 <div className="flex items-center gap-4 bg-rose-500/10 px-6 py-2 rounded-full border border-rose-500/20 animate-pulse">
                     <div className="text-right">
                         <p className="text-[8px] font-black text-rose-400 uppercase tracking-widest">OFFLINE</p>
-                        <p className="text-[10px] font-black text-white uppercase tracking-widest">CONNECT WITH API</p>
+                        <p className="text-[10px] font-black text-white uppercase tracking-widest">CONNECT API</p>
                     </div>
                 </div>
             )}
@@ -410,6 +406,8 @@ export function Dashboard() {
                         currency={currency}
                         onExecuteTrade={handleExecuteRealTrade}
                         activeContract={activeContract}
+                        surveillanceStatus={surveillanceStatus}
+                        executionStatus={executionStatus}
                     />
                 </TabsContent>
 

@@ -21,7 +21,9 @@ import {
     Circle,
     Loader2,
     Lock,
-    KeyRound
+    KeyRound,
+    Radio,
+    Flame
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
@@ -44,6 +46,8 @@ interface StrategyOverOneProps {
     currency: string;
     onExecuteTrade: (params: any) => void;
     activeContract: any;
+    surveillanceStatus: 'offline' | 'active' | 'standby' | 'authorized' | 'executing';
+    executionStatus: 'offline' | 'active' | 'standby' | 'authorized' | 'executing';
 }
 
 interface TradeLog {
@@ -67,7 +71,9 @@ export function StrategyOverOne({
     isAuthorized, 
     currency, 
     onExecuteTrade,
-    activeContract
+    activeContract,
+    surveillanceStatus,
+    executionStatus
 }: StrategyOverOneProps) {
     const [config, setConfig] = React.useState({
         stake: 10,
@@ -84,10 +90,9 @@ export function StrategyOverOne({
     const [statusMessage, setStatusMessage] = React.useState('ENGINE STANDBY');
     const [isPendingExecution, setIsPendingExecution] = React.useState(false);
     
-    // Guard to prevent duplicate processing of the same contract ID
     const lastProcessedId = React.useRef<string | null>(null);
 
-    // Watchdog to prevent execution deadlock
+    // Watchdog
     React.useEffect(() => {
         if (!isPendingExecution) return;
         
@@ -108,16 +113,10 @@ export function StrategyOverOne({
         if (lastDigitTicks.length < 20) return null;
 
         // PRECISE ENTRY WINDOW MAPPING
-        // Logic Alpha: Digit 0 has appeared within the last 3 to 5 ticks (indices 2 to 4)
         const cond0 = [lastDigitTicks[2], lastDigitTicks[3], lastDigitTicks[4]].includes(0);
-        
-        // Logic Beta: Digit 1 has not appeared within the last 5 to 7 ticks (indices 4 to 6)
         const cond1 = ![lastDigitTicks[4], lastDigitTicks[5], lastDigitTicks[6]].includes(1);
-        
-        // Logic Gamma: Digit 6 or 7 has appeared in the recent flux (indices 0 to 2)
         const cond67 = [lastDigitTicks[0], lastDigitTicks[1], lastDigitTicks[2]].some(t => t === 6 || t === 7);
 
-        // AVOIDANCE PROTOCOLS
         const slice20 = lastDigitTicks.slice(0, 20);
         const avoidAbsent01 = !slice20.includes(0) && !slice20.includes(1);
         const avoidFreq1 = lastDigitTicks.slice(0, 10).filter(t => t === 1).length > 2;
@@ -141,7 +140,6 @@ export function StrategyOverOne({
 
         const contractId = activeContract.contract_id.toString();
         
-        // Only process if this is a final state and we haven't processed it yet
         if ((activeContract.status === 'won' || activeContract.status === 'lost') && contractId !== lastProcessedId.current) {
             lastProcessedId.current = contractId;
             
@@ -166,11 +164,9 @@ export function StrategyOverOne({
                 profit: prev.profit + profit
             }));
 
-            // Trade management: Win -> Reset. Loss -> Recovery Mode.
             if (result === 'WON') {
                 setIsRecoveryMode(false);
             } else {
-                // If it was already a recovery trade, we stop per protocol
                 if (isRecoveryMode) {
                     setIsRecoveryMode(false);
                 } else {
@@ -254,6 +250,53 @@ export function StrategyOverOne({
     return (
         <div className="space-y-6 animate-in fade-in slide-in-from-bottom-5 duration-700 pb-24 max-w-[1600px] mx-auto">
             
+            {/* DUAL ENGINE STATUS HUB */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <Card className="border-none shadow-xl bg-emerald-500/10 backdrop-blur-3xl overflow-hidden relative rounded-[1.5rem] border border-emerald-500/20 p-6 flex items-center justify-between group">
+                    <div className="absolute top-0 left-0 w-1 h-full bg-emerald-500" />
+                    <div className="flex items-center gap-4">
+                        <div className="w-12 h-12 rounded-xl bg-emerald-500/20 flex items-center justify-center border border-emerald-500/30 shadow-[0_0_15px_rgba(16,185,129,0.3)]">
+                            <Radio className={cn("h-6 w-6 text-emerald-400", surveillanceStatus === 'active' && 'animate-pulse')} />
+                        </div>
+                        <div>
+                            <p className="text-[8px] font-black uppercase text-emerald-400/60 tracking-widest leading-none mb-1">ENGINE ALPHA (APP ID 84799)</p>
+                            <h3 className="text-sm font-black text-white uppercase tracking-widest">MARKET SURVEILLANCE CORE</h3>
+                        </div>
+                    </div>
+                    <Badge className={cn(
+                        "px-4 py-1.5 rounded-full text-[8px] font-black uppercase tracking-widest border-none shadow-lg",
+                        surveillanceStatus === 'active' ? "bg-emerald-500 text-white" : "bg-rose-500 text-white animate-pulse"
+                    )}>
+                        {surveillanceStatus === 'active' ? 'ALWAYS LIVE' : 'SYNCING...'}
+                    </Badge>
+                </Card>
+
+                <Card className={cn(
+                    "border-none shadow-xl backdrop-blur-3xl overflow-hidden relative rounded-[1.5rem] border p-6 flex items-center justify-between group transition-all duration-500",
+                    isAuthorized ? "bg-cyan-500/10 border-cyan-500/20" : "bg-black/40 border-white/5 opacity-60"
+                )}>
+                    <div className={cn("absolute top-0 left-0 w-1 h-full transition-colors duration-500", isAuthorized ? "bg-cyan-500" : "bg-white/10")} />
+                    <div className="flex items-center gap-4">
+                        <div className={cn(
+                            "w-12 h-12 rounded-xl flex items-center justify-center border transition-all duration-500",
+                            isAuthorized ? "bg-cyan-500/20 border-cyan-500/30 shadow-[0_0_15px_rgba(6,182,212,0.3)]" : "bg-white/5 border-white/10"
+                        )}>
+                            <Cpu className={cn("h-6 w-6", isAuthorized ? "text-cyan-400" : "text-white/20")} />
+                        </div>
+                        <div>
+                            <p className={cn("text-[8px] font-black uppercase tracking-widest leading-none mb-1", isAuthorized ? "text-cyan-400/60" : "text-white/20")}>ENGINE BETA (API TOKEN)</p>
+                            <h3 className={cn("text-sm font-black uppercase tracking-widest", isAuthorized ? "text-white" : "text-white/20")}>TACTICAL EXECUTION CORE</h3>
+                        </div>
+                    </div>
+                    <Badge className={cn(
+                        "px-4 py-1.5 rounded-full text-[8px] font-black uppercase tracking-widest border-none shadow-lg transition-all duration-500",
+                        isAuthorized ? "bg-cyan-500 text-white" : "bg-white/5 text-white/20"
+                    )}>
+                        {isAuthorized ? 'AUTHORIZED' : 'STANDBY'}
+                    </Badge>
+                </Card>
+            </div>
+
             <Card className="border-none shadow-2xl bg-slate-900/60 backdrop-blur-3xl overflow-hidden relative rounded-[2rem] border border-white/5">
                 <CardContent className="p-6 sm:p-10 flex flex-col md:flex-row items-center justify-between gap-8">
                     <div className="flex items-center gap-6">
@@ -308,7 +351,6 @@ export function StrategyOverOne({
                             </div>
                         </CardHeader>
                         <CardContent className="space-y-6 px-8 pb-12 relative">
-                            {/* Execution Lock Overlay */}
                             {!isAuthorized && (
                                 <div className="absolute inset-0 z-20 bg-slate-950/60 backdrop-blur-sm flex flex-col items-center justify-center p-8 text-center rounded-[2.5rem]">
                                     <div className="w-16 h-16 rounded-full bg-rose-500/20 flex items-center justify-center mb-4 border border-rose-500/30">
@@ -365,7 +407,6 @@ export function StrategyOverOne({
                     </Card>
 
                     <Card className="border-2 border-primary/20 shadow-[0_0_30px_rgba(0,0,0,0.3)] bg-slate-950/80 backdrop-blur-xl rounded-[2.5rem] p-10 space-y-8 relative overflow-hidden">
-                        {/* Config Lock Overlay */}
                         {!isAuthorized && <div className="absolute inset-0 z-20 bg-slate-950/40 backdrop-blur-[2px]" />}
                         <div className="flex items-center justify-between border-b border-white/5 pb-4">
                             <h3 className="text-[11px] font-black uppercase text-primary tracking-[0.3em] flex items-center gap-3">
