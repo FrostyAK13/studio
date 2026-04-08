@@ -51,7 +51,7 @@ export function Dashboard() {
         setMounted(true);
     }, []);
 
-    // PERSISTENT WEBSOCKET INITIALIZATION
+    // PERSISTENT WEBSOCKET INITIALIZATION (Always Live via 84799)
     React.useEffect(() => {
         if (!mounted) return;
 
@@ -248,7 +248,7 @@ export function Dashboard() {
             "basis": "stake",
             "contract_type": params.contract_type || "DIGITOVER",
             "currency": currency,
-            "duration": 1,
+            "duration": 1, // ALWAYS 1 TICK
             "duration_unit": "t",
             "symbol": selectedMarket
         }));
@@ -279,7 +279,7 @@ export function Dashboard() {
       <header className="sticky top-0 z-[60] flex h-auto min-h-[6rem] flex-col md:flex-row items-center border-b bg-background/80 px-4 py-3 md:py-0 md:px-8 backdrop-blur-xl transition-all duration-300">
         <div className="flex w-full items-center justify-between max-w-[1600px] mx-auto gap-4">
           
-          <div className="flex-[1.5] flex items-center gap-6">
+          <div className="flex-[2] flex items-center gap-6">
             <Popover>
                 <PopoverTrigger asChild>
                     <Button variant="outline" className={cn(
@@ -332,19 +332,19 @@ export function Dashboard() {
 
             {/* LIVE BALANCE BLOCK */}
             {isAuthorized ? (
-                <div className="flex items-center gap-4 bg-black/40 px-8 py-3 rounded-full border border-white/10 animate-in fade-in slide-in-from-left-4 duration-500 shadow-xl group">
+                <div className="flex items-center gap-6 bg-black/40 px-10 py-4 rounded-full border border-white/10 animate-in fade-in slide-in-from-left-4 duration-500 shadow-xl group">
                     <div className="text-left">
-                        <div className="flex items-center gap-2 mb-0.5">
-                            <p className="text-[9px] font-black text-primary uppercase tracking-[0.2em]">EQUITY STREAM</p>
+                        <div className="flex items-center gap-3 mb-0.5">
+                            <p className="text-[10px] font-black text-primary uppercase tracking-[0.2em]">EQUITY STREAM</p>
                             <Badge className={cn(
-                                "h-4 text-[7px] font-black uppercase px-1.5 border-none",
+                                "h-5 text-[8px] font-black uppercase px-2 border-none",
                                 isVirtual ? "bg-amber-500 text-white" : "bg-emerald-500 text-white"
                             )}>
                                 {isVirtual ? 'DEMO' : 'REAL'}
                             </Badge>
                         </div>
-                        <p className="text-2xl font-black tabular-nums text-white group-hover:text-primary transition-colors">
-                            {balance.toFixed(2)} <span className="text-xs opacity-40 font-black">{currency}</span>
+                        <p className="text-3xl font-black tabular-nums text-white group-hover:text-primary transition-colors">
+                            {balance.toFixed(2)} <span className="text-sm opacity-40 font-black">{currency}</span>
                         </p>
                     </div>
                 </div>

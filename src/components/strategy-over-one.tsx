@@ -28,7 +28,9 @@ import {
     Crosshair,
     Network,
     Orbit,
-    TrendingUp
+    TrendingUp,
+    Trophy,
+    Skull
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
@@ -98,7 +100,7 @@ export function StrategyOverOne({
     
     const lastProcessedId = React.useRef<string | null>(null);
 
-    // Watchdog Timer
+    // Watchdog Timer (Reset if trade hangs)
     React.useEffect(() => {
         if (!isPendingExecution) return;
         
@@ -107,10 +109,13 @@ export function StrategyOverOne({
                 setIsPendingExecution(false);
                 setStatusMessage('SYNC TIMEOUT. RE-ENGAGING.');
                 setTimeout(() => {
-                    if (!sessionEnded) setIsRunning(true);
+                    if (!sessionEnded) {
+                        setIsRunning(true);
+                        setStatusMessage('MONITORING TICKS...');
+                    }
                 }, 2000);
             }
-        }, 15000); 
+        }, 10000); 
 
         return () => clearTimeout(timer);
     }, [isPendingExecution, activeContract, sessionEnded]);
@@ -118,10 +123,16 @@ export function StrategyOverOne({
     const strategyAnalysis = React.useMemo(() => {
         if (lastDigitTicks.length < 20) return null;
 
+        // LOGIC ALPHA: Digit 0 at index 2, 3, or 4 (3rd-5th tick)
         const cond0 = [lastDigitTicks[2], lastDigitTicks[3], lastDigitTicks[4]].includes(0);
+        
+        // LOGIC BETA: No Digit 1 at index 4, 5, or 6 (5th-7th tick)
         const cond1 = ![lastDigitTicks[4], lastDigitTicks[5], lastDigitTicks[6]].includes(1);
+        
+        // LOGIC GAMMA: Digit 6 or 7 at index 0, 1, or 2 (Immediate flux)
         const cond67 = [lastDigitTicks[0], lastDigitTicks[1], lastDigitTicks[2]].some(t => t === 6 || t === 7);
 
+        // AVOIDANCE PROTOCOLS
         const slice20 = lastDigitTicks.slice(0, 20);
         const avoidAbsent01 = !slice20.includes(0) && !slice20.includes(1);
         const avoidFreq1 = lastDigitTicks.slice(0, 10).filter(t => t === 1).length > 2;
@@ -163,7 +174,7 @@ export function StrategyOverOne({
             if (result === 'WON') {
                 setIsRecoveryMode(false);
             } else {
-                setIsRecoveryMode(!isRecoveryMode);
+                setIsRecoveryMode(true);
             }
             
             setIsPendingExecution(false);
@@ -331,6 +342,20 @@ export function StrategyOverOne({
                                 {isPendingExecution ? <Loader2 className="mr-4 h-6 w-6 animate-spin" /> : isRunning ? <Square className="mr-4 h-6 w-6 fill-current" /> : <Play className="mr-4 h-6 w-6 fill-current" />}
                                 {isPendingExecution ? 'EXECUTING' : sessionEnded ? 'TERMINATED' : isRunning ? 'STOP ENGINE' : 'ENGAGE OVER 1'}
                             </Button>
+
+                            {/* TACTICAL SCOREBOARD (WINS / LOSSES) */}
+                            <div className="grid grid-cols-2 gap-4">
+                                <div className="p-6 bg-emerald-500/10 rounded-[2rem] border border-emerald-500/20 text-center relative overflow-hidden group">
+                                    <Trophy className="absolute -top-2 -right-2 h-12 w-12 text-emerald-500/10 group-hover:scale-110 transition-transform" />
+                                    <p className="text-[10px] font-black text-emerald-400/60 uppercase mb-2 tracking-widest">WINS</p>
+                                    <p className="text-4xl font-black text-emerald-400 tabular-nums">{sessionStats.wins}</p>
+                                </div>
+                                <div className="p-6 bg-rose-500/10 rounded-[2rem] border border-rose-500/20 text-center relative overflow-hidden group">
+                                    <Skull className="absolute -top-2 -right-2 h-12 w-12 text-rose-500/10 group-hover:scale-110 transition-transform" />
+                                    <p className="text-[10px] font-black text-rose-400/60 uppercase mb-2 tracking-widest">LOSSES</p>
+                                    <p className="text-4xl font-black text-rose-400 tabular-nums">{sessionStats.losses}</p>
+                                </div>
+                            </div>
 
                             <div className="p-8 bg-black/60 rounded-[2.5rem] border border-white/5 text-center relative overflow-hidden shadow-inner">
                                 <p className="text-[10px] font-black text-muted-foreground uppercase mb-3 tracking-[0.3em] opacity-60">SESSION ROI</p>
@@ -522,15 +547,13 @@ export function StrategyOverOne({
                                 {[
                                     { label: 'ACTIVE STAKE', value: `$${isRecoveryMode ? (config.stake * config.martingale).toFixed(2) : config.stake.toFixed(2)}`, color: 'text-primary' },
                                     { label: 'ENGINE MODE', value: isRecoveryMode ? 'RECOVERY' : 'TACTICAL', color: isRecoveryMode ? 'text-amber-400' : 'text-emerald-400' },
-                                    { label: 'ACCURACY LOCK', value: '100+1 FLAWLESS', color: 'text-emerald-400', span: 2 }
+                                    { label: 'DURATION', value: '1 TICK', color: 'text-cyan-400' },
+                                    { label: 'ACCURACY LOCK', value: '100+1 FLAWLESS', color: 'text-emerald-400' }
                                 ].map((stat, i) => (
-                                    <div key={i} className={cn(
-                                        "p-12 rounded-[3rem] bg-black/40 border border-white/5 text-center shadow-[inset_0_0_30px_rgba(0,0,0,0.4)] relative group overflow-hidden",
-                                        stat.span && "lg:col-span-2 border-emerald-500/20 bg-emerald-500/5"
-                                    )}>
+                                    <div key={i} className="p-12 rounded-[3rem] bg-black/40 border border-white/5 text-center shadow-[inset_0_0_30px_rgba(0,0,0,0.4)] relative group overflow-hidden">
                                         <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-white/5 to-transparent" />
                                         <p className="text-[11px] font-black text-muted-foreground uppercase tracking-[0.4em] mb-6 opacity-60 group-hover:opacity-100 transition-opacity">{stat.label}</p>
-                                        <p className={cn("text-3xl sm:text-5xl font-black uppercase tracking-tighter", stat.color)}>{stat.value}</p>
+                                        <p className={cn("text-3xl sm:text-4xl font-black uppercase tracking-tighter", stat.color)}>{stat.value}</p>
                                     </div>
                                 ))}
                             </div>
