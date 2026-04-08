@@ -1,4 +1,3 @@
-
 'use client';
 
 import * as React from 'react';
@@ -21,6 +20,7 @@ import { useToast } from '@/hooks/use-toast';
 type ConnectionStatusType = 'connecting' | 'streaming' | 'disconnected' | 'authorized';
 
 export function Dashboard() {
+    const [mounted, setMounted] = React.useState(false);
     const [price, setPrice] = React.useState(0);
     const [lastDigitTicks, setLastDigitTicks] = React.useState<number[]>([]);
     const [priceHistory, setPriceHistory] = React.useState<number[]>([]);
@@ -41,8 +41,15 @@ export function Dashboard() {
     // Trade Handling State
     const [activeContract, setActiveContract] = React.useState<any>(null);
 
+    // Initial mounting guard to prevent hydration errors
+    React.useEffect(() => {
+        setMounted(true);
+    }, []);
+
     // PERSISTENT WEBSOCKET INITIALIZATION (ALWAYS LIVE)
     React.useEffect(() => {
+        if (!mounted) return;
+
         const ws = new WebSocket('wss://ws.derivws.com/websockets/v3?app_id=84799');
         setWsInstance(ws);
 
@@ -178,7 +185,7 @@ export function Dashboard() {
              ws.close();
            }
         };
-    }, []);
+    }, [mounted, toast]);
 
     // LIVE MARKET SYNCHRONIZATION (ALWAYS OPERATIONAL)
     React.useEffect(() => {
@@ -202,6 +209,15 @@ export function Dashboard() {
             "subscribe": 1 
         }));
     }, [selectedMarket, wsInstance]);
+
+    if (!mounted) {
+        return (
+            <div className="flex min-h-screen w-full flex-col bg-background font-sans items-center justify-center">
+                <Activity className="h-12 w-12 text-primary animate-spin" />
+                <p className="mt-4 text-[10px] font-black uppercase tracking-[0.4em] text-primary/60 animate-pulse">Initializing Zero-Error Environment...</p>
+            </div>
+        );
+    }
 
     const handleAuthorize = () => {
         if (!wsInstance || !apiToken) return;
