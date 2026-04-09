@@ -1,4 +1,3 @@
-
 'use client';
 
 import * as React from 'react';
@@ -214,68 +213,68 @@ export function Dashboard() {
 
     return (
         <div className="flex min-h-screen w-full flex-col bg-slate-50 font-sans overflow-x-hidden">
-            <header className="sticky top-0 z-[100] flex h-[3.5rem] items-center border-b bg-white/95 backdrop-blur-xl px-2 sm:px-4 shadow-sm">
-                <div className="flex w-full items-center justify-between max-w-[1600px] mx-auto gap-2">
+            <header className="sticky top-0 z-[100] flex h-[4rem] items-center border-b bg-white/95 backdrop-blur-xl px-4 shadow-sm">
+                <div className="flex w-full items-center justify-between max-w-[1600px] mx-auto">
                     
-                    <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
-                        <Button variant="outline" onClick={() => window.location.reload()} title="SYSTEM RELOAD" className="h-7 w-7 sm:h-8 sm:w-8 rounded-full border-slate-200 bg-slate-100 hover:bg-slate-200 flex items-center justify-center shadow-sm group active:scale-95 transition-all">
-                            <RefreshCw className="h-3 w-3 sm:h-4 sm:w-4 text-slate-950 group-hover:rotate-180 transition-transform duration-500" />
+                    <div className="flex items-center gap-3 shrink-0">
+                        <Button variant="outline" onClick={() => window.location.reload()} title="SYSTEM RELOAD" className="h-9 w-9 rounded-full border-slate-200 bg-slate-100 hover:bg-slate-200 flex items-center justify-center shadow-sm group active:scale-95 transition-all">
+                            <RefreshCw className="h-4 w-4 text-slate-950 group-hover:rotate-180 transition-transform duration-500" />
                         </Button>
 
                         <Popover>
                             <PopoverTrigger asChild>
-                                <Button variant="outline" className={cn("h-7 sm:h-8 px-2 sm:px-3 rounded-full border-slate-200 font-black text-[7px] sm:text-[9px] uppercase tracking-widest gap-1 transition-all shadow-sm", isAuthorized ? "bg-emerald-50 text-emerald-600 border-emerald-200" : "bg-slate-950 text-white")}>
-                                    {isAuthorized ? <ShieldCheck className="h-2.5 w-2.5 sm:h-3.5 sm:w-3.5" /> : <KeyRound className="h-2.5 w-2.5 sm:h-3.5 sm:w-3.5" />}
+                                <Button variant="outline" className={cn("h-9 px-4 rounded-full border-slate-200 font-black text-[10px] uppercase tracking-widest gap-2 transition-all shadow-sm", isAuthorized ? "bg-emerald-50 text-emerald-600 border-emerald-200" : "bg-slate-950 text-white")}>
+                                    {isAuthorized ? <ShieldCheck className="h-4 w-4" /> : <KeyRound className="h-4 w-4" />}
                                     <span className="hidden xs:inline">{isAuthorized ? "AUTHORIZED" : "TACTICAL API"}</span>
                                     <span className="inline xs:hidden">API</span>
                                 </Button>
                             </PopoverTrigger>
-                            <PopoverContent className="w-[200px] p-2 bg-slate-950 border-white/10 rounded-xl shadow-2xl">
+                            <PopoverContent className="w-[240px] p-3 bg-slate-950 border-white/10 rounded-2xl shadow-2xl">
                                 {isAuthorized ? (
-                                    <Button onClick={() => { localStorage.removeItem('frosty_api_token'); window.location.reload(); }} variant="destructive" className="w-full h-7 rounded-lg font-black text-[7px] uppercase tracking-widest">LOGOUT</Button>
+                                    <Button onClick={() => { localStorage.removeItem('frosty_api_token'); window.location.reload(); }} variant="destructive" className="w-full h-10 rounded-xl font-black text-[10px] uppercase tracking-widest">LOGOUT SESSION</Button>
                                 ) : (
-                                    <div className="space-y-2">
-                                        <Input placeholder="API Token..." type="password" value={apiToken} onChange={e => setApiToken(e.target.value)} className="h-7 bg-black/60 border-white/10 text-white font-bold rounded-lg text-[10px]" />
-                                        <Button onClick={() => wsInstance?.send(JSON.stringify({"authorize": apiToken}))} className="w-full h-7 rounded-lg font-black text-[7px] uppercase tracking-widest bg-primary">SYNC ENGINE</Button>
+                                    <div className="space-y-3">
+                                        <Input placeholder="API Token..." type="password" value={apiToken} onChange={e => setApiToken(e.target.value)} className="h-10 bg-black/60 border-white/10 text-white font-bold rounded-xl text-[12px]" />
+                                        <Button onClick={() => wsInstance?.send(JSON.stringify({"authorize": apiToken}))} className="w-full h-10 rounded-xl font-black text-[10px] uppercase tracking-widest bg-primary">SYNC ENGINE</Button>
                                     </div>
                                 )}
                             </PopoverContent>
                         </Popover>
 
-                        <div className={cn("flex items-center gap-1.5 sm:gap-2 bg-slate-100 px-2 sm:px-3 py-1 rounded-full border border-slate-200 shadow-sm transition-all", !isAuthorized && "opacity-50")}>
-                            <Wallet className="h-3 w-3 text-slate-500" />
+                        <div className={cn("flex items-center gap-3 bg-slate-100 px-4 py-1.5 rounded-full border border-slate-200 shadow-sm transition-all", !isAuthorized && "opacity-50")}>
+                            <Wallet className="h-4 w-4 text-slate-500" />
                             <div className="text-left leading-none">
-                                <p className="text-[5px] sm:text-[7px] font-black text-slate-400 uppercase tracking-widest mb-0.5">LIQUIDITY LOCKED</p>
-                                <div className="flex items-center gap-1">
-                                    <p className="text-[9px] sm:text-xs font-black text-slate-950 tabular-nums">{isAuthorized ? balance.toFixed(2) : '0.00'}</p>
-                                    {isAuthorized && <Badge className={cn("h-3 sm:h-3.5 text-[5px] sm:text-[6px] font-black uppercase px-1 border-none", isVirtual ? "bg-amber-500 text-white" : "bg-emerald-500 text-white")}>{isVirtual ? 'DEMO' : 'REAL'}</Badge>}
+                                <p className="text-[7px] font-black text-slate-400 uppercase tracking-widest mb-1">LIQUIDITY LOCKED</p>
+                                <div className="flex items-center gap-2">
+                                    <p className="text-sm font-black text-slate-950 tabular-nums">{isAuthorized ? balance.toFixed(2) : '0.00'}</p>
+                                    {isAuthorized && <Badge className={cn("h-4 text-[7px] font-black uppercase px-1.5 border-none", isVirtual ? "bg-amber-500 text-white" : "bg-emerald-500 text-white")}>{isVirtual ? 'DEMO' : 'REAL'}</Badge>}
                                 </div>
                             </div>
                         </div>
                     </div>
 
                     <div className="absolute left-1/2 -translate-x-1/2 flex items-center shrink-0">
-                        <a href="https://frostytraders.com" target="_blank" rel="noopener noreferrer" className="relative flex items-center gap-1 sm:gap-1.5 px-3 sm:px-4 py-1.5 bg-white border border-slate-200 rounded-full shadow-md hover:scale-105 active:scale-95 transition-all group">
-                            <div className="h-1 sm:h-1.5 w-1 sm:w-1.5 rounded-full bg-rose-500 animate-pulse shadow-[0_0_8px_#f43f5e]" />
-                            <span className="text-[9px] sm:text-xs font-black text-slate-950 uppercase tracking-[0.2em] sm:tracking-[0.4em]">FROSTY</span>
+                        <a href="https://frostytraders.com" target="_blank" rel="noopener noreferrer" className="relative flex items-center gap-3 px-6 py-2 bg-white border border-slate-200 rounded-full shadow-lg hover:scale-105 active:scale-95 transition-all group">
+                            <div className="h-2 w-2 rounded-full bg-[#ff4d4d] animate-pulse shadow-[0_0_12px_#ff4d4d]" />
+                            <span className="text-xs sm:text-sm font-black text-slate-950 uppercase tracking-[0.4em] sm:tracking-[0.6em]">FROSTY</span>
                         </a>
                     </div>
 
                     <div className="flex items-center shrink-0">
-                        <div className="flex items-center gap-1 sm:gap-2 px-2 sm:px-3 py-1.5 bg-slate-100 rounded-full border border-slate-200 shadow-sm">
-                            <Radio className={cn("h-2.5 w-2.5 sm:h-3 sm:w-3", surveillanceStatus === 'active' ? 'text-emerald-500 animate-pulse' : 'text-rose-500')} />
-                            <span className="hidden sm:inline text-[7px] sm:text-[8px] font-black uppercase text-slate-950 tracking-widest">SURVEILLANCE LIVE</span>
-                            <span className="sm:hidden text-[7px] font-black uppercase text-slate-950">LIVE</span>
+                        <div className="flex items-center gap-3 px-4 py-2 bg-slate-100 rounded-full border border-slate-200 shadow-sm">
+                            <Radio className={cn("h-4 w-4", surveillanceStatus === 'active' ? 'text-emerald-500 animate-pulse' : 'text-rose-500')} />
+                            <span className="hidden sm:inline text-[9px] font-black uppercase text-slate-950 tracking-widest">SURVEILLANCE LIVE</span>
+                            <span className="sm:hidden text-[9px] font-black uppercase text-slate-950">LIVE</span>
                         </div>
                     </div>
                 </div>
             </header>
 
-            <main className="flex-1 flex flex-col max-w-[1600px] mx-auto w-full relative p-2">
+            <main className="flex-1 flex flex-col max-w-[1600px] mx-auto w-full relative p-4">
                 <Tabs defaultValue="strategy-over-one" className="w-full">
-                    <TabsList className="flex items-center justify-start md:justify-center gap-1 bg-transparent h-auto p-0 mb-3 overflow-x-auto no-scrollbar w-full">
+                    <TabsList className="flex items-center justify-start md:justify-center gap-2 bg-transparent h-auto p-0 mb-6 overflow-x-auto no-scrollbar w-full">
                         {['strategy-over-one', 'global-scan', 'scanner', 'analyzer', 'frequency', 'insight', 'circles'].map((tab) => (
-                            <TabsTrigger key={tab} value={tab} className="flex-shrink-0 px-2 sm:px-3 py-1.5 rounded-full border border-transparent data-[state=active]:bg-primary/10 data-[state=active]:text-primary text-muted-foreground font-black text-[7px] sm:text-[8px] uppercase tracking-widest transition-all">
+                            <TabsTrigger key={tab} value={tab} className="flex-shrink-0 px-4 py-2.5 rounded-full border border-transparent data-[state=active]:bg-primary/10 data-[state=active]:text-primary text-muted-foreground font-black text-[9px] uppercase tracking-widest transition-all">
                                 {tab === 'strategy-over-one' ? 'OVER 1 BOT' : tab.toUpperCase().replace('-', ' ')}
                             </TabsTrigger>
                         ))}
@@ -333,4 +332,3 @@ export function Dashboard() {
         </div>
     );
 }
-
