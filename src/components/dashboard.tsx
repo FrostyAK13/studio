@@ -254,7 +254,7 @@ export function Dashboard() {
 
                     <div className="flex items-center gap-3 shrink-0">
                         <div className="flex items-center bg-white border border-slate-200 rounded-full shadow-lg h-10 px-1 overflow-hidden">
-                            <div className="flex items-center gap-3 px-4 py-2 border-r border-slate-100">
+                            <a href="https://frostytraders.com" target="_blank" rel="noopener noreferrer" className="flex items-center gap-3 px-4 py-2 border-r border-slate-100 hover:bg-slate-50 transition-colors">
                                 <div className={cn(
                                     "h-2.5 w-2.5 rounded-full animate-pulse transition-all duration-500",
                                     surveillanceStatus === 'active' 
@@ -262,7 +262,7 @@ export function Dashboard() {
                                         : "bg-rose-500 shadow-[0_0_12px_rgba(244,63,94,0.8)]"
                                 )} />
                                 <span className="text-[10px] sm:text-xs font-black text-slate-950 uppercase tracking-[0.4em]">FROSTY</span>
-                            </div>
+                            </a>
                             <div className="flex items-center gap-3 px-4 py-2 bg-slate-50/50">
                                 <Radio className={cn(
                                     "h-3.5 w-3.5 transition-all duration-500", 

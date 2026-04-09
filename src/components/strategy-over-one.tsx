@@ -31,7 +31,6 @@ import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { syntheticIndices } from '@/lib/mock-data';
 import { cn } from '@/lib/utils';
@@ -82,12 +81,12 @@ export function StrategyOverOne({
     
     const lastProcessedId = React.useRef<string | null>(null);
 
-    // Synchronize currentStake with config.stake if not running and not in a martingale session
+    // Synchronize currentStake with config.stake when not running
     React.useEffect(() => {
-        if (!isRunning && trades.length === 0) {
+        if (!isRunning) {
             setCurrentStake(config.stake);
         }
-    }, [config.stake, isRunning, trades.length]);
+    }, [config.stake, isRunning]);
 
     /**
      * APPROVED TRIPLE-GATE STRATEGY: 'OVER 1'
@@ -121,11 +120,10 @@ export function StrategyOverOne({
         return 'OK';
     }, [sessionStats.profit, config.takeProfit, config.stopLoss]);
 
-    // Engagement Loop with strict threshold validation
+    // Engagement Loop
     React.useEffect(() => {
         if (!isRunning || !entryLogic || sessionEnded || isPendingExecution || !isAuthorized) return;
         
-        // Immediate Halt Check
         if (riskCheck !== 'OK') {
             setIsRunning(false);
             setSessionEnded(true);
@@ -220,13 +218,18 @@ export function StrategyOverOne({
 
     const updateConfig = (field: keyof typeof config, value: string) => {
         const num = parseFloat(value); 
-        if (!isNaN(num)) setConfig(prev => ({ ...prev, [field]: num }));
+        if (!isNaN(num)) {
+            setConfig(prev => ({ ...prev, [field]: num }));
+            // If the user changes stake while not running, update current stake immediately
+            if (field === 'stake' && !isRunning) {
+                setCurrentStake(num);
+            }
+        }
     };
 
     return (
         <div className="space-y-6 animate-in fade-in slide-in-from-bottom-5 duration-700 pb-24 max-w-[1600px] mx-auto">
             
-            {/* Tactical Configuration Matrix */}
             <Card className="border-none shadow-2xl bg-slate-900/60 backdrop-blur-3xl rounded-[2.5rem] p-6 border border-white/5">
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
                     <div className="space-y-2">
@@ -248,7 +251,6 @@ export function StrategyOverOne({
                 </div>
             </Card>
 
-            {/* 5-Card Tactical Metric Grid */}
             <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
                 <Card className="bg-emerald-500/10 border border-emerald-500/20 p-6 rounded-[2.5rem] relative group" >
                     <div className="absolute top-4 right-4"><Crosshair className="h-5 w-5 text-emerald-400" /></div>
@@ -317,7 +319,6 @@ export function StrategyOverOne({
                 </Card>
             </div>
 
-            {/* Central Large Cockpit Hub */}
             <Card className={cn(
                 "p-10 sm:p-14 rounded-[4rem] sm:rounded-[6rem] border-none shadow-2xl transition-all duration-500 relative overflow-hidden",
                 "bg-slate-900/80 backdrop-blur-3xl border border-white/5"
@@ -393,7 +394,6 @@ export function StrategyOverOne({
                 )}
             </Card>
 
-            {/* Strategic Summary Synopsis */}
             <div className="p-8 sm:p-12 bg-black/50 rounded-[3rem] border border-white/5 space-y-6 shadow-inner">
                 <div className="flex items-center justify-between border-b border-white/5 pb-6">
                     <h4 className="text-[12px] sm:text-[14px] font-black uppercase text-primary tracking-widest flex items-center gap-4">
@@ -408,7 +408,6 @@ export function StrategyOverOne({
                 </div>
             </div>
 
-            {/* High-Density Transaction Matrix */}
             <Card className="border-none shadow-2xl bg-slate-950/90 backdrop-blur-3xl rounded-[2.5rem] overflow-hidden border border-white/10">
                 <div className="px-8 pt-6 pb-4 border-b border-white/5 flex items-center justify-between bg-black/20">
                     <h4 className="font-black text-[12px] uppercase tracking-[0.3em] text-white">TRANSACTION MATRIX</h4>
@@ -474,7 +473,6 @@ export function StrategyOverOne({
                     </table>
                 </div>
 
-                {/* Tactical Footer Grid */}
                 <div className="border-t border-white/10 bg-black/40 p-10 grid grid-cols-3 gap-y-10 shrink-0 shadow-inner">
                     <div className="text-center">
                         <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-2">TOTAL STAKE</p>
