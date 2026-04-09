@@ -308,16 +308,16 @@ export function StrategyOverOne({
                     <Tabs defaultValue="transactions" className="w-full h-full flex flex-col overflow-hidden">
                         <div className="px-3 pt-1 border-b border-slate-100 flex items-center justify-between bg-white shrink-0">
                             <TabsList className="bg-transparent h-auto p-0 gap-4">
-                                <TabsTrigger value="summary" className="px-0 py-1.5 border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent rounded-none font-bold text-[8px] uppercase tracking-widest text-slate-400 data-[state=active]:text-slate-950">Summary</TabsTrigger>
-                                <TabsTrigger value="transactions" className="px-0 py-1.5 border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent rounded-none font-bold text-[8px] uppercase tracking-widest text-slate-400 data-[state=active]:text-slate-950">Transactions</TabsTrigger>
+                                <TabsTrigger value="summary" className="px-0 py-1.5 border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent rounded-none font-bold text-[8px] uppercase tracking-widest text-slate-400 data-[state=active]:text-slate-950">SUMMARY</TabsTrigger>
+                                <TabsTrigger value="transactions" className="px-0 py-1.5 border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent rounded-none font-bold text-[8px] uppercase tracking-widest text-slate-400 data-[state=active]:text-slate-950">TRANSACTIONS</TabsTrigger>
                             </TabsList>
                             <div className="flex gap-1.5">
                                 <Button 
                                     variant="outline" 
                                     onClick={resetSession}
-                                    className="h-5 px-2 text-[6px] font-black uppercase tracking-widest border-rose-500/30 text-rose-600 hover:bg-rose-50 flex items-center gap-1"
+                                    className="h-5 px-2 text-[6px] font-black uppercase tracking-widest border-rose-500 text-rose-600 hover:bg-rose-50 flex items-center gap-1 rounded-sm"
                                 >
-                                    <RefreshCcw className="h-2 w-2" /> Reset
+                                    <RefreshCcw className="h-2 w-2" /> RESET
                                 </Button>
                             </div>
                         </div>
@@ -328,9 +328,9 @@ export function StrategyOverOne({
                                     <table className="w-full text-left border-collapse">
                                         <thead className="sticky top-0 bg-slate-50 z-10 border-b border-slate-100">
                                             <tr className="text-[6px] font-black uppercase text-slate-400 tracking-wider">
-                                                <th className="px-3 py-1.5">Type</th>
-                                                <th className="px-3 py-1.5">Entry/Exit spot</th>
-                                                <th className="px-3 py-1.5 text-right">Buy price and P/L</th>
+                                                <th className="px-3 py-1.5">TYPE</th>
+                                                <th className="px-3 py-1.5">ENTRY/EXIT SPOT</th>
+                                                <th className="px-3 py-1.5 text-right">BUY PRICE AND P/L</th>
                                             </tr>
                                         </thead>
                                         <tbody className="divide-y divide-slate-50">
@@ -345,11 +345,11 @@ export function StrategyOverOne({
                                                     <td className="px-3 py-2">
                                                         <div className="space-y-0.5">
                                                             <div className="flex items-center gap-1.5">
-                                                                <Circle className="h-1 w-1 fill-rose-500 text-rose-500" />
+                                                                <div className="h-1.5 w-1.5 bg-rose-500" />
                                                                 <span className="text-[8px] font-bold text-slate-600 tabular-nums">{t.entrySpot}</span>
                                                             </div>
                                                             <div className="flex items-center gap-1.5">
-                                                                <Circle className="h-1 w-1 text-slate-300" />
+                                                                <div className="h-1.5 w-1.5 border border-slate-300" />
                                                                 <span className="text-[8px] font-bold text-slate-600 tabular-nums">{t.exitSpot}</span>
                                                             </div>
                                                         </div>
@@ -392,31 +392,31 @@ export function StrategyOverOne({
                             </TabsContent>
                         </div>
 
-                        <div className="mt-auto border-t border-slate-100 bg-slate-50/50 p-3 grid grid-cols-3 gap-y-3 shrink-0">
+                        <div className="mt-auto border-t border-slate-100 bg-slate-50/50 p-2 sm:p-3 grid grid-cols-3 gap-y-2 sm:gap-y-3 shrink-0">
                             <div className="text-center">
-                                <p className="text-[6px] font-black text-slate-400 uppercase tracking-widest mb-0.5">Total stake</p>
-                                <p className="text-[9px] font-black text-slate-600">{sessionStats.totalStake.toFixed(2)} USD</p>
+                                <p className="text-[5px] sm:text-[6px] font-black text-slate-400 uppercase tracking-widest mb-0.5">TOTAL STAKE</p>
+                                <p className="text-[8px] sm:text-[10px] font-black text-slate-950">{sessionStats.totalStake.toFixed(2)} USD</p>
                             </div>
                             <div className="text-center">
-                                <p className="text-[6px] font-black text-slate-400 uppercase tracking-widest mb-0.5">Total payout</p>
-                                <p className="text-[9px] font-black text-slate-600">{sessionStats.totalPayout.toFixed(2)} USD</p>
+                                <p className="text-[5px] sm:text-[6px] font-black text-slate-400 uppercase tracking-widest mb-0.5">TOTAL PAYOUT</p>
+                                <p className="text-[8px] sm:text-[10px] font-black text-slate-950">{sessionStats.totalPayout.toFixed(2)} USD</p>
                             </div>
                             <div className="text-center relative">
-                                <p className="text-[6px] font-black text-slate-400 uppercase tracking-widest mb-0.5 flex items-center justify-center gap-0.5">No. of runs <Info className="h-1.5 w-1.5" /></p>
-                                <p className="text-[9px] font-black text-slate-600">{trades.length}</p>
+                                <p className="text-[5px] sm:text-[6px] font-black text-slate-400 uppercase tracking-widest mb-0.5 flex items-center justify-center gap-0.5">NO. OF RUNS <Info className="h-1.5 w-1.5" /></p>
+                                <p className="text-[8px] sm:text-[10px] font-black text-slate-950">{trades.length}</p>
                             </div>
                             <div className="text-center">
-                                <p className="text-[6px] font-black text-slate-400 uppercase tracking-widest mb-0.5">Contracts lost</p>
-                                <p className="text-[9px] font-black text-slate-600">{sessionStats.losses}</p>
+                                <p className="text-[5px] sm:text-[6px] font-black text-slate-400 uppercase tracking-widest mb-0.5">CONTRACTS LOST</p>
+                                <p className="text-[8px] sm:text-[10px] font-black text-slate-950">{sessionStats.losses}</p>
                             </div>
                             <div className="text-center">
-                                <p className="text-[6px] font-black text-slate-400 uppercase tracking-widest mb-0.5">Contracts won</p>
-                                <p className="text-[9px] font-black text-slate-600">{sessionStats.wins}</p>
+                                <p className="text-[5px] sm:text-[6px] font-black text-slate-400 uppercase tracking-widest mb-0.5">CONTRACTS WON</p>
+                                <p className="text-[8px] sm:text-[10px] font-black text-slate-950">{sessionStats.wins}</p>
                             </div>
                             <div className="text-center">
-                                <p className="text-[6px] font-black text-slate-400 uppercase tracking-widest mb-0.5">Total profit/loss</p>
-                                <p className={cn("text-[9px] font-black", sessionStats.profit >= 0 ? "text-emerald-500" : "text-rose-500")}>
-                                    {sessionStats.profit >= 0 ? `+${sessionStats.profit.toFixed(2)}` : sessionStats.profit.toFixed(2)} USD
+                                <p className="text-[5px] sm:text-[6px] font-black text-slate-400 uppercase tracking-widest mb-0.5">TOTAL PROFIT/LOSS</p>
+                                <p className={cn("text-[8px] sm:text-[10px] font-black", sessionStats.profit >= 0 ? "text-emerald-500" : "text-rose-500")}>
+                                    {sessionStats.profit.toFixed(2)} USD
                                 </p>
                             </div>
                         </div>
