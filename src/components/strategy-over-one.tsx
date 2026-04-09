@@ -23,7 +23,8 @@ import {
     ArrowUp,
     TrendingDown,
     Loader2,
-    ChevronDown
+    ChevronDown,
+    Search
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
@@ -82,7 +83,7 @@ export function StrategyOverOne({
     const lastProcessedId = React.useRef<string | null>(null);
 
     const entryLogic = React.useMemo(() => {
-        if (lastDigitTicks.length < 2) return null;
+        if (lastDigitTicks.length < 2) return { d1: 0, d2: 0, shouldSkip: false, canTrade: false };
         const d1 = lastDigitTicks[0]; 
         const d2 = lastDigitTicks[1]; 
         const shouldSkip = d1 <= 3 && d2 <= 3;
@@ -94,22 +95,29 @@ export function StrategyOverOne({
         return (sessionStats.wins / trades.length) * 100;
     }, [trades.length, sessionStats.wins]);
 
+    // Safety check for risk limits
+    const riskCheck = React.useMemo(() => {
+        if (sessionStats.profit >= config.takeProfit) return 'TP';
+        if (sessionStats.profit <= -config.stopLoss) return 'SL';
+        return 'OK';
+    }, [sessionStats.profit, config]);
+
     // Risk Management Watcher
     React.useEffect(() => {
         if (!isRunning || sessionEnded) return;
 
-        if (sessionStats.profit >= config.takeProfit) {
+        if (riskCheck === 'TP') {
             setIsRunning(false);
             setSessionEnded(true);
             setStatusMessage('TAKE PROFIT REACHED');
             toast({ title: "TAKE PROFIT REACHED", description: `Cycle completed at +${sessionStats.profit.toFixed(2)} ${currency}` });
-        } else if (sessionStats.profit <= -config.stopLoss) {
+        } else if (riskCheck === 'SL') {
             setIsRunning(false);
             setSessionEnded(true);
             setStatusMessage('STOP LOSS TRIGGERED');
             toast({ variant: "destructive", title: "STOP LOSS TRIGGERED", description: `Cycle halted at ${sessionStats.profit.toFixed(2)} ${currency}` });
         }
-    }, [sessionStats.profit, config.takeProfit, config.stopLoss, isRunning, sessionEnded, currency, toast]);
+    }, [riskCheck, isRunning, sessionEnded, currency, toast, sessionStats.profit]);
 
     // Contract Result Handler
     React.useEffect(() => {
@@ -165,7 +173,8 @@ export function StrategyOverOne({
     React.useEffect(() => {
         if (!isRunning || !entryLogic || sessionEnded || isPendingExecution || !isAuthorized) return;
         
-        if (sessionStats.profit >= config.takeProfit || sessionStats.profit <= -config.stopLoss) return;
+        // Double-guard risk check inside loop
+        if (riskCheck !== 'OK') return;
 
         if (entryLogic.canTrade) {
             setStatusMessage('ENGAGING OVER 1');
@@ -178,7 +187,7 @@ export function StrategyOverOne({
         } else {
             setStatusMessage('FILTER: SKIPPING CYCLE');
         }
-    }, [lastDigitTicks, isRunning, sessionEnded, isPendingExecution, isAuthorized, entryLogic, currentStake, onExecuteTrade, sessionStats.profit, config]);
+    }, [lastDigitTicks, isRunning, sessionEnded, isPendingExecution, isAuthorized, entryLogic, currentStake, onExecuteTrade, riskCheck]);
 
     const stopTrading = () => {
         setIsRunning(false);
@@ -204,7 +213,7 @@ export function StrategyOverOne({
     const marketName = syntheticIndices.find(m => m.id === selectedMarket)?.name || selectedMarket;
 
     return (
-        <div className="space-y-6 animate-in fade-in slide-in-from-bottom-5 duration-700 pb-24 max-w-[1600px] mx-auto scale-[0.9] origin-top">
+        <div className="space-y-6 animate-in fade-in slide-in-from-bottom-5 duration-700 pb-24 max-w-[1600px] mx-auto">
             
             {/* Tactical Configuration Bar */}
             <Card className="border-none shadow-2xl bg-slate-900/60 backdrop-blur-3xl rounded-[2.5rem] p-6 border border-white/5">
@@ -228,7 +237,7 @@ export function StrategyOverOne({
                 </div>
             </Card>
 
-            {/* Global Scan 5-Card Grid (Screenshot Style) */}
+            {/* Global Scan Grid Style Metric Cards */}
             <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
                 <Card className="bg-emerald-500/10 border border-emerald-500/20 p-6 rounded-[2.5rem] relative group" >
                     <div className="absolute top-4 right-4"><Crosshair className="h-5 w-5 text-emerald-400" /></div>
@@ -266,7 +275,7 @@ export function StrategyOverOne({
                     <div className="absolute top-4 right-4">
                         <div className={cn(
                             "h-5 w-5 rounded-full transition-all duration-300",
-                            entryLogic?.canTrade && isRunning ? "bg-emerald-400 animate-pulse shadow-[0_0_15px_#10b981]" : "bg-cyan-400 opacity-20"
+                            entryLogic?.canTrade ? "bg-emerald-400 animate-pulse shadow-[0_0_15px_#10b981]" : "bg-cyan-400 opacity-20"
                         )} />
                     </div>
                     <p className="text-[10px] font-black text-cyan-400 uppercase tracking-widest mb-3">ENTRY SIGNAL</p>
@@ -293,7 +302,7 @@ export function StrategyOverOne({
                 </Card>
             </div>
 
-            {/* Central Execution Hub (Screenshot Large Pill Style) */}
+            {/* Central Large Cockpit Pill Style Status Card */}
             <Card className={cn(
                 "p-10 sm:p-14 rounded-[4rem] sm:rounded-[6rem] border-none shadow-2xl transition-all duration-500 relative overflow-hidden",
                 "bg-slate-900/80 backdrop-blur-3xl border border-white/5"
@@ -381,128 +390,101 @@ export function StrategyOverOne({
                 </p>
             </div>
 
-            {/* Transactions Matrix */}
-            <Card className="border-none shadow-2xl bg-slate-950/90 backdrop-blur-3xl rounded-[2.5rem] overflow-hidden border border-white/10 flex flex-col">
-                <Tabs defaultValue="transactions" className="w-full flex flex-col">
-                    <div className="px-8 pt-6 border-b border-white/5 flex items-center justify-between bg-black/20">
-                        <TabsList className="bg-transparent h-auto p-0 gap-10">
-                            <TabsTrigger value="transactions" className="px-0 py-4 border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent rounded-none font-black text-[12px] uppercase tracking-[0.3em] text-slate-500 data-[state=active]:text-white transition-all">TRANSACTIONS</TabsTrigger>
-                            <TabsTrigger value="summary" className="px-0 py-4 border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent rounded-none font-black text-[12px] uppercase tracking-[0.3em] text-slate-500 data-[state=active]:text-white transition-all">SUMMARY</TabsTrigger>
-                        </TabsList>
-                        <div className="flex items-center gap-6">
-                            <Badge className="bg-primary/20 text-primary border-none text-[10px] font-black uppercase tracking-widest px-4">RUNS: {trades.length}</Badge>
-                        </div>
-                    </div>
+            {/* Professional Transaction Table */}
+            <Card className="border-none shadow-2xl bg-slate-950/90 backdrop-blur-3xl rounded-[2.5rem] overflow-hidden border border-white/10">
+                <div className="px-8 pt-6 pb-4 border-b border-white/5 flex items-center justify-between bg-black/20">
+                    <h4 className="font-black text-[12px] uppercase tracking-[0.3em] text-white">TRANSACTION LOG</h4>
+                    <Badge className="bg-primary/20 text-primary border-none text-[10px] font-black uppercase tracking-widest px-4">RUNS: {trades.length}</Badge>
+                </div>
+                <div className="w-full">
+                    <table className="w-full text-left border-collapse">
+                        <thead className="bg-slate-900/80 backdrop-blur-md border-b border-white/5">
+                            <tr className="text-[10px] font-black uppercase text-slate-500 tracking-[0.3em]">
+                                <th className="px-8 py-4">TYPE</th>
+                                <th className="px-8 py-4">ENTRY/EXIT SPOT</th>
+                                <th className="px-8 py-4 text-right">BUY PRICE AND P/L</th>
+                            </tr>
+                        </thead>
+                        <tbody className="divide-y divide-white/5">
+                            <AnimatePresence>
+                                {trades.map((t) => (
+                                    <motion.tr 
+                                        key={t.id} 
+                                        initial={{ opacity: 0, x: -20 }}
+                                        animate={{ opacity: 1, x: 0 }}
+                                        className="hover:bg-white/5 transition-colors"
+                                    >
+                                        <td className="px-8 py-6">
+                                            <div className="flex items-center gap-4">
+                                                <Activity className="h-5 w-5 text-slate-600" />
+                                                {t.result === 'WON' ? <TrendingUp className="h-5 w-5 text-emerald-400" /> : <TrendingDown className="h-5 w-5 text-rose-500" />}
+                                                <span className="text-[12px] font-black text-white">OVER 1</span>
+                                            </div>
+                                        </td>
+                                        <td className="px-8 py-6">
+                                            <div className="space-y-2.5">
+                                                <div className="flex items-center gap-4">
+                                                    <div className="h-2.5 w-2.5 bg-rose-500 rounded-sm" />
+                                                    <span className="text-[13px] font-black text-white tabular-nums">{t.entrySpot}</span>
+                                                </div>
+                                                <div className="flex items-center gap-4">
+                                                    <div className="h-2.5 w-2.5 border border-slate-600 rounded-sm" />
+                                                    <span className="text-[13px] font-black text-slate-400 tabular-nums">{t.exitSpot}</span>
+                                                </div>
+                                            </div>
+                                        </td>
+                                        <td className="px-8 py-6 text-right">
+                                            <div className="space-y-2">
+                                                <p className="text-[13px] font-black text-slate-300 tabular-nums">{t.stake.toFixed(2)} USD</p>
+                                                <p className={cn("text-[13px] font-black tabular-nums", t.result === 'WON' ? "text-emerald-400" : "text-rose-500")}>
+                                                    {t.result === 'WON' ? `+${t.profit.toFixed(2)}` : t.profit.toFixed(2)} USD
+                                                </p>
+                                            </div>
+                                        </td>
+                                    </motion.tr>
+                                ))}
+                            </AnimatePresence>
+                            {trades.length === 0 && (
+                                <tr>
+                                    <td colSpan={3} className="px-8 py-32 text-center opacity-20">
+                                        <Zap className="h-24 w-24 mx-auto mb-6 text-slate-400" />
+                                        <p className="text-lg font-black uppercase tracking-[0.5em] text-white">Awaiting Tactical Engagement</p>
+                                    </td>
+                                </tr>
+                            )}
+                        </tbody>
+                    </table>
+                </div>
 
-                    <div className="flex flex-col">
-                        <TabsContent value="transactions" className="m-0 p-0 bg-transparent">
-                            <div className="w-full">
-                                <table className="w-full text-left border-collapse">
-                                    <thead className="bg-slate-900/80 backdrop-blur-md border-b border-white/5">
-                                        <tr className="text-[10px] font-black uppercase text-slate-500 tracking-[0.3em]">
-                                            <th className="px-8 py-4">TYPE</th>
-                                            <th className="px-8 py-4">ENTRY/EXIT SPOT</th>
-                                            <th className="px-8 py-4 text-right">BUY PRICE AND P/L</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody className="divide-y divide-white/5">
-                                        <AnimatePresence>
-                                            {trades.map((t) => (
-                                                <motion.tr 
-                                                    key={t.id} 
-                                                    initial={{ opacity: 0, x: -20 }}
-                                                    animate={{ opacity: 1, x: 0 }}
-                                                    className="hover:bg-white/5 transition-colors"
-                                                >
-                                                    <td className="px-8 py-6">
-                                                        <div className="flex items-center gap-4">
-                                                            <Activity className="h-5 w-5 text-slate-600" />
-                                                            {t.result === 'WON' ? <TrendingUp className="h-5 w-5 text-emerald-400" /> : <TrendingDown className="h-5 w-5 text-rose-500" />}
-                                                            <span className="text-[12px] font-black text-white">OVER 1</span>
-                                                        </div>
-                                                    </td>
-                                                    <td className="px-8 py-6">
-                                                        <div className="space-y-2.5">
-                                                            <div className="flex items-center gap-4">
-                                                                <div className="h-2.5 w-2.5 bg-rose-500 rounded-sm" />
-                                                                <span className="text-[13px] font-black text-white tabular-nums">{t.entrySpot}</span>
-                                                            </div>
-                                                            <div className="flex items-center gap-4">
-                                                                <div className="h-2.5 w-2.5 border border-slate-600 rounded-sm" />
-                                                                <span className="text-[13px] font-black text-slate-400 tabular-nums">{t.exitSpot}</span>
-                                                            </div>
-                                                        </div>
-                                                    </td>
-                                                    <td className="px-8 py-6 text-right">
-                                                        <div className="space-y-2">
-                                                            <p className="text-[13px] font-black text-slate-300 tabular-nums">{t.stake.toFixed(2)} USD</p>
-                                                            <p className={cn("text-[13px] font-black tabular-nums", t.result === 'WON' ? "text-emerald-400" : "text-rose-500")}>
-                                                                {t.result === 'WON' ? `+${t.profit.toFixed(2)}` : t.profit.toFixed(2)} USD
-                                                            </p>
-                                                        </div>
-                                                    </td>
-                                                </motion.tr>
-                                            ))}
-                                        </AnimatePresence>
-                                        {trades.length === 0 && (
-                                            <tr>
-                                                <td colSpan={3} className="px-8 py-32 text-center opacity-20">
-                                                    <Zap className="h-24 w-24 mx-auto mb-6 text-slate-400" />
-                                                    <p className="text-lg font-black uppercase tracking-[0.5em] text-white">Awaiting Tactical Engagement</p>
-                                                </td>
-                                            </tr>
-                                        )}
-                                    </tbody>
-                                </table>
-                            </div>
-                        </TabsContent>
-
-                        <TabsContent value="summary" className="m-0 p-24 flex items-center justify-center bg-transparent">
-                             <div className="text-center space-y-10 max-w-md">
-                                <div className="p-14 bg-white/5 rounded-[3rem] border border-white/10 shadow-2xl relative overflow-hidden group">
-                                    <div className="absolute inset-0 bg-primary/5 opacity-0 group-hover:opacity-100 transition-opacity" />
-                                    <p className="text-[12px] font-black text-primary uppercase tracking-[0.4em] mb-6">CYCLE WIN RATE</p>
-                                    <p className="text-8xl font-black text-white tracking-tighter tabular-nums">
-                                        {winRate.toFixed(0)}%
-                                    </p>
-                                </div>
-                                <p className="text-sm font-medium text-slate-400 leading-relaxed italic px-12">
-                                    "100+1 Accuracy Protocol active. Monitoring high-volatility streams for Zero-Error digit skew confirmation."
-                                </p>
-                             </div>
-                        </TabsContent>
+                {/* Integrated Summary Footer */}
+                <div className="mt-auto border-t border-white/10 bg-black/40 p-10 grid grid-cols-3 gap-y-10 shrink-0 shadow-inner">
+                    <div className="text-center">
+                        <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-2">TOTAL STAKE</p>
+                        <p className="text-xl font-black text-white tabular-nums">{sessionStats.totalStake.toFixed(2)} <span className="text-[12px] opacity-40">USD</span></p>
                     </div>
-
-                    {/* Integrated Summary Footer (Exact Screenshot Layout) */}
-                    <div className="mt-auto border-t border-white/10 bg-black/40 p-10 grid grid-cols-3 gap-y-10 shrink-0 shadow-inner">
-                        <div className="text-center">
-                            <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-2">TOTAL STAKE</p>
-                            <p className="text-xl font-black text-white tabular-nums">{sessionStats.totalStake.toFixed(2)} <span className="text-[12px] opacity-40">USD</span></p>
-                        </div>
-                        <div className="text-center">
-                            <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-2">TOTAL PAYOUT</p>
-                            <p className="text-xl font-black text-white tabular-nums">{sessionStats.totalPayout.toFixed(2)} <span className="text-[12px] opacity-40">USD</span></p>
-                        </div>
-                        <div className="text-center">
-                            <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-2">NO. OF RUNS</p>
-                            <p className="text-xl font-black text-white tabular-nums">{trades.length}</p>
-                        </div>
-                        <div className="text-center">
-                            <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-2">CONTRACTS LOST</p>
-                            <p className="text-xl font-black text-rose-500 tabular-nums">{sessionStats.losses}</p>
-                        </div>
-                        <div className="text-center">
-                            <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-2">CONTRACTS WON</p>
-                            <p className="text-xl font-black text-emerald-400 tabular-nums">{sessionStats.wins}</p>
-                        </div>
-                        <div className="text-center">
-                            <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-2">TOTAL PROFIT/LOSS</p>
-                            <p className={cn("text-2xl font-black tabular-nums", sessionStats.profit >= 0 ? "text-emerald-400" : "text-rose-500")}>
-                                {sessionStats.profit >= 0 ? '+' : ''}{sessionStats.profit.toFixed(2)} <span className="text-[12px] opacity-40">USD</span>
-                            </p>
-                        </div>
+                    <div className="text-center">
+                        <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-2">TOTAL PAYOUT</p>
+                        <p className="text-xl font-black text-white tabular-nums">{sessionStats.totalPayout.toFixed(2)} <span className="text-[12px] opacity-40">USD</span></p>
                     </div>
-                </Tabs>
+                    <div className="text-center">
+                        <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-2">NO. OF RUNS</p>
+                        <p className="text-xl font-black text-white tabular-nums">{trades.length}</p>
+                    </div>
+                    <div className="text-center">
+                        <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-2">CONTRACTS LOST</p>
+                        <p className="text-xl font-black text-rose-500 tabular-nums">{sessionStats.losses}</p>
+                    </div>
+                    <div className="text-center">
+                        <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-2">CONTRACTS WON</p>
+                        <p className="text-xl font-black text-emerald-400 tabular-nums">{sessionStats.wins}</p>
+                    </div>
+                    <div className="text-center">
+                        <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-2">TOTAL PROFIT/LOSS</p>
+                        <p className={cn("text-2xl font-black tabular-nums", sessionStats.profit >= 0 ? "text-emerald-400" : "text-rose-500")}>
+                            {sessionStats.profit >= 0 ? '+' : ''}{sessionStats.profit.toFixed(2)} <span className="text-[12px] opacity-40">USD</span>
+                        </p>
+                    </div>
+                </div>
             </Card>
         </div>
     );

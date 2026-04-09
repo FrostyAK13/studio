@@ -50,7 +50,6 @@ export function Dashboard() {
     React.useEffect(() => {
         if (!mounted) return;
 
-        // Hard-coded to App ID 84799
         const ws = new WebSocket('wss://ws.derivws.com/websockets/v3?app_id=84799');
         setWsInstance(ws);
 
@@ -255,7 +254,7 @@ export function Dashboard() {
 
                     <div className="absolute left-1/2 -translate-x-1/2 flex items-center shrink-0">
                         <a href="https://frostytraders.com" target="_blank" rel="noopener noreferrer" className="relative flex items-center gap-3 px-6 py-2 bg-white border border-slate-200 rounded-full shadow-lg hover:scale-105 active:scale-95 transition-all group">
-                            <div className="h-2 w-2 rounded-full bg-[#ff4d4d] animate-pulse shadow-[0_0_12px_#ff4d4d]" />
+                            <div className="h-2.5 w-2.5 rounded-full bg-[#ff3b3b] animate-pulse shadow-[0_0_12px_#ff3b3b]" />
                             <span className="text-xs sm:text-sm font-black text-slate-950 uppercase tracking-[0.4em] sm:tracking-[0.6em]">FROSTY</span>
                         </a>
                     </div>
