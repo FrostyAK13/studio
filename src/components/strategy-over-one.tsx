@@ -82,13 +82,20 @@ export function StrategyOverOne({
     
     const lastProcessedId = React.useRef<string | null>(null);
 
-    // 100+1 Strategy: Avoid losses by skipping if both digits are <= 3
+    // TRIPLE-GATE OVER 1 STRATEGY:
+    // Digit A (Previous) <= 2 AND Digit B (Current) < 4 AND (A + B) <= 4
     const entryLogic = React.useMemo(() => {
-        if (lastDigitTicks.length < 2) return { d1: 0, d2: 0, shouldSkip: false, canTrade: false };
-        const d1 = lastDigitTicks[0]; 
-        const d2 = lastDigitTicks[1]; 
-        const shouldSkip = d1 <= 3 && d2 <= 3;
-        return { d1, d2, shouldSkip, canTrade: !shouldSkip };
+        if (lastDigitTicks.length < 2) return { digitA: 0, digitB: 0, sum: 0, canTrade: false };
+        const digitB = lastDigitTicks[0]; // Current
+        const digitA = lastDigitTicks[1]; // Previous
+        const sum = digitA + digitB;
+        
+        const gate1 = digitA <= 2;
+        const gate2 = digitB < 4;
+        const gate3 = sum <= 4;
+        
+        const canTrade = gate1 && gate2 && gate3;
+        return { digitA, digitB, sum, canTrade };
     }, [lastDigitTicks]);
 
     const winRate = React.useMemo(() => {
@@ -102,7 +109,7 @@ export function StrategyOverOne({
         return 'OK';
     }, [sessionStats.profit, config]);
 
-    // Threshold Check Effect (Immediate stop on Goal/Limit)
+    // Threshold Check Effect
     React.useEffect(() => {
         if (!isRunning || sessionEnded) return;
 
@@ -183,7 +190,7 @@ export function StrategyOverOne({
                 contract_type: "DIGITOVER" 
             });
         } else {
-            setStatusMessage('FILTER: SKIPPING CYCLE');
+            setStatusMessage('FILTER: SCANNING GATES');
         }
     }, [lastDigitTicks, isRunning, sessionEnded, isPendingExecution, isAuthorized, entryLogic, currentStake, onExecuteTrade, riskCheck]);
 
@@ -207,8 +214,6 @@ export function StrategyOverOne({
         const num = parseFloat(value); 
         if (!isNaN(num)) setConfig(prev => ({ ...prev, [field]: num }));
     };
-
-    const marketName = syntheticIndices.find(m => m.id === selectedMarket)?.name || selectedMarket;
 
     return (
         <div className="space-y-6 animate-in fade-in slide-in-from-bottom-5 duration-700 pb-24 max-w-[1600px] mx-auto">
@@ -235,7 +240,7 @@ export function StrategyOverOne({
                 </div>
             </Card>
 
-            {/* 5-Card Tactical Metric Grid (Global Scan Style) */}
+            {/* 5-Card Tactical Metric Grid */}
             <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
                 <Card className="bg-emerald-500/10 border border-emerald-500/20 p-6 rounded-[2.5rem] relative group" >
                     <div className="absolute top-4 right-4"><Crosshair className="h-5 w-5 text-emerald-400" /></div>
@@ -257,7 +262,7 @@ export function StrategyOverOne({
                     <div className="absolute top-4 right-4"><Zap className="h-5 w-5 text-primary" /></div>
                     <p className="text-[10px] font-black text-primary uppercase tracking-widest mb-3">ENGAGEMENT</p>
                     <p className="text-2xl font-black text-white leading-tight uppercase">OVER 1</p>
-                    <Badge className="bg-primary/20 text-primary border-none mt-3 text-[9px] font-black uppercase">100+1 ACTIVE</Badge>
+                    <Badge className="bg-primary/20 text-primary border-none mt-3 text-[9px] font-black uppercase">TRIPLE-GATE ACTIVE</Badge>
                 </Card>
 
                 <Card className="bg-blue-600/10 border border-blue-500/20 p-6 rounded-[2.5rem] relative">
@@ -277,15 +282,19 @@ export function StrategyOverOne({
                         )} />
                     </div>
                     <p className="text-[10px] font-black text-cyan-400 uppercase tracking-widest mb-3">ENTRY SIGNAL</p>
-                    <div className="flex items-center gap-6">
+                    <div className="flex items-center gap-4 justify-between">
                         <div>
-                            <p className="text-[8px] font-bold text-muted-foreground uppercase mb-1">DIGIT 2</p>
-                            <p className={cn("text-3xl font-black", entryLogic && entryLogic.d2 <= 3 ? "text-rose-500" : "text-white")}>{entryLogic ? entryLogic.d2 : '-'}</p>
+                            <p className="text-[7px] font-bold text-muted-foreground uppercase mb-1">PREV (A)</p>
+                            <p className={cn("text-2xl font-black", entryLogic.digitA <= 2 ? "text-emerald-400" : "text-white")}>{entryLogic.digitA}</p>
                         </div>
-                        <div className="w-px h-10 bg-white/10" />
                         <div>
-                            <p className="text-[8px] font-bold text-muted-foreground uppercase mb-1">DIGIT 1</p>
-                            <p className={cn("text-3xl font-black", entryLogic && entryLogic.d1 <= 3 ? "text-rose-500" : "text-white")}>{entryLogic ? entryLogic.d1 : '-'}</p>
+                            <p className="text-[7px] font-bold text-muted-foreground uppercase mb-1">CURR (B)</p>
+                            <p className={cn("text-2xl font-black", entryLogic.digitB < 4 ? "text-emerald-400" : "text-white")}>{entryLogic.digitB}</p>
+                        </div>
+                        <div className="w-px h-8 bg-white/10" />
+                        <div>
+                            <p className="text-[7px] font-bold text-muted-foreground uppercase mb-1">SUM (A+B)</p>
+                            <p className={cn("text-2xl font-black", entryLogic.sum <= 4 ? "text-emerald-400" : "text-rose-500")}>{entryLogic.sum}</p>
                         </div>
                     </div>
                 </Card>
@@ -325,7 +334,7 @@ export function StrategyOverOne({
                             </h3>
                             <p className="text-xs font-black uppercase tracking-[0.5em] text-primary/60 mt-4">
                                 {isPendingExecution ? "ZERO-ERROR GATE ENGAGED" : 
-                                 isRunning ? (entryLogic?.shouldSkip ? "FILTER: SKIPPING CYCLE" : "READY TO ENGAGE") : 
+                                 isRunning ? (entryLogic.canTrade ? "READY TO ENGAGE" : "FILTER: SCANNING GATES") : 
                                  "AWAITING COMMAND PARAMETERS"}
                             </p>
                         </div>
@@ -384,7 +393,7 @@ export function StrategyOverOne({
                     </div>
                 </div>
                 <p className="text-sm sm:text-xl font-medium text-white/90 leading-relaxed italic">
-                    "Engine identified a Flawless Zero-Error window. Profit targets set at +{config.takeProfit} USD with a -{config.stopLoss} USD safety threshold. Execution Logic: Digit Over 1 with Neural Filter active."
+                    "Triple-Gate Logic Active: Digit A &le; 2, Digit B &lt; 4, SUM &le; 4. Execution window locked for 100+1 accuracy cycle. Performance threshold: +{config.takeProfit} USD / -{config.stopLoss} USD."
                 </p>
             </div>
 
