@@ -188,7 +188,7 @@ export function StrategyOverOne({
     return (
         <div className="grid grid-cols-1 xl:grid-cols-4 gap-2 pb-4">
             <div className="xl:col-span-1 space-y-2">
-                <Card className="border-none shadow-2xl bg-slate-950/90 backdrop-blur-3xl rounded-[1.5rem] overflow-hidden border-l-4 border-primary">
+                <Card className="border-none shadow-2xl bg-slate-900/60 backdrop-blur-3xl rounded-[1.5rem] overflow-hidden border border-white/5">
                     <CardHeader className="p-3 pb-1">
                         <div className="text-center">
                             <p className="text-[7px] font-black text-primary uppercase tracking-[0.3em]">EQUITY VECTOR</p>
@@ -304,8 +304,8 @@ export function StrategyOverOne({
                     </Card>
                 </div>
 
-                <Card className="border-none shadow-2xl bg-slate-950/90 backdrop-blur-3xl rounded-[1.5rem] overflow-hidden border border-white/10 flex-1 flex flex-col h-full max-h-[500px]">
-                    <Tabs defaultValue="transactions" className="w-full h-full flex flex-col overflow-hidden">
+                <Card className="border-none shadow-2xl bg-slate-950/90 backdrop-blur-3xl rounded-[1.5rem] overflow-hidden border border-white/10 flex flex-col">
+                    <Tabs defaultValue="transactions" className="w-full flex flex-col">
                         <div className="px-4 pt-2 border-b border-white/5 flex items-center justify-between bg-black/20 shrink-0">
                             <TabsList className="bg-transparent h-auto p-0 gap-6">
                                 <TabsTrigger value="summary" className="px-0 py-2 border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent rounded-none font-black text-[9px] uppercase tracking-[0.2em] text-slate-500 data-[state=active]:text-white transition-all">SUMMARY</TabsTrigger>
@@ -322,8 +322,8 @@ export function StrategyOverOne({
                             </div>
                         </div>
 
-                        <div className="flex-1 overflow-hidden flex flex-col">
-                            <TabsContent value="transactions" className="flex-1 overflow-y-auto m-0 p-0 custom-scrollbar bg-transparent">
+                        <div className="flex flex-col">
+                            <TabsContent value="transactions" className="m-0 p-0 bg-transparent">
                                 <div className="w-full">
                                     <table className="w-full text-left border-collapse">
                                         <thead className="sticky top-0 bg-slate-900/80 backdrop-blur-md z-10 border-b border-white/5">
@@ -377,7 +377,7 @@ export function StrategyOverOne({
                                 </div>
                             </TabsContent>
 
-                            <TabsContent value="summary" className="flex-1 m-0 p-6 flex items-center justify-center bg-transparent">
+                            <TabsContent value="summary" className="m-0 p-6 flex items-center justify-center bg-transparent">
                                  <div className="text-center space-y-4 max-w-sm">
                                     <div className="p-6 bg-white/5 rounded-[2rem] border border-white/10 shadow-2xl relative overflow-hidden group">
                                         <div className="absolute inset-0 bg-primary/5 opacity-0 group-hover:opacity-100 transition-opacity" />
