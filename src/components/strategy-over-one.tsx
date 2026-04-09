@@ -15,7 +15,8 @@ import {
     Play,
     RotateCcw,
     Circle,
-    Info
+    Info,
+    RefreshCcw
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -72,16 +73,14 @@ export function StrategyOverOne({
     
     const lastProcessedId = React.useRef<string | null>(null);
 
-    // Entry Logic Filter: If both Digit_1 <= 3 AND Digit_2 <= 3 -> SKIP. Otherwise -> EXECUTE Over 1.
     const entryLogic = React.useMemo(() => {
         if (lastDigitTicks.length < 2) return null;
-        const d1 = lastDigitTicks[0]; // Latest
-        const d2 = lastDigitTicks[1]; // Previous
+        const d1 = lastDigitTicks[0]; 
+        const d2 = lastDigitTicks[1]; 
         const shouldSkip = d1 <= 3 && d2 <= 3;
         return { d1, d2, shouldSkip, canTrade: !shouldSkip };
     }, [lastDigitTicks]);
 
-    // Trade Result Processing & Money Management
     React.useEffect(() => {
         if (!activeContract || !isPendingExecution) return;
         
@@ -120,7 +119,6 @@ export function StrategyOverOne({
                 const newTotalStake = prev.totalStake + buyPrice;
                 const newTotalPayout = prev.totalPayout + (result === 'WON' ? payoutValue : 0);
                 
-                // Risk Management Check
                 if (newProfit >= config.takeProfit) {
                     setIsRunning(false);
                     setSessionEnded(true);
@@ -136,7 +134,6 @@ export function StrategyOverOne({
                 return { wins: newWins, losses: newLosses, profit: newProfit, totalStake: newTotalStake, totalPayout: newTotalPayout };
             });
 
-            // Martingale recovery logic
             if (result === 'LOST') {
                 setCurrentStake(prev => prev * config.martingale);
             } else {
@@ -151,7 +148,6 @@ export function StrategyOverOne({
         }
     }, [activeContract, isPendingExecution, sessionEnded, config, currency, isRunning, lastDigitTicks, toast]);
 
-    // Automated Execution Loop
     React.useEffect(() => {
         if (!isRunning || !entryLogic || sessionEnded || isPendingExecution || !isAuthorized) return;
 
@@ -314,11 +310,15 @@ export function StrategyOverOne({
                             <TabsList className="bg-transparent h-auto p-0 gap-6">
                                 <TabsTrigger value="summary" className="px-0 py-2 border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent rounded-none font-bold text-[9px] uppercase tracking-widest text-slate-400 data-[state=active]:text-slate-950">Summary</TabsTrigger>
                                 <TabsTrigger value="transactions" className="px-0 py-2 border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent rounded-none font-bold text-[9px] uppercase tracking-widest text-slate-400 data-[state=active]:text-slate-950">Transactions</TabsTrigger>
-                                <TabsTrigger value="journal" className="px-0 py-2 border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent rounded-none font-bold text-[9px] uppercase tracking-widest text-slate-400 data-[state=active]:text-slate-950">Journal</TabsTrigger>
                             </TabsList>
                             <div className="flex gap-2">
-                                <Button variant="outline" className="h-6 px-2 text-[7px] font-black uppercase tracking-widest border-emerald-500/30 text-emerald-600 hover:bg-emerald-50">Download</Button>
-                                <Button variant="outline" className="h-6 px-2 text-[7px] font-black uppercase tracking-widest border-emerald-500/30 text-emerald-600 hover:bg-emerald-50">View Detail</Button>
+                                <Button 
+                                    variant="outline" 
+                                    onClick={resetSession}
+                                    className="h-6 px-3 text-[7px] font-black uppercase tracking-widest border-rose-500/30 text-rose-600 hover:bg-rose-50 flex items-center gap-1.5"
+                                >
+                                    <RefreshCcw className="h-2 w-2" /> Reset
+                                </Button>
                             </div>
                         </div>
 
