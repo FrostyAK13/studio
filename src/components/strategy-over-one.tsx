@@ -112,27 +112,29 @@ export function StrategyOverOne({
                 return [newTrade, ...prev].slice(0, 50);
             });
             
-            setSessionStats(prev => {
-                const newProfit = prev.profit + profitValue;
-                const newWins = result === 'WON' ? prev.wins + 1 : prev.wins;
-                const newLosses = result === 'LOST' ? prev.losses + 1 : prev.losses;
-                const newTotalStake = prev.totalStake + buyPrice;
-                const newTotalPayout = prev.totalPayout + (result === 'WON' ? payoutValue : 0);
-                
-                if (newProfit >= config.takeProfit) {
-                    setIsRunning(false);
-                    setSessionEnded(true);
-                    setStatusMessage('TAKE PROFIT REACHED');
-                    toast({ title: "TP REACHED", description: `Profit: ${newProfit.toFixed(2)} ${currency}` });
-                } else if (newProfit <= -config.stopLoss) {
-                    setIsRunning(false);
-                    setSessionEnded(true);
-                    setStatusMessage('STOP LOSS TRIGGERED');
-                    toast({ variant: "destructive", title: "STOP LOSS", description: `Loss: ${newProfit.toFixed(2)} ${currency}` });
-                }
+            // Calculate potential new profit locally first to handle side effects correctly
+            const newTotalProfit = sessionStats.profit + profitValue;
 
-                return { wins: newWins, losses: newLosses, profit: newProfit, totalStake: newTotalStake, totalPayout: newTotalPayout };
-            });
+            setSessionStats(prev => ({
+                wins: result === 'WON' ? prev.wins + 1 : prev.wins,
+                losses: result === 'LOST' ? prev.losses + 1 : prev.losses,
+                profit: prev.profit + profitValue,
+                totalStake: prev.totalStake + buyPrice,
+                totalPayout: prev.totalPayout + (result === 'WON' ? payoutValue : 0)
+            }));
+
+            // Handle Risk Management Side Effects outside of setSessionStats
+            if (newTotalProfit >= config.takeProfit) {
+                setIsRunning(false);
+                setSessionEnded(true);
+                setStatusMessage('TAKE PROFIT REACHED');
+                toast({ title: "TP REACHED", description: `Profit: ${newTotalProfit.toFixed(2)} ${currency}` });
+            } else if (newTotalProfit <= -config.stopLoss) {
+                setIsRunning(false);
+                setSessionEnded(true);
+                setStatusMessage('STOP LOSS TRIGGERED');
+                toast({ variant: "destructive", title: "STOP LOSS", description: `Loss: ${newTotalProfit.toFixed(2)} ${currency}` });
+            }
 
             if (result === 'LOST') {
                 setCurrentStake(prev => prev * config.martingale);
@@ -141,12 +143,12 @@ export function StrategyOverOne({
             }
 
             setIsPendingExecution(false);
-            if (!sessionEnded) {
+            if (!sessionEnded && newTotalProfit < config.takeProfit && newTotalProfit > -config.stopLoss) {
                 setStatusMessage('CYCLE SETTLED');
                 setTimeout(() => { if (isRunning && !sessionEnded) setStatusMessage('MONITORING TICKS...'); }, 800);
             }
         }
-    }, [activeContract, isPendingExecution, sessionEnded, config, currency, isRunning, lastDigitTicks, toast]);
+    }, [activeContract, isPendingExecution, sessionEnded, config, currency, isRunning, lastDigitTicks, toast, sessionStats.profit]);
 
     React.useEffect(() => {
         if (!isRunning || !entryLogic || sessionEnded || isPendingExecution || !isAuthorized) return;
@@ -186,7 +188,7 @@ export function StrategyOverOne({
     };
 
     return (
-        <div className="grid grid-cols-1 xl:grid-cols-4 gap-2 pb-4">
+        <div className="grid grid-cols-1 xl:grid-cols-4 gap-2 pb-4 h-full">
             <div className="xl:col-span-1 space-y-2">
                 <Card className="border-none shadow-2xl bg-slate-900/60 backdrop-blur-3xl rounded-[1.5rem] overflow-hidden border border-white/5">
                     <CardHeader className="p-3 pb-1">
@@ -266,8 +268,8 @@ export function StrategyOverOne({
                 </Card>
             </div>
 
-            <div className="xl:col-span-3 flex flex-col gap-2">
-                <div className="grid grid-cols-2 gap-2">
+            <div className="xl:col-span-3 flex flex-col gap-2 h-full">
+                <div className="grid grid-cols-2 gap-2 shrink-0">
                     <Card className="border-none shadow-2xl bg-slate-900/60 backdrop-blur-3xl rounded-[1.5rem] overflow-hidden border border-white/5">
                         <CardHeader className="p-3 pb-1 flex flex-row items-center justify-between">
                             <h4 className="text-[8px] font-black uppercase text-white tracking-[0.3em] flex items-center gap-2"><Network className="h-3.5 w-3.5 text-primary" /> ANALYZER FEED</h4>
@@ -304,8 +306,8 @@ export function StrategyOverOne({
                     </Card>
                 </div>
 
-                <Card className="border-none shadow-2xl bg-slate-950/90 backdrop-blur-3xl rounded-[1.5rem] overflow-hidden border border-white/10 flex flex-col">
-                    <Tabs defaultValue="transactions" className="w-full flex flex-col">
+                <Card className="border-none shadow-2xl bg-slate-950/90 backdrop-blur-3xl rounded-[1.5rem] overflow-hidden border border-white/10 flex flex-col flex-grow">
+                    <Tabs defaultValue="transactions" className="w-full flex flex-col h-full">
                         <div className="px-4 pt-2 border-b border-white/5 flex items-center justify-between bg-black/20 shrink-0">
                             <TabsList className="bg-transparent h-auto p-0 gap-6">
                                 <TabsTrigger value="summary" className="px-0 py-2 border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent rounded-none font-black text-[9px] uppercase tracking-[0.2em] text-slate-500 data-[state=active]:text-white transition-all">SUMMARY</TabsTrigger>
@@ -322,11 +324,11 @@ export function StrategyOverOne({
                             </div>
                         </div>
 
-                        <div className="flex flex-col">
-                            <TabsContent value="transactions" className="m-0 p-0 bg-transparent">
+                        <div className="flex flex-col flex-grow">
+                            <TabsContent value="transactions" className="m-0 p-0 bg-transparent flex-grow">
                                 <div className="w-full">
                                     <table className="w-full text-left border-collapse">
-                                        <thead className="sticky top-0 bg-slate-900/80 backdrop-blur-md z-10 border-b border-white/5">
+                                        <thead className="bg-slate-900/80 backdrop-blur-md border-b border-white/5">
                                             <tr className="text-[7px] font-black uppercase text-slate-500 tracking-[0.2em]">
                                                 <th className="px-4 py-2">TYPE</th>
                                                 <th className="px-4 py-2">ENTRY/EXIT SPOT</th>
@@ -377,7 +379,7 @@ export function StrategyOverOne({
                                 </div>
                             </TabsContent>
 
-                            <TabsContent value="summary" className="m-0 p-6 flex items-center justify-center bg-transparent">
+                            <TabsContent value="summary" className="m-0 p-6 flex items-center justify-center bg-transparent flex-grow">
                                  <div className="text-center space-y-4 max-w-sm">
                                     <div className="p-6 bg-white/5 rounded-[2rem] border border-white/10 shadow-2xl relative overflow-hidden group">
                                         <div className="absolute inset-0 bg-primary/5 opacity-0 group-hover:opacity-100 transition-opacity" />
