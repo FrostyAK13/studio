@@ -30,7 +30,7 @@ export function Dashboard() {
     const [decimalPlaces, setDecimalPlaces] = React.useState(2);
     const [tickTimestamps, setTickTimestamps] = React.useState<number[]>([]);
     
-    const [surveillanceStatus, setSurveillanceStatus] = React.useState<EngineStatus>('active');
+    const [surveillanceStatus, setSurveillanceStatus] = React.useState<EngineStatus>('offline');
     const [executionStatus, setExecutionStatus] = React.useState<EngineStatus>('standby');
     
     const [apiToken, setApiToken] = React.useState('');
@@ -254,16 +254,28 @@ export function Dashboard() {
 
                     <div className="absolute left-1/2 -translate-x-1/2 flex items-center shrink-0">
                         <a href="https://frostytraders.com" target="_blank" rel="noopener noreferrer" className="relative flex items-center gap-3 px-6 py-2 bg-white border border-slate-200 rounded-full shadow-lg hover:scale-105 active:scale-95 transition-all group">
-                            <div className="h-2.5 w-2.5 rounded-full bg-[#ff3b3b] animate-pulse shadow-[0_0_12px_#ff3b3b]" />
+                            <div className={cn(
+                                "h-2.5 w-2.5 rounded-full animate-pulse transition-all duration-500",
+                                surveillanceStatus === 'active' 
+                                    ? "bg-emerald-500 shadow-[0_0_12px_rgba(16,185,129,0.8)]" 
+                                    : "bg-rose-500 shadow-[0_0_12px_rgba(244,63,94,0.8)]"
+                            )} />
                             <span className="text-xs sm:text-sm font-black text-slate-950 uppercase tracking-[0.4em] sm:tracking-[0.6em]">FROSTY</span>
                         </a>
                     </div>
 
                     <div className="flex items-center shrink-0">
                         <div className="flex items-center gap-3 px-4 py-2 bg-slate-100 rounded-full border border-slate-200 shadow-sm">
-                            <Radio className={cn("h-4 w-4", surveillanceStatus === 'active' ? 'text-emerald-500 animate-pulse' : 'text-rose-500')} />
-                            <span className="hidden sm:inline text-[9px] font-black uppercase text-slate-950 tracking-widest">SURVEILLANCE LIVE</span>
-                            <span className="sm:hidden text-[9px] font-black uppercase text-slate-950">LIVE</span>
+                            <Radio className={cn(
+                                "h-4 w-4 transition-all duration-500", 
+                                surveillanceStatus === 'active' ? 'text-emerald-500 animate-pulse' : 'text-rose-500'
+                            )} />
+                            <span className="hidden sm:inline text-[9px] font-black uppercase text-slate-950 tracking-widest">
+                                {surveillanceStatus === 'active' ? 'SURVEILLANCE LIVE' : 'SURVEILLANCE OFFLINE'}
+                            </span>
+                            <span className="sm:hidden text-[9px] font-black uppercase text-slate-950">
+                                {surveillanceStatus === 'active' ? 'LIVE' : 'OFFLINE'}
+                            </span>
                         </div>
                     </div>
                 </div>
