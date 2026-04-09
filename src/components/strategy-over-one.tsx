@@ -77,6 +77,23 @@ export function StrategyOverOne({
         return { d1, d2, shouldSkip, canTrade: !shouldSkip };
     }, [lastDigitTicks]);
 
+    // Safety check for TP/SL every render cycle when running
+    React.useEffect(() => {
+        if (!isRunning || sessionEnded) return;
+
+        if (sessionStats.profit >= config.takeProfit) {
+            setIsRunning(false);
+            setSessionEnded(true);
+            setStatusMessage('TAKE PROFIT REACHED');
+            toast({ title: "TP REACHED", description: `Goal: ${config.takeProfit} ${currency}` });
+        } else if (sessionStats.profit <= -config.stopLoss) {
+            setIsRunning(false);
+            setSessionEnded(true);
+            setStatusMessage('STOP LOSS TRIGGERED');
+            toast({ variant: "destructive", title: "STOP LOSS", description: `Limit: -${config.stopLoss} ${currency}` });
+        }
+    }, [sessionStats.profit, config.takeProfit, config.stopLoss, isRunning, sessionEnded, currency, toast]);
+
     React.useEffect(() => {
         if (!activeContract || !isPendingExecution) return;
         
@@ -127,21 +144,11 @@ export function StrategyOverOne({
     }, [activeContract, isPendingExecution, config, lastDigitTicks]);
 
     React.useEffect(() => {
-        if (sessionStats.profit >= config.takeProfit && !sessionEnded) {
-            setIsRunning(false);
-            setSessionEnded(true);
-            setStatusMessage('TAKE PROFIT REACHED');
-            toast({ title: "TP REACHED", description: `Profit: ${sessionStats.profit.toFixed(2)} ${currency}` });
-        } else if (sessionStats.profit <= -config.stopLoss && !sessionEnded) {
-            setIsRunning(false);
-            setSessionEnded(true);
-            setStatusMessage('STOP LOSS TRIGGERED');
-            toast({ variant: "destructive", title: "STOP LOSS", description: `Loss: ${sessionStats.profit.toFixed(2)} ${currency}` });
-        }
-    }, [sessionStats.profit, config.takeProfit, config.stopLoss, sessionEnded, currency, toast]);
-
-    React.useEffect(() => {
+        // Critical: Guard trade engagement with sessionEnded and current profit status
         if (!isRunning || !entryLogic || sessionEnded || isPendingExecution || !isAuthorized) return;
+        
+        // Double-check thresholds before calling API
+        if (sessionStats.profit >= config.takeProfit || sessionStats.profit <= -config.stopLoss) return;
 
         if (entryLogic.canTrade) {
             setStatusMessage('ENGAGING OVER 1');
@@ -154,7 +161,7 @@ export function StrategyOverOne({
         } else {
             setStatusMessage('FILTER: SKIPPING CYCLE');
         }
-    }, [lastDigitTicks, isRunning, sessionEnded, isPendingExecution, isAuthorized, entryLogic, currentStake, onExecuteTrade]);
+    }, [lastDigitTicks, isRunning, sessionEnded, isPendingExecution, isAuthorized, entryLogic, currentStake, onExecuteTrade, sessionStats.profit, config]);
 
     const stopTrading = () => {
         setIsRunning(false);
@@ -178,7 +185,7 @@ export function StrategyOverOne({
     };
 
     return (
-        <div className="flex flex-col gap-2 pb-8 h-full max-w-[1600px] mx-auto">
+        <div className="flex flex-col gap-2 pb-8 h-full max-w-[1600px] mx-auto scale-[0.85] origin-top">
             <div className="grid grid-cols-1 lg:grid-cols-4 gap-2">
                 <Card className="lg:col-span-1 border-none shadow-2xl bg-slate-900/60 backdrop-blur-3xl rounded-[1rem] overflow-hidden border border-white/5">
                     <CardHeader className="p-3 pb-1">
