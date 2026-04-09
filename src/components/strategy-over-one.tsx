@@ -82,6 +82,7 @@ export function StrategyOverOne({
     
     const lastProcessedId = React.useRef<string | null>(null);
 
+    // 100+1 Strategy: Avoid losses by skipping if both digits are <= 3
     const entryLogic = React.useMemo(() => {
         if (lastDigitTicks.length < 2) return { d1: 0, d2: 0, shouldSkip: false, canTrade: false };
         const d1 = lastDigitTicks[0]; 
@@ -95,14 +96,13 @@ export function StrategyOverOne({
         return (sessionStats.wins / trades.length) * 100;
     }, [trades.length, sessionStats.wins]);
 
-    // Safety check for risk limits
     const riskCheck = React.useMemo(() => {
         if (sessionStats.profit >= config.takeProfit) return 'TP';
         if (sessionStats.profit <= -config.stopLoss) return 'SL';
         return 'OK';
     }, [sessionStats.profit, config]);
 
-    // Risk Management Watcher
+    // Threshold Check Effect (Immediate stop on Goal/Limit)
     React.useEffect(() => {
         if (!isRunning || sessionEnded) return;
 
@@ -119,7 +119,7 @@ export function StrategyOverOne({
         }
     }, [riskCheck, isRunning, sessionEnded, currency, toast, sessionStats.profit]);
 
-    // Contract Result Handler
+    // Contract Processor
     React.useEffect(() => {
         if (!activeContract || !isPendingExecution) return;
         
@@ -169,11 +169,9 @@ export function StrategyOverOne({
         }
     }, [activeContract, isPendingExecution, config, lastDigitTicks]);
 
-    // Automation Loop
+    // Engagement Loop
     React.useEffect(() => {
         if (!isRunning || !entryLogic || sessionEnded || isPendingExecution || !isAuthorized) return;
-        
-        // Double-guard risk check inside loop
         if (riskCheck !== 'OK') return;
 
         if (entryLogic.canTrade) {
@@ -215,15 +213,15 @@ export function StrategyOverOne({
     return (
         <div className="space-y-6 animate-in fade-in slide-in-from-bottom-5 duration-700 pb-24 max-w-[1600px] mx-auto">
             
-            {/* Tactical Configuration Bar */}
+            {/* Tactical Configuration Matrix */}
             <Card className="border-none shadow-2xl bg-slate-900/60 backdrop-blur-3xl rounded-[2.5rem] p-6 border border-white/5">
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
                     <div className="space-y-2">
-                        <Label className="text-[10px] font-black text-primary uppercase tracking-[0.3em] ml-2">STAKE (USD)</Label>
+                        <Label className="text-[10px] font-black text-primary uppercase tracking-[0.3em] ml-2">STAKE</Label>
                         <Input type="number" value={config.stake} onChange={e => updateConfig('stake', e.target.value)} className="h-12 bg-black/60 border-white/10 text-white font-black text-center text-[16px] rounded-2xl" />
                     </div>
                     <div className="space-y-2">
-                        <Label className="text-[10px] font-black text-primary uppercase tracking-[0.3em] ml-2">MARTINGALE (X)</Label>
+                        <Label className="text-[10px] font-black text-primary uppercase tracking-[0.3em] ml-2">MARTINGALE</Label>
                         <Input type="number" step="0.1" value={config.martingale} onChange={e => updateConfig('martingale', e.target.value)} className="h-12 bg-black/60 border-white/10 text-white font-black text-center text-[16px] rounded-2xl" />
                     </div>
                     <div className="space-y-2">
@@ -237,7 +235,7 @@ export function StrategyOverOne({
                 </div>
             </Card>
 
-            {/* Global Scan Grid Style Metric Cards */}
+            {/* 5-Card Tactical Metric Grid (Global Scan Style) */}
             <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
                 <Card className="bg-emerald-500/10 border border-emerald-500/20 p-6 rounded-[2.5rem] relative group" >
                     <div className="absolute top-4 right-4"><Crosshair className="h-5 w-5 text-emerald-400" /></div>
@@ -259,7 +257,7 @@ export function StrategyOverOne({
                     <div className="absolute top-4 right-4"><Zap className="h-5 w-5 text-primary" /></div>
                     <p className="text-[10px] font-black text-primary uppercase tracking-widest mb-3">ENGAGEMENT</p>
                     <p className="text-2xl font-black text-white leading-tight uppercase">OVER 1</p>
-                    <Badge className="bg-primary/20 text-primary border-none mt-3 text-[9px] font-black uppercase">ZERO-ERROR ACTIVE</Badge>
+                    <Badge className="bg-primary/20 text-primary border-none mt-3 text-[9px] font-black uppercase">100+1 ACTIVE</Badge>
                 </Card>
 
                 <Card className="bg-blue-600/10 border border-blue-500/20 p-6 rounded-[2.5rem] relative">
@@ -302,7 +300,7 @@ export function StrategyOverOne({
                 </Card>
             </div>
 
-            {/* Central Large Cockpit Pill Style Status Card */}
+            {/* Central Large Cockpit Hub */}
             <Card className={cn(
                 "p-10 sm:p-14 rounded-[4rem] sm:rounded-[6rem] border-none shadow-2xl transition-all duration-500 relative overflow-hidden",
                 "bg-slate-900/80 backdrop-blur-3xl border border-white/5"
@@ -327,7 +325,7 @@ export function StrategyOverOne({
                             </h3>
                             <p className="text-xs font-black uppercase tracking-[0.5em] text-primary/60 mt-4">
                                 {isPendingExecution ? "ZERO-ERROR GATE ENGAGED" : 
-                                 isRunning ? (entryLogic?.shouldSkip ? "FILTER: SKIPPING CYCLE" : "SYNC: READY TO ENGAGE") : 
+                                 isRunning ? (entryLogic?.shouldSkip ? "FILTER: SKIPPING CYCLE" : "READY TO ENGAGE") : 
                                  "AWAITING COMMAND PARAMETERS"}
                             </p>
                         </div>
@@ -372,7 +370,7 @@ export function StrategyOverOne({
                 )}
             </Card>
 
-            {/* Strategic Summary Box */}
+            {/* Strategic Summary Synopsis */}
             <div className="p-8 sm:p-12 bg-black/50 rounded-[3rem] border border-white/5 space-y-6 shadow-inner">
                 <div className="flex items-center justify-between border-b border-white/5 pb-6">
                     <h4 className="text-[12px] sm:text-[14px] font-black uppercase text-primary tracking-widest flex items-center gap-4">
@@ -386,14 +384,14 @@ export function StrategyOverOne({
                     </div>
                 </div>
                 <p className="text-sm sm:text-xl font-medium text-white/90 leading-relaxed italic">
-                    "Engine identified a Flawless Zero-Error window. Profit cycle targets set at +{config.takeProfit} USD with a -{config.stopLoss} USD safety threshold. Strategy logic: Digit Over 1 with filtered Skip Logic."
+                    "Engine identified a Flawless Zero-Error window. Profit targets set at +{config.takeProfit} USD with a -{config.stopLoss} USD safety threshold. Execution Logic: Digit Over 1 with Neural Filter active."
                 </p>
             </div>
 
-            {/* Professional Transaction Table */}
+            {/* High-Density Transaction Matrix */}
             <Card className="border-none shadow-2xl bg-slate-950/90 backdrop-blur-3xl rounded-[2.5rem] overflow-hidden border border-white/10">
                 <div className="px-8 pt-6 pb-4 border-b border-white/5 flex items-center justify-between bg-black/20">
-                    <h4 className="font-black text-[12px] uppercase tracking-[0.3em] text-white">TRANSACTION LOG</h4>
+                    <h4 className="font-black text-[12px] uppercase tracking-[0.3em] text-white">TRANSACTION MATRIX</h4>
                     <Badge className="bg-primary/20 text-primary border-none text-[10px] font-black uppercase tracking-widest px-4">RUNS: {trades.length}</Badge>
                 </div>
                 <div className="w-full">
@@ -456,8 +454,8 @@ export function StrategyOverOne({
                     </table>
                 </div>
 
-                {/* Integrated Summary Footer */}
-                <div className="mt-auto border-t border-white/10 bg-black/40 p-10 grid grid-cols-3 gap-y-10 shrink-0 shadow-inner">
+                {/* Tactical Footer Grid */}
+                <div className="border-t border-white/10 bg-black/40 p-10 grid grid-cols-3 gap-y-10 shrink-0 shadow-inner">
                     <div className="text-center">
                         <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-2">TOTAL STAKE</p>
                         <p className="text-xl font-black text-white tabular-nums">{sessionStats.totalStake.toFixed(2)} <span className="text-[12px] opacity-40">USD</span></p>
