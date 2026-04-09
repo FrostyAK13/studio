@@ -82,11 +82,13 @@ export function StrategyOverOne({
     
     const lastProcessedId = React.useRef<string | null>(null);
 
-    // TRIPLE-GATE OVER 1 STRATEGY:
-    // Gate 1: Digit A (Previous) <= 2
-    // Gate 2: Digit B (Current) < 4
-    // Gate 3: Sum (A+B) <= 4
-    // NEW SAFETY: SKIP if Sum === 0 (Double Zero Zone)
+    /**
+     * APPROVED STRATEGY: 'OVER 1'
+     * Gate 1: Previous Digit A <= 2
+     * Gate 2: Current Digit B < 4
+     * Gate 3: Sum (A+B) <= 4
+     * Safety: SKIP if Sum > 4 OR Sum === 0 (Double Zero)
+     */
     const entryLogic = React.useMemo(() => {
         if (lastDigitTicks.length < 2) return { digitA: 0, digitB: 0, sum: 0, canTrade: false };
         const digitB = lastDigitTicks[0]; // Current
@@ -95,10 +97,9 @@ export function StrategyOverOne({
         
         const gate1 = digitA <= 2;
         const gate2 = digitB < 4;
-        const gate3 = sum <= 4;
-        const isForbiddenZero = sum === 0;
+        const gate3 = sum <= 4 && sum > 0;
         
-        const canTrade = gate1 && gate2 && gate3 && !isForbiddenZero;
+        const canTrade = gate1 && gate2 && gate3;
         return { digitA, digitB, sum, canTrade };
     }, [lastDigitTicks]);
 
@@ -298,7 +299,7 @@ export function StrategyOverOne({
                         <div className="w-px h-8 bg-white/10" />
                         <div>
                             <p className="text-[7px] font-bold text-muted-foreground uppercase mb-1">SUM (A+B)</p>
-                            <p className={cn("text-2xl font-black", entryLogic.sum <= 4 ? "text-emerald-400" : "text-rose-500")}>{entryLogic.sum}</p>
+                            <p className={cn("text-2xl font-black", (entryLogic.sum <= 4 && entryLogic.sum > 0) ? "text-emerald-400" : "text-rose-500")}>{entryLogic.sum}</p>
                         </div>
                     </div>
                 </Card>
