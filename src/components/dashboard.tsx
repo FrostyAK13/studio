@@ -252,30 +252,29 @@ export function Dashboard() {
                         </div>
                     </div>
 
-                    <div className="absolute left-1/2 -translate-x-1/2 flex items-center shrink-0">
-                        <a href="https://frostytraders.com" target="_blank" rel="noopener noreferrer" className="relative flex items-center gap-3 px-6 py-2 bg-white border border-slate-200 rounded-full shadow-lg hover:scale-105 active:scale-95 transition-all group">
-                            <div className={cn(
-                                "h-2.5 w-2.5 rounded-full animate-pulse transition-all duration-500",
-                                surveillanceStatus === 'active' 
-                                    ? "bg-emerald-500 shadow-[0_0_12px_rgba(16,185,129,0.8)]" 
-                                    : "bg-rose-500 shadow-[0_0_12px_rgba(244,63,94,0.8)]"
-                            )} />
-                            <span className="text-xs sm:text-sm font-black text-slate-950 uppercase tracking-[0.4em] sm:tracking-[0.6em]">FROSTY</span>
-                        </a>
-                    </div>
-
-                    <div className="flex items-center shrink-0">
-                        <div className="flex items-center gap-3 px-4 py-2 bg-slate-100 rounded-full border border-slate-200 shadow-sm">
-                            <Radio className={cn(
-                                "h-4 w-4 transition-all duration-500", 
-                                surveillanceStatus === 'active' ? 'text-emerald-500 animate-pulse' : 'text-rose-500'
-                            )} />
-                            <span className="hidden sm:inline text-[9px] font-black uppercase text-slate-950 tracking-widest">
-                                {surveillanceStatus === 'active' ? 'SURVEILLANCE LIVE' : 'SURVEILLANCE OFFLINE'}
-                            </span>
-                            <span className="sm:hidden text-[9px] font-black uppercase text-slate-950">
-                                {surveillanceStatus === 'active' ? 'LIVE' : 'OFFLINE'}
-                            </span>
+                    <div className="flex items-center gap-3 shrink-0">
+                        <div className="flex items-center bg-white border border-slate-200 rounded-full shadow-lg h-10 px-1 overflow-hidden">
+                            <div className="flex items-center gap-3 px-4 py-2 border-r border-slate-100">
+                                <div className={cn(
+                                    "h-2.5 w-2.5 rounded-full animate-pulse transition-all duration-500",
+                                    surveillanceStatus === 'active' 
+                                        ? "bg-emerald-500 shadow-[0_0_12px_rgba(16,185,129,0.8)]" 
+                                        : "bg-rose-500 shadow-[0_0_12px_rgba(244,63,94,0.8)]"
+                                )} />
+                                <span className="text-[10px] sm:text-xs font-black text-slate-950 uppercase tracking-[0.4em]">FROSTY</span>
+                            </div>
+                            <div className="flex items-center gap-3 px-4 py-2 bg-slate-50/50">
+                                <Radio className={cn(
+                                    "h-3.5 w-3.5 transition-all duration-500", 
+                                    surveillanceStatus === 'active' ? 'text-emerald-500 animate-pulse' : 'text-rose-500'
+                                )} />
+                                <span className="hidden sm:inline text-[9px] font-black uppercase text-slate-950 tracking-widest">
+                                    {surveillanceStatus === 'active' ? 'SURVEILLANCE LIVE' : 'SURVEILLANCE OFFLINE'}
+                                </span>
+                                <span className="sm:hidden text-[9px] font-black uppercase text-slate-950">
+                                    {surveillanceStatus === 'active' ? 'LIVE' : 'OFFLINE'}
+                                </span>
+                            </div>
                         </div>
                     </div>
                 </div>

@@ -82,12 +82,19 @@ export function StrategyOverOne({
     
     const lastProcessedId = React.useRef<string | null>(null);
 
+    // Synchronize currentStake with config.stake if not running and not in a martingale session
+    React.useEffect(() => {
+        if (!isRunning && trades.length === 0) {
+            setCurrentStake(config.stake);
+        }
+    }, [config.stake, isRunning, trades.length]);
+
     /**
-     * APPROVED STRATEGY: 'OVER 1'
+     * APPROVED TRIPLE-GATE STRATEGY: 'OVER 1'
      * Gate 1: Previous Digit A <= 2
      * Gate 2: Current Digit B < 4
      * Gate 3: Sum (A+B) <= 4
-     * Safety: SKIP if Sum > 4 OR Sum === 0 (Double Zero)
+     * Safety: SKIP if Sum > 4 OR Sum === 0 (Double Zero Protection)
      */
     const entryLogic = React.useMemo(() => {
         if (lastDigitTicks.length < 2) return { digitA: 0, digitB: 0, sum: 0, canTrade: false };
@@ -112,24 +119,38 @@ export function StrategyOverOne({
         if (sessionStats.profit >= config.takeProfit) return 'TP';
         if (sessionStats.profit <= -config.stopLoss) return 'SL';
         return 'OK';
-    }, [sessionStats.profit, config]);
+    }, [sessionStats.profit, config.takeProfit, config.stopLoss]);
 
-    // Threshold Check Effect
+    // Engagement Loop with strict threshold validation
     React.useEffect(() => {
-        if (!isRunning || sessionEnded) return;
-
-        if (riskCheck === 'TP') {
+        if (!isRunning || !entryLogic || sessionEnded || isPendingExecution || !isAuthorized) return;
+        
+        // Immediate Halt Check
+        if (riskCheck !== 'OK') {
             setIsRunning(false);
             setSessionEnded(true);
-            setStatusMessage('TAKE PROFIT REACHED');
-            toast({ title: "TAKE PROFIT REACHED", description: `Cycle completed at +${sessionStats.profit.toFixed(2)} ${currency}` });
-        } else if (riskCheck === 'SL') {
-            setIsRunning(false);
-            setSessionEnded(true);
-            setStatusMessage('STOP LOSS TRIGGERED');
-            toast({ variant: "destructive", title: "STOP LOSS TRIGGERED", description: `Cycle halted at ${sessionStats.profit.toFixed(2)} ${currency}` });
+            const title = riskCheck === 'TP' ? "TAKE PROFIT REACHED" : "STOP LOSS TRIGGERED";
+            setStatusMessage(title);
+            toast({ 
+                variant: riskCheck === 'SL' ? "destructive" : "default", 
+                title, 
+                description: `Cycle completed at ${sessionStats.profit.toFixed(2)} ${currency}` 
+            });
+            return;
         }
-    }, [riskCheck, isRunning, sessionEnded, currency, toast, sessionStats.profit]);
+
+        if (entryLogic.canTrade) {
+            setStatusMessage('ENGAGING OVER 1');
+            setIsPendingExecution(true);
+            onExecuteTrade({ 
+                stake: currentStake, 
+                barrier: "1", 
+                contract_type: "DIGITOVER" 
+            });
+        } else {
+            setStatusMessage('FILTER: SCANNING GATES');
+        }
+    }, [lastDigitTicks, isRunning, sessionEnded, isPendingExecution, isAuthorized, entryLogic, currentStake, onExecuteTrade, riskCheck, currency, toast, sessionStats.profit]);
 
     // Contract Processor
     React.useEffect(() => {
@@ -179,25 +200,7 @@ export function StrategyOverOne({
 
             setIsPendingExecution(false);
         }
-    }, [activeContract, isPendingExecution, config, lastDigitTicks]);
-
-    // Engagement Loop
-    React.useEffect(() => {
-        if (!isRunning || !entryLogic || sessionEnded || isPendingExecution || !isAuthorized) return;
-        if (riskCheck !== 'OK') return;
-
-        if (entryLogic.canTrade) {
-            setStatusMessage('ENGAGING OVER 1');
-            setIsPendingExecution(true);
-            onExecuteTrade({ 
-                stake: currentStake, 
-                barrier: "1", 
-                contract_type: "DIGITOVER" 
-            });
-        } else {
-            setStatusMessage('FILTER: SCANNING GATES');
-        }
-    }, [lastDigitTicks, isRunning, sessionEnded, isPendingExecution, isAuthorized, entryLogic, currentStake, onExecuteTrade, riskCheck]);
+    }, [activeContract, isPendingExecution, config.martingale, config.stake, lastDigitTicks]);
 
     const stopTrading = () => {
         setIsRunning(false);
@@ -228,19 +231,19 @@ export function StrategyOverOne({
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
                     <div className="space-y-2">
                         <Label className="text-[10px] font-black text-primary uppercase tracking-[0.3em] ml-2">STAKE</Label>
-                        <Input type="number" value={config.stake} onChange={e => updateConfig('stake', e.target.value)} className="h-12 bg-black/60 border-white/10 text-white font-black text-center text-[16px] rounded-2xl" />
+                        <Input type="number" value={config.stake} onChange={e => updateConfig('stake', e.target.value)} className="h-12 bg-black/60 border-white/10 text-white font-black text-center text-[16px] rounded-2xl focus:ring-primary/40" />
                     </div>
                     <div className="space-y-2">
                         <Label className="text-[10px] font-black text-primary uppercase tracking-[0.3em] ml-2">MARTINGALE</Label>
-                        <Input type="number" step="0.1" value={config.martingale} onChange={e => updateConfig('martingale', e.target.value)} className="h-12 bg-black/60 border-white/10 text-white font-black text-center text-[16px] rounded-2xl" />
+                        <Input type="number" step="0.1" value={config.martingale} onChange={e => updateConfig('martingale', e.target.value)} className="h-12 bg-black/60 border-white/10 text-white font-black text-center text-[16px] rounded-2xl focus:ring-primary/40" />
                     </div>
                     <div className="space-y-2">
                         <Label className="text-[10px] font-black text-primary uppercase tracking-[0.3em] ml-2">TAKE PROFIT</Label>
-                        <Input type="number" value={config.takeProfit} onChange={e => updateConfig('takeProfit', e.target.value)} className="h-12 bg-black/60 border-white/10 text-white font-black text-center text-[16px] rounded-2xl" />
+                        <Input type="number" value={config.takeProfit} onChange={e => updateConfig('takeProfit', e.target.value)} className="h-12 bg-black/60 border-white/10 text-white font-black text-center text-[16px] rounded-2xl focus:ring-primary/40" />
                     </div>
                     <div className="space-y-2">
                         <Label className="text-[10px] font-black text-primary uppercase tracking-[0.3em] ml-2">STOP LOSS</Label>
-                        <Input type="number" value={config.stopLoss} onChange={e => updateConfig('stopLoss', e.target.value)} className="h-12 bg-black/60 border-white/10 text-white font-black text-center text-[16px] rounded-2xl" />
+                        <Input type="number" value={config.stopLoss} onChange={e => updateConfig('stopLoss', e.target.value)} className="h-12 bg-black/60 border-white/10 text-white font-black text-center text-[16px] rounded-2xl focus:ring-primary/40" />
                     </div>
                 </div>
             </Card>
@@ -337,11 +340,17 @@ export function StrategyOverOne({
                             )}>
                                 {isPendingExecution ? "EXECUTING..." : isRunning ? "NEURAL SURVEILLANCE" : "ENGINE STANDBY"}
                             </h3>
-                            <p className="text-xs font-black uppercase tracking-[0.5em] text-primary/60 mt-4">
-                                {isPendingExecution ? "ZERO-ERROR GATE ENGAGED" : 
-                                 isRunning ? (entryLogic.canTrade ? "READY TO ENGAGE" : "FILTER: SCANNING GATES") : 
-                                 "AWAITING COMMAND PARAMETERS"}
-                            </p>
+                            <div className="flex items-center gap-3 mt-4">
+                                <div className={cn(
+                                    "h-2 w-2 rounded-full",
+                                    entryLogic.canTrade ? "bg-emerald-400 animate-pulse shadow-[0_0_10px_#10b981]" : "bg-white/20"
+                                )} />
+                                <p className="text-xs font-black uppercase tracking-[0.5em] text-primary/60">
+                                    {isPendingExecution ? "ZERO-ERROR GATE ENGAGED" : 
+                                     isRunning ? (entryLogic.canTrade ? "READY TO ENGAGE" : "FILTER: SCANNING GATES") : 
+                                     "AWAITING COMMAND PARAMETERS"}
+                                </p>
+                            </div>
                         </div>
                     </div>
 
