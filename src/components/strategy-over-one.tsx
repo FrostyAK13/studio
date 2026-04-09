@@ -252,19 +252,19 @@ export function StrategyOverOne({
                         </div>
                         <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
                             <div className="space-y-1">
-                                <Label className="text-[7px] uppercase text-slate-400 tracking-widest ml-1">STAKE</Label>
+                                <Label className="text-[8px] font-black text-primary uppercase tracking-[0.3em] ml-1">STAKE</Label>
                                 <Input type="number" value={config.stake} onChange={e => updateConfig('stake', e.target.value)} className="h-8 bg-black/60 border-white/10 text-white font-black text-center text-[10px] rounded-lg" />
                             </div>
                             <div className="space-y-1">
-                                <Label className="text-[7px] uppercase text-slate-400 tracking-widest ml-1">MARTINGALE</Label>
+                                <Label className="text-[8px] font-black text-primary uppercase tracking-[0.3em] ml-1">MARTINGALE</Label>
                                 <Input type="number" step="0.1" value={config.martingale} onChange={e => updateConfig('martingale', e.target.value)} className="h-8 bg-black/60 border-white/10 text-white font-black text-center text-[10px] rounded-lg" />
                             </div>
                             <div className="space-y-1">
-                                <Label className="text-[7px] uppercase text-slate-400 tracking-widest ml-1">TAKE PROFIT</Label>
+                                <Label className="text-[8px] font-black text-primary uppercase tracking-[0.3em] ml-1">TAKE PROFIT</Label>
                                 <Input type="number" value={config.takeProfit} onChange={e => updateConfig('takeProfit', e.target.value)} className="h-8 bg-black/60 border-white/10 text-white font-black text-center text-[10px] rounded-lg" />
                             </div>
                             <div className="space-y-1">
-                                <Label className="text-[7px] uppercase text-slate-400 tracking-widest ml-1">STOP LOSS</Label>
+                                <Label className="text-[8px] font-black text-primary uppercase tracking-[0.3em] ml-1">STOP LOSS</Label>
                                 <Input type="number" value={config.stopLoss} onChange={e => updateConfig('stopLoss', e.target.value)} className="h-8 bg-black/60 border-white/10 text-white font-black text-center text-[10px] rounded-lg" />
                             </div>
                         </div>
