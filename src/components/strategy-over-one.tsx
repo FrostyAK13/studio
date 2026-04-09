@@ -77,7 +77,7 @@ export function StrategyOverOne({
         return { d1, d2, shouldSkip, canTrade: !shouldSkip };
     }, [lastDigitTicks]);
 
-    // Safety check for TP/SL every render cycle when running
+    // Risk Management Watcher
     React.useEffect(() => {
         if (!isRunning || sessionEnded) return;
 
@@ -85,15 +85,20 @@ export function StrategyOverOne({
             setIsRunning(false);
             setSessionEnded(true);
             setStatusMessage('TAKE PROFIT REACHED');
-            toast({ title: "TP REACHED", description: `Goal: ${config.takeProfit} ${currency}` });
+            setTimeout(() => {
+                toast({ title: "TAKE PROFIT REACHED", description: `Cycle completed at +${sessionStats.profit.toFixed(2)} ${currency}` });
+            }, 100);
         } else if (sessionStats.profit <= -config.stopLoss) {
             setIsRunning(false);
             setSessionEnded(true);
             setStatusMessage('STOP LOSS TRIGGERED');
-            toast({ variant: "destructive", title: "STOP LOSS", description: `Limit: -${config.stopLoss} ${currency}` });
+            setTimeout(() => {
+                toast({ variant: "destructive", title: "STOP LOSS TRIGGERED", description: `Cycle halted at ${sessionStats.profit.toFixed(2)} ${currency}` });
+            }, 100);
         }
     }, [sessionStats.profit, config.takeProfit, config.stopLoss, isRunning, sessionEnded, currency, toast]);
 
+    // Contract Result Handler
     React.useEffect(() => {
         if (!activeContract || !isPendingExecution) return;
         
@@ -143,11 +148,11 @@ export function StrategyOverOne({
         }
     }, [activeContract, isPendingExecution, config, lastDigitTicks]);
 
+    // Automation Loop
     React.useEffect(() => {
-        // Critical: Guard trade engagement with sessionEnded and current profit status
         if (!isRunning || !entryLogic || sessionEnded || isPendingExecution || !isAuthorized) return;
         
-        // Double-check thresholds before calling API
+        // Strict Double-Guard Threshold Check
         if (sessionStats.profit >= config.takeProfit || sessionStats.profit <= -config.stopLoss) return;
 
         if (entryLogic.canTrade) {
@@ -255,11 +260,11 @@ export function StrategyOverOne({
                                 <Input type="number" step="0.1" value={config.martingale} onChange={e => updateConfig('martingale', e.target.value)} className="h-8 bg-black/60 border-white/10 text-white font-black text-center text-[10px] rounded-lg" />
                             </div>
                             <div className="space-y-1">
-                                <Label className="text-[7px] uppercase text-slate-400 tracking-widest ml-1">TP ($)</Label>
+                                <Label className="text-[7px] uppercase text-slate-400 tracking-widest ml-1">TAKE PROFIT</Label>
                                 <Input type="number" value={config.takeProfit} onChange={e => updateConfig('takeProfit', e.target.value)} className="h-8 bg-black/60 border-white/10 text-white font-black text-center text-[10px] rounded-lg" />
                             </div>
                             <div className="space-y-1">
-                                <Label className="text-[7px] uppercase text-slate-400 tracking-widest ml-1">SL ($)</Label>
+                                <Label className="text-[7px] uppercase text-slate-400 tracking-widest ml-1">STOP LOSS</Label>
                                 <Input type="number" value={config.stopLoss} onChange={e => updateConfig('stopLoss', e.target.value)} className="h-8 bg-black/60 border-white/10 text-white font-black text-center text-[10px] rounded-lg" />
                             </div>
                         </div>
@@ -271,7 +276,14 @@ export function StrategyOverOne({
                 <Card className="border-none shadow-2xl bg-slate-900/60 backdrop-blur-3xl rounded-[1rem] overflow-hidden border border-white/5">
                     <div className="p-2 border-b border-white/5 flex items-center justify-between bg-black/20">
                         <h4 className="text-[7px] font-black uppercase text-white tracking-[0.3em] flex items-center gap-1.5"><Network className="h-3 w-3 text-primary" /> ANALYZER FEED</h4>
-                        <Badge className="bg-primary/20 text-primary border-none text-[6px] font-black uppercase tracking-widest">NEURAL SYNC</Badge>
+                        <Badge className={cn(
+                            "border-none text-[6px] font-black uppercase tracking-widest transition-all duration-300",
+                            entryLogic?.canTrade && isRunning 
+                                ? "bg-emerald-500/20 text-emerald-400 animate-pulse shadow-[0_0_10px_rgba(16,185,129,0.4)]" 
+                                : "bg-primary/20 text-primary"
+                        )}>
+                            NEURAL SYNC
+                        </Badge>
                     </div>
                     <CardContent className="p-3 flex items-center justify-around gap-2">
                         <div className="text-center">
@@ -298,15 +310,20 @@ export function StrategyOverOne({
                 <Card className="border-none shadow-2xl bg-slate-900/60 backdrop-blur-3xl rounded-[1rem] overflow-hidden border border-white/5 flex flex-col justify-center items-center text-center p-3">
                      <p className="text-[7px] font-black uppercase text-slate-400 tracking-[0.3em] mb-2">BOT STATUS</p>
                      <div className="flex items-center gap-2">
-                        {entryLogic?.shouldSkip ? (
+                        {entryLogic?.shouldSkip && isRunning ? (
                             <div className="flex items-center gap-1.5 text-rose-500 animate-pulse">
                                 <ShieldAlert className="h-3.5 w-3.5" />
                                 <span className="text-[8px] font-black uppercase tracking-widest">FILTER: SKIPPING CYCLE</span>
                             </div>
-                        ) : (
+                        ) : isRunning ? (
                             <div className="flex items-center gap-1.5 text-emerald-400">
-                                <ShieldCheck className="h-3.5 w-3.5" />
+                                <ShieldCheck className="h-3.5 w-3.5 animate-bounce" />
                                 <span className="text-[8px] font-black uppercase tracking-widest">SYNC: READY TO ENGAGE</span>
+                            </div>
+                        ) : (
+                            <div className="flex items-center gap-1.5 text-slate-500">
+                                <Square className="h-3 w-3" />
+                                <span className="text-[8px] font-black uppercase tracking-widest">ENGINE: {statusMessage}</span>
                             </div>
                         )}
                      </div>
