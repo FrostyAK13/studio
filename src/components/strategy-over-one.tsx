@@ -11,7 +11,8 @@ import {
     Network,
     ShieldCheck,
     ShieldAlert,
-    TrendingUp
+    TrendingUp,
+    Square
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -64,16 +65,16 @@ export function StrategyOverOne({
     
     const lastProcessedId = React.useRef<string | null>(null);
 
-    // Entry Logic Filter: If both last two digits <= 3 -> SKIP. Otherwise -> EXECUTE Over 1.
+    // Entry Logic Filter: If both Digit_1 <= 3 AND Digit_2 <= 3 -> SKIP. Otherwise -> EXECUTE Over 1.
     const entryLogic = React.useMemo(() => {
         if (lastDigitTicks.length < 2) return null;
-        const d1 = lastDigitTicks[0];
-        const d2 = lastDigitTicks[1];
+        const d1 = lastDigitTicks[0]; // Latest
+        const d2 = lastDigitTicks[1]; // Previous
         const shouldSkip = d1 <= 3 && d2 <= 3;
         return { d1, d2, shouldSkip, canTrade: !shouldSkip };
     }, [lastDigitTicks]);
 
-    // Money Management & Trade Result Processing
+    // Trade Result Processing & Money Management
     React.useEffect(() => {
         if (!activeContract || !isPendingExecution) return;
         
@@ -83,6 +84,9 @@ export function StrategyOverOne({
             const result = activeContract.status.toUpperCase() as 'WON' | 'LOST';
             const profitValue = parseFloat(activeContract.profit);
             
+            // Capture digits at point of settlement
+            const analyzedDigitsString = `${lastDigitTicks[1]},${lastDigitTicks[0]}`;
+            
             const newTrade: TradeLog = { 
                 id: contractId, 
                 time: new Date().toLocaleTimeString(), 
@@ -90,10 +94,13 @@ export function StrategyOverOne({
                 result, 
                 stake: parseFloat(activeContract.buy_price), 
                 profit: profitValue,
-                digits: `${lastDigitTicks[1]},${lastDigitTicks[0]}`
+                digits: analyzedDigitsString
             };
             
-            setTrades(prev => prev.some(t => t.id === contractId) ? prev : [newTrade, ...prev].slice(0, 50));
+            setTrades(prev => {
+                if (prev.some(t => t.id === contractId)) return prev;
+                return [newTrade, ...prev].slice(0, 50);
+            });
             
             setSessionStats(prev => {
                 const newProfit = prev.profit + profitValue;
@@ -105,18 +112,18 @@ export function StrategyOverOne({
                     setIsRunning(false);
                     setSessionEnded(true);
                     setStatusMessage('TAKE PROFIT REACHED');
-                    toast({ title: "TP REACHED", description: `Session Profit: ${newProfit.toFixed(2)} ${currency}` });
+                    toast({ title: "TP REACHED", description: `Profit: ${newProfit.toFixed(2)} ${currency}` });
                 } else if (newProfit <= -config.stopLoss) {
                     setIsRunning(false);
                     setSessionEnded(true);
                     setStatusMessage('STOP LOSS TRIGGERED');
-                    toast({ variant: "destructive", title: "STOP LOSS", description: `Session Loss: ${newProfit.toFixed(2)} ${currency}` });
+                    toast({ variant: "destructive", title: "STOP LOSS", description: `Loss: ${newProfit.toFixed(2)} ${currency}` });
                 }
 
                 return { wins: newWins, losses: newLosses, profit: newProfit };
             });
 
-            // Martingale Logic
+            // Martingale recovery logic
             if (result === 'LOST') {
                 setCurrentStake(prev => prev * config.martingale);
             } else {
@@ -126,17 +133,17 @@ export function StrategyOverOne({
             setIsPendingExecution(false);
             if (!sessionEnded) {
                 setStatusMessage('CYCLE SETTLED');
-                setTimeout(() => { if (isRunning && !sessionEnded) setStatusMessage('MONITORING TICKS...'); }, 1000);
+                setTimeout(() => { if (isRunning && !sessionEnded) setStatusMessage('MONITORING TICKS...'); }, 800);
             }
         }
-    }, [activeContract, isPendingExecution, sessionEnded, config.takeProfit, config.stopLoss, config.stake, config.martingale, currency, isRunning, lastDigitTicks, toast]);
+    }, [activeContract, isPendingExecution, sessionEnded, config, currency, isRunning, lastDigitTicks, toast]);
 
     // Automated Execution Loop
     React.useEffect(() => {
         if (!isRunning || !entryLogic || sessionEnded || isPendingExecution || !isAuthorized) return;
 
         if (entryLogic.canTrade) {
-            setStatusMessage('EXECUTING OVER 1');
+            setStatusMessage('ENGAGING OVER 1');
             setIsPendingExecution(true);
             onExecuteTrade({ 
                 stake: currentStake, 
@@ -144,9 +151,14 @@ export function StrategyOverOne({
                 contract_type: "DIGITOVER" 
             });
         } else {
-            setStatusMessage('FILTER ACTIVE: SKIPPING...');
+            setStatusMessage('FILTER ACTIVE: SKIP');
         }
     }, [lastDigitTicks, isRunning, sessionEnded, isPendingExecution, isAuthorized, entryLogic, currentStake, onExecuteTrade]);
+
+    const stopTrading = () => {
+        setIsRunning(false);
+        setStatusMessage('ENGINE HALTED');
+    };
 
     const resetSession = () => {
         setTrades([]); 
@@ -165,24 +177,33 @@ export function StrategyOverOne({
     };
 
     return (
-        <div className="grid grid-cols-1 xl:grid-cols-4 gap-2 pb-6">
+        <div className="grid grid-cols-1 xl:grid-cols-4 gap-2 pb-4">
             <div className="xl:col-span-1 space-y-2">
                 <Card className="border-none shadow-xl bg-slate-950 rounded-xl overflow-hidden border-l-2 border-primary">
-                    <CardHeader className="p-3 pb-1">
+                    <CardHeader className="p-2 pb-1">
                         <div className="text-center">
                             <p className="text-[6px] font-black text-primary uppercase tracking-[0.3em]">EQUITY VECTOR</p>
                             <p className="text-base font-black text-white">{isAuthorized ? balance.toFixed(2) : 'LOCKED'}</p>
                         </div>
                     </CardHeader>
-                    <CardContent className="p-3 pt-1 space-y-2">
-                        <Button 
-                            onClick={() => setIsRunning(!isRunning)} 
-                            disabled={sessionEnded || isPendingExecution || !isAuthorized} 
-                            className={cn("w-full h-10 rounded-lg font-black text-[8px] uppercase tracking-widest transition-all", 
-                            isRunning ? "bg-rose-500 hover:bg-rose-600 shadow-rose-500/20" : "bg-emerald-500 hover:bg-emerald-600 shadow-emerald-500/20")}
-                        >
-                            {isPendingExecution ? <Activity className="animate-spin h-3 w-3" /> : isRunning ? "STOP ENGINE" : "ENGAGE BOT"}
-                        </Button>
+                    <CardContent className="p-2 pt-1 space-y-2">
+                        {!isRunning ? (
+                            <Button 
+                                onClick={() => setIsRunning(true)} 
+                                disabled={sessionEnded || !isAuthorized} 
+                                className="w-full h-8 rounded-lg font-black text-[8px] uppercase tracking-widest bg-emerald-500 hover:bg-emerald-600 shadow-emerald-500/20"
+                            >
+                                START BOT
+                            </Button>
+                        ) : (
+                            <Button 
+                                onClick={stopTrading} 
+                                className="w-full h-8 rounded-lg font-black text-[8px] uppercase tracking-widest bg-rose-500 hover:bg-rose-600 shadow-rose-500/20"
+                            >
+                                <Square className="h-3 w-3 mr-2" /> STOP BOT
+                            </Button>
+                        )}
+                        
                         <div className="grid grid-cols-2 gap-1.5">
                             <div className="p-1.5 bg-emerald-500/10 rounded-lg border border-emerald-500/20 text-center">
                                 <p className="text-[5px] font-black text-emerald-400 uppercase">WINS</p>
@@ -194,18 +215,18 @@ export function StrategyOverOne({
                             </div>
                         </div>
                         <div className="p-2 bg-black/40 rounded-lg border border-white/5 text-center">
-                            <p className="text-[6px] font-black text-muted-foreground uppercase mb-0.5">CURRENT ROI</p>
+                            <p className="text-[6px] font-black text-muted-foreground uppercase mb-0.5">SESSION PROFIT</p>
                             <p className={cn("text-base font-black tabular-nums", sessionStats.profit >= 0 ? "text-emerald-400" : "text-rose-500")}>
                                 {sessionStats.profit.toFixed(2)}
                             </p>
                         </div>
-                        <Button variant="outline" onClick={resetSession} className="w-full h-6 text-[6px] font-black uppercase tracking-widest border-white/10 text-white hover:bg-white/5">REBOOT CORE</Button>
+                        <Button variant="outline" onClick={resetSession} className="w-full h-6 text-[6px] font-black uppercase tracking-widest border-white/10 text-white hover:bg-white/5">REBOOT ENGINE</Button>
                     </CardContent>
                 </Card>
 
                 <Card className="border-none shadow-xl bg-slate-900/40 backdrop-blur-xl rounded-xl p-3 space-y-2">
                     <div className="space-y-1.5">
-                        <Label className="text-[7px] font-black text-primary uppercase">MARKET VECTOR</Label>
+                        <Label className="text-[7px] font-black text-primary uppercase">MARKET</Label>
                         <Select value={selectedMarket} onValueChange={onMarketChange}>
                             <SelectTrigger className="h-7 bg-black/40 border-white/10 rounded-lg text-[8px] font-black text-white"><SelectValue /></SelectTrigger>
                             <SelectContent className="bg-slate-950 border-white/10 text-white">
@@ -214,7 +235,7 @@ export function StrategyOverOne({
                         </Select>
                         <div className="grid grid-cols-2 gap-1.5 mt-1.5">
                             <div className="space-y-0.5">
-                                <Label className="text-[6px] uppercase text-white">BASE STAKE</Label>
+                                <Label className="text-[6px] uppercase text-white">STAKE</Label>
                                 <Input type="number" value={config.stake} onChange={e => updateConfig('stake', e.target.value)} className="h-6 bg-black border-white/10 text-white font-black text-center text-[10px]" />
                             </div>
                             <div className="space-y-0.5">
@@ -239,42 +260,42 @@ export function StrategyOverOne({
                     <Card className="border-none shadow-xl bg-slate-900/40 rounded-xl overflow-hidden border border-white/5">
                         <CardHeader className="p-3 pb-1 flex flex-row items-center justify-between">
                             <h4 className="text-[7px] font-black uppercase text-primary tracking-widest flex items-center gap-1.5"><Network className="h-3 w-3" /> ANALYZER FEED</h4>
-                            <Badge className="bg-primary/10 text-primary border-none text-[6px] font-black uppercase">100+1 SYNC</Badge>
+                            <Badge className="bg-primary/10 text-primary border-none text-[6px] font-black uppercase">NEURAL SYNC</Badge>
                         </CardHeader>
                         <CardContent className="p-3 pt-1 flex items-center justify-around gap-2">
                             <div className="text-center">
-                                <p className="text-[6px] font-black text-muted-foreground uppercase mb-1">D2 (SEC LAST)</p>
-                                <p className={cn("text-xl font-black", entryLogic && entryLogic.d2 <= 3 ? "text-emerald-400" : "text-white")}>{entryLogic ? entryLogic.d2 : '-'}</p>
+                                <p className="text-[6px] font-black text-muted-foreground uppercase mb-1">DIGIT 2 (PREV)</p>
+                                <p className={cn("text-xl font-black", entryLogic && entryLogic.d2 <= 3 ? "text-rose-500" : "text-white")}>{entryLogic ? entryLogic.d2 : '-'}</p>
                             </div>
                             <div className="h-8 w-px bg-white/5" />
                             <div className="text-center">
-                                <p className="text-[6px] font-black text-muted-foreground uppercase mb-1">D1 (LATEST)</p>
-                                <p className={cn("text-xl font-black", entryLogic && entryLogic.d1 <= 3 ? "text-emerald-400" : "text-white")}>{entryLogic ? entryLogic.d1 : '-'}</p>
+                                <p className="text-[6px] font-black text-muted-foreground uppercase mb-1">DIGIT 1 (LATEST)</p>
+                                <p className={cn("text-xl font-black", entryLogic && entryLogic.d1 <= 3 ? "text-rose-500" : "text-white")}>{entryLogic ? entryLogic.d1 : '-'}</p>
                             </div>
                         </CardContent>
                     </Card>
 
                     <Card className="border-none shadow-xl bg-slate-900/40 rounded-xl overflow-hidden border border-white/5 flex flex-col justify-center items-center text-center p-3">
-                         <p className="text-[7px] font-black uppercase text-primary tracking-widest mb-1">EXECUTION STATE</p>
+                         <p className="text-[7px] font-black uppercase text-primary tracking-widest mb-1">BOT STATUS</p>
                          <div className="flex items-center gap-2">
                             {entryLogic?.shouldSkip ? (
                                 <div className="flex items-center gap-2 text-rose-500 animate-pulse">
                                     <ShieldAlert className="h-4 w-4" />
-                                    <span className="text-[8px] font-black uppercase">FILTER: SKIP</span>
+                                    <span className="text-[8px] font-black uppercase">SKEW: SKIP</span>
                                 </div>
                             ) : (
                                 <div className="flex items-center gap-2 text-emerald-400">
                                     <ShieldCheck className="h-4 w-4" />
-                                    <span className="text-[8px] font-black uppercase">FILTER: PASS</span>
+                                    <span className="text-[8px] font-black uppercase">SYNC: READY</span>
                                 </div>
                             )}
                          </div>
                     </Card>
                 </div>
 
-                <Card className="border-none shadow-2xl bg-slate-950 rounded-xl overflow-hidden border border-white/5 flex-1 min-h-[300px] flex flex-col">
+                <Card className="border-none shadow-2xl bg-slate-950 rounded-xl overflow-hidden border border-white/5 flex-1 min-h-[350px] flex flex-col">
                     <CardHeader className="p-3 flex flex-row items-center justify-between border-b border-white/5">
-                        <CardTitle className="text-[9px] font-black uppercase tracking-widest text-white flex items-center gap-2"><Zap className="h-3 w-3 text-primary" /> TACTICAL LOG</CardTitle>
+                        <CardTitle className="text-[9px] font-black uppercase tracking-widest text-white flex items-center gap-2"><Zap className="h-3 w-3 text-primary" /> TACTICAL BOT LOG</CardTitle>
                         <Badge className={cn("h-5 px-2 rounded-md text-[6px] font-black uppercase tracking-widest border-none", isRunning || isPendingExecution ? "bg-emerald-500/20 text-emerald-400 animate-pulse" : "bg-black/60 text-muted-foreground")}>
                             {statusMessage}
                         </Badge>
@@ -288,8 +309,8 @@ export function StrategyOverOne({
                                             {t.result === 'WON' ? <ArrowUpRight className="h-3 w-3" /> : <ArrowDownRight className="h-3 w-3" />}
                                         </div>
                                         <div>
-                                            <p className="text-[8px] font-black text-white">{t.type} (STAKE: {t.stake})</p>
-                                            <p className="text-[5px] text-muted-foreground font-mono uppercase">DIGITS: [{t.digits}] • {t.time}</p>
+                                            <p className="text-[8px] font-black text-white">CONTRACT: {t.id}</p>
+                                            <p className="text-[5px] text-muted-foreground font-mono uppercase">ANALYZED DIGITS: [{t.digits}] • {t.time}</p>
                                         </div>
                                     </div>
                                     <div className="text-right">
@@ -305,7 +326,7 @@ export function StrategyOverOne({
                             {trades.length === 0 && (
                                 <div className="flex flex-col items-center justify-center py-10 opacity-10">
                                     <TrendingUp className="h-12 w-12 mb-2" />
-                                    <p className="text-[7px] uppercase font-black tracking-[0.4em]">Awaiting Tactical Engagement</p>
+                                    <p className="text-[7px] uppercase font-black tracking-[0.4em]">Awaiting Automated Execution</p>
                                 </div>
                             )}
                         </div>
@@ -315,3 +336,4 @@ export function StrategyOverOne({
         </div>
     );
 }
+

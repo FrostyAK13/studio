@@ -91,7 +91,7 @@ export function Dashboard() {
                 setIsVirtual(data.authorize.is_virtual === 1);
                 localStorage.setItem('frosty_api_token', data.echo_req.authorize);
                 ws.send(JSON.stringify({ "balance": 1, "subscribe": 1 }));
-                toast({ title: "CONNECTED" });
+                toast({ title: "API AUTHORIZED" });
             }
 
             if (data.msg_type === 'balance') {
@@ -207,14 +207,14 @@ export function Dashboard() {
         }));
     };
 
-    if (!mounted) return <div className="flex min-h-screen items-center justify-center bg-white"><Activity className="h-6 w-6 animate-spin text-primary" /></div>;
+    if (!mounted) return <div className="flex min-h-screen items-center justify-center bg-white"><Activity className="h-4 w-4 animate-spin text-primary" /></div>;
 
     const analyzedDigits = lastDigitTicks.slice(0, maxTicks);
     const analyzedPrices = priceHistory.slice(0, maxTicks);
 
     return (
         <div className="flex min-h-screen w-full flex-col bg-slate-50 font-sans overflow-x-hidden">
-            <header className="sticky top-0 z-[100] flex h-[3.5rem] items-center border-b bg-white/95 backdrop-blur-xl px-2 sm:px-4">
+            <header className="sticky top-0 z-[100] flex h-[3.5rem] items-center border-b bg-white/95 backdrop-blur-xl px-2 sm:px-4 shadow-sm">
                 <div className="flex w-full items-center justify-between max-w-[1600px] mx-auto gap-2">
                     
                     <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
@@ -226,7 +226,7 @@ export function Dashboard() {
                             <PopoverTrigger asChild>
                                 <Button variant="outline" className={cn("h-7 sm:h-8 px-2 sm:px-3 rounded-full border-slate-200 font-black text-[7px] sm:text-[9px] uppercase tracking-widest gap-1 transition-all shadow-sm", isAuthorized ? "bg-emerald-50 text-emerald-600 border-emerald-200" : "bg-slate-950 text-white")}>
                                     {isAuthorized ? <ShieldCheck className="h-2.5 w-2.5 sm:h-3.5 sm:w-3.5" /> : <KeyRound className="h-2.5 w-2.5 sm:h-3.5 sm:w-3.5" />}
-                                    <span className="hidden xs:inline">{isAuthorized ? "AUTHORIZED" : "CONNECT TACTICAL API"}</span>
+                                    <span className="hidden xs:inline">{isAuthorized ? "AUTHORIZED" : "TACTICAL API"}</span>
                                     <span className="inline xs:hidden">API</span>
                                 </Button>
                             </PopoverTrigger>
@@ -236,7 +236,7 @@ export function Dashboard() {
                                 ) : (
                                     <div className="space-y-2">
                                         <Input placeholder="API Token..." type="password" value={apiToken} onChange={e => setApiToken(e.target.value)} className="h-7 bg-black/60 border-white/10 text-white font-bold rounded-lg text-[10px]" />
-                                        <Button onClick={() => wsInstance?.send(JSON.stringify({"authorize": apiToken}))} className="w-full h-7 rounded-lg font-black text-[7px] uppercase tracking-widest bg-primary">INITIATE SYNC</Button>
+                                        <Button onClick={() => wsInstance?.send(JSON.stringify({"authorize": apiToken}))} className="w-full h-7 rounded-lg font-black text-[7px] uppercase tracking-widest bg-primary">SYNC ENGINE</Button>
                                     </div>
                                 )}
                             </PopoverContent>
@@ -333,3 +333,4 @@ export function Dashboard() {
         </div>
     );
 }
+
