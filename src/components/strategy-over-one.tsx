@@ -16,7 +16,8 @@ import {
     RotateCcw,
     Circle,
     Info,
-    RefreshCcw
+    RefreshCcw,
+    Wallet
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -112,9 +113,6 @@ export function StrategyOverOne({
                 return [newTrade, ...prev].slice(0, 50);
             });
             
-            // Calculate potential new profit locally first to handle side effects correctly
-            const newTotalProfit = sessionStats.profit + profitValue;
-
             setSessionStats(prev => ({
                 wins: result === 'WON' ? prev.wins + 1 : prev.wins,
                 losses: result === 'LOST' ? prev.losses + 1 : prev.losses,
@@ -123,19 +121,6 @@ export function StrategyOverOne({
                 totalPayout: prev.totalPayout + (result === 'WON' ? payoutValue : 0)
             }));
 
-            // Handle Risk Management Side Effects outside of setSessionStats
-            if (newTotalProfit >= config.takeProfit) {
-                setIsRunning(false);
-                setSessionEnded(true);
-                setStatusMessage('TAKE PROFIT REACHED');
-                toast({ title: "TP REACHED", description: `Profit: ${newTotalProfit.toFixed(2)} ${currency}` });
-            } else if (newTotalProfit <= -config.stopLoss) {
-                setIsRunning(false);
-                setSessionEnded(true);
-                setStatusMessage('STOP LOSS TRIGGERED');
-                toast({ variant: "destructive", title: "STOP LOSS", description: `Loss: ${newTotalProfit.toFixed(2)} ${currency}` });
-            }
-
             if (result === 'LOST') {
                 setCurrentStake(prev => prev * config.martingale);
             } else {
@@ -143,12 +128,23 @@ export function StrategyOverOne({
             }
 
             setIsPendingExecution(false);
-            if (!sessionEnded && newTotalProfit < config.takeProfit && newTotalProfit > -config.stopLoss) {
-                setStatusMessage('CYCLE SETTLED');
-                setTimeout(() => { if (isRunning && !sessionEnded) setStatusMessage('MONITORING TICKS...'); }, 800);
-            }
         }
-    }, [activeContract, isPendingExecution, sessionEnded, config, currency, isRunning, lastDigitTicks, toast, sessionStats.profit]);
+    }, [activeContract, isPendingExecution, config, lastDigitTicks]);
+
+    // Handle session end side effects in a separate effect to avoid state updates during render
+    React.useEffect(() => {
+        if (sessionStats.profit >= config.takeProfit && !sessionEnded) {
+            setIsRunning(false);
+            setSessionEnded(true);
+            setStatusMessage('TAKE PROFIT REACHED');
+            toast({ title: "TP REACHED", description: `Profit: ${sessionStats.profit.toFixed(2)} ${currency}` });
+        } else if (sessionStats.profit <= -config.stopLoss && !sessionEnded) {
+            setIsRunning(false);
+            setSessionEnded(true);
+            setStatusMessage('STOP LOSS TRIGGERED');
+            toast({ variant: "destructive", title: "STOP LOSS", description: `Loss: ${sessionStats.profit.toFixed(2)} ${currency}` });
+        }
+    }, [sessionStats.profit, config.takeProfit, config.stopLoss, sessionEnded, currency, toast]);
 
     React.useEffect(() => {
         if (!isRunning || !entryLogic || sessionEnded || isPendingExecution || !isAuthorized) return;
@@ -269,7 +265,7 @@ export function StrategyOverOne({
             </div>
 
             <div className="xl:col-span-3 flex flex-col gap-2 h-full">
-                <div className="grid grid-cols-2 gap-2 shrink-0">
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-2 shrink-0">
                     <Card className="border-none shadow-2xl bg-slate-900/60 backdrop-blur-3xl rounded-[1.5rem] overflow-hidden border border-white/5">
                         <CardHeader className="p-3 pb-1 flex flex-row items-center justify-between">
                             <h4 className="text-[8px] font-black uppercase text-white tracking-[0.3em] flex items-center gap-2"><Network className="h-3.5 w-3.5 text-primary" /> ANALYZER FEED</h4>
@@ -286,6 +282,15 @@ export function StrategyOverOne({
                                 <p className={cn("text-2xl font-black tabular-nums", entryLogic && entryLogic.d1 <= 3 ? "text-rose-500" : "text-white")}>{entryLogic ? entryLogic.d1 : '-'}</p>
                             </div>
                         </CardContent>
+                    </Card>
+
+                    <Card className="border-none shadow-2xl bg-slate-900/60 backdrop-blur-3xl rounded-[1.5rem] overflow-hidden border border-white/5 flex flex-col justify-center items-center text-center p-3">
+                         <p className="text-[8px] font-black uppercase text-slate-400 tracking-[0.3em] mb-1">LIVE MARKET PRICE</p>
+                         <div className="bg-primary/10 px-4 py-2 rounded-xl border border-primary/20">
+                            <p className="text-2xl font-black text-white tabular-nums tracking-tighter">
+                                {price === 0 ? '---' : price.toFixed(decimalPlaces)}
+                            </p>
+                         </div>
                     </Card>
 
                     <Card className="border-none shadow-2xl bg-slate-900/60 backdrop-blur-3xl rounded-[1.5rem] overflow-hidden border border-white/5 flex flex-col justify-center items-center text-center p-3">
