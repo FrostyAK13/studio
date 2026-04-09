@@ -15,7 +15,7 @@ import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
-import { KeyRound, ShieldCheck, RefreshCw, Radio, Activity } from 'lucide-react';
+import { KeyRound, ShieldCheck, RefreshCw, Radio, Activity, Wallet } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { Badge } from '@/components/ui/badge';
 
@@ -27,7 +27,7 @@ export function Dashboard() {
     const [lastDigitTicks, setLastDigitTicks] = React.useState<number[]>([]);
     const [priceHistory, setPriceHistory] = React.useState<number[]>([]);
     const [maxTicks, setMaxTicks] = React.useState(1000); 
-    const [selectedMarket, setSelectedMarket] = React.useState(syntheticIndices[0].id);
+    const [selectedMarket, setSelectedMarket] = React.useState('1HZ10V');
     const [decimalPlaces, setDecimalPlaces] = React.useState(2);
     const [tickTimestamps, setTickTimestamps] = React.useState<number[]>([]);
     
@@ -51,6 +51,7 @@ export function Dashboard() {
     React.useEffect(() => {
         if (!mounted) return;
 
+        // Hard-coded to App ID 84799
         const ws = new WebSocket('wss://ws.derivws.com/websockets/v3?app_id=84799');
         setWsInstance(ws);
 
@@ -206,18 +207,18 @@ export function Dashboard() {
         }));
     };
 
-    if (!mounted) return <div className="flex min-h-screen items-center justify-center bg-background"><Activity className="h-6 w-6 animate-spin text-primary" /></div>;
+    if (!mounted) return <div className="flex min-h-screen items-center justify-center bg-white"><Activity className="h-6 w-6 animate-spin text-primary" /></div>;
 
     const analyzedDigits = lastDigitTicks.slice(0, maxTicks);
     const analyzedPrices = priceHistory.slice(0, maxTicks);
 
     return (
-        <div className="flex min-h-screen w-full flex-col bg-background font-sans overflow-x-hidden">
-            <header className="sticky top-0 z-[100] flex h-[3.5rem] items-center border-b bg-white/95 backdrop-blur-xl transition-all duration-300 px-2 sm:px-4">
+        <div className="flex min-h-screen w-full flex-col bg-slate-50 font-sans overflow-x-hidden">
+            <header className="sticky top-0 z-[100] flex h-[3.5rem] items-center border-b bg-white/95 backdrop-blur-xl px-2 sm:px-4">
                 <div className="flex w-full items-center justify-between max-w-[1600px] mx-auto gap-2">
                     
                     <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
-                        <Button variant="outline" onClick={() => window.location.reload()} className="h-7 w-7 sm:h-8 sm:w-8 rounded-full border-slate-200 bg-slate-50 hover:bg-slate-100 flex items-center justify-center shadow-sm group active:scale-95">
+                        <Button variant="outline" onClick={() => window.location.reload()} title="SYSTEM RELOAD" className="h-7 w-7 sm:h-8 sm:w-8 rounded-full border-slate-200 bg-slate-100 hover:bg-slate-200 flex items-center justify-center shadow-sm group active:scale-95 transition-all">
                             <RefreshCw className="h-3 w-3 sm:h-4 sm:w-4 text-slate-950 group-hover:rotate-180 transition-transform duration-500" />
                         </Button>
 
@@ -241,7 +242,8 @@ export function Dashboard() {
                             </PopoverContent>
                         </Popover>
 
-                        <div className={cn("flex items-center gap-1.5 sm:gap-2 bg-slate-50 px-2 sm:px-3 py-1 rounded-full border border-slate-200 shadow-sm", !isAuthorized && "opacity-50")}>
+                        <div className={cn("flex items-center gap-1.5 sm:gap-2 bg-slate-100 px-2 sm:px-3 py-1 rounded-full border border-slate-200 shadow-sm transition-all", !isAuthorized && "opacity-50")}>
+                            <Wallet className="h-3 w-3 text-slate-500" />
                             <div className="text-left leading-none">
                                 <p className="text-[5px] sm:text-[7px] font-black text-slate-400 uppercase tracking-widest mb-0.5">LIQUIDITY LOCKED</p>
                                 <div className="flex items-center gap-1">
@@ -253,14 +255,14 @@ export function Dashboard() {
                     </div>
 
                     <div className="absolute left-1/2 -translate-x-1/2 flex items-center shrink-0">
-                        <a href="https://frostytraders.com" target="_blank" rel="noopener noreferrer" className="relative flex items-center gap-1 sm:gap-1.5 px-3 sm:px-4 py-1.5 bg-slate-950 rounded-full shadow-lg hover:scale-105 active:scale-95 transition-all group">
+                        <a href="https://frostytraders.com" target="_blank" rel="noopener noreferrer" className="relative flex items-center gap-1 sm:gap-1.5 px-3 sm:px-4 py-1.5 bg-white border border-slate-200 rounded-full shadow-md hover:scale-105 active:scale-95 transition-all group">
                             <div className="h-1 sm:h-1.5 w-1 sm:w-1.5 rounded-full bg-rose-500 animate-pulse shadow-[0_0_8px_#f43f5e]" />
-                            <span className="text-[9px] sm:text-xs font-black text-white uppercase tracking-[0.2em] sm:tracking-[0.4em]">FROSTY</span>
+                            <span className="text-[9px] sm:text-xs font-black text-slate-950 uppercase tracking-[0.2em] sm:tracking-[0.4em]">FROSTY</span>
                         </a>
                     </div>
 
                     <div className="flex items-center shrink-0">
-                        <div className="flex items-center gap-1 sm:gap-2 px-2 sm:px-3 py-1.5 bg-slate-50 rounded-full border border-slate-200 shadow-sm">
+                        <div className="flex items-center gap-1 sm:gap-2 px-2 sm:px-3 py-1.5 bg-slate-100 rounded-full border border-slate-200 shadow-sm">
                             <Radio className={cn("h-2.5 w-2.5 sm:h-3 sm:w-3", surveillanceStatus === 'active' ? 'text-emerald-500 animate-pulse' : 'text-rose-500')} />
                             <span className="hidden sm:inline text-[7px] sm:text-[8px] font-black uppercase text-slate-950 tracking-widest">SURVEILLANCE LIVE</span>
                             <span className="sm:hidden text-[7px] font-black uppercase text-slate-950">LIVE</span>
@@ -274,7 +276,7 @@ export function Dashboard() {
                     <TabsList className="flex items-center justify-start md:justify-center gap-1 bg-transparent h-auto p-0 mb-3 overflow-x-auto no-scrollbar w-full">
                         {['strategy-over-one', 'global-scan', 'scanner', 'analyzer', 'frequency', 'insight', 'circles'].map((tab) => (
                             <TabsTrigger key={tab} value={tab} className="flex-shrink-0 px-2 sm:px-3 py-1.5 rounded-full border border-transparent data-[state=active]:bg-primary/10 data-[state=active]:text-primary text-muted-foreground font-black text-[7px] sm:text-[8px] uppercase tracking-widest transition-all">
-                                {tab === 'strategy-over-one' ? 'OVER 1' : tab.toUpperCase().replace('-', ' ')}
+                                {tab === 'strategy-over-one' ? 'OVER 1 BOT' : tab.toUpperCase().replace('-', ' ')}
                             </TabsTrigger>
                         ))}
                     </TabsList>
@@ -331,4 +333,3 @@ export function Dashboard() {
         </div>
     );
 }
-
