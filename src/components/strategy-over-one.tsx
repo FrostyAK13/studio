@@ -84,6 +84,7 @@ export function StrategyOverOne({
 
     // TRIPLE-GATE OVER 1 STRATEGY:
     // Digit A (Previous) <= 2 AND Digit B (Current) < 4 AND (A + B) <= 4
+    // SKIP if A=0 and B=0
     const entryLogic = React.useMemo(() => {
         if (lastDigitTicks.length < 2) return { digitA: 0, digitB: 0, sum: 0, canTrade: false };
         const digitB = lastDigitTicks[0]; // Current
@@ -93,8 +94,9 @@ export function StrategyOverOne({
         const gate1 = digitA <= 2;
         const gate2 = digitB < 4;
         const gate3 = sum <= 4;
+        const isForbiddenZero = digitA === 0 && digitB === 0;
         
-        const canTrade = gate1 && gate2 && gate3;
+        const canTrade = gate1 && gate2 && gate3 && !isForbiddenZero;
         return { digitA, digitB, sum, canTrade };
     }, [lastDigitTicks]);
 
@@ -392,9 +394,6 @@ export function StrategyOverOne({
                         <p className="text-[10px] text-muted-foreground uppercase tracking-widest font-black">NET PROFIT</p>
                     </div>
                 </div>
-                <p className="text-sm sm:text-xl font-medium text-white/90 leading-relaxed italic">
-                    "Triple-Gate Logic Active: Digit A &le; 2, Digit B &lt; 4, SUM &le; 4. Execution window locked for 100+1 accuracy cycle. Performance threshold: +{config.takeProfit} USD / -{config.stopLoss} USD."
-                </p>
             </div>
 
             {/* High-Density Transaction Matrix */}
