@@ -14,7 +14,7 @@ import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
-import { KeyRound, ShieldCheck, Wallet, LogOut, Activity, Lock, RefreshCw, Cpu, Zap, Radio, CircleUser } from 'lucide-react';
+import { KeyRound, ShieldCheck, Wallet, LogOut, Activity, Lock, RefreshCw, Cpu, Radio } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { Badge } from '@/components/ui/badge';
 
@@ -51,7 +51,7 @@ export function Dashboard() {
         setMounted(true);
     }, []);
 
-    // PERSISTENT WEBSOCKET INITIALIZATION (Always Live via 84799)
+    // PERSISTENT WEBSOCKET INITIALIZATION (App ID 84799)
     React.useEffect(() => {
         if (!mounted) return;
 
@@ -90,11 +90,6 @@ export function Dashboard() {
                     setExecutionStatus('standby');
                     localStorage.removeItem('frosty_api_token');
                 }
-                toast({
-                    variant: "destructive",
-                    title: "TACTICAL ERROR",
-                    description: data.error.message
-                });
                 return;
             }
 
@@ -105,9 +100,7 @@ export function Dashboard() {
                 setIsVirtual(data.authorize.is_virtual === 1);
                 localStorage.setItem('frosty_api_token', data.echo_req.authorize);
                 ws.send(JSON.stringify({ "balance": 1, "subscribe": 1 }));
-                toast({
-                    title: "CONNECTED",
-                });
+                toast({ title: "CONNECTED" });
             }
 
             if (data.msg_type === 'balance') {
@@ -216,15 +209,6 @@ export function Dashboard() {
         }));
     }, [selectedMarket, wsInstance]);
 
-    if (!mounted) {
-        return (
-            <div className="flex min-h-screen w-full flex-col bg-background font-sans items-center justify-center">
-                <Activity className="h-12 w-12 text-primary animate-spin" />
-                <p className="mt-4 text-[10px] font-black uppercase tracking-[0.4em] text-primary/60 animate-pulse">Initializing Zero-Error Environment...</p>
-            </div>
-        );
-    }
-
     const handleAuthorize = () => {
         if (!wsInstance || !apiToken) return;
         wsInstance.send(JSON.stringify({ "authorize": apiToken }));
@@ -240,21 +224,6 @@ export function Dashboard() {
 
     const handleSystemReload = () => {
         window.location.reload();
-    };
-
-    const handleExecuteRealTrade = (params: any) => {
-        if (!wsInstance || !isAuthorized) return;
-        wsInstance.send(JSON.stringify({
-            "proposal": 1,
-            "amount": params.stake,
-            "barrier": params.barrier || "1",
-            "basis": "stake",
-            "contract_type": params.contract_type || "DIGITOVER",
-            "currency": currency,
-            "duration": 1, // ALWAYS 1 TICK
-            "duration_unit": "t",
-            "symbol": selectedMarket
-        }));
     };
 
     const handleMaxTicksChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -274,236 +243,193 @@ export function Dashboard() {
         if (maxTicks < 1) setMaxTicks(1);
     };
 
+    const handleExecuteRealTrade = (params: any) => {
+        if (!wsInstance || !isAuthorized) return;
+        wsInstance.send(JSON.stringify({
+            "proposal": 1,
+            "amount": params.stake,
+            "barrier": params.barrier || "1",
+            "basis": "stake",
+            "contract_type": params.contract_type || "DIGITOVER",
+            "currency": currency,
+            "duration": 1, 
+            "duration_unit": "t",
+            "symbol": selectedMarket
+        }));
+    };
+
+    if (!mounted) {
+        return (
+            <div className="flex min-h-screen w-full flex-col bg-background font-sans items-center justify-center">
+                <Activity className="h-6 w-6 text-primary animate-spin" />
+                <p className="mt-2 text-[8px] font-black uppercase tracking-[0.2em] text-primary/60 animate-pulse">Initializing...</p>
+            </div>
+        );
+    }
+
     const analyzedDigits = lastDigitTicks.slice(0, maxTicks);
     const analyzedPrices = priceHistory.slice(0, maxTicks);
 
   return (
     <div className="flex min-h-screen w-full flex-col bg-background font-sans overflow-x-hidden">
-      <header className="sticky top-0 z-[60] flex h-auto min-h-[4rem] sm:min-h-[6rem] flex-col items-center border-b bg-background/80 px-2 sm:px-8 backdrop-blur-xl transition-all duration-300">
-        <div className="flex w-full items-center justify-between max-w-[1600px] mx-auto gap-2 sm:gap-4 py-2 sm:py-0">
+      <header className="sticky top-0 z-[100] flex h-[3.5rem] items-center border-b bg-white/95 backdrop-blur-xl transition-all duration-300 px-2 sm:px-6">
+        <div className="flex w-full items-center justify-between max-w-[1600px] mx-auto">
           
-          <div className="flex items-center gap-2 sm:gap-6">
+          {/* LEFT: RELOAD & API HANDSHAKE */}
+          <div className="flex items-center gap-1.5 sm:gap-3">
             <Button 
                 variant="outline" 
                 onClick={handleSystemReload}
-                className="h-10 w-10 sm:h-14 sm:w-14 rounded-full border-white/10 bg-black/40 hover:bg-white/5 flex items-center justify-center shadow-xl group transition-all active:scale-95"
+                className="h-7 w-7 sm:h-9 sm:w-9 rounded-full border-slate-200 bg-slate-50 hover:bg-slate-100 flex items-center justify-center shadow-sm group active:scale-95"
             >
-                <RefreshCw className="h-4 w-4 sm:h-5 sm:w-5 text-primary group-hover:rotate-180 transition-transform duration-500" />
+                <RefreshCw className="h-3 w-3 sm:h-4 sm:w-4 text-slate-950 group-hover:rotate-180 transition-transform duration-500" />
             </Button>
 
             <Popover>
                 <PopoverTrigger asChild>
                     <Button variant="outline" className={cn(
-                        "h-10 sm:h-14 px-3 sm:px-8 rounded-full border-white/10 font-black text-[9px] sm:text-[11px] uppercase tracking-widest gap-2 sm:gap-3 transition-all shadow-xl",
-                        isAuthorized ? "bg-cyan-500/10 text-cyan-400 border-cyan-500/30" : "bg-black/40 hover:bg-white/5"
+                        "h-7 sm:h-9 px-2 sm:px-4 rounded-full border-slate-200 font-black text-[7px] sm:text-[9px] uppercase tracking-widest gap-1 sm:gap-2 transition-all shadow-sm",
+                        isAuthorized ? "bg-emerald-50 text-emerald-600 border-emerald-200" : "bg-slate-950 text-white"
                     )}>
-                        {isAuthorized ? <ShieldCheck className="h-4 w-4 sm:h-5 sm:w-5" /> : <KeyRound className="h-4 w-4 sm:h-5 sm:w-5" />}
-                        <span className="hidden xs:inline">{isAuthorized ? "CONNECTED" : "API"}</span>
-                        <span className="inline xs:hidden">{isAuthorized ? "OK" : "KEY"}</span>
+                        {isAuthorized ? <ShieldCheck className="h-2.5 w-2.5 sm:h-3.5 sm:w-3.5" /> : <KeyRound className="h-2.5 w-2.5 sm:h-3.5 sm:w-3.5" />}
+                        <span className="hidden xs:inline">{isAuthorized ? "AUTHORIZED" : "CONNECT TACTICAL API"}</span>
+                        <span className="inline xs:hidden">{isAuthorized ? "OK" : "API"}</span>
                     </Button>
                 </PopoverTrigger>
-                <PopoverContent className="w-[280px] sm:w-80 p-4 sm:p-6 bg-slate-950 border-white/10 rounded-[1.5rem] sm:rounded-[2rem] shadow-2xl">
-                    <div className="space-y-4 sm:space-y-6">
-                        <div className="space-y-2">
-                            <h4 className="text-xs font-black uppercase text-white tracking-widest">TACTICAL LOGIN</h4>
-                            <p className="text-[9px] font-bold text-muted-foreground uppercase leading-tight">Enter your Deriv API Token to enable real-market execution via App ID 84799.</p>
-                        </div>
+                <PopoverContent className="w-[240px] p-3 bg-slate-950 border-white/10 rounded-xl shadow-2xl">
+                    <div className="space-y-3">
                         {isAuthorized ? (
-                            <div className="space-y-4">
-                                <div className="p-4 bg-emerald-500/10 border border-emerald-500/20 rounded-2xl">
-                                    <div className="flex items-center justify-between mb-2">
-                                        <span className="text-[8px] font-black text-emerald-400 uppercase">LIVE BALANCE</span>
-                                        <Wallet className="h-3 w-3 text-emerald-400" />
-                                    </div>
-                                    <p className="text-xl sm:text-2xl font-black text-white">{balance.toFixed(2)} {currency}</p>
+                            <div className="space-y-2">
+                                <div className="p-2 bg-emerald-500/10 border border-emerald-500/20 rounded-lg">
+                                    <p className="text-[7px] font-black text-emerald-400 uppercase mb-1">EQUITY</p>
+                                    <p className="text-sm font-black text-white">{balance.toFixed(2)} {currency}</p>
                                 </div>
-                                <Button onClick={handleLogout} variant="destructive" className="w-full h-11 rounded-xl font-black text-[10px] uppercase tracking-widest gap-2">
-                                    <LogOut className="h-3 w-3" /> TERMINATE SESSION
-                                </Button>
+                                <Button onClick={handleLogout} variant="destructive" className="w-full h-8 rounded-lg font-black text-[8px] uppercase tracking-widest">LOGOUT</Button>
                             </div>
                         ) : (
-                            <div className="space-y-4">
-                                <div className="relative">
-                                    <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-white/20" />
-                                    <Input 
-                                        placeholder="API Token..." 
-                                        type="password"
-                                        value={apiToken}
-                                        onChange={(e) => setApiToken(e.target.value)}
-                                        className="h-12 pl-10 bg-black/60 border-white/10 text-white font-bold rounded-xl focus:ring-primary/40"
-                                    />
-                                </div>
-                                <Button onClick={handleAuthorize} className="w-full h-12 rounded-xl font-black text-[10px] uppercase tracking-widest bg-primary hover:bg-primary/90">
-                                    INITIATE SYNC
-                                </Button>
+                            <div className="space-y-3">
+                                <Input 
+                                    placeholder="API Token..." 
+                                    type="password"
+                                    value={apiToken}
+                                    onChange={(e) => setApiToken(e.target.value)}
+                                    className="h-8 bg-black/60 border-white/10 text-white font-bold rounded-lg text-xs"
+                                />
+                                <Button onClick={handleAuthorize} className="w-full h-8 rounded-lg font-black text-[8px] uppercase tracking-widest bg-primary">INITIATE SYNC</Button>
                             </div>
                         )}
                     </div>
                 </PopoverContent>
             </Popover>
 
-            {/* LIVE BALANCE BLOCK */}
-            {isAuthorized ? (
-                <div className="flex items-center gap-3 sm:gap-6 bg-black/40 px-4 sm:px-10 py-2 sm:py-4 rounded-full border border-white/10 animate-in fade-in slide-in-from-left-4 duration-500 shadow-xl group">
-                    <div className="text-left">
-                        <div className="flex items-center gap-2 sm:gap-3 mb-0.5">
-                            <p className="hidden xs:block text-[8px] sm:text-[10px] font-black text-primary uppercase tracking-[0.2em]">EQUITY</p>
+            <div className={cn(
+                "flex items-center gap-1.5 sm:gap-3 bg-slate-50 px-2 sm:px-4 py-1 sm:py-1.5 rounded-full border border-slate-200 shadow-sm transition-all",
+                !isAuthorized && "opacity-50"
+            )}>
+                <div className="text-left leading-none">
+                    <p className="text-[6px] sm:text-[7px] font-black text-slate-400 uppercase tracking-widest mb-0.5">LIQUIDITY LOCKED</p>
+                    <div className="flex items-center gap-1 sm:gap-2">
+                        <p className="text-[10px] sm:text-sm font-black text-slate-950 tabular-nums">
+                            {isAuthorized ? balance.toFixed(2) : '0.00'} <span className="text-[7px] sm:text-[9px] opacity-40">{currency}</span>
+                        </p>
+                        {isAuthorized && (
                             <Badge className={cn(
-                                "h-4 sm:h-5 text-[7px] sm:text-[8px] font-black uppercase px-1.5 sm:px-2 border-none",
+                                "h-3 sm:h-4 text-[5px] sm:text-[7px] font-black uppercase px-1 border-none",
                                 isVirtual ? "bg-amber-500 text-white" : "bg-emerald-500 text-white"
                             )}>
                                 {isVirtual ? 'DEMO' : 'REAL'}
                             </Badge>
-                        </div>
-                        <p className="text-sm sm:text-3xl font-black tabular-nums text-white group-hover:text-primary transition-colors">
-                            {balance.toFixed(2)} <span className="text-[10px] sm:text-sm opacity-40 font-black">{currency}</span>
-                        </p>
-                    </div>
-                </div>
-            ) : (
-                <div className="flex items-center gap-2 sm:gap-4 bg-rose-500/5 px-3 sm:px-8 py-2 sm:py-3 rounded-full border border-rose-500/10 animate-pulse">
-                    <div className="text-left">
-                        <p className="hidden xs:block text-[7px] sm:text-[9px] font-black text-rose-400/60 uppercase tracking-[0.2em]">LIQUIDITY LOCKED</p>
-                        <p className="text-[10px] sm:text-xl font-black text-rose-400/40 uppercase tracking-widest">CONNECT</p>
-                    </div>
-                </div>
-            )}
-          </div>
-
-          <div className="flex items-center gap-2 sm:gap-4">
-            <div className="relative group transition-all duration-300 hover:scale-105 active:scale-95">
-                <div className={cn(
-                    "absolute -inset-1 rounded-full blur opacity-25 group-hover:opacity-75 transition duration-1000",
-                    surveillanceStatus === 'active' ? 'bg-emerald-400' : 'bg-rose-500'
-                )}></div>
-                <div className="relative flex items-center gap-2 sm:gap-3 px-3 sm:px-10 py-2 sm:py-4 bg-card border border-white/5 rounded-full shadow-2xl">
-                    <div className="relative flex items-center justify-center">
-                        <div className={cn("h-1.5 w-1.5 sm:h-3 sm:w-3 rounded-full transition-all duration-500", surveillanceStatus === 'active' ? 'bg-emerald-400' : 'bg-rose-500')} />
-                        {surveillanceStatus === 'active' && (
-                            <div className={cn("absolute h-1.5 w-1.5 sm:h-3 sm:w-3 rounded-full animate-ping opacity-75 bg-emerald-400")} />
                         )}
                     </div>
-                    <span className={cn(
-                        "text-[8px] sm:text-sm font-black uppercase tracking-[0.1em] sm:tracking-[0.4em] whitespace-nowrap transition-colors duration-500",
-                        surveillanceStatus === 'active' ? 'text-emerald-400' : 'text-rose-500'
-                    )}>
-                        FROSTY
-                    </span>
                 </div>
             </div>
-            
-            <div className="hidden md:flex items-center gap-3 px-6 py-3 bg-black/40 rounded-full border border-white/5 shadow-xl">
-                <Radio className={cn("h-4 w-4", surveillanceStatus === 'active' ? 'text-emerald-400 animate-pulse' : 'text-rose-500')} />
-                <span className="text-[9px] font-black uppercase text-muted-foreground tracking-[0.3em]">SURVEILLANCE LIVE</span>
+          </div>
+
+          {/* CENTER: FROSTY BRANDING */}
+          <div className="absolute left-1/2 -translate-x-1/2">
+            <a 
+                href="https://frostytraders.com" 
+                target="_blank" 
+                rel="noopener noreferrer"
+                className="relative flex items-center gap-1.5 sm:gap-2 px-3 sm:px-6 py-1.5 sm:py-2 bg-slate-950 rounded-full shadow-lg hover:scale-105 active:scale-95 transition-all group"
+            >
+                <div className="h-1 w-1 sm:h-1.5 sm:w-1.5 rounded-full bg-rose-500 animate-pulse shadow-[0_0_8px_#f43f5e]" />
+                <span className="text-[10px] sm:text-sm font-black text-white uppercase tracking-[0.2em] sm:tracking-[0.4em]">FROSTY</span>
+            </a>
+          </div>
+
+          {/* RIGHT: SURVEILLANCE */}
+          <div className="flex items-center gap-2">
+            <div className="flex items-center gap-1.5 sm:gap-3 px-2 sm:px-4 py-1.5 sm:py-2 bg-slate-50 rounded-full border border-slate-200 shadow-sm">
+                <Radio className={cn("h-2.5 w-2.5 sm:h-3.5 sm:w-3.5", surveillanceStatus === 'active' ? 'text-emerald-500 animate-pulse' : 'text-rose-500')} />
+                <span className="hidden sm:inline text-[7px] sm:text-[9px] font-black uppercase text-slate-950 tracking-[0.2em]">SURVEILLANCE LIVE</span>
+                <span className="sm:hidden text-[7px] font-black uppercase text-slate-950 tracking-widest">LIVE</span>
             </div>
           </div>
         </div>
       </header>
 
       <main className="flex-1 flex flex-col max-w-[1600px] mx-auto w-full relative">
-        <div className="flex-1 p-2 sm:p-4 md:p-6 lg:p-8">
+        <div className="flex-1 p-2 sm:p-4">
             <Tabs defaultValue="strategy-over-one" className="w-full">
-                <TabsList className="flex items-center justify-start md:justify-center gap-1 sm:gap-2 bg-transparent h-auto p-0 mb-4 sm:mb-10 overflow-x-auto no-scrollbar pb-2 w-full">
+                <TabsList className="flex items-center justify-start md:justify-center gap-1 bg-transparent h-auto p-0 mb-4 overflow-x-auto no-scrollbar w-full">
                     {['strategy-over-one', 'global-scan', 'scanner', 'analyzer', 'frequency', 'insight', 'circles'].map((tab) => (
                         <TabsTrigger 
                             key={tab} 
                             value={tab}
-                            className="flex-shrink-0 px-3 sm:px-8 py-2 sm:py-3 rounded-full border border-transparent data-[state=active]:border-primary/20 data-[state=active]:bg-primary/10 data-[state=active]:text-primary data-[state=active]:shadow-[0_0_20px_rgba(var(--primary),0.15)] text-muted-foreground font-black text-[8px] sm:text-[10px] uppercase tracking-[0.1em] sm:tracking-[0.2em] transition-all duration-300 hover:text-foreground hover:bg-muted/50"
+                            className="flex-shrink-0 px-2 sm:px-4 py-1.5 sm:py-2 rounded-full border border-transparent data-[state=active]:bg-primary/10 data-[state=active]:text-primary text-muted-foreground font-black text-[7px] sm:text-[9px] uppercase tracking-widest transition-all"
                         >
-                            {tab === 'strategy-over-one' ? 'OVER 1' : tab === 'global-scan' ? 'GLOBAL SCAN' : tab.toUpperCase().replace('-', ' ')}
+                            {tab === 'strategy-over-one' ? 'OVER 1' : tab.toUpperCase().replace('-', ' ')}
                         </TabsTrigger>
                     ))}
                 </TabsList>
 
-                <TabsContent value="strategy-over-one" className="mt-0 animate-in fade-in zoom-in-95 duration-500 outline-none">
+                <TabsContent value="strategy-over-one" className="mt-0 outline-none">
                     <StrategyOverOne 
-                        price={price}
-                        lastDigitTicks={analyzedDigits}
-                        selectedMarket={selectedMarket}
-                        onMarketChange={setSelectedMarket}
-                        decimalPlaces={decimalPlaces}
-                        balance={balance}
-                        isAuthorized={isAuthorized}
-                        currency={currency}
-                        onExecuteTrade={handleExecuteRealTrade}
-                        activeContract={activeContract}
-                        surveillanceStatus={surveillanceStatus}
-                        executionStatus={executionStatus}
+                        price={price} lastDigitTicks={analyzedDigits} selectedMarket={selectedMarket}
+                        onMarketChange={setSelectedMarket} decimalPlaces={decimalPlaces} balance={balance}
+                        isAuthorized={isAuthorized} currency={currency} onExecuteTrade={handleExecuteRealTrade}
+                        activeContract={activeContract} surveillanceStatus={surveillanceStatus} executionStatus={executionStatus}
                     />
                 </TabsContent>
 
-                <TabsContent value="global-scan" className="mt-0 animate-in fade-in zoom-in-95 duration-500 outline-none">
-                    <GlobalMarketScanner 
-                        onMarketSelect={setSelectedMarket} 
-                        lastDigitTicks={analyzedDigits} 
-                        price={price}
-                        decimalPlaces={decimalPlaces}
-                    />
+                <TabsContent value="global-scan" className="mt-0 outline-none">
+                    <GlobalMarketScanner onMarketSelect={setSelectedMarket} lastDigitTicks={analyzedDigits} price={price} decimalPlaces={decimalPlaces} />
                 </TabsContent>
 
-                <TabsContent value="scanner" className="mt-0 animate-in fade-in zoom-in-95 duration-500 outline-none">
+                <TabsContent value="scanner" className="mt-0 outline-none">
                     <ScannerView 
-                        price={price} 
-                        lastDigitTicks={analyzedDigits}
-                        priceHistory={analyzedPrices}
-                        maxTicks={maxTicks}
-                        handleMaxTicksChange={handleMaxTicksChange}
-                        handleMaxTicksBlur={handleMaxTicksBlur}
-                        selectedMarket={selectedMarket}
-                        onMarketChange={setSelectedMarket}
-                        decimalPlaces={decimalPlaces}
+                        price={price} lastDigitTicks={analyzedDigits} priceHistory={analyzedPrices} maxTicks={maxTicks}
+                        handleMaxTicksChange={handleMaxTicksChange} handleMaxTicksBlur={handleMaxTicksBlur} selectedMarket={selectedMarket}
+                        onMarketChange={setSelectedMarket} decimalPlaces={decimalPlaces}
                     />
                 </TabsContent>
 
-                <TabsContent value="analyzer" className="mt-0 animate-in fade-in zoom-in-95 duration-500 outline-none">
+                <TabsContent value="analyzer" className="mt-0 outline-none">
                     <AnalyzerView
-                        price={price}
-                        lastDigitTicks={analyzedDigits}
-                        priceHistory={analyzedPrices}
-                        maxTicks={maxTicks}
-                        handleMaxTicksChange={handleMaxTicksChange}
-                        handleMaxTicksBlur={handleMaxTicksBlur}
-                        selectedMarket={selectedMarket}
-                        onMarketChange={setSelectedMarket}
-                        decimalPlaces={decimalPlaces}
-                        tickTimestamps={tickTimestamps}
+                        price={price} lastDigitTicks={analyzedDigits} priceHistory={analyzedPrices} maxTicks={maxTicks}
+                        handleMaxTicksChange={handleMaxTicksChange} handleMaxTicksBlur={handleMaxTicksBlur} selectedMarket={selectedMarket}
+                        onMarketChange={setSelectedMarket} decimalPlaces={decimalPlaces} tickTimestamps={tickTimestamps}
                     />
                 </TabsContent>
 
-                <TabsContent value="frequency" className="mt-0 animate-in fade-in zoom-in-95 duration-500 outline-none">
+                <TabsContent value="frequency" className="mt-0 outline-none">
                     <DigitFrequencyView
-                        price={price}
-                        lastDigitTicks={analyzedDigits}
-                        priceHistory={analyzedPrices}
-                        maxTicks={maxTicks}
-                        handleMaxTicksChange={handleMaxTicksChange}
-                        handleMaxTicksBlur={handleMaxTicksBlur}
-                        selectedMarket={selectedMarket}
-                        onMarketChange={setSelectedMarket}
-                        decimalPlaces={decimalPlaces}
+                        price={price} lastDigitTicks={analyzedDigits} priceHistory={analyzedPrices} maxTicks={maxTicks}
+                        handleMaxTicksChange={handleMaxTicksChange} handleMaxTicksBlur={handleMaxTicksBlur} selectedMarket={selectedMarket}
+                        onMarketChange={setSelectedMarket} decimalPlaces={decimalPlaces}
                     />
                 </TabsContent>
 
-                <TabsContent value="insight" className="mt-0 animate-in fade-in zoom-in-95 duration-500 outline-none">
+                <TabsContent value="insight" className="mt-0 outline-none">
                     <InsightView
-                        price={price}
-                        decimalPlaces={decimalPlaces}
-                        lastDigitTicks={analyzedDigits}
-                        priceHistory={analyzedPrices}
-                        selectedMarket={selectedMarket}
-                        onMarketChange={setSelectedMarket}
-                        maxTicks={maxTicks}
+                        price={price} decimalPlaces={decimalPlaces} lastDigitTicks={analyzedDigits}
+                        priceHistory={analyzedPrices} selectedMarket={selectedMarket} onMarketChange={setSelectedMarket} maxTicks={maxTicks}
                     />
                 </TabsContent>
                 
-                <TabsContent value="circles" className="mt-0 animate-in fade-in zoom-in-95 duration-500 outline-none">
-                    <CorrelationView
-                        selectedMarket={selectedMarket}
-                        onMarketChange={setSelectedMarket}
-                        lastDigitTicks={analyzedDigits}
-                        price={price}
-                        decimalPlaces={decimalPlaces}
-                    />
+                <TabsContent value="circles" className="mt-0 outline-none">
+                    <CorrelationView selectedMarket={selectedMarket} onMarketChange={setSelectedMarket} lastDigitTicks={analyzedDigits} price={price} decimalPlaces={decimalPlaces} />
                 </TabsContent>
             </Tabs>
         </div>
