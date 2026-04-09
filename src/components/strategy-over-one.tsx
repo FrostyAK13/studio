@@ -83,8 +83,10 @@ export function StrategyOverOne({
     const lastProcessedId = React.useRef<string | null>(null);
 
     // TRIPLE-GATE OVER 1 STRATEGY:
-    // Digit A (Previous) <= 2 AND Digit B (Current) < 4 AND (A + B) <= 4
-    // SKIP if A=0 and B=0
+    // Gate 1: Digit A (Previous) <= 2
+    // Gate 2: Digit B (Current) < 4
+    // Gate 3: Sum (A+B) <= 4
+    // NEW SAFETY: SKIP if Sum === 0 (Double Zero Zone)
     const entryLogic = React.useMemo(() => {
         if (lastDigitTicks.length < 2) return { digitA: 0, digitB: 0, sum: 0, canTrade: false };
         const digitB = lastDigitTicks[0]; // Current
@@ -94,7 +96,7 @@ export function StrategyOverOne({
         const gate1 = digitA <= 2;
         const gate2 = digitB < 4;
         const gate3 = sum <= 4;
-        const isForbiddenZero = digitA === 0 && digitB === 0;
+        const isForbiddenZero = sum === 0;
         
         const canTrade = gate1 && gate2 && gate3 && !isForbiddenZero;
         return { digitA, digitB, sum, canTrade };
@@ -321,10 +323,10 @@ export function StrategyOverOne({
                         <div className={cn(
                             "w-20 h-20 rounded-3xl flex items-center justify-center transition-all duration-500",
                             isPendingExecution ? "bg-primary shadow-[0_0_30px_rgba(var(--primary),1)]" : 
-                            isRunning ? "bg-emerald-500 shadow-[0_0_30px_#10b981]" : "bg-white/5"
+                            isRunning ? (entryLogic.canTrade ? "bg-emerald-500 shadow-[0_0_30px_#10b981]" : "bg-emerald-500/20") : "bg-white/5"
                         )}>
                             {isPendingExecution ? <Activity className="h-10 w-10 text-white animate-spin" /> : 
-                             isRunning ? <Flame className="h-10 w-10 text-white animate-bounce" /> : 
+                             isRunning ? <Flame className={cn("h-10 w-10 text-white", entryLogic.canTrade && "animate-bounce")} /> : 
                              <Cpu className="h-10 w-10 text-muted-foreground/40" />}
                         </div>
                         <div>
