@@ -1,3 +1,4 @@
+
 'use client';
 
 import * as React from 'react';
@@ -143,7 +144,7 @@ export function Dashboard() {
                         const digits = historyBuffer.map(h => {
                             const pStr = h.price.toFixed(8);
                             const decPart = pStr.split('.')[1] || '00000000';
-                            return parseInt(decPart[activePipSize - 1] || '0');
+                            return parseInt(decimals[activePipSize - 1] || '0');
                         });
                         const prices = historyBuffer.map(h => h.price);
                         const times = historyBuffer.map(h => h.time);
@@ -244,7 +245,7 @@ export function Dashboard() {
                             <PopoverTrigger asChild>
                                 <Button variant="outline" className={cn("h-8 px-3 rounded-full border-slate-200 font-black text-[9px] uppercase tracking-widest gap-2 transition-all shadow-sm", isAuthorized ? "bg-emerald-50 text-emerald-600 border-emerald-200" : "bg-slate-950 text-white")}>
                                     {isAuthorized ? <ShieldCheck className="h-3.5 w-3.5" /> : <KeyRound className="h-3.5 w-3.5" />}
-                                    <span className="hidden xs:inline">{isAuthorized ? "AUTHORIZED" : "TACTICAL API"}</span>
+                                    <span className="hidden xs:inline">{isAuthorized ? "AUTHORIZED" : "API"}</span>
                                     <span className="inline xs:hidden">API</span>
                                 </Button>
                             </PopoverTrigger>
@@ -279,7 +280,7 @@ export function Dashboard() {
                             </a>
                             <div className="flex items-center gap-2 px-4 py-1.5 bg-slate-50/50">
                                 <Radio className={cn("h-3 w-3 transition-all duration-500", surveillanceStatus === 'active' ? 'text-emerald-500 animate-pulse' : 'text-rose-500')} />
-                                <span className="hidden sm:inline text-[9px] font-black uppercase text-slate-950 tracking-[0.2em]">{surveillanceStatus === 'active' ? 'SURVEILLANCE LIVE' : 'ENGINE OFFLINE'}</span>
+                                <span className="hidden sm:inline text-[9px] font-black uppercase text-slate-950 tracking-[0.2em]">{surveillanceStatus === 'active' ? 'SURVEILLANCE LIVE' : 'OFFLINE'}</span>
                                 <span className="sm:hidden text-[9px] font-black uppercase text-slate-950">{surveillanceStatus === 'active' ? 'LIVE' : 'OFF'}</span>
                             </div>
                         </div>

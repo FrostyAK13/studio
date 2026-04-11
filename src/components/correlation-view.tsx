@@ -68,17 +68,15 @@ export const DigitFrequencyCircles = ({
             >
                 <div className={cn(
                     "relative w-16 h-16 sm:w-24 md:w-28 lg:w-32 rounded-full flex items-center justify-center transition-all duration-300",
-                    isSelected ? "bg-black shadow-[0_0_20px_rgba(0,0,0,0.2)]" : "bg-white"
+                    isSelected ? "bg-black shadow-xl" : "bg-white"
                 )}>
                     <svg className="absolute inset-0 w-full h-full -rotate-90">
-                        {/* Background Track - Complete Circle */}
                         <circle 
                             cx="50%" cy="50%" r="42%" 
                             stroke={isSelected ? "#333" : "#f3f4f6"} 
                             strokeWidth="8" 
                             fill="transparent" 
                         />
-                        {/* Progress Ring - Exact Arcs */}
                         <circle 
                             cx="50%" cy="50%" r="42%" 
                             stroke={isSelected ? "#fff" : "currentColor"} 
@@ -110,7 +108,7 @@ export const DigitFrequencyCircles = ({
                 
                 <div className="h-6 mt-1 flex items-center justify-center">
                     {isLast && (
-                        <Triangle className="w-3 h-3 sm:w-4 sm:h-4 fill-gray-500 text-gray-500 animate-bounce" />
+                        <Triangle className="w-3 h-3 sm:w-4 sm:h-4 fill-gray-500 text-gray-500" />
                     )}
                 </div>
             </div>
@@ -147,7 +145,7 @@ export const DigitFrequencyCircles = ({
     );
 };
 
-export const DigitNexusMatrix = ({ digit, ticks }: { digit: number, ticks: number[] }) => {
+export const DigitAnalysisMatrix = ({ digit, ticks }: { digit: number, ticks: number[] }) => {
     const nexusAnalysis = React.useMemo(() => {
         const followingDigits = Array(10).fill(0);
         const chain3Data: Record<string, number> = {};
@@ -272,7 +270,7 @@ export function CorrelationView({
                 </CardContent>
             </Card>
             <DigitFrequencyCircles ticks={lastDigitTicks} selectedDigit={selectedDigit} onDigitSelect={setSelectedDigit} selectedMarket={selectedMarket} />
-            {selectedDigit !== null && ( <DigitNexusMatrix digit={selectedDigit} ticks={lastDigitTicks} /> )}
+            {selectedDigit !== null && ( <DigitAnalysisMatrix digit={selectedDigit} ticks={lastDigitTicks} /> )}
         </div>
     );
 }
