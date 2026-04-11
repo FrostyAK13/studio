@@ -48,8 +48,8 @@ export const DigitFrequencyCircles = ({
             digitData: mapped.map(item => {
                 let colorClass = "text-slate-200"; 
                 if (total > 10) {
-                    if (item.count === max1) colorClass = "text-[#2563eb]"; // 1st Hottest (Blue 600)
-                    else if (item.count === max2 && max2 !== max1) colorClass = "text-[#60a5fa]"; // 2nd Hottest (Blue 400)
+                    if (item.count === max1) colorClass = "text-[#2dd4bf]"; // 1st Hottest (Ice Green / Teal 400)
+                    else if (item.count === max2 && max2 !== max1) colorClass = "text-[#99f6e4]"; // 2nd Hottest (Light Ice Green / Teal 200)
                     else if (item.count === min1) colorClass = "text-[#ea580c]"; // 1st Coldest (Orange 600)
                     else if (item.count === min2 && min2 !== min1) colorClass = "text-[#fb923c]"; // 2nd Coldest (Orange 400)
                 }
@@ -68,7 +68,7 @@ export const DigitFrequencyCircles = ({
     }) => {
         return (
             <div 
-                className="flex flex-col items-center relative cursor-pointer group transition-all duration-300 hover:scale-125 hover:z-50"
+                className="flex flex-col items-center relative cursor-pointer group transition-all duration-300 hover:scale-150 hover:z-50"
                 onClick={() => onDigitSelect(digit)}
             >
                 <div className={cn(
