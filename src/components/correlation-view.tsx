@@ -63,7 +63,7 @@ export const DigitFrequencyCircles = ({
     }) => {
         return (
             <div 
-                className="flex flex-col items-center relative cursor-pointer group transition-transform duration-300 hover:scale-125 hover:z-50"
+                className="flex flex-col items-center relative cursor-pointer group transition-all duration-300 hover:scale-125 hover:z-50"
                 onClick={() => onDigitSelect(digit)}
             >
                 <div className={cn(
@@ -110,7 +110,7 @@ export const DigitFrequencyCircles = ({
                 
                 <div className="h-6 mt-1 flex items-center justify-center">
                     {isLast && (
-                        <Triangle className="w-3 h-3 sm:w-4 sm:h-4 fill-gray-500 text-gray-500" />
+                        <Triangle className="w-3 h-3 sm:w-4 sm:h-4 fill-gray-500 text-gray-500 animate-bounce" />
                     )}
                 </div>
             </div>
