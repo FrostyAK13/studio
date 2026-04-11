@@ -114,7 +114,11 @@ export function Dashboard() {
                     
                     const currentPipSize = pipSizeRef.current;
                     if (currentPipSize !== null && historyBuffer) {
-                        const digits = historyBuffer.map(h => parseInt(h.price.toFixed(currentPipSize).slice(-1)));
+                        const digits = historyBuffer.map(h => {
+                            const pStr = h.price.toFixed(8);
+                            const decPart = pStr.split('.')[1] || '00000000';
+                            return parseInt(decPart[currentPipSize - 1] || '0');
+                        });
                         const prices = historyBuffer.map(h => h.price);
                         const times = historyBuffer.map(h => h.time);
                         setLastDigitTicks(digits);
@@ -136,7 +140,11 @@ export function Dashboard() {
                     const activePipSize = pipSizeRef.current ?? 2;
 
                     if (historyBuffer) {
-                        const digits = historyBuffer.map(h => parseInt(h.price.toFixed(activePipSize).slice(-1)));
+                        const digits = historyBuffer.map(h => {
+                            const pStr = h.price.toFixed(8);
+                            const decPart = pStr.split('.')[1] || '00000000';
+                            return parseInt(decPart[activePipSize - 1] || '0');
+                        });
                         const prices = historyBuffer.map(h => h.price);
                         const times = historyBuffer.map(h => h.time);
                         setLastDigitTicks(digits);
@@ -147,8 +155,11 @@ export function Dashboard() {
                     }
 
                     const newPrice = data.tick.quote;
-                    const priceString = newPrice.toFixed(activePipSize);
-                    const newDigit = parseInt(priceString.slice(-1));
+                    // EXACT DIGIT EXTRACTION: No rounding.
+                    const fullPriceStr = newPrice.toFixed(8);
+                    const decimals = fullPriceStr.split('.')[1] || '00000000';
+                    const newDigit = parseInt(decimals[activePipSize - 1] || '0');
+
                     setTickTimestamps(prev => [Date.now(), ...prev].slice(0, 2000));
                     setPrice(newPrice);
                     setLastDigitTicks(prev => [newDigit, ...prev].slice(0, 2000));
@@ -181,7 +192,7 @@ export function Dashboard() {
         ws.onclose = () => { setSurveillanceStatus('offline'); setExecutionStatus('standby'); };
         ws.onerror = () => { setSurveillanceStatus('offline'); setExecutionStatus('standby'); };
 
-        return () => { if(ws.readyState === WebSocket.OPEN) ws.close(); };
+        return () => { if(ws && ws.readyState === WebSocket.OPEN) ws.close(); };
     }, [mounted, toast]);
 
     React.useEffect(() => {
@@ -260,16 +271,17 @@ export function Dashboard() {
                             </div>
                         </div>
                     </div>
+                    
                     <div className="flex items-center gap-2 shrink-0">
                         <div className="flex items-center bg-white border border-slate-200 rounded-full shadow-lg h-8 px-1 overflow-hidden">
-                            <a href="https://frostytraders.com" target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 px-3 py-1.5 border-r border-slate-100 hover:bg-slate-50 transition-colors group">
+                            <a href="https://frostytraders.com" target="_blank" rel="noopener noreferrer" className="flex items-center gap-3 px-4 py-1.5 border-r border-slate-100 hover:bg-slate-50 transition-colors group">
                                 <div className={cn("h-2 w-2 rounded-full animate-pulse transition-all duration-500", surveillanceStatus === 'active' ? "bg-emerald-500 shadow-[0_0_10px_rgba(16,185,129,0.8)]" : "bg-rose-500 shadow-[0_0_10px_rgba(244,63,94,0.8)]")} />
-                                <span className="text-[9px] font-black text-slate-950 uppercase tracking-[0.3em]">FROSTY</span>
+                                <span className="text-[10px] font-black text-slate-950 uppercase tracking-[0.3em]">FROSTY</span>
                             </a>
-                            <div className="flex items-center gap-2 px-3 py-1.5 bg-slate-50/50">
+                            <div className="flex items-center gap-2 px-4 py-1.5 bg-slate-50/50">
                                 <Radio className={cn("h-3 w-3 transition-all duration-500", surveillanceStatus === 'active' ? 'text-emerald-500 animate-pulse' : 'text-rose-500')} />
-                                <span className="hidden sm:inline text-[8px] font-black uppercase text-slate-950 tracking-widest">{surveillanceStatus === 'active' ? 'SURVEILLANCE LIVE' : 'OFFLINE'}</span>
-                                <span className="sm:hidden text-[8px] font-black uppercase text-slate-950">{surveillanceStatus === 'active' ? 'LIVE' : 'OFF'}</span>
+                                <span className="hidden sm:inline text-[9px] font-black uppercase text-slate-950 tracking-[0.2em]">{surveillanceStatus === 'active' ? 'SURVEILLANCE LIVE' : 'ENGINE OFFLINE'}</span>
+                                <span className="sm:hidden text-[9px] font-black uppercase text-slate-950">{surveillanceStatus === 'active' ? 'LIVE' : 'OFF'}</span>
                             </div>
                         </div>
                     </div>
