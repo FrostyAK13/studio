@@ -43,9 +43,17 @@ export function Dashboard() {
 
     const [activeContract, setActiveContract] = React.useState<any>(null);
 
+    // Refs for market-aware synchronization
+    const currentMarketRef = React.useRef(selectedMarket);
+    const pipSizeRef = React.useRef<number | null>(null);
+
     React.useEffect(() => {
         setMounted(true);
     }, []);
+
+    React.useEffect(() => {
+        currentMarketRef.current = selectedMarket;
+    }, [selectedMarket]);
 
     React.useEffect(() => {
         if (!mounted) return;
@@ -53,7 +61,6 @@ export function Dashboard() {
         const ws = new WebSocket('wss://ws.derivws.com/websockets/v3?app_id=84799');
         setWsInstance(ws);
 
-        let pipSize: number | null = null;
         let historyBuffer: {time: number, price: number}[] | null = null;
 
         ws.onopen = () => {
@@ -73,6 +80,10 @@ export function Dashboard() {
 
         ws.onmessage = (event) => {
             const data = JSON.parse(event.data);
+
+            // Gate: Ensure message belongs to current market to avoid digit leaks
+            const msgMarket = data.echo_req?.ticks_history || data.tick?.symbol;
+            if (msgMarket && msgMarket !== currentMarketRef.current) return;
 
             if (data.error) {
                 if (data.msg_type === 'authorize') {
@@ -104,8 +115,9 @@ export function Dashboard() {
                         time: data.history.times[index] * 1000 
                     })).reverse();
                     
-                    if (pipSize !== null && historyBuffer) {
-                        const digits = historyBuffer.map(h => parseInt(h.price.toFixed(pipSize!).slice(-1)));
+                    const currentPipSize = pipSizeRef.current;
+                    if (currentPipSize !== null && historyBuffer) {
+                        const digits = historyBuffer.map(h => parseInt(h.price.toFixed(currentPipSize).slice(-1)));
                         const prices = historyBuffer.map(h => h.price);
                         const times = historyBuffer.map(h => h.time);
                         setLastDigitTicks(digits);
@@ -119,22 +131,27 @@ export function Dashboard() {
 
             if (data.msg_type === 'tick') {
                 if (data.tick && typeof data.tick.quote === 'number') {
-                    if (pipSize === null) {
-                        pipSize = data.tick.pip_size ?? 2;
-                        setDecimalPlaces(pipSize);
-                        if (historyBuffer) {
-                            const digits = historyBuffer.map(h => parseInt(h.price.toFixed(pipSize!).slice(-1)));
-                            const prices = historyBuffer.map(h => h.price);
-                            const times = historyBuffer.map(h => h.time);
-                            setLastDigitTicks(digits);
-                            setPriceHistory(prices);
-                            setTickTimestamps(times);
-                            setPrice(prices[0]);
-                            historyBuffer = null;
-                        }
+                    // Update precision ref from the tick source
+                    if (data.tick.pip_size !== undefined) {
+                        pipSizeRef.current = data.tick.pip_size;
+                        setDecimalPlaces(data.tick.pip_size);
                     }
+
+                    const activePipSize = pipSizeRef.current ?? 2;
+
+                    if (historyBuffer) {
+                        const digits = historyBuffer.map(h => parseInt(h.price.toFixed(activePipSize).slice(-1)));
+                        const prices = historyBuffer.map(h => h.price);
+                        const times = historyBuffer.map(h => h.time);
+                        setLastDigitTicks(digits);
+                        setPriceHistory(prices);
+                        setTickTimestamps(times);
+                        setPrice(prices[0]);
+                        historyBuffer = null;
+                    }
+
                     const newPrice = data.tick.quote;
-                    const priceString = newPrice.toFixed(pipSize ?? 2);
+                    const priceString = newPrice.toFixed(activePipSize);
                     const newDigit = parseInt(priceString.slice(-1));
                     setTickTimestamps(prev => [Date.now(), ...prev].slice(0, 2000));
                     setPrice(newPrice);
@@ -173,6 +190,14 @@ export function Dashboard() {
 
     React.useEffect(() => {
         if (!wsInstance || wsInstance.readyState !== WebSocket.OPEN) return;
+        
+        // Reset buffers and precision for the new market vector
+        pipSizeRef.current = null;
+        setDecimalPlaces(2);
+        setLastDigitTicks([]);
+        setPriceHistory([]);
+        setTickTimestamps([]);
+
         wsInstance.send(JSON.stringify({ "forget_all": "ticks" }));
         wsInstance.send(JSON.stringify({ 
             "ticks_history": selectedMarket, 
@@ -254,7 +279,7 @@ export function Dashboard() {
 
                     <div className="flex items-center gap-3 shrink-0">
                         <div className="flex items-center bg-white border border-slate-200 rounded-full shadow-lg h-10 px-1 overflow-hidden">
-                            <a href="https://frostytraders.com" target="_blank" rel="noopener noreferrer" className="flex items-center gap-3 px-4 py-2 border-r border-slate-100 hover:bg-slate-50 transition-colors">
+                            <a href="https://frostytraders.com" target="_blank" rel="noopener noreferrer" className="flex items-center gap-3 px-4 py-2 border-r border-slate-100 hover:bg-slate-50 transition-colors group">
                                 <div className={cn(
                                     "h-2.5 w-2.5 rounded-full animate-pulse transition-all duration-500",
                                     surveillanceStatus === 'active' 

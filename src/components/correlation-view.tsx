@@ -8,7 +8,7 @@ import { syntheticIndices } from '@/lib/mock-data';
 import { cn } from '@/lib/utils';
 import { Progress } from '@/components/ui/progress';
 import { Badge } from '@/components/ui/badge';
-import { Orbit, Fingerprint, Network, Cpu, Layers, Crosshair, ArrowRight } from 'lucide-react';
+import { Orbit, Fingerprint, Network, Cpu, Layers, Crosshair, ArrowRight, AlertTriangle } from 'lucide-react';
 
 interface CorrelationViewProps {
     selectedMarket: string;
@@ -72,14 +72,14 @@ export const DigitFrequencyCircles = ({
         return (
             <div 
                 className={cn(
-                    "flex flex-col items-center relative cursor-pointer transition-all duration-500 p-1 sm:p-3 group",
+                    "flex flex-col items-center relative cursor-pointer transition-all duration-500 p-1 sm:p-2 group",
                     isSelected 
-                        ? "bg-primary/20 rounded-[1.5rem] sm:rounded-[2.5rem] ring-[8px] ring-primary/80 scale-105 z-20 shadow-[0_0_60px_rgba(var(--primary),0.8)]" 
+                        ? "bg-primary/20 rounded-[1.5rem] sm:rounded-[2.5rem] ring-[4px] sm:ring-[8px] ring-primary/80 scale-105 z-20 shadow-[0_0_60px_rgba(var(--primary),0.8)]" 
                         : "hover:scale-105"
                 )}
                 onClick={() => onDigitSelect(digit)}
             >
-                <div className="relative w-16 h-16 sm:w-32 sm:h-32 flex items-center justify-center">
+                <div className="relative w-14 h-14 sm:w-28 sm:h-28 md:w-32 md:h-32 flex items-center justify-center">
                     <svg className="absolute inset-0 w-full h-full -rotate-90">
                         <circle
                             cx="50%"
@@ -105,18 +105,18 @@ export const DigitFrequencyCircles = ({
                     </svg>
                     <div className="flex flex-col items-center justify-center z-10">
                         <span className={cn(
-                            "text-3xl sm:text-[5.5rem] font-black leading-none tracking-tighter transition-all duration-500 drop-shadow-2xl",
+                            "text-2xl sm:text-[4.5rem] md:text-[5.5rem] font-black leading-none tracking-tighter transition-all duration-500 drop-shadow-2xl",
                             isSelected ? "text-white" : "text-foreground"
                         )}>{digit}</span>
-                        <span className="text-[10px] sm:text-[18px] font-black text-cyan-400 mt-1 uppercase tracking-[0.2em] drop-shadow-[0_4px_15px_rgba(0,0,0,1)]">
+                        <span className="text-[8px] sm:text-[14px] md:text-[18px] font-black text-cyan-400 mt-0.5 sm:mt-1 uppercase tracking-[0.2em] drop-shadow-[0_4px_15px_rgba(0,0,0,1)]">
                             {percentage.toFixed(0)}%
                         </span>
                     </div>
                 </div>
                 {isLast && (
                     <div className="absolute top-0 right-0">
-                        <div className="h-4 w-4 sm:h-8 sm:w-8 rounded-full bg-cyan-400 animate-ping shadow-[0_0_20px_cyan] absolute" />
-                        <div className="h-4 w-4 sm:h-8 sm:w-8 rounded-full bg-cyan-400 shadow-[0_0_15px_cyan] relative" />
+                        <div className="h-3 w-3 sm:h-6 sm:w-6 rounded-full bg-cyan-400 animate-ping shadow-[0_0_20px_cyan] absolute" />
+                        <div className="h-3 w-3 sm:h-6 sm:w-6 rounded-full bg-cyan-400 shadow-[0_0_15px_cyan] relative" />
                     </div>
                 )}
             </div>
@@ -136,9 +136,9 @@ export const DigitFrequencyCircles = ({
                     GLOBAL FREQUENCY ORBIT
                 </CardTitle>
             </CardHeader>
-            <CardContent className="p-2 sm:p-10">
+            <CardContent className="p-2 sm:p-10 space-y-8">
                 <div className="space-y-4 sm:space-y-12">
-                    <div className="grid grid-cols-5 gap-2 sm:gap-8 border-b border-white/5 pb-4 sm:pb-12">
+                    <div className="grid grid-cols-5 gap-1.5 sm:gap-8 border-b border-white/5 pb-4 sm:pb-12">
                         {digitData.slice(0, 5).map((data) => (
                             <DigitCircle 
                                 key={data.index} 
@@ -150,7 +150,7 @@ export const DigitFrequencyCircles = ({
                             />
                         ))}
                     </div>
-                    <div className="grid grid-cols-5 gap-2 sm:gap-8 pt-2 sm:pt-4">
+                    <div className="grid grid-cols-5 gap-1.5 sm:gap-8 pt-2 sm:pt-4">
                         {digitData.slice(5, 10).map((data) => (
                             <DigitCircle 
                                 key={data.index} 
@@ -162,6 +162,12 @@ export const DigitFrequencyCircles = ({
                             />
                         ))}
                     </div>
+                </div>
+
+                <div className="flex items-center justify-start mt-4 px-2">
+                    <Badge className="bg-amber-500 text-slate-950 font-black text-[8px] sm:text-[10px] uppercase tracking-widest py-1.5 px-4 rounded-lg flex items-center gap-2">
+                        <AlertTriangle className="h-3 w-3" /> RISK DISCLAIMER
+                    </Badge>
                 </div>
             </CardContent>
         </Card>
