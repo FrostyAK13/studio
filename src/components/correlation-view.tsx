@@ -40,16 +40,15 @@ export const DigitFrequencyCircles = ({
         const total = ticks.length || 1;
         const mapped = counts.map((count, index) => ({ index, count, percentage: (count / total) * 100 }));
         
-        // Logic for High/Low colors based on image: Teal for Max, Red for Min
         const sorted = [...mapped].sort((a, b) => b.count - a.count);
         const maxVal = sorted[0].count;
         const minVal = sorted[sorted.length - 1].count;
 
         return {
             digitData: mapped.map(item => {
-                let colorClass = "text-gray-400"; // Default gray
-                if (item.count === maxVal && total > 10) colorClass = "text-[#46a0a0]"; // Teal for highest
-                else if (item.count === minVal && total > 10) colorClass = "text-[#e64646]"; // Red for lowest
+                let colorClass = "text-gray-400"; 
+                if (item.count === maxVal && total > 10) colorClass = "text-[#46a0a0]"; 
+                else if (item.count === minVal && total > 10) colorClass = "text-[#e64646]"; 
                 return { ...item, colorClass };
             }),
             lastDigit: ticks.length > 0 ? ticks[0] : null
@@ -63,7 +62,6 @@ export const DigitFrequencyCircles = ({
         isLast: boolean, 
         isSelected: boolean 
     }) => {
-        // SVG circle logic
         const radius = 45;
         const circumference = 2 * Math.PI * radius;
         const offset = circumference - (percentage / 100) * circumference;
@@ -77,17 +75,15 @@ export const DigitFrequencyCircles = ({
                     "relative w-16 h-16 sm:w-24 md:w-28 lg:w-32 rounded-full flex items-center justify-center transition-all duration-300",
                     isSelected ? "bg-black" : "bg-white"
                 )}>
-                    {/* Background Track */}
                     <svg className="absolute inset-0 w-full h-full -rotate-90">
                         <circle 
                             cx="50%" cy="50%" r="42%" 
-                            stroke="#f0f0f0" strokeWidth="8" fill="transparent" 
+                            stroke="#f0f0f0" strokeWidth="12" fill="transparent" 
                         />
-                        {/* Progress Arc */}
                         <circle 
                             cx="50%" cy="50%" r="42%" 
                             stroke={isSelected ? "#555" : "currentColor"} 
-                            strokeWidth="8" 
+                            strokeWidth="12" 
                             fill="transparent" 
                             strokeDasharray="100 100" 
                             strokeDashoffset={100 - percentage} 
@@ -98,7 +94,7 @@ export const DigitFrequencyCircles = ({
                     
                     <div className="flex flex-col items-center justify-center z-10 leading-none">
                         <span className={cn(
-                            "text-xl sm:text-4xl md:text-5xl font-bold transition-all",
+                            "text-xl sm:text-5xl md:text-6xl font-bold transition-all",
                             isSelected ? "text-white" : "text-black"
                         )}>
                             {digit}
@@ -112,7 +108,6 @@ export const DigitFrequencyCircles = ({
                     </div>
                 </div>
                 
-                {/* Last Digit Marker (Triangle) */}
                 <div className="h-6 mt-1 flex items-center justify-center">
                     {isLast && (
                         <Triangle className="w-3 h-3 sm:w-4 sm:h-4 fill-gray-500 text-gray-500 rotate-0" />
@@ -126,23 +121,22 @@ export const DigitFrequencyCircles = ({
         <Card className="overflow-hidden border-none shadow-xl bg-white rounded-[1.25rem] sm:rounded-[2.5rem]">
             <div className="px-4 sm:px-10 pt-4 sm:pt-6">
                 <div className="flex items-center gap-2 sm:gap-3 bg-gray-50 px-3 sm:px-6 py-1.5 sm:py-2 rounded-full text-[9px] sm:text-[11px] text-gray-500 font-bold border border-gray-100 uppercase tracking-[0.15em] w-fit shadow-sm">
-                    <Orbit className="h-3.5 w-3.5 sm:h-5 sm:w-5 text-gray-400" />
                     <span>SAMPLE: {ticks.length} • {marketName.toUpperCase()}</span>
                 </div>
             </div>
              <CardHeader className="pb-4 pt-3 text-center px-4 sm:px-10">
                 <CardTitle className="text-[10px] sm:text-lg font-black uppercase tracking-[0.3em] flex items-center justify-center gap-2.5 text-gray-900">
-                    GLOBAL FREQUENCY ORBIT
+                    DIGIT FREQUENCY
                 </CardTitle>
             </CardHeader>
             <CardContent className="p-4 sm:p-10">
-                <div className="space-y-4 sm:space-y-8">
-                    <div className="grid grid-cols-5 gap-2 sm:gap-6 border-b border-gray-50 pb-4 sm:pb-8">
+                <div className="space-y-4 sm:space-y-12">
+                    <div className="grid grid-cols-5 gap-2 sm:gap-6 border-b border-gray-50 pb-4 sm:pb-12">
                         {digitData.slice(0, 5).map((data) => (
                             <DigitCircle key={data.index} digit={data.index} percentage={data.percentage} colorClass={data.colorClass} isLast={lastDigit === data.index} isSelected={selectedDigit === data.index} />
                         ))}
                     </div>
-                    <div className="grid grid-cols-5 gap-2 sm:gap-6 pt-4 sm:pt-8">
+                    <div className="grid grid-cols-5 gap-2 sm:gap-6 pt-4 sm:pt-6">
                         {digitData.slice(5, 10).map((data) => (
                             <DigitCircle key={data.index} digit={data.index} percentage={data.percentage} colorClass={data.colorClass} isLast={lastDigit === data.index} isSelected={selectedDigit === data.index} />
                         ))}
@@ -175,8 +169,7 @@ export const DigitNexusMatrix = ({ digit, ticks }: { digit: number, ticks: numbe
 
     return (
         <div className="mt-4 sm:mt-6 animate-in fade-in slide-in-from-bottom-4 duration-700">
-            <Card className="border-none bg-slate-950/90 shadow-2xl overflow-hidden relative rounded-[1.5rem] border border-white/5">
-                <div className="absolute top-0 left-0 w-full h-[2px] bg-gradient-to-r from-cyan-500 via-primary to-emerald-500" />
+            <Card className="border-none bg-slate-950 shadow-2xl overflow-hidden relative rounded-[1.5rem] border border-white/5">
                 <CardHeader className="pb-2 sm:pb-4 pt-4 px-5 sm:px-8">
                     <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
                         <div className="flex items-center gap-4 text-left">
@@ -184,22 +177,13 @@ export const DigitNexusMatrix = ({ digit, ticks }: { digit: number, ticks: numbe
                                 <Network className="h-5 w-5 text-primary" />
                             </div>
                             <div>
-                                <CardTitle className="text-lg sm:text-2xl font-black text-white tracking-tighter uppercase leading-none">DIGIT {digit} NEXUS</CardTitle>
-                                <CardDescription className="text-primary/70 font-black uppercase tracking-[0.3em] text-[7px] sm:text-[9px] mt-1">PREDICTIVE STABILITY</CardDescription>
+                                <CardTitle className="text-lg sm:text-2xl font-black text-white tracking-tighter uppercase leading-none">DIGIT {digit} ANALYSIS</CardTitle>
                             </div>
                         </div>
                         <div className="bg-white/5 border border-white/10 px-4 py-2 rounded-[1rem] flex items-center gap-4 shadow-xl">
                             <div className="text-center">
                                 <p className="text-[7px] font-black text-muted-foreground uppercase mb-0.5">SEQUENCES</p>
                                 <p className="text-base font-black text-white tabular-nums">{nexusAnalysis.totalFound}</p>
-                            </div>
-                            <div className="w-px h-6 bg-white/10" />
-                            <div className="text-center">
-                                <p className="text-[7px] font-black text-muted-foreground uppercase mb-0.5">SYNC</p>
-                                <div className="flex items-center gap-1">
-                                    <div className="h-1 w-1 rounded-full bg-emerald-400 animate-pulse" />
-                                    <p className="text-xs font-black text-emerald-400 uppercase">STABLE</p>
-                                </div>
                             </div>
                         </div>
                     </div>
@@ -211,7 +195,6 @@ export const DigitNexusMatrix = ({ digit, ticks }: { digit: number, ticks: numbe
                                 <h4 className="text-[8px] font-black uppercase tracking-[0.15em] text-muted-foreground flex items-center gap-2">
                                     <Cpu className="h-3 w-3 text-emerald-400" /> SUCCESSION
                                 </h4>
-                                <Badge className="bg-emerald-500/10 text-emerald-400 border-none px-2 py-0.5 text-[7px] font-black uppercase">STABILITY</Badge>
                             </div>
                             <div className="grid grid-cols-5 gap-2">
                                 {nexusAnalysis.results.slice(0, 5).map((res, idx) => (
@@ -227,7 +210,6 @@ export const DigitNexusMatrix = ({ digit, ticks }: { digit: number, ticks: numbe
                                 <h4 className="text-[8px] font-black uppercase tracking-[0.15em] text-muted-foreground flex items-center gap-2">
                                     <Layers className="h-3 w-3 text-cyan-400" /> RECURSION
                                 </h4>
-                                <Badge className="bg-cyan-500/10 text-cyan-400 border-none px-2 py-0.5 text-[7px] font-black uppercase">ZERO-ERROR</Badge>
                             </div>
                             <div className="grid grid-cols-2 gap-2">
                                 {nexusAnalysis.chains.map((chain, idx) => (
@@ -242,12 +224,6 @@ export const DigitNexusMatrix = ({ digit, ticks }: { digit: number, ticks: numbe
                                 ))}
                             </div>
                         </div>
-                    </div>
-                    <div className="p-4 rounded-xl bg-slate-900/80 border border-white/10 text-center shadow-xl">
-                        <h4 className="text-[9px] font-black uppercase tracking-[0.4em] text-primary mb-2 flex items-center justify-center gap-2">
-                            <Crosshair className="h-3 w-3" /> 15-TICK FORECAST
-                        </h4>
-                        <p className="text-sm font-medium text-white/90 leading-relaxed italic max-w-2xl mx-auto">"Engine confirms <span className="text-emerald-400 font-black px-2 py-0.5 bg-emerald-500/10 rounded-lg">Digit {nexusAnalysis.hottestNext.digit}</span> stability for the next 15+ sequence cycles."</p>
                     </div>
                 </CardContent>
             </Card>
@@ -266,7 +242,7 @@ export function CorrelationView({
 
     return (
         <div className="space-y-4 animate-in fade-in slide-in-from-bottom-4 duration-700 pb-20">
-            <Card className="border-none shadow-xl bg-slate-900/60 backdrop-blur-3xl overflow-hidden relative rounded-[1.5rem] border border-white/5">
+            <Card className="border-none shadow-xl bg-slate-900/40 backdrop-blur-3xl overflow-hidden relative rounded-[1.5rem] border border-white/5">
                 <CardContent className="p-4 sm:p-6 grid grid-cols-1 md:grid-cols-3 gap-4 items-center">
                     <div className="space-y-1">
                         <Label className="text-[9px] font-black uppercase tracking-[0.3em] text-primary ml-1.5">MARKET VECTOR SELECT</Label>

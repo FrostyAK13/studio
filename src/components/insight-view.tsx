@@ -1,4 +1,3 @@
-
 'use client';
 
 import * as React from 'react';
@@ -45,7 +44,7 @@ export function InsightView({ price, decimalPlaces, lastDigitTicks, priceHistory
 
         setTimeout(() => {
             if (lastDigitTicks.length < 50 || priceHistory.length < 50) {
-                setError(`Data sequence unstable. Minimum 50 ticks required for deep tactical analysis.`);
+                setError(`Data sequence unstable. Minimum 50 ticks required for analysis.`);
                 setAnalysisState('error');
                 return;
             }
@@ -55,7 +54,7 @@ export function InsightView({ price, decimalPlaces, lastDigitTicks, priceHistory
                 setMultiInsight(result);
                 setAnalysisState('complete');
             } catch (e: any) {
-                setError(e.message || "An unexpected error occurred during deep scan.");
+                setError(e.message || "An unexpected error occurred during scan.");
                 setAnalysisState('error');
             }
         }, 2000);
@@ -72,7 +71,7 @@ export function InsightView({ price, decimalPlaces, lastDigitTicks, priceHistory
 
     const ProtocolCard = ({ insight }: { insight: ProtocolInsight }) => {
         const isPositive = insight.direction.includes('RISE') || insight.direction.includes('OVER') || insight.direction.includes('EVEN') || insight.direction.includes('MATCH');
-        const riskLevel = insight.confidence > 90 ? 'ZERO-ERROR' : insight.confidence > 80 ? 'LOW' : 'MODERATE';
+        const riskLevel = insight.confidence > 90 ? 'STABLE' : insight.confidence > 80 ? 'LOW' : 'MODERATE';
         
         return (
             <div className="p-4 sm:p-8 bg-black/60 rounded-[1.25rem] sm:rounded-[2.5rem] border border-white/5 relative overflow-hidden group shadow-xl transition-all hover:bg-black/80 hover:border-primary/20">
@@ -86,7 +85,7 @@ export function InsightView({ price, decimalPlaces, lastDigitTicks, priceHistory
                     </p>
                     <Badge className={cn(
                         "font-black tracking-widest text-[7px] sm:text-[9px] px-2 sm:px-3 py-0.5",
-                        riskLevel === 'ZERO-ERROR' ? "bg-emerald-500/10 text-emerald-400" : riskLevel === 'LOW' ? "bg-amber-500/10 text-amber-400" : "bg-rose-500/10 text-rose-400"
+                        riskLevel === 'STABLE' ? "bg-emerald-500/10 text-emerald-400" : riskLevel === 'LOW' ? "bg-amber-500/10 text-amber-400" : "bg-rose-500/10 text-rose-400"
                     )}>
                         {riskLevel}
                     </Badge>
@@ -107,7 +106,7 @@ export function InsightView({ price, decimalPlaces, lastDigitTicks, priceHistory
                                 <span className="text-base sm:text-2xl font-black text-emerald-400 tabular-nums tracking-tighter">
                                     {insight.confidence.toFixed(0)}%
                                 </span>
-                                <p className="text-[7px] sm:text-[9px] font-black text-muted-foreground uppercase tracking-widest">STABILITY LOCK</p>
+                                <p className="text-[7px] sm:text-[9px] font-black text-muted-foreground uppercase tracking-widest">STABILITY</p>
                              </div>
                              <Gauge className="h-3 w-3 sm:h-5 sm:w-5 text-emerald-400/40" />
                         </div>
@@ -130,14 +129,14 @@ export function InsightView({ price, decimalPlaces, lastDigitTicks, priceHistory
             case 'complete':
             case 'error':
                  return (
-                    <HackerAnimation title={`INTELLIGENCE REPORT: ${marketName.toUpperCase()} FLAWLESS`}>
+                    <HackerAnimation title={`INTELLIGENCE REPORT: ${marketName.toUpperCase()}`}>
                         {analysisState === 'analyzing' ? (
                             <ScannerAnimationContent />
                         ) : error ? (
                             <div className="text-left text-rose-400 flex items-start gap-3 p-4 sm:p-8 bg-rose-950/20 rounded-[1.25rem] sm:rounded-[3rem] border border-rose-500/30">
                                 <ShieldAlert className="h-6 w-6 sm:h-10 sm:w-10 flex-shrink-0 mt-1 animate-pulse"/>
                                 <div>
-                                    <p className="font-black text-base sm:text-2xl uppercase tracking-widest">LOGIC FAILURE</p>
+                                    <p className="font-black text-base sm:text-2xl uppercase tracking-widest">ERROR</p>
                                     <p className="font-mono text-[10px] sm:text-base opacity-80 mt-1 leading-relaxed">{error}</p>
                                 </div>
                             </div>
@@ -146,7 +145,7 @@ export function InsightView({ price, decimalPlaces, lastDigitTicks, priceHistory
                                 <div className="p-4 sm:p-8 bg-white/5 rounded-[1.25rem] sm:rounded-[3rem] border border-white/10 shadow-inner relative overflow-hidden group">
                                     <div className="absolute inset-0 bg-primary/5 opacity-0 group-hover:opacity-100 transition-opacity" />
                                     <p className="font-black text-primary text-[8px] sm:text-[12px] uppercase tracking-widest mb-2 sm:mb-4 flex items-center gap-2">
-                                        <Layers className="h-3 w-3 sm:h-5 sm:w-5" /> // FLAWLESS STRATEGY SYNOPSIS
+                                        <Layers className="h-3 w-3 sm:h-5 sm:w-5" /> // STRATEGY SYNOPSIS
                                     </p>
                                     <p className="text-xs sm:text-lg font-medium text-white/90 leading-relaxed italic px-1 sm:px-2">"{multiInsight.globalSummary}"</p>
                                 </div>
@@ -205,7 +204,6 @@ export function InsightView({ price, decimalPlaces, lastDigitTicks, priceHistory
                         </div>
                         <div>
                             <h3 className="text-base sm:text-2xl font-black uppercase tracking-widest text-foreground leading-tight">STRATEGY INTELLIGENCE</h3>
-                            <p className="text-[8px] sm:text-[10px] font-black uppercase tracking-widest text-primary/70 mt-1">PRECISION FLAWLESS MULTI-ANALYSIS</p>
                         </div>
                     </div>
                     <div className="text-center sm:text-right bg-card/60 px-5 sm:px-8 py-2 sm:py-4 rounded-[1rem] sm:rounded-[1.5rem] border border-white/10 shadow-lg w-full sm:w-auto">
@@ -240,11 +238,10 @@ export function InsightView({ price, decimalPlaces, lastDigitTicks, priceHistory
                             ) : (
                                 <>
                                 <Zap className="mr-2 sm:mr-3 h-4 w-4 sm:h-5 sm:w-5 fill-current" />
-                                INITIATE DEEP FLAWLESS SCAN
+                                INITIATE SCAN
                                 </>
                             )}
                         </Button>
-                        <p className="text-[7px] sm:text-[9px] font-black text-muted-foreground uppercase tracking-widest mt-4 animate-pulse">Ready for absolute multi-vector synchronization</p>
                     </div>
                     
                     {renderContent()}
