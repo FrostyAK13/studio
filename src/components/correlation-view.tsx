@@ -1,4 +1,3 @@
-
 'use client';
 
 import * as React from 'react';
@@ -47,12 +46,12 @@ export const DigitFrequencyCircles = ({
 
         return {
             digitData: mapped.map(item => {
-                let colorClass = "text-gray-300"; 
+                let colorClass = "text-slate-200"; 
                 if (total > 10) {
-                    if (item.count === max1) colorClass = "text-[#46a0a0]"; // 1st Hottest
-                    else if (item.count === max2 && max2 !== max1) colorClass = "text-[#64b5b5]"; // 2nd Hottest
-                    else if (item.count === min1) colorClass = "text-[#e64646]"; // 1st Coldest
-                    else if (item.count === min2 && min2 !== min1) colorClass = "text-[#f07b7b]"; // 2nd Coldest
+                    if (item.count === max1) colorClass = "text-[#2563eb]"; // 1st Hottest (Blue 600)
+                    else if (item.count === max2 && max2 !== max1) colorClass = "text-[#60a5fa]"; // 2nd Hottest (Blue 400)
+                    else if (item.count === min1) colorClass = "text-[#ea580c]"; // 1st Coldest (Orange 600)
+                    else if (item.count === min2 && min2 !== min1) colorClass = "text-[#fb923c]"; // 2nd Coldest (Orange 400)
                 }
                 return { ...item, colorClass };
             }),
