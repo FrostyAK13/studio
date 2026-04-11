@@ -144,7 +144,7 @@ export function Dashboard() {
                         const digits = historyBuffer.map(h => {
                             const pStr = h.price.toFixed(8);
                             const decPart = pStr.split('.')[1] || '00000000';
-                            return parseInt(decimals[activePipSize - 1] || '0');
+                            return parseInt(decPart[activePipSize - 1] || '0');
                         });
                         const prices = historyBuffer.map(h => h.price);
                         const times = historyBuffer.map(h => h.time);
@@ -157,8 +157,8 @@ export function Dashboard() {
 
                     const newPrice = data.tick.quote;
                     const fullPriceStr = newPrice.toFixed(8);
-                    const decimals = fullPriceStr.split('.')[1] || '00000000';
-                    const newDigit = parseInt(decimals[activePipSize - 1] || '0');
+                    const decimalsStr = fullPriceStr.split('.')[1] || '00000000';
+                    const newDigit = parseInt(decimalsStr[activePipSize - 1] || '0');
 
                     setTickTimestamps(prev => [Date.now(), ...prev].slice(0, 2000));
                     setPrice(newPrice);
