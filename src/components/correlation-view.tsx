@@ -1,14 +1,13 @@
+
 'use client';
 
 import * as React from 'react';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { syntheticIndices } from '@/lib/mock-data';
 import { cn } from '@/lib/utils';
-import { Progress } from '@/components/ui/progress';
-import { Badge } from '@/components/ui/badge';
-import { Orbit, Fingerprint, Network, Cpu, Layers, Crosshair, ArrowRight, AlertTriangle, Triangle } from 'lucide-react';
+import { Network, Cpu, Layers, ArrowRight, Triangle } from 'lucide-react';
 
 interface CorrelationViewProps {
     selectedMarket: string;
@@ -64,22 +63,22 @@ export const DigitFrequencyCircles = ({
     }) => {
         return (
             <div 
-                className="flex flex-col items-center relative cursor-pointer group"
+                className="flex flex-col items-center relative cursor-pointer group transition-transform duration-300 hover:scale-125 hover:z-50"
                 onClick={() => onDigitSelect(digit)}
             >
                 <div className={cn(
                     "relative w-16 h-16 sm:w-24 md:w-28 lg:w-32 rounded-full flex items-center justify-center transition-all duration-300",
-                    isSelected ? "bg-black" : "bg-white shadow-sm border border-gray-100"
+                    isSelected ? "bg-black shadow-[0_0_20px_rgba(0,0,0,0.2)]" : "bg-white"
                 )}>
                     <svg className="absolute inset-0 w-full h-full -rotate-90">
                         {/* Background Track - Complete Circle */}
                         <circle 
                             cx="50%" cy="50%" r="42%" 
                             stroke={isSelected ? "#333" : "#f3f4f6"} 
-                            strokeWidth="10" 
+                            strokeWidth="8" 
                             fill="transparent" 
                         />
-                        {/* Progress Ring */}
+                        {/* Progress Ring - Exact Arcs */}
                         <circle 
                             cx="50%" cy="50%" r="42%" 
                             stroke={isSelected ? "#fff" : "currentColor"} 
@@ -95,7 +94,7 @@ export const DigitFrequencyCircles = ({
                     
                     <div className="flex flex-col items-center justify-center z-10 leading-none">
                         <span className={cn(
-                            "text-xl sm:text-5xl md:text-6xl font-bold transition-all",
+                            "text-xl sm:text-4xl md:text-5xl font-bold transition-all",
                             isSelected ? "text-white" : "text-black"
                         )}>
                             {digit}
