@@ -104,23 +104,18 @@ export const DigitFrequencyCircles = ({
                     GLOBAL FREQUENCY ORBIT
                 </CardTitle>
             </CardHeader>
-            <CardContent className="p-2 sm:p-6 space-y-2 sm:space-y-4">
-                <div className="space-y-2 sm:space-y-4">
-                    <div className="grid grid-cols-5 gap-1 sm:gap-4 border-b border-white/5 pb-2 sm:pb-4">
+            <CardContent className="p-2 sm:p-6 space-y-4 sm:space-y-8">
+                <div className="space-y-6 sm:space-y-12">
+                    <div className="grid grid-cols-5 gap-1 sm:gap-4 border-b border-white/5 pb-8 sm:pb-12">
                         {digitData.slice(0, 5).map((data) => (
                             <DigitCircle key={data.index} digit={data.index} percentage={data.percentage} colorClass={data.colorClass} isLast={lastDigit === data.index} isSelected={selectedDigit === data.index} />
                         ))}
                     </div>
-                    <div className="grid grid-cols-5 gap-1 sm:gap-4 pt-1">
+                    <div className="grid grid-cols-5 gap-1 sm:gap-4 pt-6 sm:pt-10">
                         {digitData.slice(5, 10).map((data) => (
                             <DigitCircle key={data.index} digit={data.index} percentage={data.percentage} colorClass={data.colorClass} isLast={lastDigit === data.index} isSelected={selectedDigit === data.index} />
                         ))}
                     </div>
-                </div>
-                <div className="flex items-center justify-start mt-2 px-1">
-                    <Badge className="bg-amber-500 text-slate-950 font-black text-[7px] sm:text-[9px] uppercase tracking-widest py-1 px-3 rounded-lg flex items-center gap-1.5">
-                        <AlertTriangle className="h-2.5 w-2.5" /> RISK DISCLAIMER
-                    </Badge>
                 </div>
             </CardContent>
         </Card>

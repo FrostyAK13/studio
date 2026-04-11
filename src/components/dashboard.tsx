@@ -70,7 +70,7 @@ export function Dashboard() {
             }
             ws.send(JSON.stringify({ 
                 "ticks_history": selectedMarket, 
-                "count": 500, 
+                "count": 1000, 
                 "end": "latest", 
                 "style": "ticks", 
                 "subscribe": 1 
@@ -155,7 +155,6 @@ export function Dashboard() {
                     }
 
                     const newPrice = data.tick.quote;
-                    // EXACT DIGIT EXTRACTION: No rounding.
                     const fullPriceStr = newPrice.toFixed(8);
                     const decimals = fullPriceStr.split('.')[1] || '00000000';
                     const newDigit = parseInt(decimals[activePipSize - 1] || '0');
@@ -203,7 +202,7 @@ export function Dashboard() {
         setPriceHistory([]);
         setTickTimestamps([]);
         wsInstance.send(JSON.stringify({ "forget_all": "ticks" }));
-        wsInstance.send(JSON.stringify({ "ticks_history": selectedMarket, "count": 500, "end": "latest", "style": "ticks", "subscribe": 1 }));
+        wsInstance.send(JSON.stringify({ "ticks_history": selectedMarket, "count": 1000, "end": "latest", "style": "ticks", "subscribe": 1 }));
     }, [selectedMarket, wsInstance]);
 
     const handleMaxTicksChange = (e: React.ChangeEvent<HTMLInputElement>) => {
