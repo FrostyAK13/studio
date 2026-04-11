@@ -62,10 +62,6 @@ export const DigitFrequencyCircles = ({
         isLast: boolean, 
         isSelected: boolean 
     }) => {
-        const radius = 45;
-        const circumference = 2 * Math.PI * radius;
-        const offset = circumference - (percentage / 100) * circumference;
-
         return (
             <div 
                 className="flex flex-col items-center relative cursor-pointer group"
@@ -73,19 +69,24 @@ export const DigitFrequencyCircles = ({
             >
                 <div className={cn(
                     "relative w-16 h-16 sm:w-24 md:w-28 lg:w-32 rounded-full flex items-center justify-center transition-all duration-300",
-                    isSelected ? "bg-black" : "bg-white"
+                    isSelected ? "bg-black" : "bg-white shadow-sm border border-gray-100"
                 )}>
                     <svg className="absolute inset-0 w-full h-full -rotate-90">
+                        {/* Background Track - Complete Circle */}
                         <circle 
                             cx="50%" cy="50%" r="42%" 
-                            stroke="#f0f0f0" strokeWidth="12" fill="transparent" 
-                        />
-                        <circle 
-                            cx="50%" cy="50%" r="42%" 
-                            stroke={isSelected ? "#555" : "currentColor"} 
-                            strokeWidth="12" 
+                            stroke={isSelected ? "#333" : "#f3f4f6"} 
+                            strokeWidth="10" 
                             fill="transparent" 
-                            strokeDasharray="100 100" 
+                        />
+                        {/* Progress Ring */}
+                        <circle 
+                            cx="50%" cy="50%" r="42%" 
+                            stroke={isSelected ? "#fff" : "currentColor"} 
+                            strokeWidth="10" 
+                            fill="transparent" 
+                            pathLength="100"
+                            strokeDasharray="100" 
                             strokeDashoffset={100 - percentage} 
                             strokeLinecap="butt" 
                             className={cn("transition-all duration-1000 ease-out", isSelected ? "" : colorClass)} 
@@ -110,7 +111,7 @@ export const DigitFrequencyCircles = ({
                 
                 <div className="h-6 mt-1 flex items-center justify-center">
                     {isLast && (
-                        <Triangle className="w-3 h-3 sm:w-4 sm:h-4 fill-gray-500 text-gray-500 rotate-0" />
+                        <Triangle className="w-3 h-3 sm:w-4 sm:h-4 fill-gray-500 text-gray-500" />
                     )}
                 </div>
             </div>
@@ -177,7 +178,7 @@ export const DigitNexusMatrix = ({ digit, ticks }: { digit: number, ticks: numbe
                                 <Network className="h-5 w-5 text-primary" />
                             </div>
                             <div>
-                                <CardTitle className="text-lg sm:text-2xl font-black text-white tracking-tighter uppercase leading-none">DIGIT {digit} ANALYSIS</CardTitle>
+                                <CardTitle className="text-lg sm:text-2xl font-black text-white tracking-tighter uppercase leading-none">DIGIT ANALYSIS</CardTitle>
                             </div>
                         </div>
                         <div className="bg-white/5 border border-white/10 px-4 py-2 rounded-[1rem] flex items-center gap-4 shadow-xl">
@@ -245,7 +246,7 @@ export function CorrelationView({
             <Card className="border-none shadow-xl bg-slate-900/40 backdrop-blur-3xl overflow-hidden relative rounded-[1.5rem] border border-white/5">
                 <CardContent className="p-4 sm:p-6 grid grid-cols-1 md:grid-cols-3 gap-4 items-center">
                     <div className="space-y-1">
-                        <Label className="text-[9px] font-black uppercase tracking-[0.3em] text-primary ml-1.5">MARKET VECTOR SELECT</Label>
+                        <Label className="text-[9px] font-black uppercase tracking-[0.3em] text-primary ml-1.5">MARKET SELECT</Label>
                         <Select value={selectedMarket} onValueChange={onMarketChange}>
                             <SelectTrigger className="h-11 bg-black/60 border-white/10 rounded-xl font-black text-[11px] sm:text-base px-4 shadow-inner">
                                 <SelectValue placeholder="Select Index" />
@@ -266,7 +267,7 @@ export function CorrelationView({
                         </div>
                     </div>
                     <div className="space-y-1 text-center">
-                        <Label className="text-[9px] font-black uppercase tracking-[0.3em] text-primary">STABILITY SAMPLE</Label>
+                        <Label className="text-[9px] font-black uppercase tracking-[0.3em] text-primary">SAMPLE SIZE</Label>
                         <div className="h-11 bg-black/60 border-white/10 rounded-xl flex items-center justify-center font-black text-base sm:text-2xl text-primary shadow-inner border border-primary/20">{lastDigitTicks.length}</div>
                     </div>
                 </CardContent>

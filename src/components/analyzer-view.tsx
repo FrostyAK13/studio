@@ -175,7 +175,7 @@ export function AnalyzerView({
                             </Select>
                         </div>
                         <div className="space-y-4">
-                            <Label className="text-[10px] sm:text-[12px] font-black uppercase tracking-[0.4em] text-primary ml-4">TACTICAL STRATEGY</Label>
+                            <Label className="text-[10px] sm:text-[12px] font-black uppercase tracking-[0.4em] text-primary ml-4">STRATEGY</Label>
                             <Select value={tradeType} onValueChange={setTradeType}>
                                 <SelectTrigger className="h-14 sm:h-16 bg-black/50 border-white/10 rounded-2xl font-black text-xs sm:text-base">
                                     <SelectValue placeholder="Select Type" />
@@ -191,7 +191,7 @@ export function AnalyzerView({
                     </div>
 
                     <div className="space-y-6">
-                        <Label className="text-[10px] sm:text-[12px] font-black uppercase tracking-[0.4em] text-primary ml-4">SIGNAL GRID</Label>
+                        <Label className="text-[10px] sm:text-[12px] font-black uppercase tracking-[0.4em] text-primary ml-4">DIGIT SELECT</Label>
                         <div className="grid grid-cols-5 sm:grid-cols-10 gap-2 sm:gap-3">
                             {Array.from({ length: 10 }, (_, i) => (
                                 <button
@@ -218,22 +218,22 @@ export function AnalyzerView({
                         <div className="text-center lg:text-left space-y-4">
                             <div className="flex items-center gap-3 justify-center lg:justify-start">
                                 <Crosshair className="h-6 w-6 text-primary" />
-                                <h3 className="text-2xl sm:text-4xl font-black text-white tracking-tighter uppercase">TACTICAL VECTOR</h3>
+                                <h3 className="text-2xl sm:text-4xl font-black text-white tracking-tighter uppercase">ANALYSIS HUD</h3>
                             </div>
                             <div className="flex flex-wrap justify-center lg:justify-start gap-3">
                                 <Badge className="bg-primary/20 text-primary border-none font-black tracking-widest text-[9px] sm:text-xs px-4 py-1 uppercase">{stats.label1} vs {stats.label2}</Badge>
-                                <Badge className="bg-blue-500/10 text-blue-400 border-none font-black tracking-widest text-[9px] sm:text-xs px-4 py-1 uppercase">SIGNAL: {selectedDigit}</Badge>
+                                <Badge className="bg-blue-500/10 text-blue-400 border-none font-black tracking-widest text-[9px] sm:text-xs px-4 py-1 uppercase">TARGET: {selectedDigit}</Badge>
                             </div>
                         </div>
                         
                         <div className="flex col-span-1 lg:col-span-2 gap-8 sm:gap-16 items-center justify-center lg:justify-end">
                             <div className="text-center space-y-3">
-                                <p className="text-[9px] sm:text-xs font-black text-muted-foreground uppercase tracking-[0.2em]">LIVE PIVOT</p>
+                                <p className="text-[9px] sm:text-xs font-black text-muted-foreground uppercase tracking-[0.2em]">LIVE PRICE</p>
                                 <p className="text-3xl sm:text-7xl font-black text-white tabular-nums tracking-tighter">{price.toFixed(decimalPlaces)}</p>
                             </div>
                             <div className="w-px h-16 sm:h-24 bg-white/10" />
                             <div className="text-center space-y-3">
-                                <p className="text-[9px] sm:text-xs font-black text-muted-foreground uppercase tracking-[0.2em]">TACTICAL DELTA</p>
+                                <p className="text-[9px] sm:text-xs font-black text-muted-foreground uppercase tracking-[0.2em]">VARIANCE</p>
                                 <p className="text-3xl sm:text-7xl font-black text-emerald-400 tabular-nums tracking-tighter">{stats.delta.toFixed(1)}%</p>
                             </div>
                         </div>
@@ -243,10 +243,10 @@ export function AnalyzerView({
 
             <Card className="border-none shadow-2xl bg-slate-900/40 border border-white/10 p-8 sm:p-14 rounded-[2rem] sm:rounded-[3.5rem] overflow-hidden relative">
                 <div className="flex flex-col sm:flex-row items-center justify-between gap-4 mb-10">
-                    <h3 className="text-sm sm:text-lg font-black uppercase tracking-[0.4em] text-white">SEQUENCE FLUX</h3>
+                    <h3 className="text-sm sm:text-lg font-black uppercase tracking-[0.4em] text-white">STREAM SEQUENCE</h3>
                     <div className="flex items-center gap-2">
                          <div className="h-2 w-2 rounded-full bg-blue-400 animate-pulse shadow-[0_0_10px_#60a5fa]" />
-                         <span className="text-[9px] font-black uppercase text-blue-400 tracking-widest">100+1 ACCURACY SYNC</span>
+                         <span className="text-[9px] font-black uppercase text-blue-400 tracking-widest">ACTIVE SYNC</span>
                     </div>
                 </div>
                 <div className="flex flex-wrap justify-center gap-3 sm:gap-6">
@@ -260,12 +260,12 @@ export function AnalyzerView({
                         <div className="space-y-6">
                             <div className="flex justify-between items-end">
                                 <div>
-                                    <p className="text-[10px] font-black uppercase text-emerald-400 tracking-widest mb-1">VECTOR ALPHA</p>
+                                    <p className="text-[10px] font-black uppercase text-emerald-400 tracking-widest mb-1">STABILITY ALPHA</p>
                                     <h4 className="text-base sm:text-xl font-black text-white/60">{stats.label1}</h4>
                                 </div>
                                 <div className="text-right">
                                     <p className="text-3xl sm:text-6xl font-black text-emerald-400 tabular-nums">{stats.val1.toFixed(1)}%</p>
-                                    <Badge className="bg-emerald-500/10 text-emerald-400 border-none font-black text-[9px] mt-1">SUCCESS: 100+1</Badge>
+                                    <Badge className="bg-emerald-500/10 text-emerald-400 border-none font-black text-[9px] mt-1">CONFIRMED</Badge>
                                 </div>
                             </div>
                             <Progress value={stats.val1} className="h-4 sm:h-5 bg-black/60 [&>div]:bg-emerald-500 shadow-[0_0_15px_rgba(16,185,129,0.3)]" />
@@ -273,12 +273,12 @@ export function AnalyzerView({
                         <div className="space-y-6">
                             <div className="flex justify-between items-end">
                                 <div>
-                                    <p className="text-[10px] font-black uppercase text-rose-500 tracking-widest mb-1">VECTOR BETA</p>
+                                    <p className="text-[10px] font-black uppercase text-rose-500 tracking-widest mb-1">STABILITY BETA</p>
                                     <h4 className="text-base sm:text-xl font-black text-white/60">{stats.label2}</h4>
                                 </div>
                                 <div className="text-right">
                                     <p className="text-3xl sm:text-6xl font-black text-rose-500 tabular-nums">{stats.val2.toFixed(1)}%</p>
-                                    <Badge className="bg-rose-500/10 text-rose-500 border-none font-black text-[9px] mt-1">SUCCESS: 100+1</Badge>
+                                    <Badge className="bg-rose-500/10 text-rose-500 border-none font-black text-[9px] mt-1">CONFIRMED</Badge>
                                 </div>
                             </div>
                             <Progress value={stats.val2} className="h-4 sm:h-5 bg-black/60 [&>div]:bg-rose-500 shadow-[0_0_15px_rgba(244,63,94,0.3)]" />
@@ -287,10 +287,10 @@ export function AnalyzerView({
 
                     <div className="p-8 sm:p-12 rounded-[2rem] sm:rounded-[3rem] bg-slate-900/80 border border-white/10 text-center shadow-2xl">
                         <h4 className="text-[10px] sm:text-[12px] font-black uppercase tracking-[0.4em] text-primary mb-6 flex items-center justify-center gap-3">
-                            <Zap className="h-5 w-5" /> 100+1 TACTICAL SUMMARY
+                            <Zap className="h-5 w-5" /> STRATEGY SUMMARY
                         </h4>
                         <p className="text-base sm:text-2xl font-medium text-white/90 leading-relaxed italic drop-shadow-md">
-                            "Stability Engine identifies a <span className={cn("font-black px-3 py-1 rounded-xl", stats.val1 > stats.val2 ? "text-emerald-400 bg-emerald-500/10" : "text-rose-500 bg-rose-500/10")}>{stats.val1 > stats.val2 ? stats.label1 : stats.label2}</span> bias. Zero-Error gate confirmed with 100+1 accuracy for the next 25+ ticks."
+                            "Stability Engine identifies a <span className={cn("font-black px-3 py-1 rounded-xl", stats.val1 > stats.val2 ? "text-emerald-400 bg-emerald-500/10" : "text-rose-500 bg-rose-500/10")}>{stats.val1 > stats.val2 ? stats.label1 : stats.label2}</span> bias. Confirmed accuracy for the current market cycle."
                         </p>
                     </div>
                 </CardContent>

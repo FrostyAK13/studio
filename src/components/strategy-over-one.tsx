@@ -92,10 +92,16 @@ export function StrategyOverOne({
         const digitB = lastDigitTicks[0];
         const digitA = lastDigitTicks[1];
         const sum = digitA + digitB;
+        
+        // Triple-Gate Strategy Approved Logic
         const gate1 = digitA <= 2;
         const gate2 = digitB < 4;
-        const gate3 = sum <= 4 && sum > 0;
-        const canTrade = gate1 && gate2 && gate3;
+        const gate3 = sum <= 4;
+        
+        // Safety Filter: Skip if Sum is 0 or greater than 4
+        const safetyFilter = sum > 0 && sum <= 4;
+        
+        const canTrade = gate1 && gate2 && gate3 && safetyFilter;
         return { digitA, digitB, sum, canTrade };
     }, [lastDigitTicks]);
 
@@ -121,11 +127,11 @@ export function StrategyOverOne({
             return;
         }
         if (entryLogic.canTrade) {
-            setStatusMessage('ENGAGING OVER 1');
+            setStatusMessage('EXECUTING OVER 1');
             setIsPendingExecution(true);
             onExecuteTrade({ stake: currentStake, barrier: "1", contract_type: "DIGITOVER" });
         } else {
-            setStatusMessage('FILTER: SCANNING GATES');
+            setStatusMessage('MONITORING GATES');
         }
     }, [lastDigitTicks, isRunning, sessionEnded, isPendingExecution, isAuthorized, entryLogic, currentStake, onExecuteTrade, riskCheck, currency, toast, sessionStats.profit]);
 
@@ -177,7 +183,7 @@ export function StrategyOverOne({
             <div className="grid grid-cols-1 md:grid-cols-5 gap-3">
                 <Card className="bg-emerald-500/10 border border-emerald-500/20 p-4 rounded-[1.5rem] relative group" >
                     <div className="absolute top-3 right-3"><Crosshair className="h-4 w-4 text-emerald-400" /></div>
-                    <p className="text-[8px] font-black text-emerald-400 uppercase tracking-widest mb-2">FLAWLESS VECTOR</p>
+                    <p className="text-[8px] font-black text-emerald-400 uppercase tracking-widest mb-2">VECTOR SELECT</p>
                     <Select value={selectedMarket} onValueChange={onMarketChange}>
                         <SelectTrigger className="bg-transparent border-none p-0 h-auto font-black text-white text-base leading-tight focus:ring-0 focus:ring-offset-0 gap-1.5">
                             <SelectValue placeholder="Market" />
@@ -192,19 +198,19 @@ export function StrategyOverOne({
                 </Card>
                 <Card className="bg-primary/10 border border-primary/20 p-4 rounded-[1.5rem] relative">
                     <div className="absolute top-3 right-3"><Zap className="h-4 w-4 text-primary" /></div>
-                    <p className="text-[8px] font-black text-primary uppercase tracking-widest mb-2">ENGAGEMENT</p>
+                    <p className="text-[8px] font-black text-primary uppercase tracking-widest mb-2">STRATEGY</p>
                     <p className="text-xl font-black text-white leading-tight uppercase">OVER 1</p>
                     <Badge className="bg-primary/20 text-primary border-none mt-2 text-[8px] font-black uppercase">ACTIVE</Badge>
                 </Card>
                 <Card className="bg-blue-600/10 border border-blue-500/20 p-4 rounded-[1.5rem] relative">
                     <div className="absolute top-3 right-3"><Wallet className="h-4 w-4 text-blue-400" /></div>
-                    <p className="text-[8px] font-black text-blue-400 uppercase tracking-widest mb-2">LIVE MARKET PIVOT</p>
+                    <p className="text-[8px] font-black text-blue-400 uppercase tracking-widest mb-2">LIVE PRICE</p>
                     <p className="text-xl font-black text-white leading-tight tabular-nums">{price === 0 ? <span className="text-amber-400 animate-pulse text-sm">SYNCING...</span> : price.toFixed(decimalPlaces)}</p>
                     <Badge className="bg-blue-500/20 text-blue-400 border-none mt-2 text-[8px] font-black uppercase tracking-widest">STAKE: {currentStake.toFixed(2)}</Badge>
                 </Card>
                 <Card className="bg-cyan-500/10 border border-cyan-500/20 p-4 rounded-[1.5rem] relative">
                     <div className="absolute top-3 right-3"><div className={cn("h-4 w-4 rounded-full transition-all duration-300", entryLogic?.canTrade ? "bg-emerald-400 animate-pulse shadow-[0_0_10px_#10b981]" : "bg-cyan-400 opacity-20")} /></div>
-                    <p className="text-[8px] font-black text-cyan-400 uppercase tracking-widest mb-2">ENTRY SIGNAL</p>
+                    <p className="text-[8px] font-black text-cyan-400 uppercase tracking-widest mb-2">SIGNAL GATES</p>
                     <div className="flex items-center gap-3 justify-between">
                         <div>
                             <p className="text-[6px] font-bold text-muted-foreground uppercase mb-0.5">PREV</p>
@@ -236,10 +242,10 @@ export function StrategyOverOne({
                             {isPendingExecution ? <Activity className="h-8 w-8 text-white animate-spin" /> : isRunning ? <Flame className={cn("h-8 w-8 text-white", entryLogic.canTrade && "animate-bounce")} /> : <Cpu className="h-8 w-8 text-muted-foreground/40" />}
                         </div>
                         <div>
-                            <h3 className={cn("text-2xl sm:text-4xl font-black uppercase tracking-tighter leading-none", isRunning || isPendingExecution ? "text-white" : "text-muted-foreground/40")}>{isPendingExecution ? "EXECUTING..." : isRunning ? "SURVEILLANCE" : "ENGINE STANDBY"}</h3>
+                            <h3 className={cn("text-2xl sm:text-4xl font-black uppercase tracking-tighter leading-none", isRunning || isPendingExecution ? "text-white" : "text-muted-foreground/40")}>{isPendingExecution ? "EXECUTING..." : isRunning ? "SURVEILLANCE" : "STANDBY"}</h3>
                             <div className="flex items-center gap-2 mt-3">
                                 <div className={cn("h-1.5 w-1.5 rounded-full", entryLogic.canTrade ? "bg-emerald-400 animate-pulse shadow-[0_0_8px_#10b981]" : "bg-white/20")} />
-                                <p className="text-[10px] font-black uppercase tracking-[0.4em] text-primary/60">{isPendingExecution ? "ZERO-ERROR GATE ENGAGED" : isRunning ? (entryLogic.canTrade ? "READY TO ENGAGE" : "SCANNING GATES") : "AWAITING PARAMETERS"}</p>
+                                <p className="text-[10px] font-black uppercase tracking-[0.4em] text-primary/60">{isPendingExecution ? "EXECUTION ENGAGED" : isRunning ? (entryLogic.canTrade ? "SIGNAL DETECTED" : "MONITORING FLOW") : "AWAITING START"}</p>
                             </div>
                         </div>
                     </div>
@@ -263,7 +269,7 @@ export function StrategyOverOne({
 
             <div className="p-6 sm:p-8 bg-black/50 rounded-[2rem] border border-white/5 space-y-4 shadow-inner">
                 <div className="flex items-center justify-between border-b border-white/5 pb-4">
-                    <h4 className="text-[10px] sm:text-[12px] font-black uppercase text-primary tracking-widest flex items-center gap-3"><Layers className="h-5 w-5" /> ACCURACY ANALYSIS</h4>
+                    <h4 className="text-[10px] sm:text-[12px] font-black uppercase text-primary tracking-widest flex items-center gap-3"><Layers className="h-5 w-5" /> ANALYSIS HUD</h4>
                     <div className="flex items-center gap-2">
                         <span className={cn("text-lg sm:text-2xl font-black tabular-nums", sessionStats.profit >= 0 ? "text-emerald-400" : "text-rose-500")}>{sessionStats.profit.toFixed(2)} USD</span>
                         <p className="text-[8px] text-muted-foreground uppercase tracking-widest font-black">NET PROFIT</p>
@@ -273,7 +279,7 @@ export function StrategyOverOne({
 
             <Card className="border-none shadow-xl bg-slate-950/90 backdrop-blur-3xl rounded-[1.5rem] overflow-hidden border border-white/10">
                 <div className="px-6 py-4 border-b border-white/5 flex items-center justify-between bg-black/20">
-                    <h4 className="font-black text-[10px] uppercase tracking-[0.2em] text-white">TRANSACTION MATRIX</h4>
+                    <h4 className="font-black text-[10px] uppercase tracking-[0.2em] text-white">TRANSACTION LOG</h4>
                     <Badge className="bg-primary/20 text-primary border-none text-[8px] font-black uppercase tracking-widest px-3">RUNS: {trades.length}</Badge>
                 </div>
                 <div className="w-full">
