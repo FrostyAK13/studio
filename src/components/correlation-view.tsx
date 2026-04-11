@@ -48,10 +48,10 @@ export const DigitFrequencyCircles = ({
             digitData: mapped.map(item => {
                 let colorClass = "text-slate-200"; 
                 if (total > 10) {
-                    if (item.count === max1) colorClass = "text-[#2dd4bf]"; // 1st Hottest (Ice Green / Teal 400)
-                    else if (item.count === max2 && max2 !== max1) colorClass = "text-[#99f6e4]"; // 2nd Hottest (Light Ice Green / Teal 200)
-                    else if (item.count === min1) colorClass = "text-[#ea580c]"; // 1st Coldest (Orange 600)
-                    else if (item.count === min2 && min2 !== min1) colorClass = "text-[#fb923c]"; // 2nd Coldest (Orange 400)
+                    if (item.count === max1) colorClass = "text-[#2dd4bf]"; // 1st Hottest (Ice Green)
+                    else if (item.count === max2 && max2 !== max1) colorClass = "text-[#3b82f6]"; // 2nd Hottest (Blue)
+                    else if (item.count === min1) colorClass = "text-[#ea580c]"; // 1st Coldest (Orange)
+                    else if (item.count === min2 && min2 !== min1) colorClass = "text-[#fb923c]"; // 2nd Coldest (Light Orange)
                 }
                 return { ...item, colorClass };
             }),
