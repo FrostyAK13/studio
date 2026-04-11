@@ -8,7 +8,7 @@ import { syntheticIndices } from '@/lib/mock-data';
 import { cn } from '@/lib/utils';
 import { Progress } from '@/components/ui/progress';
 import { Badge } from '@/components/ui/badge';
-import { Orbit, Fingerprint, Network, Cpu, Layers, Crosshair, ArrowRight, AlertTriangle } from 'lucide-react';
+import { Orbit, Fingerprint, Network, Cpu, Layers, Crosshair, ArrowRight, AlertTriangle, Triangle } from 'lucide-react';
 
 interface CorrelationViewProps {
     selectedMarket: string;
@@ -39,15 +39,17 @@ export const DigitFrequencyCircles = ({
         ticks.forEach(d => { if (d >= 0 && d <= 9) counts[d]++; });
         const total = ticks.length || 1;
         const mapped = counts.map((count, index) => ({ index, count, percentage: (count / total) * 100 }));
+        
+        // Logic for High/Low colors based on image: Teal for Max, Red for Min
         const sorted = [...mapped].sort((a, b) => b.count - a.count);
+        const maxVal = sorted[0].count;
+        const minVal = sorted[sorted.length - 1].count;
+
         return {
             digitData: mapped.map(item => {
-                const rank = sorted.findIndex(s => s.index === item.index);
-                let colorClass = "text-muted-foreground/40";
-                if (rank === 0) colorClass = "text-emerald-500";
-                else if (rank === 1) colorClass = "text-cyan-500";
-                else if (rank === 8) colorClass = "text-orange-500";
-                else if (rank === 9) colorClass = "text-rose-500";
+                let colorClass = "text-gray-400"; // Default gray
+                if (item.count === maxVal && total > 10) colorClass = "text-[#46a0a0]"; // Teal for highest
+                else if (item.count === minVal && total > 10) colorClass = "text-[#e64646]"; // Red for lowest
                 return { ...item, colorClass };
             }),
             lastDigit: ticks.length > 0 ? ticks[0] : null
@@ -61,57 +63,86 @@ export const DigitFrequencyCircles = ({
         isLast: boolean, 
         isSelected: boolean 
     }) => {
+        // SVG circle logic
+        const radius = 45;
+        const circumference = 2 * Math.PI * radius;
+        const offset = circumference - (percentage / 100) * circumference;
+
         return (
             <div 
-                className={cn(
-                    "flex flex-col items-center relative cursor-pointer transition-all duration-500 p-0.5 group",
-                    isSelected 
-                        ? "bg-primary/20 rounded-[1rem] ring-[3px] ring-primary/80 scale-105 z-20 shadow-[0_0_40px_rgba(var(--primary),0.6)]" 
-                        : "hover:scale-105"
-                )}
+                className="flex flex-col items-center relative cursor-pointer group"
                 onClick={() => onDigitSelect(digit)}
             >
-                <div className="relative w-12 h-12 sm:w-24 md:w-28 lg:w-32 flex items-center justify-center">
+                <div className={cn(
+                    "relative w-16 h-16 sm:w-24 md:w-28 lg:w-32 rounded-full flex items-center justify-center transition-all duration-300",
+                    isSelected ? "bg-black" : "bg-white"
+                )}>
+                    {/* Background Track */}
                     <svg className="absolute inset-0 w-full h-full -rotate-90">
-                        <circle cx="50%" cy="50%" r="42%" stroke="currentColor" strokeWidth="1.5" fill="transparent" className="text-white/5" />
-                        <circle cx="50%" cy="50%" r="42%" stroke="currentColor" strokeWidth="5" fill="transparent" strokeDasharray="100 100" strokeDashoffset={100 - percentage} strokeLinecap="round" className={cn("transition-all duration-1000 ease-out", isSelected ? "text-primary drop-shadow-[0_0_15px_rgba(var(--primary),1)]" : colorClass)} />
+                        <circle 
+                            cx="50%" cy="50%" r="42%" 
+                            stroke="#f0f0f0" strokeWidth="8" fill="transparent" 
+                        />
+                        {/* Progress Arc */}
+                        <circle 
+                            cx="50%" cy="50%" r="42%" 
+                            stroke={isSelected ? "#555" : "currentColor"} 
+                            strokeWidth="8" 
+                            fill="transparent" 
+                            strokeDasharray="100 100" 
+                            strokeDashoffset={100 - percentage} 
+                            strokeLinecap="butt" 
+                            className={cn("transition-all duration-1000 ease-out", isSelected ? "" : colorClass)} 
+                        />
                     </svg>
-                    <div className="flex flex-col items-center justify-center z-10">
-                        <span className={cn("text-xl sm:text-[4rem] md:text-[5rem] lg:text-[5.5rem] font-black leading-none tracking-tighter transition-all duration-500 drop-shadow-2xl", isSelected ? "text-white" : "text-foreground")}>{digit}</span>
-                        <span className="text-[7px] sm:text-[14px] font-black text-cyan-400 mt-0 sm:-mt-1 uppercase tracking-widest drop-shadow-[0_2px_10px_rgba(0,0,0,1)]">{percentage.toFixed(1)}%</span>
+                    
+                    <div className="flex flex-col items-center justify-center z-10 leading-none">
+                        <span className={cn(
+                            "text-xl sm:text-4xl md:text-5xl font-bold transition-all",
+                            isSelected ? "text-white" : "text-black"
+                        )}>
+                            {digit}
+                        </span>
+                        <span className={cn(
+                            "text-[8px] sm:text-xs md:text-sm font-medium mt-1",
+                            isSelected ? "text-white/80" : "text-gray-500"
+                        )}>
+                            {percentage.toFixed(1)}%
+                        </span>
                     </div>
                 </div>
-                {isLast && (
-                    <div className="absolute top-0 right-0">
-                        <div className="h-2.5 w-2.5 sm:h-5 sm:w-5 rounded-full bg-cyan-400 animate-ping shadow-[0_0_15px_cyan] absolute" />
-                        <div className="h-2.5 w-2.5 sm:h-5 sm:w-5 rounded-full bg-cyan-400 shadow-[0_0_10px_cyan] relative" />
-                    </div>
-                )}
+                
+                {/* Last Digit Marker (Triangle) */}
+                <div className="h-6 mt-1 flex items-center justify-center">
+                    {isLast && (
+                        <Triangle className="w-3 h-3 sm:w-4 sm:h-4 fill-gray-500 text-gray-500 rotate-0" />
+                    )}
+                </div>
             </div>
         );
     };
 
     return (
-        <Card className="overflow-hidden border-none shadow-xl bg-slate-900/60 backdrop-blur-3xl rounded-[1.25rem] sm:rounded-[2.5rem] border border-white/5">
+        <Card className="overflow-hidden border-none shadow-xl bg-white rounded-[1.25rem] sm:rounded-[2.5rem]">
             <div className="px-4 sm:px-10 pt-4 sm:pt-6">
-                <div className="flex items-center gap-2 sm:gap-3 bg-black/60 px-3 sm:px-6 py-1.5 sm:py-2 rounded-full text-[9px] sm:text-[11px] text-muted-foreground font-black border border-white/10 uppercase tracking-[0.15em] w-fit shadow-xl">
-                    <Orbit className="h-3.5 w-3.5 sm:h-5 sm:w-5 text-cyan-400" />
+                <div className="flex items-center gap-2 sm:gap-3 bg-gray-50 px-3 sm:px-6 py-1.5 sm:py-2 rounded-full text-[9px] sm:text-[11px] text-gray-500 font-bold border border-gray-100 uppercase tracking-[0.15em] w-fit shadow-sm">
+                    <Orbit className="h-3.5 w-3.5 sm:h-5 sm:w-5 text-gray-400" />
                     <span>SAMPLE: {ticks.length} • {marketName.toUpperCase()}</span>
                 </div>
             </div>
-             <CardHeader className="pb-1 sm:pb-2 pt-3 text-center px-4 sm:px-10">
-                <CardTitle className="text-[9px] sm:text-lg font-black uppercase tracking-[0.3em] flex items-center justify-center gap-2.5 text-primary">
+             <CardHeader className="pb-4 pt-3 text-center px-4 sm:px-10">
+                <CardTitle className="text-[10px] sm:text-lg font-black uppercase tracking-[0.3em] flex items-center justify-center gap-2.5 text-gray-900">
                     GLOBAL FREQUENCY ORBIT
                 </CardTitle>
             </CardHeader>
-            <CardContent className="p-2 sm:p-6 space-y-4 sm:space-y-8">
-                <div className="space-y-6 sm:space-y-12">
-                    <div className="grid grid-cols-5 gap-1 sm:gap-4 border-b border-white/5 pb-8 sm:pb-12">
+            <CardContent className="p-4 sm:p-10">
+                <div className="space-y-4 sm:space-y-8">
+                    <div className="grid grid-cols-5 gap-2 sm:gap-6 border-b border-gray-50 pb-4 sm:pb-8">
                         {digitData.slice(0, 5).map((data) => (
                             <DigitCircle key={data.index} digit={data.index} percentage={data.percentage} colorClass={data.colorClass} isLast={lastDigit === data.index} isSelected={selectedDigit === data.index} />
                         ))}
                     </div>
-                    <div className="grid grid-cols-5 gap-1 sm:gap-4 pt-6 sm:pt-10">
+                    <div className="grid grid-cols-5 gap-2 sm:gap-6 pt-4 sm:pt-8">
                         {digitData.slice(5, 10).map((data) => (
                             <DigitCircle key={data.index} digit={data.index} percentage={data.percentage} colorClass={data.colorClass} isLast={lastDigit === data.index} isSelected={selectedDigit === data.index} />
                         ))}
