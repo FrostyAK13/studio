@@ -6,7 +6,7 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { syntheticIndices } from '@/lib/mock-data';
 import { cn } from '@/lib/utils';
-import { Zap, Crosshair, TrendingUp, TrendingDown, Target, Cpu } from 'lucide-react';
+import { Crosshair } from 'lucide-react';
 import { Progress } from '@/components/ui/progress';
 import { Badge } from '@/components/ui/badge';
 import { motion } from 'framer-motion';
@@ -162,35 +162,35 @@ export function AnalyzerView({
     };
 
     return (
-        <div className="space-y-3 sm:space-y-4 animate-in fade-in slide-in-from-bottom-8 duration-1000 pb-24 max-w-7xl mx-auto">
+        <div className="space-y-4 animate-in fade-in slide-in-from-bottom-8 duration-1000 pb-24 max-w-7xl mx-auto">
             {/* Market Selection Card */}
             <Card className="border-none shadow-lg bg-slate-900/60 backdrop-blur-3xl rounded-xl sm:rounded-2xl border border-white/5">
                 <CardContent className="p-3 sm:p-4 space-y-3">
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                        <div className="space-y-1.5">
+                        <div className="space-y-1">
                             <Label className="text-[8px] font-black uppercase tracking-[0.3em] text-primary ml-1">MARKET VECTOR</Label>
                             <Select value={selectedMarket} onValueChange={onMarketChange}>
-                                <SelectTrigger className="h-9 bg-black/50 border-white/10 rounded-lg font-black text-[11px] sm:text-xs">
+                                <SelectTrigger className="h-8 bg-black/50 border-white/10 rounded-lg font-black text-[10px]">
                                     <SelectValue placeholder="Select Market" />
                                 </SelectTrigger>
                                 <SelectContent className="bg-slate-950 border-white/10 text-white rounded-xl">
                                     {syntheticIndices.map(m => (
-                                        <SelectItem key={m.id} value={m.id} className="font-bold text-xs">{m.name}</SelectItem>
+                                        <SelectItem key={m.id} value={m.id} className="font-bold text-[10px]">{m.name}</SelectItem>
                                     ))}
                                 </SelectContent>
                             </Select>
                         </div>
-                        <div className="space-y-1.5">
+                        <div className="space-y-1">
                             <Label className="text-[8px] font-black uppercase tracking-[0.3em] text-primary ml-1">STRATEGY</Label>
                             <Select value={tradeType} onValueChange={setTradeType}>
-                                <SelectTrigger className="h-9 bg-black/50 border-white/10 rounded-lg font-black text-[11px] sm:text-xs">
+                                <SelectTrigger className="h-8 bg-black/50 border-white/10 rounded-lg font-black text-[10px]">
                                     <SelectValue placeholder="Select Type" />
                                 </SelectTrigger>
                                 <SelectContent className="bg-slate-950 border-white/10 text-white rounded-xl">
-                                    <SelectItem value="over-under" className="font-bold text-xs">Over/Under</SelectItem>
-                                    <SelectItem value="even-odd" className="font-bold text-xs">Even/Odd</SelectItem>
-                                    <SelectItem value="matches-differs" className="font-bold text-xs">Matches/Differs</SelectItem>
-                                    <SelectItem value="rise-fall" className="font-bold text-xs">Rise/Fall</SelectItem>
+                                    <SelectItem value="over-under" className="font-bold text-[10px]">Over/Under</SelectItem>
+                                    <SelectItem value="even-odd" className="font-bold text-[10px]">Even/Odd</SelectItem>
+                                    <SelectItem value="matches-differs" className="font-bold text-[10px]">Matches/Differs</SelectItem>
+                                    <SelectItem value="rise-fall" className="font-bold text-[10px]">Rise/Fall</SelectItem>
                                 </SelectContent>
                             </Select>
                         </div>
@@ -198,65 +198,65 @@ export function AnalyzerView({
                 </CardContent>
             </Card>
 
-            {/* Combined Analysis HUD */}
-            <Card className="border-none bg-slate-950/90 backdrop-blur-3xl rounded-xl sm:rounded-[2rem] border border-white/5 shadow-2xl overflow-hidden relative">
-                <div className="absolute top-0 left-0 w-full h-[2px] bg-gradient-to-r from-primary/40 via-cyan-400/40 to-primary/40" />
-                <CardContent className="p-4 sm:p-6 space-y-4">
-                    <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 items-start">
+            {/* Consistently Consolidated Analysis HUD - Amplified */}
+            <Card className="border-none bg-slate-950/95 backdrop-blur-3xl rounded-xl sm:rounded-[2rem] border border-white/10 shadow-2xl overflow-hidden relative">
+                <div className="absolute top-0 left-0 w-full h-[2px] bg-gradient-to-r from-primary via-cyan-400 to-primary" />
+                <CardContent className="p-5 sm:p-8 space-y-6">
+                    <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-center">
                         {/* Column 1: HUD Title & Badges */}
-                        <div className="text-center lg:text-left space-y-2">
+                        <div className="lg:col-span-3 text-center lg:text-left space-y-3">
                             <div className="flex items-center gap-2 justify-center lg:justify-start">
-                                <Crosshair className="h-4 w-4 text-primary" />
-                                <h3 className="text-sm font-black text-white tracking-tight uppercase">ANALYSIS HUD</h3>
+                                <Crosshair className="h-5 w-5 text-primary" />
+                                <h3 className="text-lg font-black text-white tracking-tight uppercase">ANALYSIS HUD</h3>
                             </div>
-                            <div className="flex flex-wrap justify-center lg:justify-start gap-1.5">
-                                <Badge className="bg-primary/20 text-primary border-none font-black tracking-widest text-[7px] px-2 py-0.5 uppercase">{stats.label1} vs {stats.label2}</Badge>
-                                <Badge className="bg-blue-500/10 text-blue-400 border-none font-black tracking-widest text-[7px] px-2 py-0.5 uppercase">TARGET: {selectedDigit}</Badge>
+                            <div className="flex flex-wrap justify-center lg:justify-start gap-2">
+                                <Badge className="bg-primary/20 text-primary border-none font-black tracking-widest text-[8px] px-2.5 py-1 uppercase">{stats.label1} vs {stats.label2}</Badge>
+                                <Badge className="bg-blue-500/10 text-blue-400 border-none font-black tracking-widest text-[8px] px-2.5 py-1 uppercase">TARGET: {selectedDigit}</Badge>
                             </div>
                         </div>
                         
-                        {/* Column 2: Stability Progress Bars */}
-                        <div className="grid grid-cols-2 gap-4 flex-1">
-                            <div className="space-y-1">
+                        {/* Column 2: Stability Progress Bars - Amplified */}
+                        <div className="lg:col-span-6 grid grid-cols-2 gap-8">
+                            <div className="space-y-2">
                                 <div className="flex justify-between items-end">
-                                    <p className="text-[7px] font-black uppercase text-emerald-400 tracking-widest">{stats.label1}</p>
-                                    <p className="text-[10px] font-black text-emerald-400 tabular-nums">{stats.val1.toFixed(1)}%</p>
+                                    <p className="text-xs font-black uppercase text-emerald-400 tracking-widest">{stats.label1}</p>
+                                    <p className="text-xl font-black text-emerald-400 tabular-nums">{stats.val1.toFixed(1)}%</p>
                                 </div>
-                                <Progress value={stats.val1} className="h-1 bg-black/60 [&>div]:bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.2)]" />
+                                <Progress value={stats.val1} className="h-2.5 bg-black/60 [&>div]:bg-emerald-500 shadow-[0_0_15px_rgba(16,185,129,0.3)]" />
                             </div>
-                            <div className="space-y-1">
+                            <div className="space-y-2">
                                 <div className="flex justify-between items-end">
-                                    <p className="text-[7px] font-black uppercase text-rose-500 tracking-widest">{stats.label2}</p>
-                                    <p className="text-[10px] font-black text-rose-500 tabular-nums">{stats.val2.toFixed(1)}%</p>
+                                    <p className="text-xs font-black uppercase text-rose-500 tracking-widest">{stats.label2}</p>
+                                    <p className="text-xl font-black text-rose-500 tabular-nums">{stats.val2.toFixed(1)}%</p>
                                 </div>
-                                <Progress value={stats.val2} className="h-1 bg-black/60 [&>div]:bg-rose-500 shadow-[0_0_8px_rgba(244,63,94,0.2)]" />
+                                <Progress value={stats.val2} className="h-2.5 bg-black/60 [&>div]:bg-rose-500 shadow-[0_0_15px_rgba(244,63,94,0.3)]" />
                             </div>
                         </div>
 
-                        {/* Column 3: Live Price & Variance */}
-                        <div className="flex gap-4 items-center justify-center lg:justify-end">
-                            <div className="text-center space-y-0.5">
-                                <p className="text-[7px] font-black text-muted-foreground uppercase tracking-widest">LIVE PRICE</p>
-                                <p className="text-sm sm:text-lg font-black text-white tabular-nums tracking-tighter">{price.toFixed(decimalPlaces)}</p>
+                        {/* Column 3: Live Price & Variance - Amplified */}
+                        <div className="lg:col-span-3 flex gap-6 items-center justify-center lg:justify-end">
+                            <div className="text-center space-y-1">
+                                <p className="text-[8px] font-black text-muted-foreground uppercase tracking-widest">LIVE PRICE</p>
+                                <p className="text-xl sm:text-2xl font-black text-white tabular-nums tracking-tighter">{price.toFixed(decimalPlaces)}</p>
                             </div>
-                            <div className="w-px h-6 bg-white/10" />
-                            <div className="text-center space-y-0.5">
-                                <p className="text-[7px] font-black text-muted-foreground uppercase tracking-widest">VARIANCE</p>
-                                <p className="text-sm sm:text-lg font-black text-emerald-400 tabular-nums tracking-tighter">{stats.delta.toFixed(1)}%</p>
+                            <div className="w-px h-10 bg-white/10" />
+                            <div className="text-center space-y-1">
+                                <p className="text-[8px] font-black text-muted-foreground uppercase tracking-widest">VARIANCE</p>
+                                <p className="text-xl sm:text-2xl font-black text-emerald-400 tabular-nums tracking-tighter">{stats.delta.toFixed(1)}%</p>
                             </div>
                         </div>
                     </div>
 
-                    {/* Summary Row */}
-                    <div className="pt-3 border-t border-white/5">
-                        <p className="text-[10px] font-medium text-white/70 leading-relaxed italic text-center lg:text-left">
-                            "Stability Engine identifies a <span className={cn("font-black px-1.5 py-0.5 rounded-md", stats.val1 > stats.val2 ? "text-emerald-400 bg-emerald-500/10" : "text-rose-500 bg-rose-500/10")}>{stats.val1 > stats.val2 ? stats.label1 : stats.label2}</span> bias. Confirmed accuracy for the current market cycle."
+                    {/* Summary Row - Amplified */}
+                    <div className="pt-5 border-t border-white/5">
+                        <p className="text-xs sm:text-sm font-medium text-white/80 leading-relaxed italic text-center lg:text-left">
+                            "SURVEILLANCE LOG: Engine identifies a <span className={cn("font-black px-2 py-0.5 rounded-md", stats.val1 > stats.val2 ? "text-emerald-400 bg-emerald-500/10" : "text-rose-500 bg-rose-500/10")}>{stats.val1 > stats.val2 ? stats.label1 : stats.label2}</span> directional bias. Confirmed stability for current tactical execution."
                         </p>
                     </div>
                 </CardContent>
             </Card>
 
-            {/* Digit Frequency Circles */}
+            {/* Digit Frequency Circles - Large and Prominent */}
             <DigitFrequencyCircles 
                 ticks={lastDigitTicks} 
                 selectedDigit={selectedDigit} 
@@ -267,7 +267,7 @@ export function AnalyzerView({
             {/* Stream Sequence */}
             <Card className="border-none shadow-lg bg-slate-900/40 border border-white/10 p-4 sm:p-6 rounded-xl sm:rounded-[2rem] overflow-hidden relative">
                 <div className="flex flex-col sm:flex-row items-center justify-between gap-2 mb-4">
-                    <h3 className="text-[8px] sm:text-[9px] font-black uppercase tracking-[0.3em] text-white">STREAM SEQUENCE</h3>
+                    <h3 className="text-[8px] font-black uppercase tracking-[0.3em] text-white">STREAM SEQUENCE</h3>
                     <div className="flex items-center gap-1.5">
                          <div className="h-1 w-1 rounded-full bg-blue-400 animate-pulse shadow-[0_0_8px_#60a5fa]" />
                          <span className="text-[7px] font-black uppercase text-blue-400 tracking-widest">ACTIVE SYNC</span>
