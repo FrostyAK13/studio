@@ -6,9 +6,9 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { syntheticIndices } from '@/lib/mock-data';
 import { cn } from '@/lib/utils';
-import { Crosshair, Zap, Activity, ShieldCheck, Flame, TrendingUp, TrendingDown, Target, Triangle, ShieldAlert, Cpu } from 'lucide-react';
+import { Crosshair, Activity } from 'lucide-react';
 import { Progress } from '@/components/ui/progress';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion } from 'framer-motion';
 import { DigitFrequencyCircles } from './correlation-view';
 
 interface AnalyzerViewProps {
@@ -61,49 +61,36 @@ export function AnalyzerView({
         let val2 = 0;
         let label1 = "ALPHA";
         let label2 = "BETA";
-        let signalLabel = "";
-        let signalActive = false;
-        let signalDirection: 'up' | 'down' | 'neutral' = 'neutral';
 
-        // Advanced Pattern Recognition logic
         switch (tradeType) {
             case 'over-under':
                 label1 = `OVER ${selectedDigit}`;
                 label2 = `UNDER ${selectedDigit}`;
                 val1 = (overCount / total) * 100;
                 val2 = (underCount / total) * 100;
-                if (val1 > 60) { signalLabel = `OVER ${selectedDigit}`; signalActive = true; signalDirection = 'up'; }
-                else if (val2 > 60) { signalLabel = `UNDER ${selectedDigit}`; signalActive = true; signalDirection = 'down'; }
                 break;
             case 'even-odd':
                 label1 = "EVEN";
                 label2 = "ODD";
                 val1 = (evenCount / total) * 100;
                 val2 = (oddCount / total) * 100;
-                if (val1 > 60) { signalLabel = "EVEN"; signalActive = true; signalDirection = 'up'; }
-                else if (val2 > 60) { signalLabel = "ODD"; signalActive = true; signalDirection = 'down'; }
                 break;
             case 'rise-fall':
                 label1 = "RISE";
                 label2 = "FALL";
                 val1 = (riseCount / rfTotal) * 100;
                 val2 = (fallCount / rfTotal) * 100;
-                if (val1 > 60) { signalLabel = "RISE"; signalActive = true; signalDirection = 'up'; }
-                else if (val2 > 60) { signalLabel = "FALL"; signalActive = true; signalDirection = 'down'; }
                 break;
             case 'matches-differs':
                 label1 = "MATCHES";
                 label2 = "DIFFERS";
                 val1 = (matchCount / total) * 100;
                 val2 = (differCount / total) * 100;
-                if (val2 > 94) { signalLabel = `DIFFERS ${selectedDigit}`; signalActive = true; signalDirection = 'neutral'; }
                 break;
         }
 
         const delta = Math.abs(val1 - val2);
         const confidence = Math.max(val1, val2);
-        
-        // Safety Index Calculation: Higher Delta + High Confidence = High Safety
         const safetyIndex = Math.min(100, (delta * 1.5) + (confidence * 0.5));
         const isStable = safetyIndex > 85;
 
@@ -113,9 +100,6 @@ export function AnalyzerView({
             label1,
             label2,
             delta,
-            signalLabel,
-            signalActive: signalActive && isStable,
-            signalDirection,
             confidence,
             safetyIndex,
             isStable,
@@ -231,7 +215,7 @@ export function AnalyzerView({
                             </div>
                             <div className="pt-2">
                                 <p className="text-[11px] font-medium text-muted-foreground leading-relaxed italic border-l-2 border-primary/30 pl-3">
-                                    "STABILITY PROTOCOL: Safety index identifies a <span className={cn("font-black px-1.5 py-0.5 rounded-md", analysis.isStable ? "text-emerald-600 bg-emerald-500/10" : "text-amber-600 bg-amber-500/10")}>{analysis.isStable ? "HIGH" : "LOW"}</span> reliability vector for manual engagement."
+                                    "STABILITY PROTOCOL: Safety index identifies a <span className={cn("font-black px-1.5 py-0.5 rounded-md", analysis.isStable ? "text-emerald-600 bg-emerald-500/10" : "text-amber-600 bg-amber-500/10")}>{analysis.isStable ? "HIGH" : "LOW"}</span> reliability vector."
                                 </p>
                             </div>
                         </div>
@@ -239,29 +223,29 @@ export function AnalyzerView({
                         <div className="lg:col-span-5 grid grid-cols-1 gap-6">
                             <div className="space-y-2">
                                 <div className="flex justify-between items-end">
-                                    <p className="text-[12px] font-black uppercase text-emerald-600 tracking-[0.2em]">{analysis.label1}</p>
-                                    <p className="text-xl font-black text-emerald-600 tabular-nums leading-none">{analysis.val1.toFixed(1)}%</p>
+                                    <p className="text-[10px] font-black uppercase text-emerald-600 tracking-[0.2em]">{analysis.label1}</p>
+                                    <p className="text-sm font-black text-emerald-600 tabular-nums leading-none">{analysis.val1.toFixed(1)}%</p>
                                 </div>
-                                <Progress value={analysis.val1} className="h-4 bg-muted/50 [&>div]:bg-emerald-500 rounded-full" />
+                                <Progress value={analysis.val1} className="h-3 bg-muted/50 [&>div]:bg-emerald-500 rounded-full" />
                             </div>
                             <div className="space-y-2">
                                 <div className="flex justify-between items-end">
-                                    <p className="text-[12px] font-black uppercase text-rose-600 tracking-[0.2em]">{analysis.label2}</p>
-                                    <p className="text-xl font-black text-rose-600 tabular-nums leading-none">{analysis.val2.toFixed(1)}%</p>
+                                    <p className="text-[10px] font-black uppercase text-rose-600 tracking-[0.2em]">{analysis.label2}</p>
+                                    <p className="text-sm font-black text-rose-600 tabular-nums leading-none">{analysis.val2.toFixed(1)}%</p>
                                 </div>
-                                <Progress value={analysis.val2} className="h-4 bg-muted/50 [&>div]:bg-rose-500 rounded-full" />
+                                <Progress value={analysis.val2} className="h-3 bg-muted/50 [&>div]:bg-rose-500 rounded-full" />
                             </div>
                         </div>
 
                         <div className="lg:col-span-3 flex gap-8 items-center justify-center lg:justify-end bg-muted/30 p-4 rounded-2xl border border-border">
                             <div className="text-center">
                                 <p className="text-[8px] font-black text-muted-foreground uppercase tracking-[0.3em] mb-1">LIVE PRICE</p>
-                                <p className="text-xl font-black text-foreground tabular-nums tracking-tighter leading-none">{price.toFixed(decimalPlaces)}</p>
+                                <p className="text-lg font-black text-foreground tabular-nums tracking-tighter leading-none">{price.toFixed(decimalPlaces)}</p>
                             </div>
                             <div className="w-px h-8 bg-border" />
                             <div className="text-center">
                                 <p className="text-[8px] font-black text-muted-foreground uppercase tracking-[0.3em] mb-1">DELTA BIAS</p>
-                                <p className="text-xl font-black text-emerald-600 tabular-nums tracking-tighter leading-none">{analysis.delta.toFixed(1)}%</p>
+                                <p className="text-lg font-black text-emerald-600 tabular-nums tracking-tighter leading-none">{analysis.delta.toFixed(1)}%</p>
                             </div>
                         </div>
                     </div>
@@ -284,79 +268,6 @@ export function AnalyzerView({
                 </div>
             </Card>
 
-            <Card className={cn(
-                "border-none rounded-[2rem] border overflow-hidden relative transition-all duration-700 shadow-2xl group",
-                analysis.signalActive ? "bg-emerald-500 dark:bg-emerald-600 shadow-emerald-500/30 border-emerald-400" : "bg-card border-border"
-            )}>
-                <CardContent className="p-6 sm:p-10">
-                    <div className="flex flex-col md:flex-row items-center justify-between gap-10">
-                        <div className="flex items-center gap-8">
-                            <div className={cn(
-                                "w-20 h-20 rounded-3xl flex items-center justify-center transition-all duration-700 shadow-inner",
-                                analysis.signalActive ? "bg-white/20 text-white animate-pulse" : "bg-muted/50 text-muted-foreground/30"
-                            )}>
-                                {analysis.signalActive ? <Zap className="h-10 w-10 fill-current" /> : <Activity className="h-10 w-10" />}
-                            </div>
-                            <div className="space-y-2">
-                                <h4 className={cn(
-                                    "text-sm font-black uppercase tracking-[0.4em] transition-colors",
-                                    analysis.signalActive ? "text-white" : "text-muted-foreground"
-                                )}>
-                                    {analysis.signalActive ? "SIGNAL DETECTED" : "SCANNING FLOW"}
-                                </h4>
-                                <div className="flex items-center gap-3">
-                                    <div className={cn("h-2.5 w-2.5 rounded-full", analysis.signalActive ? "bg-white animate-pulse shadow-[0_0_10px_white]" : "bg-muted-foreground/20")} />
-                                    <p className={cn(
-                                        "text-[10px] font-black uppercase tracking-[0.3em] transition-colors",
-                                        analysis.signalActive ? "text-white/80" : "text-muted-foreground/40"
-                                    )}>
-                                        {analysis.signalActive ? "ZERO-ERROR GATE LOCKED" : "AWAITING STABILITY THRESHOLD"}
-                                    </p>
-                                </div>
-                            </div>
-                        </div>
-
-                        {analysis.signalActive ? (
-                            <motion.div 
-                                initial={{ opacity: 0, scale: 0.9, y: 10 }}
-                                animate={{ opacity: 1, scale: 1, y: 0 }}
-                                className="flex flex-col items-center md:items-end text-white text-center md:text-right"
-                            >
-                                <p className="text-[10px] font-black uppercase tracking-[0.5em] mb-3 text-white/60">ENTRY VECTOR</p>
-                                <div className="flex items-center gap-4">
-                                    {analysis.signalDirection === 'up' && <TrendingUp className="h-8 w-8 text-white" />}
-                                    {analysis.signalDirection === 'down' && <TrendingDown className="h-8 w-8 text-white" />}
-                                    <span className="text-5xl font-black tracking-tighter uppercase leading-none">{analysis.signalLabel}</span>
-                                    <ShieldCheck className="h-10 w-10 text-white" />
-                                </div>
-                                <div className="mt-4 flex flex-wrap justify-center md:justify-end gap-3">
-                                    <div className="flex items-center gap-3 bg-white/10 px-6 py-2 rounded-full border border-white/10">
-                                        <Target className="h-4 w-4 text-white" />
-                                        <p className="text-[10px] font-black uppercase tracking-widest leading-none">SAFETY: {analysis.safetyIndex.toFixed(0)}%</p>
-                                    </div>
-                                    <div className="flex items-center gap-3 bg-white/10 px-6 py-2 rounded-full border border-white/10">
-                                        <Cpu className="h-4 w-4 text-white" />
-                                        <p className="text-[10px] font-black uppercase tracking-widest leading-none">CONFIDENCE: {analysis.confidence.toFixed(1)}%</p>
-                                    </div>
-                                </div>
-                            </motion.div>
-                        ) : (
-                            <div className="flex flex-col items-center md:items-end opacity-20 text-center md:text-right">
-                                <p className="text-[10px] font-black uppercase tracking-[0.5em] mb-3">ENTRY VECTOR</p>
-                                <div className="flex items-center gap-4">
-                                    <span className="text-5xl font-black tracking-tighter uppercase leading-none">WAITING</span>
-                                    <Activity className="h-10 w-10" />
-                                </div>
-                                <div className="mt-4 flex items-center gap-3 bg-muted px-6 py-2 rounded-full border border-border">
-                                    <ShieldAlert className="h-4 w-4 text-muted-foreground" />
-                                    <p className="text-[10px] font-black uppercase tracking-widest leading-none">STABILITY: {analysis.safetyIndex.toFixed(0)}%</p>
-                                </div>
-                            </div>
-                        )}
-                    </div>
-                </CardContent>
-            </Card>
-
             <DigitFrequencyCircles 
                 ticks={lastDigitTicks} 
                 selectedDigit={selectedDigit} 
@@ -366,4 +277,3 @@ export function AnalyzerView({
         </div>
     );
 }
-
