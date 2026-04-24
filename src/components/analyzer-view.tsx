@@ -1,4 +1,3 @@
-
 'use client';
 
 import * as React from 'react';
@@ -7,9 +6,8 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { syntheticIndices } from '@/lib/mock-data';
 import { cn } from '@/lib/utils';
-import { Crosshair, Zap, Activity, ShieldCheck, Flame, TrendingUp, TrendingDown, Target, Triangle } from 'lucide-react';
+import { Crosshair, Zap, Activity, ShieldCheck, Flame, TrendingUp, TrendingDown, Target, Triangle, ShieldAlert, Cpu } from 'lucide-react';
 import { Progress } from '@/components/ui/progress';
-import { Badge } from '@/components/ui/badge';
 import { motion, AnimatePresence } from 'framer-motion';
 import { DigitFrequencyCircles } from './correlation-view';
 
@@ -67,6 +65,7 @@ export function AnalyzerView({
         let signalActive = false;
         let signalDirection: 'up' | 'down' | 'neutral' = 'neutral';
 
+        // Advanced Pattern Recognition logic
         switch (tradeType) {
             case 'over-under':
                 label1 = `OVER ${selectedDigit}`;
@@ -101,18 +100,25 @@ export function AnalyzerView({
                 break;
         }
 
+        const delta = Math.abs(val1 - val2);
         const confidence = Math.max(val1, val2);
+        
+        // Safety Index Calculation: Higher Delta + High Confidence = High Safety
+        const safetyIndex = Math.min(100, (delta * 1.5) + (confidence * 0.5));
+        const isStable = safetyIndex > 85;
 
         return {
             val1,
             val2,
             label1,
             label2,
-            delta: Math.abs(val1 - val2),
+            delta,
             signalLabel,
-            signalActive,
+            signalActive: signalActive && isStable,
             signalDirection,
             confidence,
+            safetyIndex,
+            isStable,
             summary: `${label1} [${val1.toFixed(1)}%] VS ${label2} [${val2.toFixed(1)}%]`
         };
     }, [lastDigitTicks, priceHistory, selectedDigit, tradeType]);
@@ -225,7 +231,7 @@ export function AnalyzerView({
                             </div>
                             <div className="pt-2">
                                 <p className="text-[11px] font-medium text-muted-foreground leading-relaxed italic border-l-2 border-primary/30 pl-3">
-                                    "SURVEILLANCE LOG: Stability engine identifies a <span className={cn("font-black px-1.5 py-0.5 rounded-md", analysis.val1 > analysis.val2 ? "text-emerald-600 bg-emerald-500/10" : "text-rose-600 bg-rose-500/10")}>{analysis.val1 > analysis.val2 ? analysis.label1 : analysis.label2}</span> directional bias for current execution."
+                                    "STABILITY PROTOCOL: Safety index identifies a <span className={cn("font-black px-1.5 py-0.5 rounded-md", analysis.isStable ? "text-emerald-600 bg-emerald-500/10" : "text-amber-600 bg-amber-500/10")}>{analysis.isStable ? "HIGH" : "LOW"}</span> reliability vector for manual engagement."
                                 </p>
                             </div>
                         </div>
@@ -233,17 +239,17 @@ export function AnalyzerView({
                         <div className="lg:col-span-5 grid grid-cols-1 gap-6">
                             <div className="space-y-2">
                                 <div className="flex justify-between items-end">
-                                    <p className="text-[10px] font-black uppercase text-emerald-600 tracking-[0.2em]">{analysis.label1}</p>
-                                    <p className="text-2xl font-black text-emerald-600 tabular-nums leading-none">{analysis.val1.toFixed(1)}%</p>
+                                    <p className="text-[12px] font-black uppercase text-emerald-600 tracking-[0.2em]">{analysis.label1}</p>
+                                    <p className="text-xl font-black text-emerald-600 tabular-nums leading-none">{analysis.val1.toFixed(1)}%</p>
                                 </div>
-                                <Progress value={analysis.val1} className="h-3 bg-muted/50 [&>div]:bg-emerald-500 rounded-full" />
+                                <Progress value={analysis.val1} className="h-4 bg-muted/50 [&>div]:bg-emerald-500 rounded-full" />
                             </div>
                             <div className="space-y-2">
                                 <div className="flex justify-between items-end">
-                                    <p className="text-[10px] font-black uppercase text-rose-600 tracking-[0.2em]">{analysis.label2}</p>
-                                    <p className="text-2xl font-black text-rose-600 tabular-nums leading-none">{analysis.val2.toFixed(1)}%</p>
+                                    <p className="text-[12px] font-black uppercase text-rose-600 tracking-[0.2em]">{analysis.label2}</p>
+                                    <p className="text-xl font-black text-rose-600 tabular-nums leading-none">{analysis.val2.toFixed(1)}%</p>
                                 </div>
-                                <Progress value={analysis.val2} className="h-3 bg-muted/50 [&>div]:bg-rose-500 rounded-full" />
+                                <Progress value={analysis.val2} className="h-4 bg-muted/50 [&>div]:bg-rose-500 rounded-full" />
                             </div>
                         </div>
 
@@ -254,12 +260,28 @@ export function AnalyzerView({
                             </div>
                             <div className="w-px h-8 bg-border" />
                             <div className="text-center">
-                                <p className="text-[8px] font-black text-muted-foreground uppercase tracking-[0.3em] mb-1">VARIANCE</p>
+                                <p className="text-[8px] font-black text-muted-foreground uppercase tracking-[0.3em] mb-1">DELTA BIAS</p>
                                 <p className="text-xl font-black text-emerald-600 tabular-nums tracking-tighter leading-none">{analysis.delta.toFixed(1)}%</p>
                             </div>
                         </div>
                     </div>
                 </CardContent>
+            </Card>
+
+            <Card className="border-none shadow-sm bg-muted/20 border border-border p-6 rounded-[2rem] overflow-hidden relative">
+                <div className="flex flex-col sm:flex-row items-center justify-between gap-4 mb-6">
+                    <div className="flex items-center gap-3">
+                        <div className="w-1.5 h-1.5 rounded-full bg-primary animate-pulse shadow-[0_0_8px_hsl(var(--primary))]" />
+                        <h3 className="text-[10px] font-black uppercase tracking-[0.4em] text-foreground">STREAM SEQUENCE</h3>
+                    </div>
+                    <div className="flex items-center gap-2 px-4 py-1.5 bg-card rounded-full border border-border shadow-sm">
+                         <div className="h-2 w-2 rounded-full bg-blue-500 animate-pulse" />
+                         <span className="text-[9px] font-black uppercase text-blue-500 tracking-widest">ACTIVE SYNC</span>
+                    </div>
+                </div>
+                <div className="flex flex-wrap justify-center gap-2.5 sm:gap-3">
+                    {renderPattern()}
+                </div>
             </Card>
 
             <Card className={cn(
@@ -288,7 +310,7 @@ export function AnalyzerView({
                                         "text-[10px] font-black uppercase tracking-[0.3em] transition-colors",
                                         analysis.signalActive ? "text-white/80" : "text-muted-foreground/40"
                                     )}>
-                                        {analysis.signalActive ? "STABILITY GATE LOCKED" : "AWAITING ZERO-ERROR VECTOR"}
+                                        {analysis.signalActive ? "ZERO-ERROR GATE LOCKED" : "AWAITING STABILITY THRESHOLD"}
                                     </p>
                                 </div>
                             </div>
@@ -307,9 +329,15 @@ export function AnalyzerView({
                                     <span className="text-5xl font-black tracking-tighter uppercase leading-none">{analysis.signalLabel}</span>
                                     <ShieldCheck className="h-10 w-10 text-white" />
                                 </div>
-                                <div className="mt-4 flex items-center gap-3 bg-white/10 px-6 py-2 rounded-full border border-white/10">
-                                    <Target className="h-4 w-4 text-white" />
-                                    <p className="text-xs font-black uppercase tracking-widest leading-none">CONFIDENCE: {analysis.confidence.toFixed(1)}%</p>
+                                <div className="mt-4 flex flex-wrap justify-center md:justify-end gap-3">
+                                    <div className="flex items-center gap-3 bg-white/10 px-6 py-2 rounded-full border border-white/10">
+                                        <Target className="h-4 w-4 text-white" />
+                                        <p className="text-[10px] font-black uppercase tracking-widest leading-none">SAFETY: {analysis.safetyIndex.toFixed(0)}%</p>
+                                    </div>
+                                    <div className="flex items-center gap-3 bg-white/10 px-6 py-2 rounded-full border border-white/10">
+                                        <Cpu className="h-4 w-4 text-white" />
+                                        <p className="text-[10px] font-black uppercase tracking-widest leading-none">CONFIDENCE: {analysis.confidence.toFixed(1)}%</p>
+                                    </div>
                                 </div>
                             </motion.div>
                         ) : (
@@ -319,27 +347,14 @@ export function AnalyzerView({
                                     <span className="text-5xl font-black tracking-tighter uppercase leading-none">WAITING</span>
                                     <Activity className="h-10 w-10" />
                                 </div>
-                                <p className="text-[10px] font-black uppercase tracking-widest mt-4">MONITORING RECURSION</p>
+                                <div className="mt-4 flex items-center gap-3 bg-muted px-6 py-2 rounded-full border border-border">
+                                    <ShieldAlert className="h-4 w-4 text-muted-foreground" />
+                                    <p className="text-[10px] font-black uppercase tracking-widest leading-none">STABILITY: {analysis.safetyIndex.toFixed(0)}%</p>
+                                </div>
                             </div>
                         )}
                     </div>
                 </CardContent>
-            </Card>
-
-            <Card className="border-none shadow-sm bg-muted/20 border border-border p-6 rounded-[2rem] overflow-hidden relative">
-                <div className="flex flex-col sm:flex-row items-center justify-between gap-4 mb-6">
-                    <div className="flex items-center gap-3">
-                        <div className="w-1.5 h-1.5 rounded-full bg-primary animate-pulse shadow-[0_0_8px_hsl(var(--primary))]" />
-                        <h3 className="text-[10px] font-black uppercase tracking-[0.4em] text-foreground">STREAM SEQUENCE</h3>
-                    </div>
-                    <div className="flex items-center gap-2 px-4 py-1.5 bg-card rounded-full border border-border shadow-sm">
-                         <div className="h-2 w-2 rounded-full bg-blue-500 animate-pulse" />
-                         <span className="text-[9px] font-black uppercase text-blue-500 tracking-widest">ACTIVE SYNC</span>
-                    </div>
-                </div>
-                <div className="flex flex-wrap justify-center gap-2.5 sm:gap-3">
-                    {renderPattern()}
-                </div>
             </Card>
 
             <DigitFrequencyCircles 
@@ -351,3 +366,4 @@ export function AnalyzerView({
         </div>
     );
 }
+
