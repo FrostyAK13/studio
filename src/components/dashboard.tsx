@@ -7,7 +7,6 @@ import { AnalyzerView } from './analyzer-view';
 import { syntheticIndices } from '@/lib/mock-data';
 import { DigitFrequencyView } from './digit-frequency-view';
 import { InsightView } from './insight-view';
-import { CorrelationView } from './correlation-view';
 import { GlobalMarketScanner } from './global-market-scanner';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
@@ -218,7 +217,7 @@ export function Dashboard() {
             <main className="flex-1 flex flex-col max-w-[1600px] mx-auto w-full relative p-2 sm:p-4">
                 <Tabs defaultValue="analyzer" className="w-full">
                     <TabsList className="flex items-center justify-start md:justify-center gap-1.5 bg-transparent h-auto p-0 mb-4 overflow-x-auto no-scrollbar w-full">
-                        {['analyzer', 'global-scan', 'scanner', 'frequency', 'insight', 'circles'].map((tab) => (
+                        {['analyzer', 'global-scan', 'scanner', 'frequency', 'insight'].map((tab) => (
                             <TabsTrigger key={tab} value={tab} className="flex-shrink-0 px-3.5 py-2 rounded-full border border-transparent data-[state=active]:bg-primary/10 data-[state=active]:text-primary text-muted-foreground font-black text-[8px] uppercase tracking-widest transition-all">
                                 {tab.toUpperCase().replace('-', ' ')}
                             </TabsTrigger>
@@ -229,7 +228,6 @@ export function Dashboard() {
                     <TabsContent value="scanner" className="mt-0 outline-none"><ScannerView price={price} lastDigitTicks={analyzedDigits} priceHistory={analyzedPrices} maxTicks={maxTicks} handleMaxTicksChange={handleMaxTicksChange} handleMaxTicksBlur={handleMaxTicksBlur} selectedMarket={selectedMarket} onMarketChange={setSelectedMarket} decimalPlaces={decimalPlaces} /></TabsContent>
                     <TabsContent value="frequency" className="mt-0 outline-none"><DigitFrequencyView price={price} lastDigitTicks={analyzedDigits} priceHistory={analyzedPrices} maxTicks={maxTicks} handleMaxTicksChange={handleMaxTicksChange} handleMaxTicksBlur={handleMaxTicksBlur} selectedMarket={selectedMarket} onMarketChange={setSelectedMarket} decimalPlaces={decimalPlaces} /></TabsContent>
                     <TabsContent value="insight" className="mt-0 outline-none"><InsightView price={price} decimalPlaces={decimalPlaces} lastDigitTicks={analyzedDigits} priceHistory={analyzedPrices} selectedMarket={selectedMarket} onMarketChange={setSelectedMarket} maxTicks={maxTicks} /></TabsContent>
-                    <TabsContent value="circles" className="mt-0 outline-none"><CorrelationView selectedMarket={selectedMarket} onMarketChange={setSelectedMarket} lastDigitTicks={analyzedDigits} price={price} decimalPlaces={decimalPlaces} /></TabsContent>
                 </Tabs>
             </main>
         </div>

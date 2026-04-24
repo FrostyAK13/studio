@@ -70,8 +70,8 @@ const TacticalHeatMap = ({ ticks }: { ticks: number[] }) => {
             <div className="space-y-3">
                 <div className="flex items-center justify-between mb-2 px-3">
                     <div className="flex items-center gap-1.5">
-                        <TrendingUp className="h-4 w-4 text-emerald-600" />
-                        <h4 className="text-[9px] font-black uppercase tracking-[0.3em] text-emerald-600">HIGH FREQUENCY</h4>
+                        <TrendingUp className="h-3 w-3 text-emerald-600" />
+                        <h4 className="text-[8px] font-black uppercase tracking-[0.3em] text-emerald-600">HIGH FREQUENCY</h4>
                     </div>
                 </div>
                 <div className="grid grid-cols-4 gap-2">
@@ -84,7 +84,7 @@ const TacticalHeatMap = ({ ticks }: { ticks: number[] }) => {
                                 animate={{ scale: 1, opacity: 1 }}
                                 transition={{ delay: idx * 0.1 }}
                                 className={cn(
-                                    "h-20 sm:h-28 rounded-2xl flex flex-col items-center justify-center border transition-all duration-300 relative overflow-hidden",
+                                    "h-16 sm:h-24 rounded-2xl flex flex-col items-center justify-center border transition-all duration-300 relative overflow-hidden",
                                     GreenLevels[idx],
                                     isLive ? "ring-2 ring-blue-500 ring-offset-2 ring-offset-background z-20 shadow-lg" : ""
                                 )}
@@ -95,18 +95,18 @@ const TacticalHeatMap = ({ ticks }: { ticks: number[] }) => {
                                             initial={{ opacity: 0, y: 5 }}
                                             animate={{ opacity: 1, y: 0 }}
                                             exit={{ opacity: 0 }}
-                                            className="absolute top-1.5 flex items-center gap-1"
+                                            className="absolute top-1 flex items-center gap-1"
                                         >
                                             <div className="h-1 w-1 rounded-full bg-blue-500 animate-ping" />
-                                            <span className="text-[7px] font-black text-blue-500 uppercase tracking-widest">LIVE</span>
+                                            <span className="text-[6px] font-black text-blue-500 uppercase tracking-widest">LIVE</span>
                                         </motion.div>
                                     )}
                                 </AnimatePresence>
                                 <span className={cn(
-                                    "text-2xl sm:text-4xl font-black tabular-nums leading-none mb-0.5 transition-all",
+                                    "text-xl sm:text-3xl font-black tabular-nums leading-none mb-0.5 transition-all",
                                     isLive ? "scale-110" : ""
                                 )}>{item.digit}</span>
-                                <span className="text-[7px] sm:text-[10px] font-black uppercase tracking-widest opacity-80">{item.percentage.toFixed(1)}%</span>
+                                <span className="text-[6px] sm:text-[9px] font-black uppercase tracking-widest opacity-80">{item.percentage.toFixed(1)}%</span>
                             </motion.div>
                         );
                     })}
@@ -116,8 +116,8 @@ const TacticalHeatMap = ({ ticks }: { ticks: number[] }) => {
             <div className="space-y-3">
                 <div className="flex items-center justify-between mb-2 px-3">
                     <div className="flex items-center gap-1.5">
-                        <TrendingDown className="h-4 w-4 text-rose-600" />
-                        <h4 className="text-[9px] font-black uppercase tracking-[0.3em] text-rose-600">LOW FREQUENCY</h4>
+                        <TrendingDown className="h-3 w-3 text-rose-600" />
+                        <h4 className="text-[8px] font-black uppercase tracking-[0.3em] text-rose-600">LOW FREQUENCY</h4>
                     </div>
                 </div>
                 <div className="grid grid-cols-4 gap-2">
@@ -130,7 +130,7 @@ const TacticalHeatMap = ({ ticks }: { ticks: number[] }) => {
                                 animate={{ scale: 1, opacity: 1 }}
                                 transition={{ delay: idx * 0.1 }}
                                 className={cn(
-                                    "h-20 sm:h-28 rounded-2xl flex flex-col items-center justify-center border transition-all duration-300 relative overflow-hidden",
+                                    "h-16 sm:h-24 rounded-2xl flex flex-col items-center justify-center border transition-all duration-300 relative overflow-hidden",
                                     RedLevels[idx],
                                     isLive ? "ring-2 ring-blue-500 ring-offset-2 ring-offset-background z-20 shadow-lg" : ""
                                 )}
@@ -141,18 +141,18 @@ const TacticalHeatMap = ({ ticks }: { ticks: number[] }) => {
                                             initial={{ opacity: 0, y: 5 }}
                                             animate={{ opacity: 1, y: 0 }}
                                             exit={{ opacity: 0 }}
-                                            className="absolute top-1.5 flex items-center gap-1"
+                                            className="absolute top-1 flex items-center gap-1"
                                         >
                                             <div className="h-1 w-1 rounded-full bg-blue-500 animate-ping" />
-                                            <span className="text-[7px] font-black text-blue-500 uppercase tracking-widest">LIVE</span>
+                                            <span className="text-[6px] font-black text-blue-500 uppercase tracking-widest">LIVE</span>
                                         </motion.div>
                                     )}
                                 </AnimatePresence>
                                 <span className={cn(
-                                    "text-2xl sm:text-4xl font-black tabular-nums leading-none mb-0.5 transition-all",
+                                    "text-xl sm:text-3xl font-black tabular-nums leading-none mb-0.5 transition-all",
                                     isLive ? "scale-110" : ""
                                 )}>{item.digit}</span>
-                                <span className="text-[7px] sm:text-[10px] font-black uppercase tracking-widest opacity-80">{item.percentage.toFixed(1)}%</span>
+                                <span className="text-[6px] sm:text-[9px] font-black uppercase tracking-widest opacity-80">{item.percentage.toFixed(1)}%</span>
                             </motion.div>
                         );
                     })}
@@ -184,74 +184,66 @@ export function ScannerView({
     }, [lastDigitTicks]);
 
     return (
-        <div className="space-y-6 animate-in fade-in slide-in-from-bottom-8 duration-1000">
-            <div className="grid grid-cols-1 xl:grid-cols-4 gap-4 sm:gap-6">
-                <Card className="xl:col-span-3 border-none shadow-sm bg-card overflow-hidden relative rounded-2xl border border-border">
-                    <div className="absolute top-0 left-0 w-full h-[2px] bg-gradient-to-r from-transparent via-primary/50 to-transparent" />
-                    <CardContent className="p-5 sm:p-10 grid grid-cols-1 md:grid-cols-3 gap-5 sm:gap-10 items-end">
-                        <div className="space-y-3">
-                            <Label className="text-[9px] font-black uppercase tracking-[0.2em] text-primary ml-2">MARKET VECTOR SELECT</Label>
+        <div className="space-y-4 animate-in fade-in slide-in-from-bottom-8 duration-1000">
+            <div className="grid grid-cols-1 xl:grid-cols-4 gap-4">
+                <Card className="xl:col-span-3 border-none shadow-sm bg-card overflow-hidden relative rounded-xl border border-border">
+                    <CardContent className="p-4 grid grid-cols-1 md:grid-cols-3 gap-4 items-end">
+                        <div className="space-y-2">
+                            <Label className="text-[8px] font-black uppercase tracking-[0.3em] text-primary ml-1">MARKET VECTOR</Label>
                             <Select value={selectedMarket} onValueChange={onMarketChange}>
-                                <SelectTrigger className="h-12 bg-muted/50 border-border rounded-xl font-black text-xs px-5">
+                                <SelectTrigger className="h-8 bg-muted/50 border-border rounded-lg font-black text-[10px] px-4">
                                     <SelectValue placeholder="Select Index" />
                                 </SelectTrigger>
                                 <SelectContent className="bg-card border-border text-foreground">
                                     {syntheticIndices.map((index) => (
-                                    <SelectItem key={index.id} value={index.id} className="focus:bg-primary/10 font-black text-xs">
+                                    <SelectItem key={index.id} value={index.id} className="font-black text-[10px]">
                                         {index.name}
                                     </SelectItem>
                                     ))}
                                 </SelectContent>
                             </Select>
                         </div>
-                        <div className="space-y-3">
-                            <Label className="text-[9px] font-black uppercase tracking-[0.2em] text-primary ml-2">DATA HORIZON (TICKS)</Label>
-                            <div className="relative group">
-                                <Input
-                                    type="number"
-                                    min="1"
-                                    max="5000"
-                                    value={maxTicks === 0 ? '' : maxTicks}
-                                    onChange={handleMaxTicksChange}
-                                    onBlur={handleMaxTicksBlur}
-                                    className="h-12 bg-muted/50 border-border rounded-xl font-black text-lg text-primary text-center relative z-10"
-                                />
-                                <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none opacity-20 z-20"><Activity size={20} /></div>
-                            </div>
+                        <div className="space-y-2">
+                            <Label className="text-[8px] font-black uppercase tracking-[0.3em] text-primary ml-1">DATA HORIZON</Label>
+                            <Input
+                                type="number"
+                                min="1"
+                                max="5000"
+                                value={maxTicks === 0 ? '' : maxTicks}
+                                onChange={handleMaxTicksChange}
+                                onBlur={handleMaxTicksBlur}
+                                className="h-8 bg-muted/50 border-border rounded-lg font-black text-xs text-primary text-center"
+                            />
                         </div>
-                        <div className="space-y-3">
-                            <Label className="text-[9px] font-black uppercase tracking-[0.2em] text-primary ml-2">LIVE PIVOT PRICE</Label>
-                            <div className="h-12 bg-primary text-primary-foreground rounded-xl flex items-center justify-center shadow-md px-5 border border-white/10 relative overflow-hidden group">
-                                <span className="text-lg font-black tabular-nums drop-shadow-sm relative">{price.toFixed(decimalPlaces)}</span>
+                        <div className="space-y-2">
+                            <Label className="text-[8px] font-black uppercase tracking-[0.3em] text-primary ml-1">LIVE PRICE</Label>
+                            <div className="h-8 bg-primary text-primary-foreground rounded-lg flex items-center justify-center shadow-md px-4 border border-white/10 overflow-hidden">
+                                <span className="text-xs font-black tabular-nums">{price.toFixed(decimalPlaces)}</span>
                             </div>
                         </div>
                     </CardContent>
                 </Card>
 
-                <Card className="border-none shadow-sm bg-card rounded-2xl p-5 sm:p-8 flex flex-col justify-between border border-border relative overflow-hidden">
-                    <div className="absolute top-0 right-0 p-3 opacity-10"><Radio size={36} className="text-primary" /></div>
+                <Card className="border-none shadow-sm bg-card rounded-xl p-4 flex flex-col justify-between border border-border relative overflow-hidden">
+                    <div className="absolute top-0 right-0 p-2 opacity-10"><Radio size={24} className="text-primary" /></div>
                     <div>
-                        <p className="text-[9px] font-black uppercase tracking-[0.2em] text-primary mb-3">MARKET BIAS</p>
-                        <div className="flex items-end gap-1.5">
-                            <span className="text-3xl sm:text-5xl font-black text-foreground tracking-tighter tabular-nums">{globalBias.toFixed(0)}</span>
-                        </div>
+                        <p className="text-[8px] font-black uppercase tracking-[0.3em] text-primary mb-2">MARKET BIAS</p>
+                        <span className="text-2xl font-black text-foreground tracking-tighter tabular-nums">{globalBias.toFixed(0)}</span>
                     </div>
-                    <div className="space-y-2 mt-4 sm:mt-0">
-                        <div className="flex justify-between text-[7px] font-black uppercase tracking-widest text-muted-foreground">
-                            <span>BEARISH SKEW</span>
-                            <span>BULLISH SKEW</span>
+                    <div className="space-y-1 mt-2">
+                        <div className="flex justify-between text-[6px] font-black uppercase tracking-widest text-muted-foreground">
+                            <span>BEARISH</span>
+                            <span>BULLISH</span>
                         </div>
-                        <Progress value={globalBias} className="h-2.5 bg-muted [&>div]:bg-gradient-to-r [&>div]:from-rose-500 [&>div]:via-primary [&>div]:to-emerald-500 shadow-sm" />
+                        <Progress value={globalBias} className="h-1.5 bg-muted [&>div]:bg-gradient-to-r [&>div]:from-rose-500 [&>div]:via-primary [&>div]:to-emerald-500 shadow-sm" />
                     </div>
                 </Card>
             </div>
 
-            <div className="space-y-6 pb-32">
-                <div className="flex items-center gap-3 px-4 sm:px-8">
-                    <div className="h-6 w-1 bg-primary rounded-full shadow-sm" />
-                    <div>
-                        <h2 className="text-sm sm:text-xl font-black uppercase tracking-[0.2em] text-foreground leading-tight">ACTIVE SURVEILLANCE</h2>
-                    </div>
+            <div className="space-y-4 pb-24">
+                <div className="flex items-center gap-2 px-2">
+                    <Activity className="h-4 w-4 text-primary" />
+                    <h2 className="text-[8px] font-black uppercase tracking-[0.4em] text-foreground">ACTIVE SURVEILLANCE</h2>
                 </div>
 
                 <DigitFrequencyCircles 
@@ -261,7 +253,7 @@ export function ScannerView({
                     selectedMarket={selectedMarket}
                 />
 
-                <div className="px-2 sm:px-8">
+                <div className="px-1">
                     <TacticalHeatMap ticks={lastDigitTicks} />
                 </div>
             </div>
