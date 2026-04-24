@@ -1,3 +1,4 @@
+
 'use client';
 
 import * as React from 'react';
@@ -10,13 +11,15 @@ import { InsightView } from './insight-view';
 import { GlobalMarketScanner } from './global-market-scanner';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
-import { RefreshCw, Radio, Activity, Moon, Sun, ExternalLink } from 'lucide-react';
-import { motion } from 'framer-motion';
+import { RefreshCw, Radio, Activity, Moon, Sun, ExternalLink, Lock } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { LockScreen } from './lock-screen';
 
 type EngineStatus = 'offline' | 'active';
 
 export function Dashboard() {
     const [mounted, setMounted] = React.useState(false);
+    const [isLocked, setIsLocked] = React.useState(true);
     const [theme, setTheme] = React.useState<'light' | 'dark'>('light');
     const [price, setPrice] = React.useState(0);
     const [lastDigitTicks, setLastDigitTicks] = React.useState<number[]>([]);
@@ -44,7 +47,15 @@ export function Dashboard() {
 
         const savedTicks = localStorage.getItem('maxTicks');
         if (savedTicks) setMaxTicks(parseInt(savedTicks, 10));
+
+        const authState = localStorage.getItem('frosty_auth');
+        if (authState === 'true') setIsLocked(false);
     }, []);
+
+    const handleUnlock = () => {
+        setIsLocked(false);
+        localStorage.setItem('frosty_auth', 'true');
+    };
 
     // Theme Persistence
     React.useEffect(() => {
@@ -62,7 +73,7 @@ export function Dashboard() {
     }, [selectedMarket, maxTicks, mounted]);
 
     React.useEffect(() => {
-        if (!mounted) return;
+        if (!mounted || isLocked) return;
 
         const ws = new WebSocket('wss://ws.derivws.com/websockets/v3?app_id=84799');
         setWsInstance(ws);
@@ -153,7 +164,7 @@ export function Dashboard() {
         ws.onerror = () => { setSurveillanceStatus('offline'); };
 
         return () => { if(ws && ws.readyState === WebSocket.OPEN) ws.close(); };
-    }, [mounted]);
+    }, [mounted, isLocked]);
 
     React.useEffect(() => {
         if (!wsInstance || wsInstance.readyState !== WebSocket.OPEN) return;
@@ -180,143 +191,152 @@ export function Dashboard() {
 
     return (
         <div className="flex min-h-screen w-full flex-col bg-background font-sans overflow-x-hidden transition-colors duration-500">
-            <header className="sticky top-0 z-[100] flex h-[4.5rem] items-center border-b bg-background/95 backdrop-blur-xl px-4 shadow-sm">
-                <div className="flex w-full items-center justify-between max-w-[1600px] mx-auto">
-                    <div className="flex items-center gap-3 shrink-0">
-                        <Button 
-                            variant="outline" 
-                            onClick={() => window.location.reload()} 
-                            className="h-10 w-10 rounded-full border-border bg-card hover:bg-muted flex items-center justify-center shadow-lg group active:scale-90 transition-all duration-300 overflow-hidden"
-                        >
-                            <motion.div
-                                whileHover={{ rotate: 360, scale: 1.2 }}
-                                transition={{ type: "spring", stiffness: 260, damping: 20 }}
-                            >
-                                <RefreshCw className="h-5 w-5 text-foreground" />
-                            </motion.div>
-                        </Button>
-                        <div className="relative group">
-                            <motion.div 
-                                className="absolute -inset-1 bg-gradient-to-r from-primary via-cyan-500 to-primary rounded-full blur opacity-40 group-hover:opacity-100 transition duration-1000"
-                                animate={{ opacity: [0.4, 0.8, 0.4] }}
-                                transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
-                            />
-                            <a 
-                                href="https://frostytraders.com" 
-                                target="_blank" 
-                                rel="noopener noreferrer"
-                                className="relative flex items-center gap-2 bg-card px-6 py-2.5 rounded-full border border-border shadow-xl hover:bg-muted transition-all active:scale-95"
-                            >
-                                <span className="text-[10px] font-black text-foreground uppercase tracking-[0.4em]">FROSTY TRADERS</span>
-                                <ExternalLink className="h-3 w-3 text-primary" />
-                            </a>
-                        </div>
-                    </div>
-                    
-                    <div className="flex items-center gap-4 shrink-0">
-                        <div className="flex items-center bg-card border border-border rounded-full shadow-2xl h-10 px-1 overflow-hidden">
-                            <div className="flex items-center gap-3 px-5 py-2 border-r border-border">
-                                <div className={cn("h-2.5 w-2.5 rounded-full animate-pulse transition-all duration-500", surveillanceStatus === 'active' ? "bg-emerald-500 shadow-[0_0_12px_rgba(16,185,129,0.9)]" : "bg-rose-500 shadow-[0_0_12px_rgba(244,63,94,0.9)]")} />
-                                <span className="text-[10px] font-black text-foreground uppercase tracking-[0.3em]">SURVEILLANCE</span>
-                            </div>
-                            <div className="flex items-center gap-2 px-5 py-2 bg-muted/30">
-                                <Radio className={cn("h-3.5 w-3.5 transition-all duration-500", surveillanceStatus === 'active' ? 'text-emerald-500 animate-pulse' : 'text-rose-500')} />
-                                <span className="text-[10px] font-black uppercase text-foreground tracking-[0.2em]">{surveillanceStatus === 'active' ? 'LIVE' : 'OFFLINE'}</span>
-                            </div>
-                        </div>
+            <AnimatePresence>
+                {isLocked && (
+                    <LockScreen onUnlock={handleUnlock} />
+                )}
+            </AnimatePresence>
 
-                        <Button
-                            variant="ghost"
-                            size="icon"
-                            onClick={() => setTheme(theme === 'light' ? 'dark' : 'light')}
-                            className="h-10 w-10 rounded-full border border-border bg-card shadow-xl hover:bg-muted text-foreground transition-all active:scale-95"
-                        >
-                            <motion.div
-                                initial={false}
-                                animate={{ rotate: theme === 'light' ? 0 : 180 }}
-                                transition={{ type: "spring", stiffness: 200, damping: 10 }}
+            <div className={cn("flex flex-col flex-1 transition-all duration-700", isLocked ? "blur-xl scale-95 opacity-50 pointer-events-none" : "blur-0 scale-100 opacity-100")}>
+                <header className="sticky top-0 z-[100] flex h-16 md:h-[4.5rem] items-center border-b bg-background/95 backdrop-blur-xl px-4 shadow-sm">
+                    <div className="flex w-full items-center justify-between max-w-[1600px] mx-auto">
+                        <div className="flex items-center gap-2 md:gap-3 shrink-0">
+                            <Button 
+                                variant="outline" 
+                                onClick={() => window.location.reload()} 
+                                className="h-8 w-8 md:h-10 md:w-10 rounded-full border-border bg-card hover:bg-muted flex items-center justify-center shadow-lg group active:scale-90 transition-all duration-300 overflow-hidden"
                             >
-                                {theme === 'light' ? <Moon className="h-5 w-5" /> : <Sun className="h-5 w-5" />}
-                            </motion.div>
-                        </Button>
+                                <motion.div
+                                    whileTap={{ rotate: 360 }}
+                                    transition={{ type: "spring", stiffness: 260, damping: 20 }}
+                                >
+                                    <RefreshCw className="h-4 w-4 md:h-5 md:w-5 text-foreground" />
+                                </motion.div>
+                            </Button>
+                            <div className="relative group">
+                                <motion.div 
+                                    className="absolute -inset-1 bg-gradient-to-r from-primary via-cyan-500 to-primary rounded-full blur opacity-40 group-hover:opacity-100 transition duration-1000"
+                                    animate={{ opacity: [0.4, 0.8, 0.4] }}
+                                    transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
+                                />
+                                <a 
+                                    href="https://frostytraders.com" 
+                                    target="_blank" 
+                                    rel="noopener noreferrer"
+                                    className="relative flex items-center gap-1.5 md:gap-2 bg-card px-3 md:px-6 py-1.5 md:py-2.5 rounded-full border border-border shadow-xl hover:bg-muted transition-all active:scale-95"
+                                >
+                                    <span className="text-[8px] md:text-[10px] font-black text-foreground uppercase tracking-[0.2em] md:tracking-[0.4em] whitespace-nowrap">FROSTY TRADERS</span>
+                                    <ExternalLink className="h-2.5 w-2.5 md:h-3 md:w-3 text-primary" />
+                                </a>
+                            </div>
+                        </div>
+                        
+                        <div className="flex items-center gap-2 md:gap-4 shrink-0">
+                            <div className="flex items-center bg-card border border-border rounded-full shadow-2xl h-8 md:h-10 px-0.5 md:px-1 overflow-hidden">
+                                <div className="flex items-center gap-1.5 md:gap-3 px-2 md:px-5 py-1 md:py-2 border-r border-border">
+                                    <div className={cn("h-2 w-2 md:h-2.5 md:w-2.5 rounded-full animate-pulse transition-all duration-500", surveillanceStatus === 'active' ? "bg-emerald-500 shadow-[0_0_12px_rgba(16,185,129,0.9)]" : "bg-rose-500 shadow-[0_0_12px_rgba(244,63,94,0.9)]")} />
+                                    <span className="text-[7px] md:text-[10px] font-black text-foreground uppercase tracking-[0.2em] md:tracking-[0.3em] hidden sm:inline">SURVEILLANCE</span>
+                                </div>
+                                <div className="flex items-center gap-1 md:gap-2 px-2 md:px-5 py-1 md:py-2 bg-muted/30">
+                                    <Radio className={cn("h-3 w-3 md:h-3.5 md:w-3.5 transition-all duration-500", surveillanceStatus === 'active' ? 'text-emerald-500 animate-pulse' : 'text-rose-500')} />
+                                    <span className="text-[7px] md:text-[10px] font-black uppercase text-foreground tracking-[0.1em] md:tracking-[0.2em]">{surveillanceStatus === 'active' ? 'LIVE' : 'OFFLINE'}</span>
+                                </div>
+                            </div>
+
+                            <Button
+                                variant="ghost"
+                                size="icon"
+                                onClick={() => setTheme(theme === 'light' ? 'dark' : 'light')}
+                                className="h-8 w-8 md:h-10 md:w-10 rounded-full border border-border bg-card shadow-xl hover:bg-muted text-foreground transition-all active:scale-95"
+                            >
+                                <motion.div
+                                    initial={false}
+                                    animate={{ rotate: theme === 'light' ? 0 : 180 }}
+                                    transition={{ type: "spring", stiffness: 200, damping: 10 }}
+                                >
+                                    {theme === 'light' ? <Moon className="h-4 w-4 md:h-5 md:w-5" /> : <Sun className="h-4 w-4 md:h-5 md:w-5" />}
+                                </motion.div>
+                            </Button>
+                        </div>
                     </div>
-                </div>
-            </header>
-            <main className="flex-1 flex flex-col max-w-[1600px] mx-auto w-full relative p-2 sm:p-4">
-                <Tabs defaultValue="analyzer" className="w-full">
-                    <TabsList className="flex items-center justify-start md:justify-center gap-2 bg-transparent h-auto p-0 mb-6 overflow-x-auto no-scrollbar w-full pb-2">
-                        {['analyzer', 'global-scan', 'last-digit-analysis', 'frequency', 'insight'].map((tab) => (
-                            <TabsTrigger 
-                                key={tab} 
-                                value={tab} 
-                                className="flex-shrink-0 px-5 py-2.5 rounded-full border border-transparent data-[state=active]:bg-primary/10 data-[state=active]:text-primary text-muted-foreground font-black text-[10px] uppercase tracking-[0.2em] transition-all shadow-sm hover:bg-muted/50"
-                            >
-                                {tab.toUpperCase().replace(/-/g, ' ')}
-                            </TabsTrigger>
-                        ))}
-                    </TabsList>
-                    <TabsContent value="analyzer" className="mt-0 outline-none animate-in fade-in duration-500">
-                        <AnalyzerView 
-                            price={price} 
-                            lastDigitTicks={analyzedDigits} 
-                            priceHistory={analyzedPrices} 
-                            maxTicks={maxTicks} 
-                            handleMaxTicksChange={handleMaxTicksChange} 
-                            handleMaxTicksBlur={handleMaxTicksBlur} 
-                            selectedMarket={selectedMarket} 
-                            onMarketChange={setSelectedMarket} 
-                            decimalPlaces={decimalPlaces} 
-                            tickTimestamps={tickTimestamps} 
-                        />
-                    </TabsContent>
-                    <TabsContent value="global-scan" className="mt-0 outline-none animate-in fade-in duration-500">
-                        <GlobalMarketScanner 
-                            onMarketSelect={setSelectedMarket} 
-                            selectedMarket={selectedMarket}
-                            lastDigitTicks={analyzedDigits} 
-                            price={price} 
-                            decimalPlaces={decimalPlaces} 
-                        />
-                    </TabsContent>
-                    <TabsContent value="last-digit-analysis" className="mt-0 outline-none animate-in fade-in duration-500">
-                        <ScannerView 
-                            price={price} 
-                            lastDigitTicks={analyzedDigits} 
-                            priceHistory={analyzedPrices} 
-                            maxTicks={maxTicks} 
-                            handleMaxTicksChange={handleMaxTicksChange} 
-                            handleMaxTicksBlur={handleMaxTicksBlur} 
-                            selectedMarket={selectedMarket} 
-                            onMarketChange={setSelectedMarket} 
-                            decimalPlaces={decimalPlaces} 
-                        />
-                    </TabsContent>
-                    <TabsContent value="frequency" className="mt-0 outline-none animate-in fade-in duration-500">
-                        <DigitFrequencyView 
-                            price={price} 
-                            lastDigitTicks={analyzedDigits} 
-                            priceHistory={analyzedPrices} 
-                            maxTicks={maxTicks} 
-                            handleMaxTicksChange={handleMaxTicksChange} 
-                            handleMaxTicksBlur={handleMaxTicksBlur} 
-                            selectedMarket={selectedMarket} 
-                            onMarketChange={setSelectedMarket} 
-                            decimalPlaces={decimalPlaces} 
-                        />
-                    </TabsContent>
-                    <TabsContent value="insight" className="mt-0 outline-none animate-in fade-in duration-500">
-                        <InsightView 
-                            price={price} 
-                            decimalPlaces={decimalPlaces} 
-                            lastDigitTicks={analyzedDigits} 
-                            priceHistory={analyzedPrices} 
-                            selectedMarket={selectedMarket} 
-                            onMarketChange={setSelectedMarket} 
-                            maxTicks={maxTicks} 
-                        />
-                    </TabsContent>
-                </Tabs>
-            </main>
+                </header>
+                <main className="flex-1 flex flex-col max-w-[1600px] mx-auto w-full relative p-2 sm:p-4">
+                    <Tabs defaultValue="analyzer" className="w-full">
+                        <TabsList className="flex items-center justify-start md:justify-center gap-1.5 md:gap-2 bg-transparent h-auto p-0 mb-4 md:mb-6 overflow-x-auto no-scrollbar w-full pb-2">
+                            {['analyzer', 'global-scan', 'last-digit-analysis', 'frequency', 'insight'].map((tab) => (
+                                <TabsTrigger 
+                                    key={tab} 
+                                    value={tab} 
+                                    className="flex-shrink-0 px-3 md:px-5 py-2 md:py-2.5 rounded-full border border-transparent data-[state=active]:bg-primary/10 data-[state=active]:text-primary text-muted-foreground font-black text-[8px] md:text-[10px] uppercase tracking-[0.1em] md:tracking-[0.2em] transition-all shadow-sm hover:bg-muted/50"
+                                >
+                                    {tab.toUpperCase().replace(/-/g, ' ')}
+                                </TabsTrigger>
+                            ))}
+                        </TabsList>
+                        <TabsContent value="analyzer" className="mt-0 outline-none animate-in fade-in duration-500">
+                            <AnalyzerView 
+                                price={price} 
+                                lastDigitTicks={analyzedDigits} 
+                                priceHistory={analyzedPrices} 
+                                maxTicks={maxTicks} 
+                                handleMaxTicksChange={handleMaxTicksChange} 
+                                handleMaxTicksBlur={handleMaxTicksBlur} 
+                                selectedMarket={selectedMarket} 
+                                onMarketChange={setSelectedMarket} 
+                                decimalPlaces={decimalPlaces} 
+                                tickTimestamps={tickTimestamps} 
+                            />
+                        </TabsContent>
+                        <TabsContent value="global-scan" className="mt-0 outline-none animate-in fade-in duration-500">
+                            <GlobalMarketScanner 
+                                onMarketSelect={setSelectedMarket} 
+                                selectedMarket={selectedMarket}
+                                lastDigitTicks={analyzedDigits} 
+                                price={price} 
+                                decimalPlaces={decimalPlaces} 
+                            />
+                        </TabsContent>
+                        <TabsContent value="last-digit-analysis" className="mt-0 outline-none animate-in fade-in duration-500">
+                            <ScannerView 
+                                price={price} 
+                                lastDigitTicks={analyzedDigits} 
+                                priceHistory={analyzedPrices} 
+                                maxTicks={maxTicks} 
+                                handleMaxTicksChange={handleMaxTicksChange} 
+                                handleMaxTicksBlur={handleMaxTicksBlur} 
+                                selectedMarket={selectedMarket} 
+                                onMarketChange={setSelectedMarket} 
+                                decimalPlaces={decimalPlaces} 
+                            />
+                        </TabsContent>
+                        <TabsContent value="frequency" className="mt-0 outline-none animate-in fade-in duration-500">
+                            <DigitFrequencyView 
+                                price={price} 
+                                lastDigitTicks={analyzedDigits} 
+                                priceHistory={analyzedPrices} 
+                                maxTicks={maxTicks} 
+                                handleMaxTicksChange={handleMaxTicksChange} 
+                                handleMaxTicksBlur={handleMaxTicksBlur} 
+                                selectedMarket={selectedMarket} 
+                                onMarketChange={setSelectedMarket} 
+                                decimalPlaces={decimalPlaces} 
+                            />
+                        </TabsContent>
+                        <TabsContent value="insight" className="mt-0 outline-none animate-in fade-in duration-500">
+                            <InsightView 
+                                price={price} 
+                                decimalPlaces={decimalPlaces} 
+                                lastDigitTicks={analyzedDigits} 
+                                priceHistory={analyzedPrices} 
+                                selectedMarket={selectedMarket} 
+                                onMarketChange={setSelectedMarket} 
+                                maxTicks={maxTicks} 
+                            />
+                        </TabsContent>
+                    </Tabs>
+                </main>
+            </div>
         </div>
     );
 }
+
