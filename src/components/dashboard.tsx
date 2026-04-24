@@ -1,4 +1,3 @@
-
 'use client';
 
 import * as React from 'react';
@@ -10,7 +9,6 @@ import { DigitFrequencyView } from './digit-frequency-view';
 import { InsightView } from './insight-view';
 import { CorrelationView } from './correlation-view';
 import { GlobalMarketScanner } from './global-market-scanner';
-import { StrategyOverOne } from './strategy-over-one';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -213,21 +211,6 @@ export function Dashboard() {
 
     const handleMaxTicksBlur = () => { if (maxTicks < 1) setMaxTicks(1); };
 
-    const handleExecuteRealTrade = (params: any) => {
-        if (!wsInstance || !isAuthorized) return;
-        wsInstance.send(JSON.stringify({
-            "proposal": 1,
-            "amount": params.stake,
-            "barrier": params.barrier || "1",
-            "basis": "stake",
-            "contract_type": params.contract_type || "DIGITOVER",
-            "currency": currency,
-            "duration": 1, 
-            "duration_unit": "t",
-            "symbol": selectedMarket
-        }));
-    };
-
     if (!mounted) return <div className="flex min-h-screen items-center justify-center bg-white"><Activity className="h-4 w-4 animate-spin text-primary" /></div>;
 
     const analyzedDigits = lastDigitTicks.slice(0, maxTicks);
@@ -288,15 +271,14 @@ export function Dashboard() {
                 </div>
             </header>
             <main className="flex-1 flex flex-col max-w-[1600px] mx-auto w-full relative p-2 sm:p-4">
-                <Tabs defaultValue="strategy-over-one" className="w-full">
+                <Tabs defaultValue="global-scan" className="w-full">
                     <TabsList className="flex items-center justify-start md:justify-center gap-1.5 bg-transparent h-auto p-0 mb-4 overflow-x-auto no-scrollbar w-full">
-                        {['strategy-over-one', 'global-scan', 'scanner', 'analyzer', 'frequency', 'insight', 'circles'].map((tab) => (
+                        {['global-scan', 'scanner', 'analyzer', 'frequency', 'insight', 'circles'].map((tab) => (
                             <TabsTrigger key={tab} value={tab} className="flex-shrink-0 px-3.5 py-2 rounded-full border border-transparent data-[state=active]:bg-primary/10 data-[state=active]:text-primary text-muted-foreground font-black text-[8px] uppercase tracking-widest transition-all">
-                                {tab === 'strategy-over-one' ? 'OVER 1 BOT' : tab.toUpperCase().replace('-', ' ')}
+                                {tab.toUpperCase().replace('-', ' ')}
                             </TabsTrigger>
                         ))}
                     </TabsList>
-                    <TabsContent value="strategy-over-one" className="mt-0 outline-none"><StrategyOverOne price={price} lastDigitTicks={analyzedDigits} selectedMarket={selectedMarket} onMarketChange={setSelectedMarket} decimalPlaces={decimalPlaces} balance={balance} isAuthorized={isAuthorized} currency={currency} onExecuteTrade={handleExecuteRealTrade} activeContract={activeContract} surveillanceStatus={surveillanceStatus} executionStatus={executionStatus}/></TabsContent>
                     <TabsContent value="global-scan" className="mt-0 outline-none"><GlobalMarketScanner onMarketSelect={setSelectedMarket} lastDigitTicks={analyzedDigits} price={price} decimalPlaces={decimalPlaces} /></TabsContent>
                     <TabsContent value="scanner" className="mt-0 outline-none"><ScannerView price={price} lastDigitTicks={analyzedDigits} priceHistory={analyzedPrices} maxTicks={maxTicks} handleMaxTicksChange={handleMaxTicksChange} handleMaxTicksBlur={handleMaxTicksBlur} selectedMarket={selectedMarket} onMarketChange={setSelectedMarket} decimalPlaces={decimalPlaces} /></TabsContent>
                     <TabsContent value="analyzer" className="mt-0 outline-none"><AnalyzerView price={price} lastDigitTicks={analyzedDigits} priceHistory={analyzedPrices} maxTicks={maxTicks} handleMaxTicksChange={handleMaxTicksChange} handleMaxTicksBlur={handleMaxTicksBlur} selectedMarket={selectedMarket} onMarketChange={setSelectedMarket} decimalPlaces={decimalPlaces} tickTimestamps={tickTimestamps} /></TabsContent>
