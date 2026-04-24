@@ -1,7 +1,7 @@
 'use client';
 
 import * as React from 'react';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+import { Card, CardContent } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Input } from '@/components/ui/input';
@@ -9,8 +9,10 @@ import { syntheticIndices } from '@/lib/mock-data';
 import { cn } from '@/lib/utils';
 import { Badge } from '@/components/ui/badge';
 import { RiseFallAnalysis } from './rise-fall-analysis';
-import { Hash, Activity, Flame, BarChartHorizontal } from 'lucide-react';
-import { Progress } from '@/components/ui/progress';
+import { EvenOddAnalysis } from './even-odd-analysis';
+import { OverUnderAnalysis } from './over-under-analysis';
+import { MatchesDiffersAnalysis } from './matches-differs-analysis';
+import { Flame, Activity, BarChart3, Binary, Zap, Cpu } from 'lucide-react';
 
 interface DigitFrequencyViewProps {
     price: number;
@@ -72,26 +74,26 @@ const DigitHeatCard = ({ digit, ticks, isSelected, isLatest, onSelect }: {
         <div 
             onClick={() => onSelect(digit)}
             className={cn(
-                "relative group cursor-pointer transition-all duration-300 rounded-xl border p-2 flex flex-col justify-between h-20 sm:h-32 overflow-hidden",
+                "relative group cursor-pointer transition-all duration-300 rounded-xl border p-1.5 flex flex-col justify-between h-16 sm:h-24 overflow-hidden",
                 stats.bgClass,
                 isSelected ? "ring-1 ring-primary scale-105 z-20" : "hover:bg-muted/30"
             )}
         >
             <div className="flex justify-between items-start relative z-10">
                 <span className={cn(
-                    "text-lg sm:text-2xl font-black transition-all",
+                    "text-sm sm:text-xl font-black transition-all",
                     isSelected ? "text-primary" : stats.colorClass
                 )}>
                     {digit}
                 </span>
                 <div className="text-right">
                     <Badge variant="outline" className={cn(
-                        "text-[5px] sm:text-[7px] font-black tracking-widest px-1 py-0 border-none uppercase",
+                        "text-[5px] sm:text-[6px] font-black tracking-widest px-1 py-0 border-none uppercase",
                         stats.colorClass
                     )}>
                         {stats.rating}
                     </Badge>
-                    <p className={cn("text-[8px] sm:text-base font-black tabular-nums mt-0.5", stats.colorClass)}>
+                    <p className={cn("text-[8px] sm:text-[11px] font-black tabular-nums mt-0.5", stats.colorClass)}>
                         {stats.freq.toFixed(1)}%
                     </p>
                 </div>
@@ -99,8 +101,8 @@ const DigitHeatCard = ({ digit, ticks, isSelected, isLatest, onSelect }: {
 
             <div className="relative z-10 flex justify-between items-end">
                 <div>
-                    <p className="text-[5px] sm:text-[7px] font-black text-muted-foreground uppercase tracking-widest opacity-60">GAP</p>
-                    <p className="text-xs sm:text-xl font-black text-foreground tabular-nums leading-none mt-0.5">
+                    <p className="text-[5px] sm:text-[6px] font-black text-muted-foreground uppercase tracking-widest opacity-60">GAP</p>
+                    <p className="text-[9px] sm:text-sm font-black text-foreground tabular-nums leading-none mt-0.5">
                         {stats.tsl}
                     </p>
                 </div>
@@ -129,21 +131,19 @@ export function DigitFrequencyView({
 }: DigitFrequencyViewProps) {
     const [selectedDigit, setSelectedDigit] = React.useState<number | null>(null);
 
-    const latestDigit = lastDigitTicks.length > 0 ? lastDigitTicks[0] : null;
-
     return (
-        <div className="space-y-4 animate-in fade-in duration-700 pb-24">
+        <div className="space-y-4 animate-in fade-in duration-700 pb-24 max-w-[1600px] mx-auto">
             <Card className="border-none shadow-sm bg-card rounded-xl border border-border">
-                <CardContent className="p-3 grid grid-cols-1 md:grid-cols-2 gap-4 items-center">
+                <CardContent className="p-3 grid grid-cols-1 md:grid-cols-3 gap-3 items-center">
                     <div className="space-y-1">
-                        <Label className="text-[8px] font-black uppercase tracking-[0.3em] text-primary ml-1">MARKET VECTOR</Label>
+                        <Label className="text-[7px] font-black uppercase tracking-[0.3em] text-primary ml-1">MARKET VECTOR</Label>
                         <Select value={selectedMarket} onValueChange={onMarketChange}>
-                            <SelectTrigger className="h-8 bg-muted/50 border-border rounded-lg font-black text-[10px] px-4">
-                                <SelectValue placeholder="Select Index" />
+                            <SelectTrigger className="h-7 bg-muted/50 border-border rounded-lg font-black text-[9px] px-3">
+                                <SelectValue placeholder="Market" />
                             </SelectTrigger>
                             <SelectContent className="bg-card border-border text-foreground">
                                 {syntheticIndices.map((index) => (
-                                <SelectItem key={index.id} value={index.id} className="font-black text-[10px]">
+                                <SelectItem key={index.id} value={index.id} className="font-black text-[9px]">
                                     {index.name}
                                 </SelectItem>
                                 ))}
@@ -151,7 +151,7 @@ export function DigitFrequencyView({
                         </Select>
                     </div>
                     <div className="space-y-1">
-                        <Label className="text-[8px] font-black uppercase tracking-[0.3em] text-primary ml-1">DATA HORIZON</Label>
+                        <Label className="text-[7px] font-black uppercase tracking-[0.3em] text-primary ml-1">DATA HORIZON</Label>
                         <Input
                             type="number"
                             min="1"
@@ -159,16 +159,22 @@ export function DigitFrequencyView({
                             value={maxTicks === 0 ? '' : maxTicks}
                             onChange={handleMaxTicksChange}
                             onBlur={handleMaxTicksBlur}
-                            className="h-8 bg-muted/50 border-border rounded-lg font-black text-xs text-primary text-center"
+                            className="h-7 bg-muted/50 border-border rounded-lg font-black text-[9px] text-primary text-center"
                         />
+                    </div>
+                    <div className="space-y-1">
+                        <Label className="text-[7px] font-black uppercase tracking-[0.3em] text-primary ml-1">LIVE PRICE</Label>
+                        <div className="h-7 bg-primary text-primary-foreground rounded-lg flex items-center justify-center font-black text-[9px] shadow-sm px-3">
+                            {price.toFixed(decimalPlaces)}
+                        </div>
                     </div>
                 </CardContent>
             </Card>
 
-            <div className="space-y-4">
+            <div className="space-y-3">
                 <div className="flex items-center gap-2 px-2">
                     <Flame className="h-3 w-3 text-rose-600" />
-                    <h3 className="text-[8px] font-black uppercase tracking-[0.4em] text-foreground">STATISTICAL Z-CORE MATRIX</h3>
+                    <h3 className="text-[7px] font-black uppercase tracking-[0.4em] text-foreground">STATISTICAL Z-CORE MATRIX</h3>
                 </div>
 
                 <div className="grid grid-cols-5 gap-1.5 px-1">
@@ -178,20 +184,69 @@ export function DigitFrequencyView({
                             digit={i} 
                             ticks={lastDigitTicks} 
                             isSelected={selectedDigit === i} 
-                            isLatest={latestDigit === i}
+                            isLatest={lastDigitTicks[0] === i}
                             onSelect={setSelectedDigit} 
                         />
                     ))}
                 </div>
             </div>
 
-            <RiseFallAnalysis 
-                priceHistory={priceHistory}
-                selectedMarket={selectedMarket}
-                price={price}
-                decimalPlaces={decimalPlaces}
-                variant="compact"
-            />
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                <div className="space-y-3">
+                    <div className="flex items-center gap-2 px-2">
+                        <Activity className="h-3 w-3 text-emerald-600" />
+                        <h3 className="text-[7px] font-black uppercase tracking-[0.4em] text-foreground">MOMENTUM PROTOCOL</h3>
+                    </div>
+                    <RiseFallAnalysis 
+                        priceHistory={priceHistory}
+                        selectedMarket={selectedMarket}
+                        price={price}
+                        decimalPlaces={decimalPlaces}
+                        variant="compact"
+                    />
+                </div>
+
+                <div className="space-y-3">
+                    <div className="flex items-center gap-2 px-2">
+                        <Binary className="h-3 w-3 text-blue-600" />
+                        <h3 className="text-[7px] font-black uppercase tracking-[0.4em] text-foreground">PARITY & BARRIER</h3>
+                    </div>
+                    <EvenOddAnalysis 
+                        lastDigitTicks={lastDigitTicks}
+                        selectedMarket={selectedMarket}
+                        price={price}
+                        decimalPlaces={decimalPlaces}
+                    />
+                </div>
+            </div>
+
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                <div className="space-y-3">
+                    <div className="flex items-center gap-2 px-2">
+                        <Zap className="h-3 w-3 text-amber-600" />
+                        <h3 className="text-[7px] font-black uppercase tracking-[0.4em] text-foreground">GATEWAY OVER/UNDER</h3>
+                    </div>
+                    <OverUnderAnalysis 
+                        lastDigitTicks={lastDigitTicks}
+                        selectedMarket={selectedMarket}
+                        price={price}
+                        decimalPlaces={decimalPlaces}
+                    />
+                </div>
+
+                <div className="space-y-3">
+                    <div className="flex items-center gap-2 px-2">
+                        <Cpu className="h-3 w-3 text-primary" />
+                        <h3 className="text-[7px] font-black uppercase tracking-[0.4em] text-foreground">VARIANCE MATCH/DIFF</h3>
+                    </div>
+                    <MatchesDiffersAnalysis 
+                        lastDigitTicks={lastDigitTicks}
+                        selectedMarket={selectedMarket}
+                        price={price}
+                        decimalPlaces={decimalPlaces}
+                    />
+                </div>
+            </div>
         </div>
     );
 }
