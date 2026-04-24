@@ -114,7 +114,7 @@ export function InsightView({ price, decimalPlaces, lastDigitTicks, priceHistory
              <Card className="border-none shadow-sm bg-card overflow-hidden relative rounded-xl border border-border">
                 <CardContent className="p-3 grid grid-cols-1 md:grid-cols-2 gap-4 items-center">
                     <div className="space-y-1">
-                        <Label className="text-[8px] font-black uppercase tracking-[0.3em] text-primary ml-1">MARKET VECTOR</Label>
+                        <Label className="text-[8px] font-black uppercase tracking-[0.3em] text-primary ml-1">MARKET</Label>
                         <Select value={selectedMarket} onValueChange={onMarketChange}>
                             <SelectTrigger className="h-8 bg-muted/50 border-border rounded-lg font-black text-[10px] px-4">
                                 <SelectValue placeholder="Select Index" />
@@ -129,7 +129,7 @@ export function InsightView({ price, decimalPlaces, lastDigitTicks, priceHistory
                         </Select>
                     </div>
                     <div className="space-y-1">
-                        <Label className="text-[8px] font-black uppercase tracking-[0.3em] text-primary ml-1">ANALYSIS HORIZON</Label>
+                        <Label className="text-[8px] font-black uppercase tracking-[0.3em] text-primary ml-1">HORIZON</Label>
                         <div className="h-8 bg-muted/50 border-border rounded-lg flex items-center justify-center font-black text-xs text-primary shadow-inner">
                             {maxTicks} <span className="text-[6px] opacity-40 ml-1 tracking-widest uppercase">TICKS</span>
                         </div>

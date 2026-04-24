@@ -245,7 +245,7 @@ export function CorrelationView({
             <Card className="border-none shadow-sm bg-card overflow-hidden relative rounded-[2rem] border border-border">
                 <CardContent className="p-6 sm:p-8 grid grid-cols-1 md:grid-cols-3 gap-6 items-center">
                     <div className="space-y-2">
-                        <Label className="text-[10px] font-black uppercase tracking-widest text-primary ml-2">MARKET VECTOR</Label>
+                        <Label className="text-[10px] font-black uppercase tracking-widest text-primary ml-2">MARKET</Label>
                         <Select value={selectedMarket} onValueChange={onMarketChange}>
                             <SelectTrigger className="h-14 bg-muted/50 border-border rounded-[1.25rem] font-black text-base px-6 shadow-sm">
                                 <SelectValue placeholder="Select Index" />

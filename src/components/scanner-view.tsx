@@ -189,7 +189,7 @@ export function ScannerView({
                 <Card className="xl:col-span-3 border-none shadow-sm bg-card overflow-hidden relative rounded-xl border border-border">
                     <CardContent className="p-4 grid grid-cols-1 md:grid-cols-3 gap-4 items-end">
                         <div className="space-y-2">
-                            <Label className="text-[8px] font-black uppercase tracking-[0.3em] text-primary ml-1">MARKET VECTOR</Label>
+                            <Label className="text-[8px] font-black uppercase tracking-[0.3em] text-primary ml-1">MARKET</Label>
                             <Select value={selectedMarket} onValueChange={onMarketChange}>
                                 <SelectTrigger className="h-8 bg-muted/50 border-border rounded-lg font-black text-[10px] px-4">
                                     <SelectValue placeholder="Select Index" />
@@ -204,7 +204,7 @@ export function ScannerView({
                             </Select>
                         </div>
                         <div className="space-y-2">
-                            <Label className="text-[8px] font-black uppercase tracking-[0.3em] text-primary ml-1">DATA HORIZON</Label>
+                            <Label className="text-[8px] font-black uppercase tracking-[0.3em] text-primary ml-1">HORIZON</Label>
                             <Input
                                 type="number"
                                 min="1"

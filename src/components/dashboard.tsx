@@ -1,4 +1,3 @@
-
 'use client';
 
 import * as React from 'react';
@@ -33,22 +32,34 @@ export function Dashboard() {
     const currentMarketRef = React.useRef(selectedMarket);
     const pipSizeRef = React.useRef<number | null>(null);
 
+    // Initial load from Session/Local Storage
     React.useEffect(() => {
         setMounted(true);
         const savedTheme = localStorage.getItem('theme') as 'light' | 'dark';
         if (savedTheme) setTheme(savedTheme);
         else if (window.matchMedia('(prefers-color-scheme: dark)').matches) setTheme('dark');
+
+        const savedMarket = localStorage.getItem('selectedMarket');
+        if (savedMarket) setSelectedMarket(savedMarket);
+
+        const savedTicks = localStorage.getItem('maxTicks');
+        if (savedTicks) setMaxTicks(parseInt(savedTicks, 10));
     }, []);
 
+    // Theme Persistence
     React.useEffect(() => {
         if (!mounted) return;
         document.documentElement.classList.toggle('dark', theme === 'dark');
         localStorage.setItem('theme', theme);
     }, [theme, mounted]);
 
+    // Market & Ticks Persistence
     React.useEffect(() => {
+        if (!mounted) return;
+        localStorage.setItem('selectedMarket', selectedMarket);
+        localStorage.setItem('maxTicks', maxTicks.toString());
         currentMarketRef.current = selectedMarket;
-    }, [selectedMarket]);
+    }, [selectedMarket, maxTicks, mounted]);
 
     React.useEffect(() => {
         if (!mounted) return;

@@ -12,7 +12,9 @@ import { RiseFallAnalysis } from './rise-fall-analysis';
 import { EvenOddAnalysis } from './even-odd-analysis';
 import { OverUnderAnalysis } from './over-under-analysis';
 import { MatchesDiffersAnalysis } from './matches-differs-analysis';
-import { Flame, Activity, BarChart3, Binary, Zap, Cpu } from 'lucide-react';
+import { Flame, Activity, BarChart3, Binary, Zap, Cpu, Info } from 'lucide-react';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { Button } from '@/components/ui/button';
 
 interface DigitFrequencyViewProps {
     price: number;
@@ -136,7 +138,7 @@ export function DigitFrequencyView({
             <Card className="border-none shadow-sm bg-card rounded-xl border border-border">
                 <CardContent className="p-3 grid grid-cols-1 md:grid-cols-3 gap-3 items-center">
                     <div className="space-y-1">
-                        <Label className="text-[7px] font-black uppercase tracking-[0.3em] text-primary ml-1">MARKET VECTOR</Label>
+                        <Label className="text-[7px] font-black uppercase tracking-[0.3em] text-primary ml-1">MARKET</Label>
                         <Select value={selectedMarket} onValueChange={onMarketChange}>
                             <SelectTrigger className="h-7 bg-muted/50 border-border rounded-lg font-black text-[9px] px-3">
                                 <SelectValue placeholder="Market" />
@@ -172,9 +174,24 @@ export function DigitFrequencyView({
             </Card>
 
             <div className="space-y-3">
-                <div className="flex items-center gap-2 px-2">
-                    <Flame className="h-3 w-3 text-rose-600" />
-                    <h3 className="text-[7px] font-black uppercase tracking-[0.4em] text-foreground">STATISTICAL Z-CORE MATRIX</h3>
+                <div className="flex items-center justify-between px-2">
+                    <div className="flex items-center gap-2">
+                        <Flame className="h-3 w-3 text-rose-600" />
+                        <h3 className="text-[7px] font-black uppercase tracking-[0.4em] text-foreground">STATISTICAL Z-CORE MATRIX</h3>
+                    </div>
+                    <Popover>
+                        <PopoverTrigger asChild>
+                            <Button variant="ghost" size="icon" className="h-4 w-4 text-muted-foreground hover:text-primary">
+                                <Info className="h-3 w-3" />
+                            </Button>
+                        </PopoverTrigger>
+                        <PopoverContent className="w-64 bg-card border-border shadow-2xl rounded-xl p-3">
+                            <h4 className="text-[8px] font-black text-primary uppercase tracking-widest mb-2">Z-CORE GUIDE</h4>
+                            <p className="text-[8px] font-medium leading-relaxed italic text-muted-foreground">
+                                "SATURATED" (Red) indicates high probability of immediate mean-reversion. "DUE" (Cyan) identifies digits that have not appeared in long sequences.
+                            </p>
+                        </PopoverContent>
+                    </Popover>
                 </div>
 
                 <div className="grid grid-cols-5 gap-1.5 px-1">
