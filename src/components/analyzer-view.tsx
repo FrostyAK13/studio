@@ -1,4 +1,3 @@
-
 'use client';
 
 import * as React from 'react';
@@ -164,9 +163,8 @@ export function AnalyzerView({
 
     return (
         <div className="space-y-4 animate-in fade-in slide-in-from-bottom-8 duration-1000 pb-24 max-w-7xl mx-auto">
-            {/* Market Selection Card */}
-            <Card className="border-none shadow-sm bg-card rounded-xl sm:rounded-2xl border border-border">
-                <CardContent className="p-3 sm:p-4 space-y-3">
+            <Card className="border-none shadow-sm bg-card rounded-xl border border-border">
+                <CardContent className="p-3 space-y-3">
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                         <div className="space-y-1">
                             <Label className="text-[8px] font-black uppercase tracking-[0.3em] text-primary ml-1">MARKET VECTOR</Label>
@@ -199,66 +197,60 @@ export function AnalyzerView({
                 </CardContent>
             </Card>
 
-            {/* Consistently Consolidated Analysis HUD */}
-            <Card className="border-none bg-card rounded-xl sm:rounded-[2rem] border border-border shadow-xl overflow-hidden relative">
+            <Card className="border-none bg-card rounded-xl border border-border shadow-xl overflow-hidden relative">
                 <div className="absolute top-0 left-0 w-full h-[2px] bg-gradient-to-r from-primary via-cyan-400 to-primary" />
-                <CardContent className="p-4 sm:p-8 space-y-6">
+                <CardContent className="p-4 sm:p-6 space-y-6">
                     <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-center">
-                        {/* Column 1: HUD Title & Badges */}
                         <div className="lg:col-span-3 text-center lg:text-left space-y-3">
-                            <div className="flex items-center gap-2.5 justify-center lg:justify-start">
-                                <Crosshair className="h-5 w-5 text-primary" />
-                                <h3 className="text-lg font-black text-foreground tracking-tight uppercase">ANALYSIS HUD</h3>
+                            <div className="flex items-center gap-2 justify-center lg:justify-start">
+                                <Crosshair className="h-4 w-4 text-primary" />
+                                <h3 className="text-sm font-black text-foreground tracking-tight uppercase">ANALYSIS HUD</h3>
                             </div>
-                            <div className="flex flex-wrap justify-center lg:justify-start gap-1.5">
-                                <Badge className="bg-primary/10 text-primary border-none font-black tracking-widest text-[8px] px-2.5 py-1 uppercase">{stats.label1} vs {stats.label2}</Badge>
-                                <Badge className="bg-blue-500/10 text-blue-600 border-none font-black tracking-widest text-[8px] px-2.5 py-1 uppercase">TARGET: {selectedDigit}</Badge>
+                            <div className="flex flex-wrap justify-center lg:justify-start gap-1">
+                                <Badge variant="outline" className="font-black tracking-widest text-[7px] px-2 py-0.5 uppercase">{stats.label1} vs {stats.label2}</Badge>
+                                <Badge variant="outline" className="font-black tracking-widest text-[7px] px-2 py-0.5 uppercase border-primary text-primary">TARGET: {selectedDigit}</Badge>
                             </div>
                         </div>
                         
-                        {/* Column 2: Stability Progress Bars */}
-                        <div className="lg:col-span-6 grid grid-cols-2 gap-8">
-                            <div className="space-y-2">
-                                <div className="flex justify-between items-end mb-0.5">
-                                    <p className="text-[10px] font-black uppercase text-emerald-600 tracking-[0.15em]">{stats.label1}</p>
-                                    <p className="text-2xl font-black text-emerald-600 tabular-nums">{stats.val1.toFixed(1)}%</p>
+                        <div className="lg:col-span-6 grid grid-cols-2 gap-6">
+                            <div className="space-y-1.5">
+                                <div className="flex justify-between items-end">
+                                    <p className="text-[8px] font-black uppercase text-emerald-600 tracking-[0.1em]">{stats.label1}</p>
+                                    <p className="text-lg font-black text-emerald-600 tabular-nums">{stats.val1.toFixed(1)}%</p>
                                 </div>
-                                <Progress value={stats.val1} className="h-4 bg-muted [&>div]:bg-emerald-500" />
+                                <Progress value={stats.val1} className="h-2 bg-muted [&>div]:bg-emerald-500" />
                             </div>
-                            <div className="space-y-2">
-                                <div className="flex justify-between items-end mb-0.5">
-                                    <p className="text-[10px] font-black uppercase text-rose-600 tracking-[0.15em]">{stats.label2}</p>
-                                    <p className="text-2xl font-black text-rose-600 tabular-nums">{stats.val2.toFixed(1)}%</p>
+                            <div className="space-y-1.5">
+                                <div className="flex justify-between items-end">
+                                    <p className="text-[8px] font-black uppercase text-rose-600 tracking-[0.1em]">{stats.label2}</p>
+                                    <p className="text-lg font-black text-rose-600 tabular-nums">{stats.val2.toFixed(1)}%</p>
                                 </div>
-                                <Progress value={stats.val2} className="h-4 bg-muted [&>div]:bg-rose-500" />
+                                <Progress value={stats.val2} className="h-2 bg-muted [&>div]:bg-rose-500" />
                             </div>
                         </div>
 
-                        {/* Column 3: Live Price & Variance */}
-                        <div className="lg:col-span-3 flex gap-6 items-center justify-center lg:justify-end">
-                            <div className="text-center space-y-0.5">
-                                <p className="text-[9px] font-black text-muted-foreground uppercase tracking-widest">LIVE PRICE</p>
-                                <p className="text-xl sm:text-2xl font-black text-foreground tabular-nums tracking-tighter">{price.toFixed(decimalPlaces)}</p>
+                        <div className="lg:col-span-3 flex gap-4 items-center justify-center lg:justify-end">
+                            <div className="text-center">
+                                <p className="text-[7px] font-black text-muted-foreground uppercase tracking-widest">LIVE PRICE</p>
+                                <p className="text-lg font-black text-foreground tabular-nums tracking-tighter">{price.toFixed(decimalPlaces)}</p>
                             </div>
-                            <div className="w-px h-10 bg-border" />
-                            <div className="text-center space-y-0.5">
-                                <p className="text-[9px] font-black text-muted-foreground uppercase tracking-widest">VARIANCE</p>
-                                <p className="text-xl sm:text-2xl font-black text-emerald-600 tabular-nums tracking-tighter">{stats.delta.toFixed(1)}%</p>
+                            <div className="w-px h-8 bg-border" />
+                            <div className="text-center">
+                                <p className="text-[7px] font-black text-muted-foreground uppercase tracking-widest">VARIANCE</p>
+                                <p className="text-lg font-black text-emerald-600 tabular-nums tracking-tighter">{stats.delta.toFixed(1)}%</p>
                             </div>
                         </div>
                     </div>
 
-                    {/* Summary Row */}
-                    <div className="pt-4 border-t border-border">
-                        <p className="text-[10px] sm:text-sm font-medium text-muted-foreground leading-relaxed italic text-center lg:text-left">
-                            "SURVEILLANCE LOG: Engine identifies a <span className={cn("font-black px-2 py-0.5 rounded-md", stats.val1 > stats.val2 ? "text-emerald-600 bg-emerald-500/10" : "text-rose-600 bg-rose-500/10")}>{stats.val1 > stats.val2 ? stats.label1 : stats.label2}</span> directional bias. Confirmed stability for current tactical execution."
+                    <div className="pt-3 border-t border-border">
+                        <p className="text-[9px] font-medium text-muted-foreground leading-relaxed italic text-center lg:text-left">
+                            "SURVEILLANCE LOG: Engine identifies a <span className={cn("font-black px-1.5 py-0.5 rounded-md", stats.val1 > stats.val2 ? "text-emerald-600 bg-emerald-500/10" : "text-rose-600 bg-rose-500/10")}>{stats.val1 > stats.val2 ? stats.label1 : stats.label2}</span> directional bias. Confirmed stability for current tactical execution."
                         </p>
                     </div>
                 </CardContent>
             </Card>
 
-            {/* Stream Sequence */}
-            <Card className="border-none shadow-sm bg-muted/50 border border-border p-4 sm:p-6 rounded-xl sm:rounded-[2rem] overflow-hidden relative">
+            <Card className="border-none shadow-sm bg-muted/30 border border-border p-4 rounded-xl overflow-hidden relative">
                 <div className="flex flex-col sm:flex-row items-center justify-between gap-2 mb-4">
                     <h3 className="text-[8px] font-black uppercase tracking-[0.3em] text-foreground">STREAM SEQUENCE</h3>
                     <div className="flex items-center gap-1.5">
@@ -271,7 +263,6 @@ export function AnalyzerView({
                 </div>
             </Card>
 
-            {/* Digit Frequency Circles */}
             <DigitFrequencyCircles 
                 ticks={lastDigitTicks} 
                 selectedDigit={selectedDigit} 

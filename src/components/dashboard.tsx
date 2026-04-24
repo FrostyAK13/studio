@@ -1,4 +1,3 @@
-
 'use client';
 
 import * as React from 'react';
@@ -37,6 +36,7 @@ export function Dashboard() {
         setMounted(true);
         const savedTheme = localStorage.getItem('theme') as 'light' | 'dark';
         if (savedTheme) setTheme(savedTheme);
+        else if (window.matchMedia('(prefers-color-scheme: dark)').matches) setTheme('dark');
     }, []);
 
     React.useEffect(() => {

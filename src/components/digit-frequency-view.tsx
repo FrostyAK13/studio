@@ -9,9 +9,8 @@ import { syntheticIndices } from '@/lib/mock-data';
 import { cn } from '@/lib/utils';
 import { Badge } from '@/components/ui/badge';
 import { RiseFallAnalysis } from './rise-fall-analysis';
-import { Target, Zap, List, Hash, Activity, Flame, Timer, BarChartHorizontal, Sparkles, TrendingUp, TrendingDown, Gauge } from 'lucide-react';
+import { Hash, Activity, Flame, BarChartHorizontal, TrendingUp, TrendingDown } from 'lucide-react';
 import { Progress } from '@/components/ui/progress';
-import { motion, AnimatePresence } from 'framer-motion';
 
 interface DigitFrequencyViewProps {
     price: number;
@@ -48,25 +47,25 @@ const DigitHeatCard = ({ digit, ticks, isSelected, isLatest, onSelect }: {
             tsl++;
         }
 
-        let colorClass = "text-slate-400";
+        let colorClass = "text-muted-foreground";
         let glowClass = "";
-        let bgClass = "bg-white";
+        let bgClass = "bg-card";
         let rating = "STABLE";
 
         if (zScore > 2) {
             colorClass = "text-rose-600";
-            glowClass = "border-rose-200 shadow-sm";
-            bgClass = "bg-rose-50";
+            glowClass = "border-rose-200 dark:border-rose-900 shadow-sm";
+            bgClass = "bg-rose-50 dark:bg-rose-950/20";
             rating = "OVER-SATURATED";
         } else if (zScore < -2) {
             colorClass = "text-cyan-600";
-            glowClass = "border-cyan-200 shadow-sm";
-            bgClass = "bg-cyan-50";
+            glowClass = "border-cyan-200 dark:border-cyan-900 shadow-sm";
+            bgClass = "bg-cyan-50 dark:bg-cyan-950/20";
             rating = "STATISTICALLY DUE";
         } else if (freq > 11.5) {
             colorClass = "text-orange-600";
-            glowClass = "border-orange-200 shadow-sm";
-            bgClass = "bg-orange-50";
+            glowClass = "border-orange-200 dark:border-orange-900 shadow-sm";
+            bgClass = "bg-orange-50 dark:bg-orange-950/20";
             rating = "TRENDING";
         }
 
@@ -77,10 +76,10 @@ const DigitHeatCard = ({ digit, ticks, isSelected, isLatest, onSelect }: {
         <div 
             onClick={() => onSelect(digit)}
             className={cn(
-                "relative group cursor-pointer transition-all duration-300 rounded-xl sm:rounded-2xl border p-2 sm:p-3 flex flex-col justify-between h-20 sm:h-36 overflow-hidden",
+                "relative group cursor-pointer transition-all duration-300 rounded-xl border p-2 flex flex-col justify-between h-20 sm:h-36 overflow-hidden",
                 stats.bgClass,
-                stats.glowClass || "border-slate-200",
-                isSelected ? "ring-2 ring-primary scale-105 z-20 shadow-md bg-primary/5" : "hover:scale-[1.02]"
+                stats.glowClass || "border-border",
+                isSelected ? "ring-2 ring-primary scale-105 z-20 shadow-md" : "hover:scale-[1.02]"
             )}
         >
             {isLatest && (
@@ -89,7 +88,7 @@ const DigitHeatCard = ({ digit, ticks, isSelected, isLatest, onSelect }: {
                 </div>
             )}
 
-            <div className="absolute top-0 right-0 p-1 sm:p-2 opacity-5 sm:opacity-10">
+            <div className="absolute top-0 right-0 p-1 opacity-10">
                 <Hash className={cn("w-5 h-5 sm:w-12 sm:h-12", stats.colorClass)} />
             </div>
 
@@ -101,9 +100,8 @@ const DigitHeatCard = ({ digit, ticks, isSelected, isLatest, onSelect }: {
                     {digit}
                 </span>
                 <div className="text-right">
-                    <Badge className={cn(
-                        "text-[5px] sm:text-[7px] font-black tracking-widest px-1 sm:px-1.5 py-0 border-none",
-                        stats.bgClass.replace('bg-', 'bg-') + "/50",
+                    <Badge variant="outline" className={cn(
+                        "text-[5px] sm:text-[7px] font-black tracking-widest px-1 py-0 border-none",
                         stats.colorClass
                     )}>
                         {stats.rating}
@@ -116,20 +114,20 @@ const DigitHeatCard = ({ digit, ticks, isSelected, isLatest, onSelect }: {
 
             <div className="relative z-10 flex justify-between items-end">
                 <div>
-                    <p className="text-[5px] sm:text-[8px] font-black text-slate-400 uppercase tracking-widest opacity-60">GAP</p>
-                    <p className="text-xs sm:text-2xl font-black text-slate-900 tabular-nums tracking-tighter leading-none mt-0.5">
+                    <p className="text-[5px] sm:text-[8px] font-black text-muted-foreground uppercase tracking-widest opacity-60">GAP</p>
+                    <p className="text-xs sm:text-2xl font-black text-foreground tabular-nums tracking-tighter leading-none mt-0.5">
                         {stats.tsl}
                     </p>
                 </div>
                 <div className="text-right">
-                    <p className="text-[5px] sm:text-[7px] font-black text-slate-400 uppercase tracking-widest opacity-40">Z-SCORE</p>
-                    <p className={cn("text-[7px] sm:text-[10px] font-black", Math.abs(stats.zScore) > 2 ? stats.colorClass : "text-slate-300")}>
+                    <p className="text-[5px] sm:text-[7px] font-black text-muted-foreground uppercase tracking-widest opacity-40">Z-SCORE</p>
+                    <p className={cn("text-[7px] sm:text-[10px] font-black", Math.abs(stats.zScore) > 2 ? stats.colorClass : "text-muted-foreground/50")}>
                         {stats.zScore.toFixed(2)}
                     </p>
                 </div>
             </div>
 
-            <div className="absolute bottom-0 left-0 w-full h-1 bg-slate-100 overflow-hidden">
+            <div className="absolute bottom-0 left-0 w-full h-1 bg-muted overflow-hidden">
                 <div 
                     className={cn("h-full transition-all duration-700", stats.colorClass.replace('text-', 'bg-'))} 
                     style={{ width: `${Math.min(stats.freq * 6, 100)}%` }} 
@@ -158,23 +156,23 @@ const DigitDetailInsights = ({ digit, ticks }: { digit: number, ticks: number[] 
     }, [digit, ticks]);
 
     return (
-        <Card className="mt-4 border-none bg-white shadow-lg overflow-hidden animate-in fade-in slide-in-from-bottom-5 duration-700 rounded-2xl sm:rounded-[2rem] border border-slate-200">
+        <Card className="mt-4 border-none bg-card shadow-lg overflow-hidden animate-in fade-in slide-in-from-bottom-5 duration-700 rounded-2xl border border-border">
             <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-cyan-500 via-primary to-emerald-600" />
-            <CardHeader className="pb-3 pt-5 sm:pt-6 px-4 sm:px-6">
-                <div className="flex items-center gap-3 text-center sm:text-left">
-                    <div className="w-8 h-8 sm:w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center border border-primary/20">
-                        <Activity className="h-4 w-4 sm:h-5 sm:w-5 text-primary" />
+            <CardHeader className="pb-3 pt-5 px-4 sm:px-6">
+                <div className="flex items-center gap-3">
+                    <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center border border-primary/20">
+                        <Activity className="h-4 w-4 text-primary" />
                     </div>
                     <div>
-                        <CardTitle className="text-base sm:text-lg font-black text-slate-950 tracking-tight uppercase">DIGIT {digit} INTEL</CardTitle>
+                        <CardTitle className="text-base sm:text-lg font-black text-foreground tracking-tight uppercase">DIGIT {digit} INTEL</CardTitle>
                         <CardDescription className="text-primary/70 font-black uppercase tracking-widest text-[7px] sm:text-[8px] mt-0.5">Precision Volumetric Matrix</CardDescription>
                     </div>
                 </div>
             </CardHeader>
             <CardContent className="px-4 sm:px-6 pb-6 grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-6">
-                <div className="p-3 sm:p-5 rounded-xl bg-slate-50 border border-slate-200 space-y-3">
-                    <div className="flex justify-between items-center border-b border-slate-100 pb-2">
-                        <h4 className="text-[8px] sm:text-[10px] font-black uppercase tracking-widest text-slate-500 flex items-center gap-1.5">
+                <div className="p-3 sm:p-5 rounded-xl bg-muted/30 border border-border space-y-3">
+                    <div className="flex justify-between items-center border-b border-border pb-2">
+                        <h4 className="text-[8px] sm:text-[10px] font-black uppercase tracking-widest text-muted-foreground flex items-center gap-1.5">
                             <Hash className="h-3 w-3 text-emerald-600" /> ACCURACY GATE
                         </h4>
                         <span className="text-sm sm:text-xl font-black text-emerald-600 tabular-nums">{stats.actualFreq.toFixed(1)}%</span>
@@ -183,16 +181,16 @@ const DigitDetailInsights = ({ digit, ticks }: { digit: number, ticks: number[] 
                         <div className="space-y-1">
                             <div className="flex justify-between text-[6px] sm:text-[8px] font-black uppercase tracking-widest">
                                 <span className="text-emerald-600">MATCHES</span>
-                                <span className="text-slate-500">{stats.matches} TICKS</span>
+                                <span className="text-muted-foreground">{stats.matches} TICKS</span>
                             </div>
-                            <Progress value={stats.actualFreq * 4} className="h-1 sm:h-1.5 bg-slate-200 [&>div]:bg-emerald-500" />
+                            <Progress value={stats.actualFreq * 4} className="h-1 sm:h-1.5 bg-muted [&>div]:bg-emerald-500" />
                         </div>
                     </div>
                 </div>
 
-                <div className="p-3 sm:p-5 rounded-xl bg-slate-50 border border-slate-200 space-y-3">
-                    <div className="flex justify-between items-center border-b border-slate-100 pb-2">
-                        <h4 className="text-[8px] sm:text-[10px] font-black uppercase tracking-widest text-slate-500 flex items-center gap-1.5">
+                <div className="p-3 sm:p-5 rounded-xl bg-muted/30 border border-border space-y-3">
+                    <div className="flex justify-between items-center border-b border-border pb-2">
+                        <h4 className="text-[8px] sm:text-[10px] font-black uppercase tracking-widest text-muted-foreground flex items-center gap-1.5">
                             <BarChartHorizontal className="h-3 w-3 text-cyan-600" /> BARRIER SYMMETRY
                         </h4>
                         <span className="text-sm sm:text-xl font-black text-cyan-600 tabular-nums">{stats.over.toFixed(1)}%</span>
@@ -201,9 +199,9 @@ const DigitDetailInsights = ({ digit, ticks }: { digit: number, ticks: number[] 
                         <div className="space-y-1">
                             <div className="flex justify-between text-[6px] sm:text-[8px] font-black uppercase tracking-widest">
                                 <span className="text-cyan-600">OVER {digit} WEIGHT</span>
-                                <span className="text-slate-500">{stats.over.toFixed(1)}%</span>
+                                <span className="text-muted-foreground">{stats.over.toFixed(1)}%</span>
                             </div>
-                            <Progress value={stats.over} className="h-1 sm:h-1.5 bg-slate-200 [&>div]:bg-cyan-500" />
+                            <Progress value={stats.over} className="h-1 sm:h-1.5 bg-muted [&>div]:bg-cyan-500" />
                         </div>
                     </div>
                 </div>
@@ -247,54 +245,52 @@ export function DigitFrequencyView({
     }, [lastDigitTicks]);
 
     return (
-        <div className="space-y-6 sm:space-y-8 animate-in fade-in slide-in-from-bottom-5 duration-700 pb-24">
-            <Card className="border-none shadow-sm bg-white overflow-hidden relative rounded-xl sm:rounded-[2rem] border border-slate-200">
+        <div className="space-y-6 animate-in fade-in slide-in-from-bottom-5 duration-700 pb-24">
+            <Card className="border-none shadow-sm bg-card overflow-hidden relative rounded-xl border border-border">
                 <div className="absolute top-0 left-0 w-full h-[2px] bg-gradient-to-r from-transparent via-primary/60 to-transparent" />
-                <CardContent className="p-4 sm:p-6 grid grid-cols-1 md:grid-cols-2 gap-5 sm:gap-8 items-center">
-                    <div className="space-y-2 sm:space-y-3">
-                        <Label className="text-[9px] sm:text-[10px] font-black uppercase tracking-widest text-primary ml-1">MARKET VECTOR SELECT</Label>
+                <CardContent className="p-4 grid grid-cols-1 md:grid-cols-2 gap-5 items-center">
+                    <div className="space-y-2">
+                        <Label className="text-[9px] font-black uppercase tracking-widest text-primary ml-1">MARKET VECTOR SELECT</Label>
                         <Select value={selectedMarket} onValueChange={onMarketChange}>
-                            <SelectTrigger className="h-10 sm:h-12 bg-slate-50 border-slate-200 rounded-lg sm:rounded-xl font-black text-[11px] sm:text-sm px-4">
+                            <SelectTrigger className="h-10 bg-muted/50 border-border rounded-lg font-black text-[11px] px-4">
                                 <SelectValue placeholder="Select Index" />
                             </SelectTrigger>
-                            <SelectContent side="bottom" position="popper" sideOffset={8} className="w-[var(--radix-select-trigger-width)] max-h-[300px] rounded-lg sm:rounded-xl border-slate-200 bg-white text-slate-950 z-[100] shadow-2xl">
+                            <SelectContent className="bg-card border-border text-foreground">
                                 {syntheticIndices.map((index) => (
-                                <SelectItem key={index.id} value={index.id} className="focus:bg-primary/10 focus:text-slate-950 cursor-pointer py-2 px-3 font-black text-[10px] sm:text-[11px]">
+                                <SelectItem key={index.id} value={index.id} className="font-black text-[10px]">
                                     {index.name}
                                 </SelectItem>
                                 ))}
                             </SelectContent>
                         </Select>
                     </div>
-                    <div className="space-y-2 sm:space-y-3">
-                        <Label className="text-[9px] sm:text-[10px] font-black uppercase tracking-widest text-primary ml-1">DATA HORIZON</Label>
-                        <div className="relative">
-                            <Input
-                                type="number"
-                                min="1"
-                                max="5000"
-                                value={maxTicks === 0 ? '' : maxTicks}
-                                onChange={handleMaxTicksChange}
-                                onBlur={handleMaxTicksBlur}
-                                className="h-10 sm:h-12 bg-slate-50 border-slate-200 rounded-lg sm:rounded-xl font-black text-sm sm:text-lg text-primary text-center shadow-inner"
-                            />
-                        </div>
+                    <div className="space-y-2">
+                        <Label className="text-[9px] font-black uppercase tracking-widest text-primary ml-1">DATA HORIZON</Label>
+                        <Input
+                            type="number"
+                            min="1"
+                            max="5000"
+                            value={maxTicks === 0 ? '' : maxTicks}
+                            onChange={handleMaxTicksChange}
+                            onBlur={handleMaxTicksBlur}
+                            className="h-10 bg-muted/50 border-border rounded-lg font-black text-sm text-primary text-center"
+                        />
                     </div>
                 </CardContent>
             </Card>
 
             <div className="space-y-4">
                 <div className="flex items-center gap-2 px-4">
-                    <div className="p-1.5 sm:p-2 bg-rose-100 rounded-lg border border-rose-200">
-                        <Flame className="h-4 w-4 sm:h-5 sm:w-5 text-rose-600" />
+                    <div className="p-1.5 bg-rose-100 dark:bg-rose-950/40 rounded-lg border border-rose-200 dark:border-rose-900">
+                        <Flame className="h-4 w-4 text-rose-600" />
                     </div>
                     <div>
-                        <h3 className="text-sm sm:text-base font-black uppercase tracking-widest text-slate-900">STATISTICAL Z-CORE MATRIX</h3>
-                        <p className="text-[6px] sm:text-[8px] font-black uppercase tracking-widest text-slate-500 mt-0.5">Statistical Edge & Deviation Analysis</p>
+                        <h3 className="text-sm font-black uppercase tracking-widest text-foreground">STATISTICAL Z-CORE MATRIX</h3>
+                        <p className="text-[6px] font-black uppercase tracking-widest text-muted-foreground mt-0.5">Statistical Edge & Deviation Analysis</p>
                     </div>
                 </div>
 
-                <div className="grid grid-cols-5 gap-1.5 sm:gap-3 px-1">
+                <div className="grid grid-cols-5 gap-1.5 px-1">
                     {Array.from({ length: 10 }, (_, i) => (
                         <DigitHeatCard 
                             key={i} 
@@ -312,66 +308,66 @@ export function DigitFrequencyView({
                 <DigitDetailInsights digit={selectedDigit} ticks={lastDigitTicks} />
             )}
 
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-3 sm:gap-6 mt-4">
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-3 mt-4">
                 {marketDirectionAnalysis && (
                     <>
-                        <div className="p-3 sm:p-5 rounded-xl sm:rounded-[2rem] bg-white border border-slate-200 shadow-sm relative overflow-hidden">
-                            <h4 className="text-[8px] sm:text-[9px] font-black uppercase tracking-widest text-slate-500 border-b border-slate-100 pb-2 mb-3 flex items-center gap-1.5">
-                                <List className="h-3 w-3 text-chart-1" /> EVEN / ODD GATES
+                        <div className="p-3 rounded-xl bg-card border border-border shadow-sm relative overflow-hidden">
+                            <h4 className="text-[8px] font-black uppercase tracking-widest text-muted-foreground border-b border-border pb-2 mb-3 flex items-center gap-1.5">
+                                <Activity className="h-3 w-3 text-chart-1" /> EVEN / ODD GATES
                             </h4>
                             <div className="space-y-3 pt-1">
                                 <div className="space-y-1">
-                                    <div className="flex justify-between text-[6px] sm:text-[8px] font-black uppercase tracking-widest">
+                                    <div className="flex justify-between text-[6px] font-black uppercase tracking-widest">
                                         <span className="text-chart-1">EVEN</span>
-                                        <span className="text-slate-900 text-[10px] sm:text-sm tabular-nums">{marketDirectionAnalysis.evenOdd.even.toFixed(1)}%</span>
+                                        <span className="text-foreground text-[10px] tabular-nums">{marketDirectionAnalysis.evenOdd.even.toFixed(1)}%</span>
                                     </div>
-                                    <Progress value={marketDirectionAnalysis.evenOdd.even} className="h-1 sm:h-2 bg-slate-100 [&>div]:bg-chart-1" />
+                                    <Progress value={marketDirectionAnalysis.evenOdd.even} className="h-1 bg-muted [&>div]:bg-chart-1" />
                                 </div>
                                 <div className="space-y-1">
-                                    <div className="flex justify-between text-[6px] sm:text-[8px] font-black uppercase tracking-widest">
+                                    <div className="flex justify-between text-[6px] font-black uppercase tracking-widest">
                                         <span className="text-chart-3">ODD</span>
-                                        <span className="text-slate-900 text-[10px] sm:text-sm tabular-nums">{marketDirectionAnalysis.evenOdd.odd.toFixed(1)}%</span>
+                                        <span className="text-foreground text-[10px] tabular-nums">{marketDirectionAnalysis.evenOdd.odd.toFixed(1)}%</span>
                                     </div>
-                                    <Progress value={marketDirectionAnalysis.evenOdd.odd} className="h-1 sm:h-2 bg-slate-100 [&>div]:bg-chart-3" />
+                                    <Progress value={marketDirectionAnalysis.evenOdd.odd} className="h-1 bg-muted [&>div]:bg-chart-3" />
                                 </div>
                             </div>
                         </div>
 
-                        <div className="p-3 sm:p-5 rounded-xl sm:rounded-[2rem] bg-white border border-slate-200 shadow-sm relative overflow-hidden">
-                            <h4 className="text-[8px] sm:text-[9px] font-black uppercase tracking-widest text-slate-500 border-b border-slate-100 pb-2 mb-3 flex items-center gap-1.5">
+                        <div className="p-3 rounded-xl bg-card border border-border shadow-sm relative overflow-hidden">
+                            <h4 className="text-[8px] font-black uppercase tracking-widest text-muted-foreground border-b border-border pb-2 mb-3 flex items-center gap-1.5">
                                 <BarChartHorizontal className="h-3 w-3 text-accent" /> BARRIER SYMMETRY
                             </h4>
                             <div className="space-y-3 pt-1">
                                 <div className="space-y-1">
-                                    <div className="flex justify-between text-[6px] sm:text-[8px] font-black uppercase tracking-widest">
+                                    <div className="flex justify-between text-[6px] font-black uppercase tracking-widest">
                                         <span className="text-accent">UNDER 5</span>
-                                        <span className="text-slate-900 text-[10px] sm:text-sm tabular-nums">{marketDirectionAnalysis.overUnder.lower.toFixed(1)}%</span>
+                                        <span className="text-foreground text-[10px] tabular-nums">{marketDirectionAnalysis.overUnder.lower.toFixed(1)}%</span>
                                     </div>
-                                    <Progress value={marketDirectionAnalysis.overUnder.lower} className="h-1 sm:h-2 bg-slate-100 [&>div]:bg-accent" />
+                                    <Progress value={marketDirectionAnalysis.overUnder.lower} className="h-1 bg-muted [&>div]:bg-accent" />
                                 </div>
                                 <div className="space-y-1">
-                                    <div className="flex justify-between text-[6px] sm:text-[8px] font-black uppercase tracking-widest">
+                                    <div className="flex justify-between text-[6px] font-black uppercase tracking-widest">
                                         <span className="text-rose-600">OVER 4</span>
-                                        <span className="text-slate-900 text-[10px] sm:text-sm tabular-nums">{marketDirectionAnalysis.overUnder.higher.toFixed(1)}%</span>
+                                        <span className="text-foreground text-[10px] tabular-nums">{marketDirectionAnalysis.overUnder.higher.toFixed(1)}%</span>
                                     </div>
-                                    <Progress value={marketDirectionAnalysis.overUnder.higher} className="h-1 sm:h-2 bg-slate-100 [&>div]:bg-rose-500" />
+                                    <Progress value={marketDirectionAnalysis.overUnder.higher} className="h-1 bg-muted [&>div]:bg-rose-500" />
                                 </div>
                             </div>
                         </div>
 
-                        <div className="p-3 sm:p-5 rounded-xl sm:rounded-[2rem] bg-white border border-slate-200 shadow-sm flex flex-col justify-center text-center">
-                            <p className="text-[7px] sm:text-[9px] font-black uppercase text-primary tracking-widest mb-1.5">TECHNICAL HUD FLUX</p>
-                            <p className="text-sm sm:text-xl font-black text-slate-950 tabular-nums tracking-tighter leading-none mb-3">
+                        <div className="p-3 rounded-xl bg-card border border-border shadow-sm flex flex-col justify-center text-center">
+                            <p className="text-[7px] font-black uppercase text-primary tracking-widest mb-1.5">TECHNICAL HUD FLUX</p>
+                            <p className="text-sm font-black text-foreground tabular-nums tracking-tighter leading-none mb-3">
                                 {price.toFixed(decimalPlaces)}
                             </p>
                             <div className="grid grid-cols-2 gap-2">
-                                <div className="bg-emerald-50 border border-emerald-100 py-1.5 rounded-lg">
-                                    <p className="text-[5px] sm:text-[7px] font-black text-emerald-600 uppercase tracking-widest">BULLISH</p>
-                                    <p className="text-[10px] sm:text-sm font-black text-slate-900">{marketDirectionAnalysis.overUnder.higher.toFixed(0)}%</p>
+                                <div className="bg-emerald-50 dark:bg-emerald-950/20 border border-emerald-100 dark:border-emerald-900 py-1.5 rounded-lg">
+                                    <p className="text-[5px] font-black text-emerald-600 uppercase tracking-widest">BULLISH</p>
+                                    <p className="text-[10px] font-black text-foreground">{marketDirectionAnalysis.overUnder.higher.toFixed(0)}%</p>
                                 </div>
-                                <div className="bg-rose-50 border border-rose-100 py-1.5 rounded-lg">
-                                    <p className="text-[5px] sm:text-[7px] font-black text-rose-600 uppercase tracking-widest">BEARISH</p>
-                                    <p className="text-[10px] sm:text-sm font-black text-slate-900">{marketDirectionAnalysis.overUnder.lower.toFixed(0)}%</p>
+                                <div className="bg-rose-50 dark:bg-rose-950/20 border border-rose-100 dark:border-rose-900 py-1.5 rounded-lg">
+                                    <p className="text-[5px] font-black text-rose-600 uppercase tracking-widest">BEARISH</p>
+                                    <p className="text-[10px] font-black text-foreground">{marketDirectionAnalysis.overUnder.lower.toFixed(0)}%</p>
                                 </div>
                             </div>
                         </div>

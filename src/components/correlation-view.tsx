@@ -1,4 +1,3 @@
-
 'use client';
 
 import * as React from 'react';
@@ -82,7 +81,7 @@ export const DigitFrequencyCircles = ({
                             stroke="currentColor" 
                             strokeWidth="6" 
                             fill="transparent" 
-                            className="text-muted/30"
+                            className="text-muted/20"
                         />
                         <circle 
                             cx="50%" cy="50%" r="42%" 
@@ -115,7 +114,7 @@ export const DigitFrequencyCircles = ({
                 
                 <div className="h-4 mt-1 flex items-center justify-center">
                     {isLast && (
-                        <Triangle className="w-2.5 h-2.5 sm:w-3.5 sm:h-3.5 fill-muted-foreground text-muted-foreground" />
+                        <Triangle className="w-2.5 h-2.5 sm:w-3.5 fill-muted-foreground text-muted-foreground" />
                     )}
                 </div>
             </div>
@@ -123,23 +122,23 @@ export const DigitFrequencyCircles = ({
     };
 
     return (
-        <Card className="overflow-hidden border-none shadow-sm bg-card rounded-[1.5rem] sm:rounded-[3rem] border border-border">
+        <Card className="overflow-hidden border-none shadow-sm bg-card rounded-[1.5rem] sm:rounded-[2rem] border border-border">
             <div className="px-6 sm:px-12 pt-6 sm:pt-8 flex flex-col sm:flex-row items-center justify-between gap-4">
                 <div className="flex items-center gap-3 bg-muted px-5 py-2 rounded-full text-[10px] text-muted-foreground font-black border border-border uppercase tracking-widest shadow-sm">
                     <span>SAMPLE: {ticks.length}</span>
                     <span className="w-1 h-1 rounded-full bg-border" />
                     <span>{marketName.toUpperCase()}</span>
                 </div>
-                <h2 className="text-sm sm:text-lg font-black uppercase tracking-[0.4em] text-foreground">DIGIT FREQUENCY</h2>
+                <h2 className="text-sm font-black uppercase tracking-[0.4em] text-foreground">DIGIT FREQUENCY</h2>
             </div>
-            <CardContent className="p-6 sm:p-12">
-                <div className="space-y-8 sm:space-y-16">
-                    <div className="grid grid-cols-5 gap-3 sm:gap-8">
+            <CardContent className="p-6 sm:p-10">
+                <div className="space-y-8 sm:space-y-12">
+                    <div className="grid grid-cols-5 gap-3 sm:gap-6">
                         {digitData.slice(0, 5).map((data) => (
                             <DigitCircle key={data.index} digit={data.index} percentage={data.percentage} colorClass={data.colorClass} isLast={lastDigit === data.index} isSelected={selectedDigit === data.index} />
                         ))}
                     </div>
-                    <div className="grid grid-cols-5 gap-3 sm:gap-8">
+                    <div className="grid grid-cols-5 gap-3 sm:gap-6">
                         {digitData.slice(5, 10).map((data) => (
                             <DigitCircle key={data.index} digit={data.index} percentage={data.percentage} colorClass={data.colorClass} isLast={lastDigit === data.index} isSelected={selectedDigit === data.index} />
                         ))}
@@ -251,9 +250,9 @@ export function CorrelationView({
                             <SelectTrigger className="h-14 bg-muted/50 border-border rounded-[1.25rem] font-black text-base px-6 shadow-sm">
                                 <SelectValue placeholder="Select Index" />
                             </SelectTrigger>
-                            <SelectContent side="bottom" position="popper" sideOffset={8} className="w-[var(--radix-select-trigger-width)] max-h-[300px] rounded-[1.5rem] border-border bg-card text-foreground z-[100] shadow-2xl">
+                            <SelectContent className="bg-card border-border text-foreground rounded-2xl">
                                 {syntheticIndices.map((index) => (
-                                <SelectItem key={index.id} value={index.id} className="focus:bg-primary/10 focus:text-foreground cursor-pointer py-3 px-6 font-black text-sm">
+                                <SelectItem key={index.id} value={index.id} className="focus:bg-primary/10 font-black text-sm py-3 px-6">
                                     {index.name}
                                 </SelectItem>
                                 ))}
@@ -262,13 +261,13 @@ export function CorrelationView({
                     </div>
                     <div className="space-y-2 text-center">
                         <Label className="text-[10px] font-black uppercase tracking-widest text-primary">LIVE PRICE</Label>
-                        <div className="h-14 bg-gradient-to-br from-primary to-blue-700 rounded-[1.25rem] flex items-center justify-center shadow-md border border-white/10">
-                             <span className="text-2xl font-black tabular-nums text-white drop-shadow-sm">{price.toFixed(decimalPlaces)}</span>
+                        <div className="h-14 bg-primary text-primary-foreground rounded-[1.25rem] flex items-center justify-center shadow-md border border-white/10">
+                             <span className="text-2xl font-black tabular-nums">{price.toFixed(decimalPlaces)}</span>
                         </div>
                     </div>
                     <div className="space-y-2 text-center">
                         <Label className="text-[10px] font-black uppercase tracking-widest text-primary">SAMPLE HORIZON</Label>
-                        <div className="h-14 bg-muted/50 border-border rounded-[1.25rem] flex items-center justify-center font-black text-3xl text-primary shadow-inner border border-primary/20">{lastDigitTicks.length}</div>
+                        <div className="h-14 bg-muted/50 border-border rounded-[1.25rem] flex items-center justify-center font-black text-3xl text-primary shadow-inner">{lastDigitTicks.length}</div>
                     </div>
                 </CardContent>
             </Card>
