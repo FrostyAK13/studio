@@ -11,12 +11,13 @@ import { CorrelationView } from './correlation-view';
 import { GlobalMarketScanner } from './global-market-scanner';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
-import { RefreshCw, Radio, Activity } from 'lucide-react';
+import { RefreshCw, Radio, Activity, Moon, Sun } from 'lucide-react';
 
 type EngineStatus = 'offline' | 'active';
 
 export function Dashboard() {
     const [mounted, setMounted] = React.useState(false);
+    const [theme, setTheme] = React.useState<'light' | 'dark'>('light');
     const [price, setPrice] = React.useState(0);
     const [lastDigitTicks, setLastDigitTicks] = React.useState<number[]>([]);
     const [priceHistory, setPriceHistory] = React.useState<number[]>([]);
@@ -33,7 +34,15 @@ export function Dashboard() {
 
     React.useEffect(() => {
         setMounted(true);
+        const savedTheme = localStorage.getItem('theme') as 'light' | 'dark';
+        if (savedTheme) setTheme(savedTheme);
     }, []);
+
+    React.useEffect(() => {
+        if (!mounted) return;
+        document.documentElement.classList.toggle('dark', theme === 'dark');
+        localStorage.setItem('theme', theme);
+    }, [theme, mounted]);
 
     React.useEffect(() => {
         currentMarketRef.current = selectedMarket;
@@ -151,35 +160,57 @@ export function Dashboard() {
 
     const handleMaxTicksBlur = () => { if (maxTicks < 1) setMaxTicks(1); };
 
-    if (!mounted) return <div className="flex min-h-screen items-center justify-center bg-white"><Activity className="h-4 w-4 animate-spin text-primary" /></div>;
+    if (!mounted) return <div className="flex min-h-screen items-center justify-center bg-background"><Activity className="h-4 w-4 animate-spin text-primary" /></div>;
 
     const analyzedDigits = lastDigitTicks.slice(0, maxTicks);
     const analyzedPrices = priceHistory.slice(0, maxTicks);
 
     return (
-        <div className="flex min-h-screen w-full flex-col bg-slate-50 font-sans overflow-x-hidden">
-            <header className="sticky top-0 z-[100] flex h-[3.5rem] items-center border-b bg-white/95 backdrop-blur-xl px-4 shadow-sm">
+        <div className="flex min-h-screen w-full flex-col bg-background font-sans overflow-x-hidden">
+            <header className="sticky top-0 z-[100] flex h-[3.5rem] items-center border-b bg-background/95 backdrop-blur-xl px-4 shadow-sm">
                 <div className="flex w-full items-center justify-between max-w-[1600px] mx-auto">
                     <div className="flex items-center gap-2 shrink-0">
-                        <Button variant="outline" onClick={() => window.location.reload()} title="SYSTEM RELOAD" className="h-8 w-8 rounded-full border-slate-200 bg-slate-100 hover:bg-slate-200 flex items-center justify-center shadow-sm group active:scale-95 transition-all">
-                            <RefreshCw className="h-3.5 w-3.5 text-slate-950 group-hover:rotate-180 transition-transform duration-500" />
-                        </Button>
-                        <div className="hidden sm:flex items-center gap-2 bg-slate-100 px-4 py-1.5 rounded-full border border-slate-200 shadow-sm">
-                             <span className="text-[10px] font-black text-slate-950 uppercase tracking-[0.3em]">FROSTY TRADERS</span>
+                        <div className="relative group">
+                            <div className="absolute -inset-1 bg-gradient-to-r from-primary to-cyan-500 rounded-full blur opacity-25 group-hover:opacity-100 transition duration-1000 group-hover:duration-200 animate-pulse" />
+                            <Button 
+                                variant="outline" 
+                                onClick={() => window.location.reload()} 
+                                title="SYSTEM RELOAD" 
+                                className="relative h-8 w-8 rounded-full border-border bg-background hover:bg-muted flex items-center justify-center shadow-sm group active:scale-95 transition-all"
+                            >
+                                <RefreshCw className="h-3.5 w-3.5 text-foreground group-hover:rotate-180 transition-transform duration-500" />
+                            </Button>
                         </div>
+                        <a 
+                            href="https://frostytraders.com" 
+                            target="_blank" 
+                            rel="noopener noreferrer"
+                            className="hidden sm:flex items-center gap-2 bg-muted/50 px-4 py-1.5 rounded-full border border-border shadow-sm hover:bg-muted transition-colors"
+                        >
+                             <span className="text-[10px] font-black text-foreground uppercase tracking-[0.3em]">FROSTY TRADERS</span>
+                        </a>
                     </div>
                     
-                    <div className="flex items-center gap-2 shrink-0">
-                        <div className="flex items-center bg-white border border-slate-200 rounded-full shadow-lg h-8 px-1 overflow-hidden">
-                            <div className="flex items-center gap-3 px-4 py-1.5 border-r border-slate-100">
+                    <div className="flex items-center gap-3 shrink-0">
+                        <div className="flex items-center bg-card border border-border rounded-full shadow-lg h-8 px-1 overflow-hidden">
+                            <div className="flex items-center gap-3 px-4 py-1.5 border-r border-border">
                                 <div className={cn("h-2 w-2 rounded-full animate-pulse transition-all duration-500", surveillanceStatus === 'active' ? "bg-emerald-500 shadow-[0_0_10px_rgba(16,185,129,0.8)]" : "bg-rose-500 shadow-[0_0_10px_rgba(244,63,94,0.8)]")} />
-                                <span className="text-[10px] font-black text-slate-950 uppercase tracking-[0.3em]">SURVEILLANCE</span>
+                                <span className="text-[10px] font-black text-foreground uppercase tracking-[0.3em]">SURVEILLANCE</span>
                             </div>
-                            <div className="flex items-center gap-2 px-4 py-1.5 bg-slate-50/50">
+                            <div className="flex items-center gap-2 px-4 py-1.5 bg-muted/50">
                                 <Radio className={cn("h-3 w-3 transition-all duration-500", surveillanceStatus === 'active' ? 'text-emerald-500 animate-pulse' : 'text-rose-500')} />
-                                <span className="text-[9px] font-black uppercase text-slate-950 tracking-[0.2em]">{surveillanceStatus === 'active' ? 'LIVE' : 'OFFLINE'}</span>
+                                <span className="text-[9px] font-black uppercase text-foreground tracking-[0.2em]">{surveillanceStatus === 'active' ? 'LIVE' : 'OFFLINE'}</span>
                             </div>
                         </div>
+
+                        <Button
+                            variant="ghost"
+                            size="icon"
+                            onClick={() => setTheme(theme === 'light' ? 'dark' : 'light')}
+                            className="h-8 w-8 rounded-full border border-border bg-card shadow-sm hover:bg-muted text-foreground"
+                        >
+                            {theme === 'light' ? <Moon className="h-4 w-4" /> : <Sun className="h-4 w-4" />}
+                        </Button>
                     </div>
                 </div>
             </header>
