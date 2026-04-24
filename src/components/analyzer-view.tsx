@@ -6,10 +6,10 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { syntheticIndices } from '@/lib/mock-data';
 import { cn } from '@/lib/utils';
-import { Crosshair } from 'lucide-react';
+import { Crosshair, Zap, Activity, ShieldCheck, Flame, ArrowUpCircle, ArrowDownCircle } from 'lucide-react';
 import { Progress } from '@/components/ui/progress';
 import { Badge } from '@/components/ui/badge';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import { DigitFrequencyCircles } from './correlation-view';
 
 interface AnalyzerViewProps {
@@ -40,7 +40,7 @@ export function AnalyzerView({
     const [tradeType, setTradeType] = React.useState('over-under');
     const [selectedDigit, setSelectedDigit] = React.useState<number>(5);
 
-    const stats = React.useMemo(() => {
+    const analysis = React.useMemo(() => {
         const total = lastDigitTicks.length || 1;
         const overCount = lastDigitTicks.filter(d => d > selectedDigit).length;
         const underCount = lastDigitTicks.filter(d => d < selectedDigit).length;
@@ -62,6 +62,8 @@ export function AnalyzerView({
         let val2 = 0;
         let label1 = "ALPHA";
         let label2 = "BETA";
+        let signalLabel = "";
+        let signalActive = false;
 
         switch (tradeType) {
             case 'over-under':
@@ -69,24 +71,31 @@ export function AnalyzerView({
                 label2 = `UNDER ${selectedDigit}`;
                 val1 = (overCount / total) * 100;
                 val2 = (underCount / total) * 100;
+                if (val1 > 55) { signalLabel = `OVER ${selectedDigit}`; signalActive = true; }
+                else if (val2 > 55) { signalLabel = `UNDER ${selectedDigit}`; signalActive = true; }
                 break;
             case 'even-odd':
                 label1 = "EVEN";
                 label2 = "ODD";
                 val1 = (evenCount / total) * 100;
                 val2 = (oddCount / total) * 100;
+                if (val1 > 55) { signalLabel = "EVEN"; signalActive = true; }
+                else if (val2 > 55) { signalLabel = "ODD"; signalActive = true; }
                 break;
             case 'rise-fall':
                 label1 = "RISE";
                 label2 = "FALL";
                 val1 = (riseCount / rfTotal) * 100;
                 val2 = (fallCount / rfTotal) * 100;
+                if (val1 > 55) { signalLabel = "RISE"; signalActive = true; }
+                else if (val2 > 55) { signalLabel = "FALL"; signalActive = true; }
                 break;
             case 'matches-differs':
                 label1 = "MATCHES";
                 label2 = "DIFFERS";
                 val1 = (matchCount / total) * 100;
                 val2 = (differCount / total) * 100;
+                if (val2 > 90) { signalLabel = `DIFFER ${selectedDigit}`; signalActive = true; }
                 break;
         }
 
@@ -96,10 +105,8 @@ export function AnalyzerView({
             label1,
             label2,
             delta: Math.abs(val1 - val2),
-            overCount,
-            underCount,
-            overPerc: (overCount / total) * 100,
-            underPerc: (underCount / total) * 100
+            signalLabel,
+            signalActive
         };
     }, [lastDigitTicks, priceHistory, selectedDigit, tradeType]);
 
@@ -207,7 +214,7 @@ export function AnalyzerView({
                                 <h3 className="text-sm font-black text-foreground tracking-tight uppercase">ANALYSIS HUD</h3>
                             </div>
                             <div className="flex flex-wrap justify-center lg:justify-start gap-1">
-                                <Badge variant="outline" className="font-black tracking-widest text-[7px] px-2 py-0.5 uppercase">{stats.label1} vs {stats.label2}</Badge>
+                                <Badge variant="outline" className="font-black tracking-widest text-[7px] px-2 py-0.5 uppercase">{analysis.label1} vs {analysis.label2}</Badge>
                                 <Badge variant="outline" className="font-black tracking-widest text-[7px] px-2 py-0.5 uppercase border-primary text-primary">TARGET: {selectedDigit}</Badge>
                             </div>
                         </div>
@@ -215,17 +222,17 @@ export function AnalyzerView({
                         <div className="lg:col-span-6 grid grid-cols-2 gap-6">
                             <div className="space-y-1.5">
                                 <div className="flex justify-between items-end">
-                                    <p className="text-[8px] font-black uppercase text-emerald-600 tracking-[0.1em]">{stats.label1}</p>
-                                    <p className="text-lg font-black text-emerald-600 tabular-nums">{stats.val1.toFixed(1)}%</p>
+                                    <p className="text-[9px] font-black uppercase text-emerald-600 tracking-[0.1em]">{analysis.label1}</p>
+                                    <p className="text-lg font-black text-emerald-600 tabular-nums">{analysis.val1.toFixed(1)}%</p>
                                 </div>
-                                <Progress value={stats.val1} className="h-2 bg-muted [&>div]:bg-emerald-500" />
+                                <Progress value={analysis.val1} className="h-2 bg-muted [&>div]:bg-emerald-500" />
                             </div>
                             <div className="space-y-1.5">
                                 <div className="flex justify-between items-end">
-                                    <p className="text-[8px] font-black uppercase text-rose-600 tracking-[0.1em]">{stats.label2}</p>
-                                    <p className="text-lg font-black text-rose-600 tabular-nums">{stats.val2.toFixed(1)}%</p>
+                                    <p className="text-[9px] font-black uppercase text-rose-600 tracking-[0.1em]">{analysis.label2}</p>
+                                    <p className="text-lg font-black text-rose-600 tabular-nums">{analysis.val2.toFixed(1)}%</p>
                                 </div>
-                                <Progress value={stats.val2} className="h-2 bg-muted [&>div]:bg-rose-500" />
+                                <Progress value={analysis.val2} className="h-2 bg-muted [&>div]:bg-rose-500" />
                             </div>
                         </div>
 
@@ -237,18 +244,83 @@ export function AnalyzerView({
                             <div className="w-px h-8 bg-border" />
                             <div className="text-center">
                                 <p className="text-[7px] font-black text-muted-foreground uppercase tracking-widest">VARIANCE</p>
-                                <p className="text-lg font-black text-emerald-600 tabular-nums tracking-tighter">{stats.delta.toFixed(1)}%</p>
+                                <p className="text-lg font-black text-emerald-600 tabular-nums tracking-tighter">{analysis.delta.toFixed(1)}%</p>
                             </div>
                         </div>
                     </div>
 
                     <div className="pt-3 border-t border-border">
                         <p className="text-[9px] font-medium text-muted-foreground leading-relaxed italic text-center lg:text-left">
-                            "SURVEILLANCE LOG: Engine identifies a <span className={cn("font-black px-1.5 py-0.5 rounded-md", stats.val1 > stats.val2 ? "text-emerald-600 bg-emerald-500/10" : "text-rose-600 bg-rose-500/10")}>{stats.val1 > stats.val2 ? stats.label1 : stats.label2}</span> directional bias. Confirmed stability for current tactical execution."
+                            "SURVEILLANCE LOG: Engine identifies a <span className={cn("font-black px-1.5 py-0.5 rounded-md", analysis.val1 > analysis.val2 ? "text-emerald-600 bg-emerald-500/10" : "text-rose-600 bg-rose-500/10")}>{analysis.val1 > analysis.val2 ? analysis.label1 : analysis.label2}</span> directional bias. Confirmed stability for current tactical execution."
                         </p>
                     </div>
                 </CardContent>
             </Card>
+
+            <Card className={cn(
+                "border-none rounded-xl border overflow-hidden relative transition-all duration-500",
+                analysis.signalActive ? "bg-emerald-500 shadow-[0_0_25px_rgba(16,185,129,0.3)] border-emerald-400/50" : "bg-card border-border shadow-sm"
+            )}>
+                <CardContent className="p-4 sm:p-6">
+                    <div className="flex flex-col md:flex-row items-center justify-between gap-6">
+                        <div className="flex items-center gap-4">
+                            <div className={cn(
+                                "w-12 h-12 rounded-2xl flex items-center justify-center transition-all duration-500 shadow-inner",
+                                analysis.signalActive ? "bg-white/20 text-white animate-pulse" : "bg-muted text-muted-foreground/30"
+                            )}>
+                                {analysis.signalActive ? <Zap className="h-6 w-6" /> : <Activity className="h-6 w-6" />}
+                            </div>
+                            <div>
+                                <h4 className={cn(
+                                    "text-xs font-black uppercase tracking-[0.2em]",
+                                    analysis.signalActive ? "text-white" : "text-muted-foreground"
+                                )}>
+                                    {analysis.signalActive ? "SIGNAL DETECTED" : "AWAITING SIGNAL"}
+                                </h4>
+                                <div className="flex items-center gap-2 mt-1">
+                                    <div className={cn("h-1.5 w-1.5 rounded-full", analysis.signalActive ? "bg-white animate-pulse" : "bg-muted-foreground/20")} />
+                                    <p className={cn(
+                                        "text-[8px] font-black uppercase tracking-[0.3em]",
+                                        analysis.signalActive ? "text-white/80" : "text-muted-foreground/40"
+                                    )}>
+                                        {analysis.signalActive ? "STABILITY GATE LOCKED" : "MONITORING FLOW VECTORS"}
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+
+                        {analysis.signalActive ? (
+                            <motion.div 
+                                initial={{ opacity: 0, scale: 0.9 }}
+                                animate={{ opacity: 1, scale: 1 }}
+                                className="flex flex-col items-center md:items-end text-white"
+                            >
+                                <p className="text-[8px] font-black uppercase tracking-[0.4em] mb-1.5 text-white/60">ENTRY VECTOR</p>
+                                <div className="flex items-center gap-3">
+                                    <span className="text-3xl font-black tracking-tighter uppercase leading-none">{analysis.signalLabel}</span>
+                                    <ShieldCheck className="h-8 w-8 text-white" />
+                                </div>
+                                <p className="text-[10px] font-black uppercase tracking-widest mt-2 bg-white/10 px-3 py-1 rounded-full">CONFIDENCE: 100+1%</p>
+                            </motion.div>
+                        ) : (
+                            <div className="flex flex-col items-center md:items-end opacity-20">
+                                <p className="text-[8px] font-black uppercase tracking-[0.4em] mb-1.5">ENTRY VECTOR</p>
+                                <div className="flex items-center gap-3">
+                                    <span className="text-3xl font-black tracking-tighter uppercase leading-none">---</span>
+                                    <Activity className="h-8 w-8" />
+                                </div>
+                            </div>
+                        )}
+                    </div>
+                </CardContent>
+            </Card>
+
+            <DigitFrequencyCircles 
+                ticks={lastDigitTicks} 
+                selectedDigit={selectedDigit} 
+                onDigitSelect={handleDigitSelect} 
+                selectedMarket={selectedMarket} 
+            />
 
             <Card className="border-none shadow-sm bg-muted/30 border border-border p-4 rounded-xl overflow-hidden relative">
                 <div className="flex flex-col sm:flex-row items-center justify-between gap-2 mb-4">
@@ -262,13 +334,6 @@ export function AnalyzerView({
                     {renderPattern()}
                 </div>
             </Card>
-
-            <DigitFrequencyCircles 
-                ticks={lastDigitTicks} 
-                selectedDigit={selectedDigit} 
-                onDigitSelect={handleDigitSelect} 
-                selectedMarket={selectedMarket} 
-            />
         </div>
     );
 }
