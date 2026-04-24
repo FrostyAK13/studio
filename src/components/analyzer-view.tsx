@@ -198,7 +198,7 @@ export function AnalyzerView({
                 </CardContent>
             </Card>
 
-            {/* Consistently Consolidated Analysis HUD - Amplified */}
+            {/* Consistently Consolidated Analysis HUD - Amplified but Corrected Size */}
             <Card className="border-none bg-slate-950/95 backdrop-blur-3xl rounded-xl sm:rounded-[2rem] border border-white/10 shadow-2xl overflow-hidden relative">
                 <div className="absolute top-0 left-0 w-full h-[2px] bg-gradient-to-r from-primary via-cyan-400 to-primary" />
                 <CardContent className="p-5 sm:p-10 space-y-8">
