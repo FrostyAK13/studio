@@ -73,18 +73,18 @@ export const DigitFrequencyCircles = ({
             >
                 <div className={cn(
                     "relative w-16 h-16 sm:w-20 md:w-24 lg:w-28 rounded-full flex items-center justify-center transition-all duration-300 border-2",
-                    isSelected ? "bg-black border-slate-700 shadow-2xl scale-110" : "bg-white border-transparent shadow-sm"
+                    isSelected ? "bg-slate-50 border-primary shadow-md scale-110" : "bg-white border-transparent"
                 )}>
                     <svg className="absolute inset-0 w-full h-full -rotate-90">
                         <circle 
                             cx="50%" cy="50%" r="42%" 
-                            stroke={isSelected ? "#1e293b" : "#f1f5f9"} 
+                            stroke={isSelected ? "#f8fafc" : "#f1f5f9"} 
                             strokeWidth="6" 
                             fill="transparent" 
                         />
                         <circle 
                             cx="50%" cy="50%" r="42%" 
-                            stroke={isSelected ? "#ffffff" : "currentColor"} 
+                            stroke={isSelected ? "hsl(var(--primary))" : "currentColor"} 
                             strokeWidth="8" 
                             fill="transparent" 
                             pathLength="100"
@@ -98,13 +98,13 @@ export const DigitFrequencyCircles = ({
                     <div className="flex flex-col items-center justify-center z-10 leading-none">
                         <span className={cn(
                             "text-xl sm:text-3xl md:text-4xl font-black transition-all",
-                            isSelected ? "text-white" : "text-slate-900"
+                            isSelected ? "text-primary" : "text-slate-900"
                         )}>
                             {digit}
                         </span>
                         <span className={cn(
                             "text-[8px] sm:text-[10px] md:text-xs font-bold mt-0.5",
-                            isSelected ? "text-white/60" : "text-slate-400"
+                            isSelected ? "text-primary/60" : "text-slate-400"
                         )}>
                             {percentage.toFixed(1)}%
                         </span>
@@ -121,7 +121,7 @@ export const DigitFrequencyCircles = ({
     };
 
     return (
-        <Card className="overflow-hidden border-none shadow-2xl bg-white rounded-[1.5rem] sm:rounded-[3rem]">
+        <Card className="overflow-hidden border-none shadow-sm bg-white rounded-[1.5rem] sm:rounded-[3rem] border border-slate-200">
             <div className="px-6 sm:px-12 pt-6 sm:pt-8 flex flex-col sm:flex-row items-center justify-between gap-4">
                 <div className="flex items-center gap-3 bg-slate-50 px-5 py-2 rounded-full text-[10px] text-slate-500 font-black border border-slate-100 uppercase tracking-widest shadow-sm">
                     <span>SAMPLE: {ticks.length}</span>
@@ -170,55 +170,55 @@ export const DigitAnalysisMatrix = ({ digit, ticks }: { digit: number, ticks: nu
 
     return (
         <div className="mt-4 sm:mt-8 animate-in fade-in slide-in-from-bottom-4 duration-700">
-            <Card className="border-none bg-slate-950 shadow-2xl overflow-hidden relative rounded-[2rem] border border-white/5">
+            <Card className="border-none bg-white shadow-lg overflow-hidden relative rounded-[2rem] border border-slate-200">
                 <CardHeader className="pb-4 pt-6 px-8">
                     <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
                         <div className="flex items-center gap-4 text-left">
-                            <div className="w-10 h-10 rounded-xl bg-primary/20 flex items-center justify-center border border-primary/30">
+                            <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center border border-primary/20">
                                 <Network className="h-5 w-5 text-primary" />
                             </div>
-                            <CardTitle className="text-xl font-black text-white tracking-tight uppercase leading-none">DIGIT ANALYSIS</CardTitle>
+                            <CardTitle className="text-xl font-black text-slate-900 tracking-tight uppercase leading-none">DIGIT ANALYSIS</CardTitle>
                         </div>
-                        <div className="bg-white/5 border border-white/10 px-6 py-2 rounded-2xl flex items-center gap-4 shadow-xl">
+                        <div className="bg-slate-50 border border-slate-200 px-6 py-2 rounded-2xl flex items-center gap-4 shadow-sm">
                             <div className="text-center">
                                 <p className="text-[8px] font-black text-slate-500 uppercase mb-0.5 tracking-widest">SEQUENCES</p>
-                                <p className="text-lg font-black text-white tabular-nums">{nexusAnalysis.totalFound}</p>
+                                <p className="text-lg font-black text-slate-950 tabular-nums">{nexusAnalysis.totalFound}</p>
                             </div>
                         </div>
                     </div>
                 </CardHeader>
                 <CardContent className="px-8 pb-8 space-y-6">
                     <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
-                        <div className="space-y-3 p-5 rounded-[1.5rem] bg-black/40 border border-white/5 shadow-inner">
-                            <div className="flex items-center justify-between border-b border-white/5 pb-3 mb-4">
-                                <h4 className="text-[10px] font-black uppercase tracking-widest text-slate-400 flex items-center gap-2">
-                                    <Cpu className="h-4 w-4 text-emerald-400" /> SUCCESSION BIAS
+                        <div className="space-y-3 p-5 rounded-[1.5rem] bg-slate-50 border border-slate-100 shadow-inner">
+                            <div className="flex items-center justify-between border-b border-slate-200 pb-3 mb-4">
+                                <h4 className="text-[10px] font-black uppercase tracking-widest text-slate-500 flex items-center gap-2">
+                                    <Cpu className="h-4 w-4 text-emerald-600" /> SUCCESSION BIAS
                                 </h4>
                             </div>
                             <div className="grid grid-cols-5 gap-3">
                                 {nexusAnalysis.results.slice(0, 5).map((res, idx) => (
-                                    <div key={res.digit} className={cn("p-3 rounded-2xl border transition-all duration-500 text-center", idx === 0 ? "bg-emerald-500/20 border-emerald-500/50 scale-105 z-10" : "bg-white/5 border-white/5")}>
-                                        <p className={cn("text-xl font-black mb-0", idx === 0 ? "text-white" : "text-white/60")}>{res.digit}</p>
-                                        <p className={cn("text-[9px] font-black tabular-nums", idx === 0 ? "text-emerald-400" : "text-slate-600")}>{res.probability.toFixed(1)}%</p>
+                                    <div key={res.digit} className={cn("p-3 rounded-2xl border transition-all duration-500 text-center", idx === 0 ? "bg-emerald-50 border-emerald-200 scale-105 z-10" : "bg-white border-slate-100")}>
+                                        <p className={cn("text-xl font-black mb-0", idx === 0 ? "text-emerald-700" : "text-slate-400")}>{res.digit}</p>
+                                        <p className={cn("text-[9px] font-black tabular-nums", idx === 0 ? "text-emerald-600" : "text-slate-300")}>{res.probability.toFixed(1)}%</p>
                                     </div>
                                 ))}
                             </div>
                         </div>
-                        <div className="space-y-3 p-5 rounded-[1.5rem] bg-black/40 border border-white/5 shadow-inner">
-                            <div className="flex items-center justify-between border-b border-white/5 pb-3 mb-4">
-                                <h4 className="text-[10px] font-black uppercase tracking-widest text-slate-400 flex items-center gap-2">
-                                    <Layers className="h-4 w-4 text-cyan-400" /> RECURSION MATRIX
+                        <div className="space-y-3 p-5 rounded-[1.5rem] bg-slate-50 border border-slate-100 shadow-inner">
+                            <div className="flex items-center justify-between border-b border-slate-200 pb-3 mb-4">
+                                <h4 className="text-[10px] font-black uppercase tracking-widest text-slate-500 flex items-center gap-2">
+                                    <Layers className="h-4 w-4 text-blue-600" /> RECURSION MATRIX
                                 </h4>
                             </div>
                             <div className="grid grid-cols-2 gap-3">
                                 {nexusAnalysis.chains.map((chain, idx) => (
-                                    <div key={idx} className="flex items-center justify-between p-3 bg-white/5 rounded-2xl border border-white/5 shadow-md">
+                                    <div key={idx} className="flex items-center justify-between p-3 bg-white rounded-2xl border border-slate-100 shadow-sm">
                                         <div className="flex items-center gap-2">
                                             <span className="text-primary font-black text-sm">{digit}</span>
-                                            <ArrowRight className="h-3 w-3 text-white/20" />
-                                            <span className="text-white font-black text-base">{chain.chain}</span>
+                                            <ArrowRight className="h-3 w-3 text-slate-300" />
+                                            <span className="text-slate-950 font-black text-base">{chain.chain}</span>
                                         </div>
-                                        <span className="text-xs font-black text-emerald-400 tabular-nums">{chain.probability.toFixed(1)}%</span>
+                                        <span className="text-xs font-black text-emerald-600 tabular-nums">{chain.probability.toFixed(1)}%</span>
                                     </div>
                                 ))}
                             </div>
@@ -241,17 +241,17 @@ export function CorrelationView({
 
     return (
         <div className="space-y-6 animate-in fade-in slide-in-from-bottom-6 duration-700 pb-24">
-            <Card className="border-none shadow-2xl bg-slate-900/40 backdrop-blur-3xl overflow-hidden relative rounded-[2rem] border border-white/5">
+            <Card className="border-none shadow-sm bg-white overflow-hidden relative rounded-[2rem] border border-slate-200">
                 <CardContent className="p-6 sm:p-8 grid grid-cols-1 md:grid-cols-3 gap-6 items-center">
                     <div className="space-y-2">
                         <Label className="text-[10px] font-black uppercase tracking-widest text-primary ml-2">MARKET VECTOR</Label>
                         <Select value={selectedMarket} onValueChange={onMarketChange}>
-                            <SelectTrigger className="h-14 bg-black/60 border-white/10 rounded-[1.25rem] font-black text-base px-6 shadow-inner">
+                            <SelectTrigger className="h-14 bg-slate-50 border-slate-200 rounded-[1.25rem] font-black text-base px-6 shadow-sm">
                                 <SelectValue placeholder="Select Index" />
                             </SelectTrigger>
-                            <SelectContent side="bottom" position="popper" sideOffset={8} className="w-[var(--radix-select-trigger-width)] max-h-[300px] rounded-[1.5rem] border-white/10 bg-slate-950 text-white z-[100] shadow-2xl">
+                            <SelectContent side="bottom" position="popper" sideOffset={8} className="w-[var(--radix-select-trigger-width)] max-h-[300px] rounded-[1.5rem] border-slate-200 bg-white text-slate-950 z-[100] shadow-2xl">
                                 {syntheticIndices.map((index) => (
-                                <SelectItem key={index.id} value={index.id} className="focus:bg-primary/20 focus:text-white cursor-pointer py-3 px-6 font-black text-sm">
+                                <SelectItem key={index.id} value={index.id} className="focus:bg-primary/10 focus:text-slate-950 cursor-pointer py-3 px-6 font-black text-sm">
                                     {index.name}
                                 </SelectItem>
                                 ))}
@@ -260,13 +260,13 @@ export function CorrelationView({
                     </div>
                     <div className="space-y-2 text-center">
                         <Label className="text-[10px] font-black uppercase tracking-widest text-primary">LIVE PRICE</Label>
-                        <div className="h-14 bg-gradient-to-br from-primary to-blue-800 rounded-[1.25rem] flex items-center justify-center shadow-2xl border border-white/10">
-                             <span className="text-2xl font-black tabular-nums text-white drop-shadow-lg">{price.toFixed(decimalPlaces)}</span>
+                        <div className="h-14 bg-gradient-to-br from-primary to-blue-700 rounded-[1.25rem] flex items-center justify-center shadow-md border border-white/10">
+                             <span className="text-2xl font-black tabular-nums text-white drop-shadow-sm">{price.toFixed(decimalPlaces)}</span>
                         </div>
                     </div>
                     <div className="space-y-2 text-center">
                         <Label className="text-[10px] font-black uppercase tracking-widest text-primary">SAMPLE HORIZON</Label>
-                        <div className="h-14 bg-black/60 border-white/10 rounded-[1.25rem] flex items-center justify-center font-black text-3xl text-primary shadow-inner border border-primary/20">{lastDigitTicks.length}</div>
+                        <div className="h-14 bg-slate-50 border-slate-200 rounded-[1.25rem] flex items-center justify-center font-black text-3xl text-primary shadow-inner border border-primary/20">{lastDigitTicks.length}</div>
                     </div>
                 </CardContent>
             </Card>

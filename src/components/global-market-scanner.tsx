@@ -104,15 +104,15 @@ export function GlobalMarketScanner({ onMarketSelect, lastDigitTicks = [], price
 
     return (
         <div className="space-y-6 animate-in fade-in slide-in-from-bottom-5 duration-700 pb-24 max-w-[1600px] mx-auto">
-            <Card className="border-none shadow-xl bg-slate-900/40 backdrop-blur-3xl overflow-hidden relative rounded-2xl sm:rounded-[3rem]">
+            <Card className="border-none shadow-sm bg-white overflow-hidden relative rounded-2xl sm:rounded-[3rem] border border-slate-200">
                 <div className="absolute top-0 left-0 w-full h-[2px] bg-gradient-to-r from-transparent via-primary/60 to-transparent" />
                 <CardHeader className="text-center pt-8 px-6">
                     <div className="flex flex-col items-center gap-4">
-                        <div className="w-14 h-14 rounded-2xl bg-primary/20 flex items-center justify-center border border-primary/30 shadow-[0_0_15px_rgba(var(--primary),0.3)]">
+                        <div className="w-14 h-14 rounded-2xl bg-primary/10 flex items-center justify-center border border-primary/20 shadow-sm">
                             <Network className="h-7 w-7 text-primary animate-pulse" />
                         </div>
                         <div>
-                            <CardTitle className="text-lg sm:text-xl font-black uppercase tracking-widest text-white leading-tight">MARKET SCANNER</CardTitle>
+                            <CardTitle className="text-lg sm:text-xl font-black uppercase tracking-widest text-slate-950 leading-tight">MARKET SCANNER</CardTitle>
                         </div>
                     </div>
                 </CardHeader>
@@ -122,8 +122,8 @@ export function GlobalMarketScanner({ onMarketSelect, lastDigitTicks = [], price
                             onClick={startScan} 
                             disabled={status === 'scanning'}
                             className={cn(
-                                "h-12 sm:h-16 px-8 sm:px-12 rounded-full font-black text-[9px] sm:text-xs uppercase tracking-[0.2em] shadow-xl transition-all active:scale-95 group relative overflow-hidden",
-                                status === 'scanning' ? "bg-slate-800 cursor-not-allowed" : "bg-primary hover:bg-primary/90"
+                                "h-12 sm:h-16 px-8 sm:px-12 rounded-full font-black text-[9px] sm:text-xs uppercase tracking-[0.2em] shadow-md transition-all active:scale-95 group relative overflow-hidden",
+                                status === 'scanning' ? "bg-slate-100 text-slate-500 cursor-not-allowed" : "bg-primary text-primary-foreground hover:bg-primary/90"
                             )}
                         >
                             <div className="absolute inset-0 bg-white/10 opacity-0 group-hover:opacity-100 transition-opacity" />
@@ -158,8 +158,8 @@ export function GlobalMarketScanner({ onMarketSelect, lastDigitTicks = [], price
                                                 className={cn(
                                                     "px-2 sm:px-3 py-1 rounded-full border text-[7px] sm:text-[9px] font-black uppercase transition-all duration-100",
                                                     idx === currentScanIndex 
-                                                        ? "bg-primary border-primary text-white scale-110 shadow-lg z-10" 
-                                                        : "bg-black/20 border-white/5 text-muted-foreground/40"
+                                                        ? "bg-primary border-primary text-white scale-110 shadow-md z-10" 
+                                                        : "bg-slate-50 border-slate-200 text-slate-400"
                                                 )}
                                             >
                                                 {m.id}
@@ -168,7 +168,7 @@ export function GlobalMarketScanner({ onMarketSelect, lastDigitTicks = [], price
                                     </div>
                                     <div className="text-center space-y-2">
                                         <p className="text-[9px] sm:text-[11px] font-black text-primary animate-pulse tracking-widest uppercase">SCANNING: {volatilityIndices[currentScanIndex].name}</p>
-                                        <div className="w-full bg-black/40 h-2 rounded-full overflow-hidden border border-white/5 shadow-inner">
+                                        <div className="w-full bg-slate-100 h-2 rounded-full overflow-hidden border border-slate-200 shadow-inner">
                                             <motion.div 
                                                 className="h-full bg-primary"
                                                 initial={{ width: '0%' }}
@@ -188,51 +188,51 @@ export function GlobalMarketScanner({ onMarketSelect, lastDigitTicks = [], price
                                     className="w-full space-y-8"
                                 >
                                     <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-5 gap-3 sm:gap-4">
-                                        <Card className="bg-emerald-500/10 border border-emerald-500/30 p-4 rounded-2xl relative group" >
-                                            <div className="absolute top-2 right-3"><Crosshair className="h-3 w-3 text-emerald-400" /></div>
-                                            <p className="text-[7px] sm:text-[8px] font-black text-emerald-400 uppercase tracking-widest mb-1">MARKET</p>
-                                            <p className="text-xs sm:text-sm font-black text-white leading-tight">{result.marketName}</p>
+                                        <Card className="bg-emerald-50 border border-emerald-200 p-4 rounded-2xl relative group" >
+                                            <div className="absolute top-2 right-3"><Crosshair className="h-3 w-3 text-emerald-600" /></div>
+                                            <p className="text-[7px] sm:text-[8px] font-black text-emerald-600 uppercase tracking-widest mb-1">MARKET</p>
+                                            <p className="text-xs sm:text-sm font-black text-slate-900 leading-tight">{result.marketName}</p>
                                         </Card>
 
-                                        <Card className="bg-primary/10 border border-primary/30 p-4 rounded-2xl relative">
+                                        <Card className="bg-primary/5 border border-primary/20 p-4 rounded-2xl relative">
                                             <div className="absolute top-2 right-3"><Zap className="h-3 w-3 text-primary" /></div>
                                             <p className="text-[7px] sm:text-[8px] font-black text-primary uppercase tracking-widest mb-1">STRATEGY</p>
-                                            <p className="text-sm sm:text-lg font-black text-white leading-tight">{result.strategy}</p>
+                                            <p className="text-sm sm:text-lg font-black text-slate-900 leading-tight">{result.strategy}</p>
                                         </Card>
 
-                                        <Card className="bg-blue-600/20 border border-blue-500/30 p-4 rounded-2xl relative animate-in zoom-in-95 duration-700">
-                                            <div className="absolute top-2 right-3"><Wallet className="h-3 w-3 text-blue-400" /></div>
-                                            <p className="text-[7px] sm:text-[8px] font-black text-blue-400 uppercase tracking-widest mb-1">LIVE PIVOT</p>
-                                            <p className="text-sm sm:text-lg font-black text-white leading-tight tabular-nums">
+                                        <Card className="bg-blue-50 border border-blue-200 p-4 rounded-2xl relative animate-in zoom-in-95 duration-700">
+                                            <div className="absolute top-2 right-3"><Wallet className="h-3 w-3 text-blue-600" /></div>
+                                            <p className="text-[7px] sm:text-[8px] font-black text-blue-600 uppercase tracking-widest mb-1">LIVE PIVOT</p>
+                                            <p className="text-sm sm:text-lg font-black text-slate-900 tabular-nums">
                                                 {price === 0 ? (
-                                                    <span className="text-amber-400 animate-pulse">SYNCING...</span>
+                                                    <span className="text-amber-600 animate-pulse">SYNCING...</span>
                                                 ) : (
                                                     price.toFixed(decimalPlaces)
                                                 )}
                                             </p>
                                         </Card>
 
-                                        <Card className="bg-cyan-500/10 border border-cyan-500/30 p-4 rounded-2xl relative">
-                                            <div className="absolute top-2 right-3"><Target className="h-3 w-3 text-cyan-400" /></div>
-                                            <p className="text-[7px] sm:text-[8px] font-black text-cyan-400 uppercase tracking-widest mb-1">ENTRY SIGNAL</p>
+                                        <Card className="bg-cyan-50 border border-cyan-200 p-4 rounded-2xl relative">
+                                            <div className="absolute top-2 right-3"><Target className="h-3 w-3 text-cyan-600" /></div>
+                                            <p className="text-[7px] sm:text-[8px] font-black text-cyan-600 uppercase tracking-widest mb-1">ENTRY SIGNAL</p>
                                             <div className="flex items-center gap-3">
                                                 <div>
-                                                    <p className="text-[6px] text-muted-foreground uppercase mb-0.5">TRIGGER</p>
-                                                    <p className="text-base sm:text-xl font-black text-white">{result.triggerDigit}</p>
+                                                    <p className="text-[6px] text-slate-500 uppercase mb-0.5">TRIGGER</p>
+                                                    <p className="text-base sm:text-xl font-black text-slate-900">{result.triggerDigit}</p>
                                                 </div>
-                                                <div className="w-px h-6 bg-white/10" />
+                                                <div className="w-px h-6 bg-slate-200" />
                                                 <div>
-                                                    <p className="text-[6px] text-muted-foreground uppercase mb-0.5">RECOVERY</p>
-                                                    <p className="text-base sm:text-xl font-black text-white">{result.recoveryDigit}</p>
+                                                    <p className="text-[6px] text-slate-500 uppercase mb-0.5">RECOVERY</p>
+                                                    <p className="text-base sm:text-xl font-black text-slate-900">{result.recoveryDigit}</p>
                                                 </div>
                                             </div>
                                         </Card>
 
-                                        <Card className="bg-amber-500/10 border border-amber-500/30 p-4 rounded-2xl relative">
-                                            <div className="absolute top-2 right-3"><BarChart3 className="h-3 w-3 text-amber-400" /></div>
-                                            <p className="text-[7px] sm:text-[8px] font-black text-amber-400 uppercase tracking-widest mb-1">STABILITY</p>
-                                            <p className="text-base sm:text-xl font-black text-white leading-tight tabular-nums">{result.successRate}%</p>
-                                            <div className="mt-1.5 h-1 w-full bg-black/40 rounded-full overflow-hidden">
+                                        <Card className="bg-amber-50 border border-amber-200 p-4 rounded-2xl relative">
+                                            <div className="absolute top-2 right-3"><BarChart3 className="h-3 w-3 text-amber-600" /></div>
+                                            <p className="text-[7px] sm:text-[8px] font-black text-amber-600 uppercase tracking-widest mb-1">STABILITY</p>
+                                            <p className="text-base sm:text-xl font-black text-slate-900 leading-tight tabular-nums">{result.successRate}%</p>
+                                            <div className="mt-1.5 h-1 w-full bg-slate-200 rounded-full overflow-hidden">
                                                 <div className="h-full bg-amber-500" style={{ width: `100%` }} />
                                             </div>
                                         </Card>
@@ -241,21 +241,21 @@ export function GlobalMarketScanner({ onMarketSelect, lastDigitTicks = [], price
                                     <Card className={cn(
                                         "p-6 sm:p-8 rounded-[2rem] sm:rounded-[2.5rem] border-2 transition-all duration-500 relative overflow-hidden",
                                         entryDetected 
-                                            ? "bg-emerald-500/10 border-emerald-500 shadow-[0_0_40px_rgba(16,185,129,0.3)]" 
-                                            : "bg-black/60 border-white/5"
+                                            ? "bg-emerald-50 border-emerald-500 shadow-sm" 
+                                            : "bg-slate-50 border-slate-200"
                                     )}>
                                         <div className="flex flex-col md:flex-row items-center justify-between gap-6">
                                             <div className="flex items-center gap-4 text-center md:text-left">
                                                 <div className={cn(
                                                     "w-12 h-12 rounded-xl flex items-center justify-center transition-all duration-500",
-                                                    entryDetected ? "bg-emerald-500 shadow-[0_0_15px_#10b981]" : "bg-white/5"
+                                                    entryDetected ? "bg-emerald-500 shadow-sm" : "bg-white border border-slate-200"
                                                 )}>
-                                                    {entryDetected ? <Flame className="h-6 w-6 text-white animate-bounce" /> : <Activity className="h-6 w-6 text-muted-foreground/40" />}
+                                                    {entryDetected ? <Flame className="h-6 w-6 text-white animate-bounce" /> : <Activity className="h-6 w-6 text-slate-300" />}
                                                 </div>
                                                 <div>
                                                     <h3 className={cn(
                                                         "text-lg sm:text-xl font-black uppercase tracking-tighter leading-none",
-                                                        entryDetected ? "text-white" : "text-muted-foreground/40"
+                                                        entryDetected ? "text-emerald-700" : "text-slate-400"
                                                     )}>
                                                         {entryDetected ? "ENTRY DETECTED" : "AWAITING ENTRY"}
                                                     </h3>
@@ -268,28 +268,28 @@ export function GlobalMarketScanner({ onMarketSelect, lastDigitTicks = [], price
                                             <div className="flex items-center gap-8">
                                                 {entryPrice && (
                                                     <div className="text-center animate-in zoom-in duration-500">
-                                                        <p className="text-[7px] font-black text-emerald-400 uppercase tracking-widest mb-0.5">ENTRY PRICE</p>
-                                                        <p className="text-lg sm:text-2xl font-black text-white tabular-nums leading-none">{entryPrice.toFixed(decimalPlaces)}</p>
+                                                        <p className="text-[7px] font-black text-emerald-600 uppercase tracking-widest mb-0.5">ENTRY PRICE</p>
+                                                        <p className="text-lg sm:text-2xl font-black text-slate-900 tabular-nums leading-none">{entryPrice.toFixed(decimalPlaces)}</p>
                                                     </div>
                                                 )}
-                                                <div className="w-px h-10 bg-white/10" />
+                                                <div className="w-px h-10 bg-slate-200" />
                                                 <div className="text-center">
-                                                    <p className="text-[7px] font-black text-muted-foreground uppercase tracking-widest mb-0.5">STABILITY LOCK</p>
+                                                    <p className="text-[7px] font-black text-slate-400 uppercase tracking-widest mb-0.5">STABILITY LOCK</p>
                                                     <div className="flex items-center gap-2">
                                                         <span className={cn(
                                                             "text-2xl sm:text-4xl font-black tabular-nums tracking-tighter leading-none",
-                                                            entryDetected ? "text-emerald-400" : "text-white/20"
+                                                            entryDetected ? "text-emerald-600" : "text-slate-200"
                                                         )}>
                                                             {stabilityTicks}
                                                         </span>
-                                                        <p className="text-[8px] font-black text-muted-foreground uppercase tracking-widest">TICKS</p>
+                                                        <p className="text-[8px] font-black text-slate-400 uppercase tracking-widest">TICKS</p>
                                                     </div>
                                                 </div>
                                             </div>
                                         </div>
                                         
                                         {entryDetected && (
-                                            <div className="mt-6 h-1.5 w-full bg-black/40 rounded-full overflow-hidden">
+                                            <div className="mt-6 h-1.5 w-full bg-emerald-100 rounded-full overflow-hidden">
                                                 <motion.div 
                                                     className="h-full bg-emerald-500"
                                                     initial={{ width: "100%" }}
@@ -300,17 +300,17 @@ export function GlobalMarketScanner({ onMarketSelect, lastDigitTicks = [], price
                                         )}
                                     </Card>
 
-                                    <div className="p-5 sm:p-8 bg-black/50 rounded-[2rem] border border-white/5 space-y-3 shadow-inner">
-                                        <div className="flex items-center justify-between border-b border-white/5 pb-3">
+                                    <div className="p-5 sm:p-8 bg-slate-50 rounded-[2rem] border border-slate-200 space-y-3 shadow-inner">
+                                        <div className="flex items-center justify-between border-b border-slate-100 pb-3">
                                             <h4 className="text-[9px] sm:text-[10px] font-black uppercase text-primary tracking-widest flex items-center gap-2">
                                                 <Cpu className="h-4 w-4" /> MARKET ANALYSIS
                                             </h4>
                                             <div className="flex items-center gap-1.5">
-                                                <span className="text-sm sm:text-lg text-emerald-400 font-black tabular-nums">{result.confidence.toFixed(2)}%</span>
-                                                <p className="text-[7px] text-muted-foreground uppercase tracking-widest font-black">STABILITY LOCK</p>
+                                                <span className="text-sm sm:text-lg text-emerald-600 font-black tabular-nums">{result.confidence.toFixed(2)}%</span>
+                                                <p className="text-[7px] text-slate-500 uppercase tracking-widest font-black">STABILITY LOCK</p>
                                             </div>
                                         </div>
-                                        <p className="text-[11px] sm:text-sm font-medium text-white/90 leading-relaxed italic">
+                                        <p className="text-[11px] sm:text-sm font-medium text-slate-700 leading-relaxed italic">
                                             "{result.reasoning}"
                                         </p>
                                     </div>
@@ -324,10 +324,10 @@ export function GlobalMarketScanner({ onMarketSelect, lastDigitTicks = [], price
                                     animate={{ opacity: 1 }}
                                     className="text-center space-y-4"
                                 >
-                                    <div className="w-14 h-14 sm:w-16 sm:h-16 rounded-full bg-white/5 border border-white/10 flex items-center justify-center mx-auto opacity-20">
-                                        <Orbit className="h-7 sm:h-8 text-muted-foreground" />
+                                    <div className="w-14 h-14 sm:w-16 sm:h-16 rounded-full bg-slate-50 border border-slate-200 flex items-center justify-center mx-auto opacity-20">
+                                        <Orbit className="h-7 sm:h-8 text-slate-400" />
                                     </div>
-                                    <p className="text-[9px] sm:text-[10px] font-black uppercase tracking-[0.3em] text-muted-foreground/40">ENGINE STANDBY</p>
+                                    <p className="text-[9px] sm:text-[10px] font-black uppercase tracking-[0.3em] text-slate-400">ENGINE STANDBY</p>
                                 </motion.div>
                             )}
                         </AnimatePresence>
