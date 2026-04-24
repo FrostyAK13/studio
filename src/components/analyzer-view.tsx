@@ -1,3 +1,4 @@
+
 'use client';
 
 import * as React from 'react';
@@ -111,7 +112,7 @@ export function AnalyzerView({
             const isPivot = i === pivotIndex;
             const isMatch = digit === selectedDigit;
             
-            let colorClass = "bg-slate-100 text-slate-400"; 
+            let colorClass = "bg-muted text-muted-foreground"; 
             
             if (isMatch && (tradeType === 'matches-differs')) {
                 colorClass = "bg-blue-600 border-blue-400 text-white shadow-[0_0_15px_rgba(37,99,235,0.4)] z-20";
@@ -135,7 +136,7 @@ export function AnalyzerView({
                     case 'matches-differs':
                         colorClass = isMatch 
                             ? "bg-blue-600 border-blue-400 text-white" 
-                            : "bg-slate-100 border-slate-200 text-slate-400";
+                            : "bg-muted border-border text-muted-foreground";
                         break;
                 }
             }
@@ -147,7 +148,7 @@ export function AnalyzerView({
                     animate={{ scale: 1, opacity: 1 }}
                     className={cn(
                         "w-7 h-7 sm:w-10 sm:h-10 rounded-full flex items-center justify-center font-black text-[10px] sm:text-base border transition-all duration-300 relative overflow-hidden",
-                        isPivot ? "ring-2 ring-primary ring-offset-2 ring-offset-white z-30 shadow-[0_0_15px_rgba(var(--primary),0.4)] bg-primary text-white" : colorClass
+                        isPivot ? "ring-2 ring-primary ring-offset-2 ring-offset-background z-30 shadow-[0_0_15px_rgba(var(--primary),0.4)] bg-primary text-primary-foreground" : colorClass
                     )}
                 >
                     <span className="relative z-10">{digit}</span>
@@ -164,16 +165,16 @@ export function AnalyzerView({
     return (
         <div className="space-y-4 animate-in fade-in slide-in-from-bottom-8 duration-1000 pb-24 max-w-7xl mx-auto">
             {/* Market Selection Card */}
-            <Card className="border-none shadow-sm bg-white rounded-xl sm:rounded-2xl border border-slate-200">
+            <Card className="border-none shadow-sm bg-card rounded-xl sm:rounded-2xl border border-border">
                 <CardContent className="p-3 sm:p-4 space-y-3">
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                         <div className="space-y-1">
                             <Label className="text-[8px] font-black uppercase tracking-[0.3em] text-primary ml-1">MARKET VECTOR</Label>
                             <Select value={selectedMarket} onValueChange={onMarketChange}>
-                                <SelectTrigger className="h-8 bg-slate-50 border-slate-200 rounded-lg font-black text-[10px]">
+                                <SelectTrigger className="h-8 bg-muted/50 border-border rounded-lg font-black text-[10px]">
                                     <SelectValue placeholder="Select Market" />
                                 </SelectTrigger>
-                                <SelectContent className="bg-white border-slate-200 text-slate-950 rounded-xl">
+                                <SelectContent className="bg-card border-border text-foreground rounded-xl">
                                     {syntheticIndices.map(m => (
                                         <SelectItem key={m.id} value={m.id} className="font-bold text-[10px]">{m.name}</SelectItem>
                                     ))}
@@ -183,10 +184,10 @@ export function AnalyzerView({
                         <div className="space-y-1">
                             <Label className="text-[8px] font-black uppercase tracking-[0.3em] text-primary ml-1">STRATEGY</Label>
                             <Select value={tradeType} onValueChange={setTradeType}>
-                                <SelectTrigger className="h-8 bg-slate-50 border-slate-200 rounded-lg font-black text-[10px]">
+                                <SelectTrigger className="h-8 bg-muted/50 border-border rounded-lg font-black text-[10px]">
                                     <SelectValue placeholder="Select Type" />
                                 </SelectTrigger>
-                                <SelectContent className="bg-white border-slate-200 text-slate-950 rounded-xl">
+                                <SelectContent className="bg-card border-border text-foreground rounded-xl">
                                     <SelectItem value="over-under" className="font-bold text-[10px]">Over/Under</SelectItem>
                                     <SelectItem value="even-odd" className="font-bold text-[10px]">Even/Odd</SelectItem>
                                     <SelectItem value="matches-differs" className="font-bold text-[10px]">Matches/Differs</SelectItem>
@@ -198,8 +199,8 @@ export function AnalyzerView({
                 </CardContent>
             </Card>
 
-            {/* Consistently Consolidated Analysis HUD - Light Mode */}
-            <Card className="border-none bg-white rounded-xl sm:rounded-[2rem] border border-slate-200 shadow-xl overflow-hidden relative">
+            {/* Consistently Consolidated Analysis HUD */}
+            <Card className="border-none bg-card rounded-xl sm:rounded-[2rem] border border-border shadow-xl overflow-hidden relative">
                 <div className="absolute top-0 left-0 w-full h-[2px] bg-gradient-to-r from-primary via-cyan-400 to-primary" />
                 <CardContent className="p-4 sm:p-8 space-y-6">
                     <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-center">
@@ -207,7 +208,7 @@ export function AnalyzerView({
                         <div className="lg:col-span-3 text-center lg:text-left space-y-3">
                             <div className="flex items-center gap-2.5 justify-center lg:justify-start">
                                 <Crosshair className="h-5 w-5 text-primary" />
-                                <h3 className="text-lg font-black text-slate-950 tracking-tight uppercase">ANALYSIS HUD</h3>
+                                <h3 className="text-lg font-black text-foreground tracking-tight uppercase">ANALYSIS HUD</h3>
                             </div>
                             <div className="flex flex-wrap justify-center lg:justify-start gap-1.5">
                                 <Badge className="bg-primary/10 text-primary border-none font-black tracking-widest text-[8px] px-2.5 py-1 uppercase">{stats.label1} vs {stats.label2}</Badge>
@@ -222,34 +223,34 @@ export function AnalyzerView({
                                     <p className="text-[10px] font-black uppercase text-emerald-600 tracking-[0.15em]">{stats.label1}</p>
                                     <p className="text-2xl font-black text-emerald-600 tabular-nums">{stats.val1.toFixed(1)}%</p>
                                 </div>
-                                <Progress value={stats.val1} className="h-4 bg-slate-100 [&>div]:bg-emerald-500" />
+                                <Progress value={stats.val1} className="h-4 bg-muted [&>div]:bg-emerald-500" />
                             </div>
                             <div className="space-y-2">
                                 <div className="flex justify-between items-end mb-0.5">
                                     <p className="text-[10px] font-black uppercase text-rose-600 tracking-[0.15em]">{stats.label2}</p>
                                     <p className="text-2xl font-black text-rose-600 tabular-nums">{stats.val2.toFixed(1)}%</p>
                                 </div>
-                                <Progress value={stats.val2} className="h-4 bg-slate-100 [&>div]:bg-rose-500" />
+                                <Progress value={stats.val2} className="h-4 bg-muted [&>div]:bg-rose-500" />
                             </div>
                         </div>
 
                         {/* Column 3: Live Price & Variance */}
                         <div className="lg:col-span-3 flex gap-6 items-center justify-center lg:justify-end">
                             <div className="text-center space-y-0.5">
-                                <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest">LIVE PRICE</p>
-                                <p className="text-xl sm:text-2xl font-black text-slate-950 tabular-nums tracking-tighter">{price.toFixed(decimalPlaces)}</p>
+                                <p className="text-[9px] font-black text-muted-foreground uppercase tracking-widest">LIVE PRICE</p>
+                                <p className="text-xl sm:text-2xl font-black text-foreground tabular-nums tracking-tighter">{price.toFixed(decimalPlaces)}</p>
                             </div>
-                            <div className="w-px h-10 bg-slate-200" />
+                            <div className="w-px h-10 bg-border" />
                             <div className="text-center space-y-0.5">
-                                <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest">VARIANCE</p>
+                                <p className="text-[9px] font-black text-muted-foreground uppercase tracking-widest">VARIANCE</p>
                                 <p className="text-xl sm:text-2xl font-black text-emerald-600 tabular-nums tracking-tighter">{stats.delta.toFixed(1)}%</p>
                             </div>
                         </div>
                     </div>
 
                     {/* Summary Row */}
-                    <div className="pt-4 border-t border-slate-100">
-                        <p className="text-[10px] sm:text-sm font-medium text-slate-600 leading-relaxed italic text-center lg:text-left">
+                    <div className="pt-4 border-t border-border">
+                        <p className="text-[10px] sm:text-sm font-medium text-muted-foreground leading-relaxed italic text-center lg:text-left">
                             "SURVEILLANCE LOG: Engine identifies a <span className={cn("font-black px-2 py-0.5 rounded-md", stats.val1 > stats.val2 ? "text-emerald-600 bg-emerald-500/10" : "text-rose-600 bg-rose-500/10")}>{stats.val1 > stats.val2 ? stats.label1 : stats.label2}</span> directional bias. Confirmed stability for current tactical execution."
                         </p>
                     </div>
@@ -257,9 +258,9 @@ export function AnalyzerView({
             </Card>
 
             {/* Stream Sequence */}
-            <Card className="border-none shadow-sm bg-slate-50 border border-slate-200 p-4 sm:p-6 rounded-xl sm:rounded-[2rem] overflow-hidden relative">
+            <Card className="border-none shadow-sm bg-muted/50 border border-border p-4 sm:p-6 rounded-xl sm:rounded-[2rem] overflow-hidden relative">
                 <div className="flex flex-col sm:flex-row items-center justify-between gap-2 mb-4">
-                    <h3 className="text-[8px] font-black uppercase tracking-[0.3em] text-slate-950">STREAM SEQUENCE</h3>
+                    <h3 className="text-[8px] font-black uppercase tracking-[0.3em] text-foreground">STREAM SEQUENCE</h3>
                     <div className="flex items-center gap-1.5">
                          <div className="h-1 w-1 rounded-full bg-blue-500 animate-pulse shadow-[0_0_8px_#3b82f6]" />
                          <span className="text-[7px] font-black uppercase text-blue-500 tracking-widest">ACTIVE SYNC</span>

@@ -1,3 +1,4 @@
+
 'use client';
 
 import * as React from 'react';
@@ -170,25 +171,25 @@ export function Dashboard() {
             <header className="sticky top-0 z-[100] flex h-[3.5rem] items-center border-b bg-background/95 backdrop-blur-xl px-4 shadow-sm">
                 <div className="flex w-full items-center justify-between max-w-[1600px] mx-auto">
                     <div className="flex items-center gap-2 shrink-0">
-                        <div className="relative group">
-                            <div className="absolute -inset-1 bg-gradient-to-r from-primary to-cyan-500 rounded-full blur opacity-25 group-hover:opacity-100 transition duration-1000 group-hover:duration-200 animate-pulse" />
-                            <Button 
-                                variant="outline" 
-                                onClick={() => window.location.reload()} 
-                                title="SYSTEM RELOAD" 
-                                className="relative h-8 w-8 rounded-full border-border bg-background hover:bg-muted flex items-center justify-center shadow-sm group active:scale-95 transition-all"
-                            >
-                                <RefreshCw className="h-3.5 w-3.5 text-foreground group-hover:rotate-180 transition-transform duration-500" />
-                            </Button>
-                        </div>
-                        <a 
-                            href="https://frostytraders.com" 
-                            target="_blank" 
-                            rel="noopener noreferrer"
-                            className="hidden sm:flex items-center gap-2 bg-muted/50 px-4 py-1.5 rounded-full border border-border shadow-sm hover:bg-muted transition-colors"
+                        <Button 
+                            variant="outline" 
+                            onClick={() => window.location.reload()} 
+                            title="SYSTEM RELOAD" 
+                            className="h-8 w-8 rounded-full border-border bg-background hover:bg-muted flex items-center justify-center shadow-sm group active:scale-90 transition-all duration-300"
                         >
-                             <span className="text-[10px] font-black text-foreground uppercase tracking-[0.3em]">FROSTY TRADERS</span>
-                        </a>
+                            <RefreshCw className="h-3.5 w-3.5 text-foreground group-hover:rotate-180 transition-transform duration-500" />
+                        </Button>
+                        <div className="relative group ml-2">
+                            <div className="absolute -inset-1 bg-gradient-to-r from-primary via-cyan-500 to-primary rounded-full blur opacity-40 group-hover:opacity-100 transition duration-1000 group-hover:duration-200 animate-pulse" />
+                            <a 
+                                href="https://frostytraders.com" 
+                                target="_blank" 
+                                rel="noopener noreferrer"
+                                className="relative flex items-center gap-2 bg-card px-4 py-1.5 rounded-full border border-border shadow-sm hover:bg-muted transition-colors"
+                            >
+                                 <span className="text-[10px] font-black text-foreground uppercase tracking-[0.3em]">FROSTY TRADERS</span>
+                            </a>
+                        </div>
                     </div>
                     
                     <div className="flex items-center gap-3 shrink-0">

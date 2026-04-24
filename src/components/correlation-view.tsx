@@ -1,3 +1,4 @@
+
 'use client';
 
 import * as React from 'react';
@@ -46,7 +47,7 @@ export const DigitFrequencyCircles = ({
 
         return {
             digitData: mapped.map(item => {
-                let colorClass = "text-slate-200"; 
+                let colorClass = "text-muted-foreground"; 
                 if (total > 10) {
                     if (item.count === max1) colorClass = "text-[#2dd4bf]"; // 1st Hottest (Ice Green)
                     else if (item.count === max2 && max2 !== max1) colorClass = "text-[#3b82f6]"; // 2nd Hottest (Blue)
@@ -73,14 +74,15 @@ export const DigitFrequencyCircles = ({
             >
                 <div className={cn(
                     "relative w-16 h-16 sm:w-20 md:w-24 lg:w-28 rounded-full flex items-center justify-center transition-all duration-300 border-2",
-                    isSelected ? "bg-slate-50 border-primary shadow-md scale-110" : "bg-white border-transparent"
+                    isSelected ? "bg-muted/50 border-primary shadow-md scale-110" : "bg-card border-transparent"
                 )}>
                     <svg className="absolute inset-0 w-full h-full -rotate-90">
                         <circle 
                             cx="50%" cy="50%" r="42%" 
-                            stroke={isSelected ? "#f8fafc" : "#f1f5f9"} 
+                            stroke="currentColor" 
                             strokeWidth="6" 
                             fill="transparent" 
+                            className="text-muted/30"
                         />
                         <circle 
                             cx="50%" cy="50%" r="42%" 
@@ -95,16 +97,16 @@ export const DigitFrequencyCircles = ({
                         />
                     </svg>
                     
-                    <div className="flex flex-col items-center justify-center z-10 leading-none">
+                    <div className="flex flex-col items-center justify-center z-10 leading-none text-foreground">
                         <span className={cn(
                             "text-xl sm:text-3xl md:text-4xl font-black transition-all",
-                            isSelected ? "text-primary" : "text-slate-900"
+                            isSelected ? "text-primary" : "text-foreground"
                         )}>
                             {digit}
                         </span>
                         <span className={cn(
                             "text-[8px] sm:text-[10px] md:text-xs font-bold mt-0.5",
-                            isSelected ? "text-primary/60" : "text-slate-400"
+                            isSelected ? "text-primary/60" : "text-muted-foreground"
                         )}>
                             {percentage.toFixed(1)}%
                         </span>
@@ -113,7 +115,7 @@ export const DigitFrequencyCircles = ({
                 
                 <div className="h-4 mt-1 flex items-center justify-center">
                     {isLast && (
-                        <Triangle className="w-2.5 h-2.5 sm:w-3.5 sm:h-3.5 fill-slate-400 text-slate-400" />
+                        <Triangle className="w-2.5 h-2.5 sm:w-3.5 sm:h-3.5 fill-muted-foreground text-muted-foreground" />
                     )}
                 </div>
             </div>
@@ -121,14 +123,14 @@ export const DigitFrequencyCircles = ({
     };
 
     return (
-        <Card className="overflow-hidden border-none shadow-sm bg-white rounded-[1.5rem] sm:rounded-[3rem] border border-slate-200">
+        <Card className="overflow-hidden border-none shadow-sm bg-card rounded-[1.5rem] sm:rounded-[3rem] border border-border">
             <div className="px-6 sm:px-12 pt-6 sm:pt-8 flex flex-col sm:flex-row items-center justify-between gap-4">
-                <div className="flex items-center gap-3 bg-slate-50 px-5 py-2 rounded-full text-[10px] text-slate-500 font-black border border-slate-100 uppercase tracking-widest shadow-sm">
+                <div className="flex items-center gap-3 bg-muted px-5 py-2 rounded-full text-[10px] text-muted-foreground font-black border border-border uppercase tracking-widest shadow-sm">
                     <span>SAMPLE: {ticks.length}</span>
-                    <span className="w-1 h-1 rounded-full bg-slate-300" />
+                    <span className="w-1 h-1 rounded-full bg-border" />
                     <span>{marketName.toUpperCase()}</span>
                 </div>
-                <h2 className="text-sm sm:text-lg font-black uppercase tracking-[0.4em] text-slate-900">DIGIT FREQUENCY</h2>
+                <h2 className="text-sm sm:text-lg font-black uppercase tracking-[0.4em] text-foreground">DIGIT FREQUENCY</h2>
             </div>
             <CardContent className="p-6 sm:p-12">
                 <div className="space-y-8 sm:space-y-16">
@@ -170,53 +172,53 @@ export const DigitAnalysisMatrix = ({ digit, ticks }: { digit: number, ticks: nu
 
     return (
         <div className="mt-4 sm:mt-8 animate-in fade-in slide-in-from-bottom-4 duration-700">
-            <Card className="border-none bg-white shadow-lg overflow-hidden relative rounded-[2rem] border border-slate-200">
+            <Card className="border-none bg-card shadow-lg overflow-hidden relative rounded-[2rem] border border-border">
                 <CardHeader className="pb-4 pt-6 px-8">
                     <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
                         <div className="flex items-center gap-4 text-left">
                             <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center border border-primary/20">
                                 <Network className="h-5 w-5 text-primary" />
                             </div>
-                            <CardTitle className="text-xl font-black text-slate-900 tracking-tight uppercase leading-none">DIGIT ANALYSIS</CardTitle>
+                            <CardTitle className="text-xl font-black text-foreground tracking-tight uppercase leading-none">DIGIT ANALYSIS</CardTitle>
                         </div>
-                        <div className="bg-slate-50 border border-slate-200 px-6 py-2 rounded-2xl flex items-center gap-4 shadow-sm">
+                        <div className="bg-muted/50 border border-border px-6 py-2 rounded-2xl flex items-center gap-4 shadow-sm">
                             <div className="text-center">
-                                <p className="text-[8px] font-black text-slate-500 uppercase mb-0.5 tracking-widest">SEQUENCES</p>
-                                <p className="text-lg font-black text-slate-950 tabular-nums">{nexusAnalysis.totalFound}</p>
+                                <p className="text-[8px] font-black text-muted-foreground uppercase mb-0.5 tracking-widest">SEQUENCES</p>
+                                <p className="text-lg font-black text-foreground tabular-nums">{nexusAnalysis.totalFound}</p>
                             </div>
                         </div>
                     </div>
                 </CardHeader>
                 <CardContent className="px-8 pb-8 space-y-6">
                     <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
-                        <div className="space-y-3 p-5 rounded-[1.5rem] bg-slate-50 border border-slate-100 shadow-inner">
-                            <div className="flex items-center justify-between border-b border-slate-200 pb-3 mb-4">
-                                <h4 className="text-[10px] font-black uppercase tracking-widest text-slate-500 flex items-center gap-2">
+                        <div className="space-y-3 p-5 rounded-[1.5rem] bg-muted/30 border border-border shadow-inner">
+                            <div className="flex items-center justify-between border-b border-border pb-3 mb-4">
+                                <h4 className="text-[10px] font-black uppercase tracking-widest text-muted-foreground flex items-center gap-2">
                                     <Cpu className="h-4 w-4 text-emerald-600" /> SUCCESSION BIAS
                                 </h4>
                             </div>
                             <div className="grid grid-cols-5 gap-3">
                                 {nexusAnalysis.results.slice(0, 5).map((res, idx) => (
-                                    <div key={res.digit} className={cn("p-3 rounded-2xl border transition-all duration-500 text-center", idx === 0 ? "bg-emerald-50 border-emerald-200 scale-105 z-10" : "bg-white border-slate-100")}>
-                                        <p className={cn("text-xl font-black mb-0", idx === 0 ? "text-emerald-700" : "text-slate-400")}>{res.digit}</p>
-                                        <p className={cn("text-[9px] font-black tabular-nums", idx === 0 ? "text-emerald-600" : "text-slate-300")}>{res.probability.toFixed(1)}%</p>
+                                    <div key={res.digit} className={cn("p-3 rounded-2xl border transition-all duration-500 text-center", idx === 0 ? "bg-emerald-500/10 border-emerald-500/20 scale-105 z-10" : "bg-card border-border")}>
+                                        <p className={cn("text-xl font-black mb-0", idx === 0 ? "text-emerald-500" : "text-muted-foreground")}>{res.digit}</p>
+                                        <p className={cn("text-[9px] font-black tabular-nums", idx === 0 ? "text-emerald-600" : "text-muted-foreground/50")}>{res.probability.toFixed(1)}%</p>
                                     </div>
                                 ))}
                             </div>
                         </div>
-                        <div className="space-y-3 p-5 rounded-[1.5rem] bg-slate-50 border border-slate-100 shadow-inner">
-                            <div className="flex items-center justify-between border-b border-slate-200 pb-3 mb-4">
-                                <h4 className="text-[10px] font-black uppercase tracking-widest text-slate-500 flex items-center gap-2">
+                        <div className="space-y-3 p-5 rounded-[1.5rem] bg-muted/30 border border-border shadow-inner">
+                            <div className="flex items-center justify-between border-b border-border pb-3 mb-4">
+                                <h4 className="text-[10px] font-black uppercase tracking-widest text-muted-foreground flex items-center gap-2">
                                     <Layers className="h-4 w-4 text-blue-600" /> RECURSION MATRIX
                                 </h4>
                             </div>
                             <div className="grid grid-cols-2 gap-3">
                                 {nexusAnalysis.chains.map((chain, idx) => (
-                                    <div key={idx} className="flex items-center justify-between p-3 bg-white rounded-2xl border border-slate-100 shadow-sm">
+                                    <div key={idx} className="flex items-center justify-between p-3 bg-card rounded-2xl border border-border shadow-sm">
                                         <div className="flex items-center gap-2">
                                             <span className="text-primary font-black text-sm">{digit}</span>
-                                            <ArrowRight className="h-3 w-3 text-slate-300" />
-                                            <span className="text-slate-950 font-black text-base">{chain.chain}</span>
+                                            <ArrowRight className="h-3 w-3 text-border" />
+                                            <span className="text-foreground font-black text-base">{chain.chain}</span>
                                         </div>
                                         <span className="text-xs font-black text-emerald-600 tabular-nums">{chain.probability.toFixed(1)}%</span>
                                     </div>
@@ -241,17 +243,17 @@ export function CorrelationView({
 
     return (
         <div className="space-y-6 animate-in fade-in slide-in-from-bottom-6 duration-700 pb-24">
-            <Card className="border-none shadow-sm bg-white overflow-hidden relative rounded-[2rem] border border-slate-200">
+            <Card className="border-none shadow-sm bg-card overflow-hidden relative rounded-[2rem] border border-border">
                 <CardContent className="p-6 sm:p-8 grid grid-cols-1 md:grid-cols-3 gap-6 items-center">
                     <div className="space-y-2">
                         <Label className="text-[10px] font-black uppercase tracking-widest text-primary ml-2">MARKET VECTOR</Label>
                         <Select value={selectedMarket} onValueChange={onMarketChange}>
-                            <SelectTrigger className="h-14 bg-slate-50 border-slate-200 rounded-[1.25rem] font-black text-base px-6 shadow-sm">
+                            <SelectTrigger className="h-14 bg-muted/50 border-border rounded-[1.25rem] font-black text-base px-6 shadow-sm">
                                 <SelectValue placeholder="Select Index" />
                             </SelectTrigger>
-                            <SelectContent side="bottom" position="popper" sideOffset={8} className="w-[var(--radix-select-trigger-width)] max-h-[300px] rounded-[1.5rem] border-slate-200 bg-white text-slate-950 z-[100] shadow-2xl">
+                            <SelectContent side="bottom" position="popper" sideOffset={8} className="w-[var(--radix-select-trigger-width)] max-h-[300px] rounded-[1.5rem] border-border bg-card text-foreground z-[100] shadow-2xl">
                                 {syntheticIndices.map((index) => (
-                                <SelectItem key={index.id} value={index.id} className="focus:bg-primary/10 focus:text-slate-950 cursor-pointer py-3 px-6 font-black text-sm">
+                                <SelectItem key={index.id} value={index.id} className="focus:bg-primary/10 focus:text-foreground cursor-pointer py-3 px-6 font-black text-sm">
                                     {index.name}
                                 </SelectItem>
                                 ))}
@@ -266,7 +268,7 @@ export function CorrelationView({
                     </div>
                     <div className="space-y-2 text-center">
                         <Label className="text-[10px] font-black uppercase tracking-widest text-primary">SAMPLE HORIZON</Label>
-                        <div className="h-14 bg-slate-50 border-slate-200 rounded-[1.25rem] flex items-center justify-center font-black text-3xl text-primary shadow-inner border border-primary/20">{lastDigitTicks.length}</div>
+                        <div className="h-14 bg-muted/50 border-border rounded-[1.25rem] flex items-center justify-center font-black text-3xl text-primary shadow-inner border border-primary/20">{lastDigitTicks.length}</div>
                     </div>
                 </CardContent>
             </Card>
