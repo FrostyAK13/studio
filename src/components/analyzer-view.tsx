@@ -1,3 +1,4 @@
+
 'use client';
 
 import * as React from 'react';
@@ -6,7 +7,7 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { syntheticIndices } from '@/lib/mock-data';
 import { cn } from '@/lib/utils';
-import { Crosshair, Zap, Activity, ShieldCheck, Flame, ArrowUpCircle, ArrowDownCircle } from 'lucide-react';
+import { Crosshair, Zap, Activity, ShieldCheck, Flame, TrendingUp, TrendingDown, Target, Triangle } from 'lucide-react';
 import { Progress } from '@/components/ui/progress';
 import { Badge } from '@/components/ui/badge';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -64,6 +65,7 @@ export function AnalyzerView({
         let label2 = "BETA";
         let signalLabel = "";
         let signalActive = false;
+        let signalDirection: 'up' | 'down' | 'neutral' = 'neutral';
 
         switch (tradeType) {
             case 'over-under':
@@ -71,33 +73,35 @@ export function AnalyzerView({
                 label2 = `UNDER ${selectedDigit}`;
                 val1 = (overCount / total) * 100;
                 val2 = (underCount / total) * 100;
-                if (val1 > 55) { signalLabel = `OVER ${selectedDigit}`; signalActive = true; }
-                else if (val2 > 55) { signalLabel = `UNDER ${selectedDigit}`; signalActive = true; }
+                if (val1 > 60) { signalLabel = `OVER ${selectedDigit}`; signalActive = true; signalDirection = 'up'; }
+                else if (val2 > 60) { signalLabel = `UNDER ${selectedDigit}`; signalActive = true; signalDirection = 'down'; }
                 break;
             case 'even-odd':
                 label1 = "EVEN";
                 label2 = "ODD";
                 val1 = (evenCount / total) * 100;
                 val2 = (oddCount / total) * 100;
-                if (val1 > 55) { signalLabel = "EVEN"; signalActive = true; }
-                else if (val2 > 55) { signalLabel = "ODD"; signalActive = true; }
+                if (val1 > 60) { signalLabel = "EVEN"; signalActive = true; signalDirection = 'up'; }
+                else if (val2 > 60) { signalLabel = "ODD"; signalActive = true; signalDirection = 'down'; }
                 break;
             case 'rise-fall':
                 label1 = "RISE";
                 label2 = "FALL";
                 val1 = (riseCount / rfTotal) * 100;
                 val2 = (fallCount / rfTotal) * 100;
-                if (val1 > 55) { signalLabel = "RISE"; signalActive = true; }
-                else if (val2 > 55) { signalLabel = "FALL"; signalActive = true; }
+                if (val1 > 60) { signalLabel = "RISE"; signalActive = true; signalDirection = 'up'; }
+                else if (val2 > 60) { signalLabel = "FALL"; signalActive = true; signalDirection = 'down'; }
                 break;
             case 'matches-differs':
                 label1 = "MATCHES";
                 label2 = "DIFFERS";
                 val1 = (matchCount / total) * 100;
                 val2 = (differCount / total) * 100;
-                if (val2 > 90) { signalLabel = `DIFFER ${selectedDigit}`; signalActive = true; }
+                if (val2 > 94) { signalLabel = `DIFFERS ${selectedDigit}`; signalActive = true; signalDirection = 'neutral'; }
                 break;
         }
+
+        const confidence = Math.max(val1, val2);
 
         return {
             val1,
@@ -106,7 +110,10 @@ export function AnalyzerView({
             label2,
             delta: Math.abs(val1 - val2),
             signalLabel,
-            signalActive
+            signalActive,
+            signalDirection,
+            confidence,
+            summary: `${label1} [${val1.toFixed(1)}%] VS ${label2} [${val2.toFixed(1)}%]`
         };
     }, [lastDigitTicks, priceHistory, selectedDigit, tradeType]);
 
@@ -118,31 +125,31 @@ export function AnalyzerView({
             const isPivot = i === pivotIndex;
             const isMatch = digit === selectedDigit;
             
-            let colorClass = "bg-muted text-muted-foreground"; 
+            let colorClass = "bg-muted/50 text-muted-foreground"; 
             
             if (isMatch && (tradeType === 'matches-differs')) {
-                colorClass = "bg-blue-600 border-blue-400 text-white shadow-[0_0_15px_rgba(37,99,235,0.4)] z-20";
+                colorClass = "bg-primary border-primary text-primary-foreground shadow-lg z-20";
             } else {
                 switch (tradeType) {
                     case 'even-odd':
                         colorClass = digit % 2 === 0 
-                            ? "bg-emerald-500 border-emerald-400 text-white" 
-                            : "bg-rose-500 border-rose-400 text-white";
+                            ? "bg-emerald-500/10 border-emerald-500/30 text-emerald-600 dark:text-emerald-400" 
+                            : "bg-rose-500/10 border-rose-500/30 text-rose-600 dark:text-rose-400";
                         break;
                     case 'over-under':
                         colorClass = digit > selectedDigit
-                            ? "bg-emerald-500 border-emerald-400 text-white"
-                            : "bg-rose-500 border-rose-400 text-white";
+                            ? "bg-emerald-500/10 border-emerald-500/30 text-emerald-600 dark:text-emerald-400"
+                            : "bg-rose-500/10 border-rose-500/30 text-rose-600 dark:text-rose-400";
                         break;
                     case 'rise-fall':
                         colorClass = digit % 2 === 0 
-                            ? "bg-emerald-500 border-emerald-400 text-white" 
-                            : "bg-rose-500 border-rose-400 text-white";
+                            ? "bg-emerald-500/10 border-emerald-500/30 text-emerald-600 dark:text-emerald-400" 
+                            : "bg-rose-500/10 border-rose-500/30 text-rose-600 dark:text-rose-400";
                         break;
                     case 'matches-differs':
                         colorClass = isMatch 
-                            ? "bg-blue-600 border-blue-400 text-white" 
-                            : "bg-muted border-border text-muted-foreground";
+                            ? "bg-primary text-primary-foreground" 
+                            : "bg-muted/30 border-border text-muted-foreground";
                         break;
                 }
             }
@@ -153,8 +160,8 @@ export function AnalyzerView({
                     initial={{ scale: 0, opacity: 0 }}
                     animate={{ scale: 1, opacity: 1 }}
                     className={cn(
-                        "w-7 h-7 sm:w-10 sm:h-10 rounded-full flex items-center justify-center font-black text-[10px] sm:text-base border transition-all duration-300 relative overflow-hidden",
-                        isPivot ? "ring-2 ring-primary ring-offset-2 ring-offset-background z-30 shadow-[0_0_15px_rgba(var(--primary),0.4)] bg-primary text-primary-foreground" : colorClass
+                        "w-8 h-8 sm:w-10 sm:h-10 rounded-xl flex items-center justify-center font-black text-[10px] sm:text-base border transition-all duration-300 relative overflow-hidden",
+                        isPivot ? "ring-2 ring-primary ring-offset-2 ring-offset-background z-30 shadow-xl bg-primary text-primary-foreground" : colorClass
                     )}
                 >
                     <span className="relative z-10">{digit}</span>
@@ -169,121 +176,119 @@ export function AnalyzerView({
     };
 
     return (
-        <div className="space-y-4 animate-in fade-in slide-in-from-bottom-8 duration-1000 pb-24 max-w-7xl mx-auto">
-            <Card className="border-none shadow-sm bg-card rounded-xl border border-border">
-                <CardContent className="p-3 space-y-3">
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                        <div className="space-y-1">
-                            <Label className="text-[8px] font-black uppercase tracking-[0.3em] text-primary ml-1">MARKET VECTOR</Label>
-                            <Select value={selectedMarket} onValueChange={onMarketChange}>
-                                <SelectTrigger className="h-8 bg-muted/50 border-border rounded-lg font-black text-[10px]">
-                                    <SelectValue placeholder="Select Market" />
-                                </SelectTrigger>
-                                <SelectContent className="bg-card border-border text-foreground rounded-xl">
-                                    {syntheticIndices.map(m => (
-                                        <SelectItem key={m.id} value={m.id} className="font-bold text-[10px]">{m.name}</SelectItem>
-                                    ))}
-                                </SelectContent>
-                            </Select>
-                        </div>
-                        <div className="space-y-1">
-                            <Label className="text-[8px] font-black uppercase tracking-[0.3em] text-primary ml-1">STRATEGY</Label>
-                            <Select value={tradeType} onValueChange={setTradeType}>
-                                <SelectTrigger className="h-8 bg-muted/50 border-border rounded-lg font-black text-[10px]">
-                                    <SelectValue placeholder="Select Type" />
-                                </SelectTrigger>
-                                <SelectContent className="bg-card border-border text-foreground rounded-xl">
-                                    <SelectItem value="over-under" className="font-bold text-[10px]">Over/Under</SelectItem>
-                                    <SelectItem value="even-odd" className="font-bold text-[10px]">Even/Odd</SelectItem>
-                                    <SelectItem value="matches-differs" className="font-bold text-[10px]">Matches/Differs</SelectItem>
-                                    <SelectItem value="rise-fall" className="font-bold text-[10px]">Rise/Fall</SelectItem>
-                                </SelectContent>
-                            </Select>
-                        </div>
+        <div className="space-y-6 animate-in fade-in slide-in-from-bottom-8 duration-1000 pb-24 max-w-7xl mx-auto">
+            <Card className="border-none shadow-sm bg-card rounded-[1.5rem] border border-border">
+                <CardContent className="p-4 grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="space-y-1.5">
+                        <Label className="text-[9px] font-black uppercase tracking-[0.4em] text-primary ml-2">MARKET VECTOR</Label>
+                        <Select value={selectedMarket} onValueChange={onMarketChange}>
+                            <SelectTrigger className="h-10 bg-muted/30 border-border rounded-xl font-black text-xs px-5 shadow-inner">
+                                <SelectValue placeholder="Select Market" />
+                            </SelectTrigger>
+                            <SelectContent className="bg-card border-border text-foreground rounded-xl">
+                                {syntheticIndices.map(m => (
+                                    <SelectItem key={m.id} value={m.id} className="font-bold text-xs py-2">{m.name}</SelectItem>
+                                ))}
+                            </SelectContent>
+                        </Select>
+                    </div>
+                    <div className="space-y-1.5">
+                        <Label className="text-[9px] font-black uppercase tracking-[0.4em] text-primary ml-2">TACTICAL STRATEGY</Label>
+                        <Select value={tradeType} onValueChange={setTradeType}>
+                            <SelectTrigger className="h-10 bg-muted/30 border-border rounded-xl font-black text-xs px-5 shadow-inner">
+                                <SelectValue placeholder="Select Type" />
+                            </SelectTrigger>
+                            <SelectContent className="bg-card border-border text-foreground rounded-xl">
+                                <SelectItem value="over-under" className="font-bold text-xs py-2">OVER/UNDER</SelectItem>
+                                <SelectItem value="even-odd" className="font-bold text-xs py-2">EVEN/ODD</SelectItem>
+                                <SelectItem value="matches-differs" className="font-bold text-xs py-2">MATCHES/DIFFERS</SelectItem>
+                                <SelectItem value="rise-fall" className="font-bold text-xs py-2">RISE/FALL</SelectItem>
+                            </SelectContent>
+                        </Select>
                     </div>
                 </CardContent>
             </Card>
 
-            <Card className="border-none bg-card rounded-xl border border-border shadow-xl overflow-hidden relative">
+            <Card className="border-none bg-card rounded-[2rem] border border-border shadow-2xl overflow-hidden relative">
                 <div className="absolute top-0 left-0 w-full h-[2px] bg-gradient-to-r from-primary via-cyan-400 to-primary" />
-                <CardContent className="p-4 sm:p-6 space-y-6">
-                    <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-center">
-                        <div className="lg:col-span-3 text-center lg:text-left space-y-3">
-                            <div className="flex items-center gap-2 justify-center lg:justify-start">
-                                <Crosshair className="h-4 w-4 text-primary" />
-                                <h3 className="text-sm font-black text-foreground tracking-tight uppercase">ANALYSIS HUD</h3>
+                <CardContent className="p-6 sm:p-8 space-y-8">
+                    <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-center">
+                        <div className="lg:col-span-4 space-y-4">
+                            <div className="flex items-center gap-3">
+                                <div className="p-2 bg-primary/10 rounded-lg">
+                                    <Crosshair className="h-5 w-5 text-primary" />
+                                </div>
+                                <div>
+                                    <h3 className="text-[10px] font-black text-foreground tracking-[0.3em] uppercase leading-none">ANALYSIS HUD</h3>
+                                    <p className="text-[8px] font-bold text-muted-foreground uppercase tracking-widest mt-1.5">{analysis.summary}</p>
+                                </div>
                             </div>
-                            <div className="flex flex-wrap justify-center lg:justify-start gap-1">
-                                <Badge variant="outline" className="font-black tracking-widest text-[7px] px-2 py-0.5 uppercase">{analysis.label1} vs {analysis.label2}</Badge>
-                                <Badge variant="outline" className="font-black tracking-widest text-[7px] px-2 py-0.5 uppercase border-primary text-primary">TARGET: {selectedDigit}</Badge>
+                            <div className="pt-2">
+                                <p className="text-[11px] font-medium text-muted-foreground leading-relaxed italic border-l-2 border-primary/30 pl-3">
+                                    "SURVEILLANCE LOG: Stability engine identifies a <span className={cn("font-black px-1.5 py-0.5 rounded-md", analysis.val1 > analysis.val2 ? "text-emerald-600 bg-emerald-500/10" : "text-rose-600 bg-rose-500/10")}>{analysis.val1 > analysis.val2 ? analysis.label1 : analysis.label2}</span> directional bias for current execution."
+                                </p>
                             </div>
                         </div>
                         
-                        <div className="lg:col-span-6 grid grid-cols-2 gap-6">
-                            <div className="space-y-1.5">
+                        <div className="lg:col-span-5 grid grid-cols-1 gap-6">
+                            <div className="space-y-2">
                                 <div className="flex justify-between items-end">
-                                    <p className="text-[9px] font-black uppercase text-emerald-600 tracking-[0.1em]">{analysis.label1}</p>
-                                    <p className="text-lg font-black text-emerald-600 tabular-nums">{analysis.val1.toFixed(1)}%</p>
+                                    <p className="text-[10px] font-black uppercase text-emerald-600 tracking-[0.2em]">{analysis.label1}</p>
+                                    <p className="text-2xl font-black text-emerald-600 tabular-nums leading-none">{analysis.val1.toFixed(1)}%</p>
                                 </div>
-                                <Progress value={analysis.val1} className="h-2 bg-muted [&>div]:bg-emerald-500" />
+                                <Progress value={analysis.val1} className="h-3 bg-muted/50 [&>div]:bg-emerald-500 rounded-full" />
                             </div>
-                            <div className="space-y-1.5">
+                            <div className="space-y-2">
                                 <div className="flex justify-between items-end">
-                                    <p className="text-[9px] font-black uppercase text-rose-600 tracking-[0.1em]">{analysis.label2}</p>
-                                    <p className="text-lg font-black text-rose-600 tabular-nums">{analysis.val2.toFixed(1)}%</p>
+                                    <p className="text-[10px] font-black uppercase text-rose-600 tracking-[0.2em]">{analysis.label2}</p>
+                                    <p className="text-2xl font-black text-rose-600 tabular-nums leading-none">{analysis.val2.toFixed(1)}%</p>
                                 </div>
-                                <Progress value={analysis.val2} className="h-2 bg-muted [&>div]:bg-rose-500" />
+                                <Progress value={analysis.val2} className="h-3 bg-muted/50 [&>div]:bg-rose-500 rounded-full" />
                             </div>
                         </div>
 
-                        <div className="lg:col-span-3 flex gap-4 items-center justify-center lg:justify-end">
+                        <div className="lg:col-span-3 flex gap-8 items-center justify-center lg:justify-end bg-muted/30 p-4 rounded-2xl border border-border">
                             <div className="text-center">
-                                <p className="text-[7px] font-black text-muted-foreground uppercase tracking-widest">LIVE PRICE</p>
-                                <p className="text-lg font-black text-foreground tabular-nums tracking-tighter">{price.toFixed(decimalPlaces)}</p>
+                                <p className="text-[8px] font-black text-muted-foreground uppercase tracking-[0.3em] mb-1">LIVE PRICE</p>
+                                <p className="text-xl font-black text-foreground tabular-nums tracking-tighter leading-none">{price.toFixed(decimalPlaces)}</p>
                             </div>
                             <div className="w-px h-8 bg-border" />
                             <div className="text-center">
-                                <p className="text-[7px] font-black text-muted-foreground uppercase tracking-widest">VARIANCE</p>
-                                <p className="text-lg font-black text-emerald-600 tabular-nums tracking-tighter">{analysis.delta.toFixed(1)}%</p>
+                                <p className="text-[8px] font-black text-muted-foreground uppercase tracking-[0.3em] mb-1">VARIANCE</p>
+                                <p className="text-xl font-black text-emerald-600 tabular-nums tracking-tighter leading-none">{analysis.delta.toFixed(1)}%</p>
                             </div>
                         </div>
-                    </div>
-
-                    <div className="pt-3 border-t border-border">
-                        <p className="text-[9px] font-medium text-muted-foreground leading-relaxed italic text-center lg:text-left">
-                            "SURVEILLANCE LOG: Engine identifies a <span className={cn("font-black px-1.5 py-0.5 rounded-md", analysis.val1 > analysis.val2 ? "text-emerald-600 bg-emerald-500/10" : "text-rose-600 bg-rose-500/10")}>{analysis.val1 > analysis.val2 ? analysis.label1 : analysis.label2}</span> directional bias. Confirmed stability for current tactical execution."
-                        </p>
                     </div>
                 </CardContent>
             </Card>
 
             <Card className={cn(
-                "border-none rounded-xl border overflow-hidden relative transition-all duration-500",
-                analysis.signalActive ? "bg-emerald-500 shadow-[0_0_25px_rgba(16,185,129,0.3)] border-emerald-400/50" : "bg-card border-border shadow-sm"
+                "border-none rounded-[2rem] border overflow-hidden relative transition-all duration-700 shadow-2xl group",
+                analysis.signalActive ? "bg-emerald-500 dark:bg-emerald-600 shadow-emerald-500/30 border-emerald-400" : "bg-card border-border"
             )}>
-                <CardContent className="p-4 sm:p-6">
-                    <div className="flex flex-col md:flex-row items-center justify-between gap-6">
-                        <div className="flex items-center gap-4">
+                <CardContent className="p-6 sm:p-10">
+                    <div className="flex flex-col md:flex-row items-center justify-between gap-10">
+                        <div className="flex items-center gap-8">
                             <div className={cn(
-                                "w-12 h-12 rounded-2xl flex items-center justify-center transition-all duration-500 shadow-inner",
-                                analysis.signalActive ? "bg-white/20 text-white animate-pulse" : "bg-muted text-muted-foreground/30"
+                                "w-20 h-20 rounded-3xl flex items-center justify-center transition-all duration-700 shadow-inner",
+                                analysis.signalActive ? "bg-white/20 text-white animate-pulse" : "bg-muted/50 text-muted-foreground/30"
                             )}>
-                                {analysis.signalActive ? <Zap className="h-6 w-6" /> : <Activity className="h-6 w-6" />}
+                                {analysis.signalActive ? <Zap className="h-10 w-10 fill-current" /> : <Activity className="h-10 w-10" />}
                             </div>
-                            <div>
+                            <div className="space-y-2">
                                 <h4 className={cn(
-                                    "text-xs font-black uppercase tracking-[0.2em]",
+                                    "text-sm font-black uppercase tracking-[0.4em] transition-colors",
                                     analysis.signalActive ? "text-white" : "text-muted-foreground"
                                 )}>
-                                    {analysis.signalActive ? "SIGNAL DETECTED" : "AWAITING SIGNAL"}
+                                    {analysis.signalActive ? "SIGNAL DETECTED" : "SCANNING FLOW"}
                                 </h4>
-                                <div className="flex items-center gap-2 mt-1">
-                                    <div className={cn("h-1.5 w-1.5 rounded-full", analysis.signalActive ? "bg-white animate-pulse" : "bg-muted-foreground/20")} />
+                                <div className="flex items-center gap-3">
+                                    <div className={cn("h-2.5 w-2.5 rounded-full", analysis.signalActive ? "bg-white animate-pulse shadow-[0_0_10px_white]" : "bg-muted-foreground/20")} />
                                     <p className={cn(
-                                        "text-[8px] font-black uppercase tracking-[0.3em]",
+                                        "text-[10px] font-black uppercase tracking-[0.3em] transition-colors",
                                         analysis.signalActive ? "text-white/80" : "text-muted-foreground/40"
                                     )}>
-                                        {analysis.signalActive ? "STABILITY GATE LOCKED" : "MONITORING FLOW VECTORS"}
+                                        {analysis.signalActive ? "STABILITY GATE LOCKED" : "AWAITING ZERO-ERROR VECTOR"}
                                     </p>
                                 </div>
                             </div>
@@ -291,28 +296,50 @@ export function AnalyzerView({
 
                         {analysis.signalActive ? (
                             <motion.div 
-                                initial={{ opacity: 0, scale: 0.9 }}
-                                animate={{ opacity: 1, scale: 1 }}
-                                className="flex flex-col items-center md:items-end text-white"
+                                initial={{ opacity: 0, scale: 0.9, y: 10 }}
+                                animate={{ opacity: 1, scale: 1, y: 0 }}
+                                className="flex flex-col items-center md:items-end text-white text-center md:text-right"
                             >
-                                <p className="text-[8px] font-black uppercase tracking-[0.4em] mb-1.5 text-white/60">ENTRY VECTOR</p>
-                                <div className="flex items-center gap-3">
-                                    <span className="text-3xl font-black tracking-tighter uppercase leading-none">{analysis.signalLabel}</span>
-                                    <ShieldCheck className="h-8 w-8 text-white" />
+                                <p className="text-[10px] font-black uppercase tracking-[0.5em] mb-3 text-white/60">ENTRY VECTOR</p>
+                                <div className="flex items-center gap-4">
+                                    {analysis.signalDirection === 'up' && <TrendingUp className="h-8 w-8 text-white" />}
+                                    {analysis.signalDirection === 'down' && <TrendingDown className="h-8 w-8 text-white" />}
+                                    <span className="text-5xl font-black tracking-tighter uppercase leading-none">{analysis.signalLabel}</span>
+                                    <ShieldCheck className="h-10 w-10 text-white" />
                                 </div>
-                                <p className="text-[10px] font-black uppercase tracking-widest mt-2 bg-white/10 px-3 py-1 rounded-full">CONFIDENCE: 100+1%</p>
+                                <div className="mt-4 flex items-center gap-3 bg-white/10 px-6 py-2 rounded-full border border-white/10">
+                                    <Target className="h-4 w-4 text-white" />
+                                    <p className="text-xs font-black uppercase tracking-widest leading-none">CONFIDENCE: {analysis.confidence.toFixed(1)}%</p>
+                                </div>
                             </motion.div>
                         ) : (
-                            <div className="flex flex-col items-center md:items-end opacity-20">
-                                <p className="text-[8px] font-black uppercase tracking-[0.4em] mb-1.5">ENTRY VECTOR</p>
-                                <div className="flex items-center gap-3">
-                                    <span className="text-3xl font-black tracking-tighter uppercase leading-none">---</span>
-                                    <Activity className="h-8 w-8" />
+                            <div className="flex flex-col items-center md:items-end opacity-20 text-center md:text-right">
+                                <p className="text-[10px] font-black uppercase tracking-[0.5em] mb-3">ENTRY VECTOR</p>
+                                <div className="flex items-center gap-4">
+                                    <span className="text-5xl font-black tracking-tighter uppercase leading-none">WAITING</span>
+                                    <Activity className="h-10 w-10" />
                                 </div>
+                                <p className="text-[10px] font-black uppercase tracking-widest mt-4">MONITORING RECURSION</p>
                             </div>
                         )}
                     </div>
                 </CardContent>
+            </Card>
+
+            <Card className="border-none shadow-sm bg-muted/20 border border-border p-6 rounded-[2rem] overflow-hidden relative">
+                <div className="flex flex-col sm:flex-row items-center justify-between gap-4 mb-6">
+                    <div className="flex items-center gap-3">
+                        <div className="w-1.5 h-1.5 rounded-full bg-primary animate-pulse shadow-[0_0_8px_hsl(var(--primary))]" />
+                        <h3 className="text-[10px] font-black uppercase tracking-[0.4em] text-foreground">STREAM SEQUENCE</h3>
+                    </div>
+                    <div className="flex items-center gap-2 px-4 py-1.5 bg-card rounded-full border border-border shadow-sm">
+                         <div className="h-2 w-2 rounded-full bg-blue-500 animate-pulse" />
+                         <span className="text-[9px] font-black uppercase text-blue-500 tracking-widest">ACTIVE SYNC</span>
+                    </div>
+                </div>
+                <div className="flex flex-wrap justify-center gap-2.5 sm:gap-3">
+                    {renderPattern()}
+                </div>
             </Card>
 
             <DigitFrequencyCircles 
@@ -321,19 +348,6 @@ export function AnalyzerView({
                 onDigitSelect={handleDigitSelect} 
                 selectedMarket={selectedMarket} 
             />
-
-            <Card className="border-none shadow-sm bg-muted/30 border border-border p-4 rounded-xl overflow-hidden relative">
-                <div className="flex flex-col sm:flex-row items-center justify-between gap-2 mb-4">
-                    <h3 className="text-[8px] font-black uppercase tracking-[0.3em] text-foreground">STREAM SEQUENCE</h3>
-                    <div className="flex items-center gap-1.5">
-                         <div className="h-1 w-1 rounded-full bg-blue-500 animate-pulse shadow-[0_0_8px_#3b82f6]" />
-                         <span className="text-[7px] font-black uppercase text-blue-500 tracking-widest">ACTIVE SYNC</span>
-                    </div>
-                </div>
-                <div className="flex flex-wrap justify-center gap-1.5 sm:gap-2">
-                    {renderPattern()}
-                </div>
-            </Card>
         </div>
     );
 }

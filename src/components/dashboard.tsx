@@ -1,3 +1,4 @@
+
 'use client';
 
 import * as React from 'react';
@@ -10,7 +11,7 @@ import { InsightView } from './insight-view';
 import { GlobalMarketScanner } from './global-market-scanner';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
-import { RefreshCw, Radio, Activity, Moon, Sun } from 'lucide-react';
+import { RefreshCw, Radio, Activity, Moon, Sun, ExternalLink } from 'lucide-react';
 
 type EngineStatus = 'offline' | 'active';
 
@@ -166,40 +167,40 @@ export function Dashboard() {
     const analyzedPrices = priceHistory.slice(0, maxTicks);
 
     return (
-        <div className="flex min-h-screen w-full flex-col bg-background font-sans overflow-x-hidden">
-            <header className="sticky top-0 z-[100] flex h-[3.5rem] items-center border-b bg-background/95 backdrop-blur-xl px-4 shadow-sm">
+        <div className="flex min-h-screen w-full flex-col bg-background font-sans overflow-x-hidden transition-colors duration-500">
+            <header className="sticky top-0 z-[100] flex h-[4rem] items-center border-b bg-background/95 backdrop-blur-xl px-4 shadow-sm">
                 <div className="flex w-full items-center justify-between max-w-[1600px] mx-auto">
-                    <div className="flex items-center gap-2 shrink-0">
+                    <div className="flex items-center gap-3 shrink-0">
                         <Button 
                             variant="outline" 
                             onClick={() => window.location.reload()} 
-                            title="SYSTEM RELOAD" 
-                            className="h-8 w-8 rounded-full border-border bg-background hover:bg-muted flex items-center justify-center shadow-sm group active:scale-90 transition-all duration-300"
+                            className="h-10 w-10 rounded-full border-border bg-card hover:bg-muted flex items-center justify-center shadow-lg group active:scale-90 transition-all duration-300"
                         >
-                            <RefreshCw className="h-3.5 w-3.5 text-foreground group-hover:rotate-180 transition-transform duration-500" />
+                            <RefreshCw className="h-5 w-5 text-foreground group-hover:rotate-180 transition-transform duration-500" />
                         </Button>
-                        <div className="relative group ml-2">
+                        <div className="relative group">
                             <div className="absolute -inset-1 bg-gradient-to-r from-primary via-cyan-500 to-primary rounded-full blur opacity-40 group-hover:opacity-100 transition duration-1000 group-hover:duration-200 animate-pulse" />
                             <a 
                                 href="https://frostytraders.com" 
                                 target="_blank" 
                                 rel="noopener noreferrer"
-                                className="relative flex items-center gap-2 bg-card px-4 py-1.5 rounded-full border border-border shadow-sm hover:bg-muted transition-colors"
+                                className="relative flex items-center gap-2 bg-card px-6 py-2 rounded-full border border-border shadow-xl hover:bg-muted transition-all active:scale-95"
                             >
-                                 <span className="text-[10px] font-black text-foreground uppercase tracking-[0.3em]">FROSTY TRADERS</span>
+                                <span className="text-[10px] font-black text-foreground uppercase tracking-[0.4em]">FROSTY TRADERS</span>
+                                <ExternalLink className="h-3 w-3 text-primary" />
                             </a>
                         </div>
                     </div>
                     
-                    <div className="flex items-center gap-3 shrink-0">
-                        <div className="flex items-center bg-card border border-border rounded-full shadow-lg h-8 px-1 overflow-hidden">
-                            <div className="flex items-center gap-3 px-4 py-1.5 border-r border-border">
-                                <div className={cn("h-2 w-2 rounded-full animate-pulse transition-all duration-500", surveillanceStatus === 'active' ? "bg-emerald-500 shadow-[0_0_10px_rgba(16,185,129,0.8)]" : "bg-rose-500 shadow-[0_0_10px_rgba(244,63,94,0.8)]")} />
+                    <div className="flex items-center gap-4 shrink-0">
+                        <div className="flex items-center bg-card border border-border rounded-full shadow-2xl h-10 px-1 overflow-hidden">
+                            <div className="flex items-center gap-3 px-5 py-2 border-r border-border">
+                                <div className={cn("h-2.5 w-2.5 rounded-full animate-pulse transition-all duration-500", surveillanceStatus === 'active' ? "bg-emerald-500 shadow-[0_0_12px_rgba(16,185,129,0.9)]" : "bg-rose-500 shadow-[0_0_12px_rgba(244,63,94,0.9)]")} />
                                 <span className="text-[10px] font-black text-foreground uppercase tracking-[0.3em]">SURVEILLANCE</span>
                             </div>
-                            <div className="flex items-center gap-2 px-4 py-1.5 bg-muted/50">
-                                <Radio className={cn("h-3 w-3 transition-all duration-500", surveillanceStatus === 'active' ? 'text-emerald-500 animate-pulse' : 'text-rose-500')} />
-                                <span className="text-[9px] font-black uppercase text-foreground tracking-[0.2em]">{surveillanceStatus === 'active' ? 'LIVE' : 'OFFLINE'}</span>
+                            <div className="flex items-center gap-2 px-5 py-2 bg-muted/30">
+                                <Radio className={cn("h-3.5 w-3.5 transition-all duration-500", surveillanceStatus === 'active' ? 'text-emerald-500 animate-pulse' : 'text-rose-500')} />
+                                <span className="text-[10px] font-black uppercase text-foreground tracking-[0.2em]">{surveillanceStatus === 'active' ? 'LIVE' : 'OFFLINE'}</span>
                             </div>
                         </div>
 
@@ -207,27 +208,85 @@ export function Dashboard() {
                             variant="ghost"
                             size="icon"
                             onClick={() => setTheme(theme === 'light' ? 'dark' : 'light')}
-                            className="h-8 w-8 rounded-full border border-border bg-card shadow-sm hover:bg-muted text-foreground"
+                            className="h-10 w-10 rounded-full border border-border bg-card shadow-xl hover:bg-muted text-foreground transition-all active:scale-95"
                         >
-                            {theme === 'light' ? <Moon className="h-4 w-4" /> : <Sun className="h-4 w-4" />}
+                            {theme === 'light' ? <Moon className="h-5 w-5" /> : <Sun className="h-5 w-5" />}
                         </Button>
                     </div>
                 </div>
             </header>
             <main className="flex-1 flex flex-col max-w-[1600px] mx-auto w-full relative p-2 sm:p-4">
                 <Tabs defaultValue="analyzer" className="w-full">
-                    <TabsList className="flex items-center justify-start md:justify-center gap-1.5 bg-transparent h-auto p-0 mb-4 overflow-x-auto no-scrollbar w-full">
+                    <TabsList className="flex items-center justify-start md:justify-center gap-2 bg-transparent h-auto p-0 mb-6 overflow-x-auto no-scrollbar w-full pb-2">
                         {['analyzer', 'global-scan', 'last-digit-analysis', 'frequency', 'insight'].map((tab) => (
-                            <TabsTrigger key={tab} value={tab} className="flex-shrink-0 px-3.5 py-2 rounded-full border border-transparent data-[state=active]:bg-primary/10 data-[state=active]:text-primary text-muted-foreground font-black text-[8px] uppercase tracking-widest transition-all">
-                                {tab.toUpperCase().replace('-', ' ')}
+                            <TabsTrigger 
+                                key={tab} 
+                                value={tab} 
+                                className="flex-shrink-0 px-5 py-2.5 rounded-full border border-transparent data-[state=active]:bg-primary/10 data-[state=active]:text-primary text-muted-foreground font-black text-[10px] uppercase tracking-[0.2em] transition-all shadow-sm hover:bg-muted/50"
+                            >
+                                {tab.toUpperCase().replace(/-/g, ' ')}
                             </TabsTrigger>
                         ))}
                     </TabsList>
-                    <TabsContent value="analyzer" className="mt-0 outline-none"><AnalyzerView price={price} lastDigitTicks={analyzedDigits} priceHistory={analyzedPrices} maxTicks={maxTicks} handleMaxTicksChange={handleMaxTicksChange} handleMaxTicksBlur={handleMaxTicksBlur} selectedMarket={selectedMarket} onMarketChange={setSelectedMarket} decimalPlaces={decimalPlaces} tickTimestamps={tickTimestamps} /></TabsContent>
-                    <TabsContent value="global-scan" className="mt-0 outline-none"><GlobalMarketScanner onMarketSelect={setSelectedMarket} lastDigitTicks={analyzedDigits} price={price} decimalPlaces={decimalPlaces} /></TabsContent>
-                    <TabsContent value="last-digit-analysis" className="mt-0 outline-none"><ScannerView price={price} lastDigitTicks={analyzedDigits} priceHistory={analyzedPrices} maxTicks={maxTicks} handleMaxTicksChange={handleMaxTicksChange} handleMaxTicksBlur={handleMaxTicksBlur} selectedMarket={selectedMarket} onMarketChange={setSelectedMarket} decimalPlaces={decimalPlaces} /></TabsContent>
-                    <TabsContent value="frequency" className="mt-0 outline-none"><DigitFrequencyView price={price} lastDigitTicks={analyzedDigits} priceHistory={analyzedPrices} maxTicks={maxTicks} handleMaxTicksChange={handleMaxTicksChange} handleMaxTicksBlur={handleMaxTicksBlur} selectedMarket={selectedMarket} onMarketChange={setSelectedMarket} decimalPlaces={decimalPlaces} /></TabsContent>
-                    <TabsContent value="insight" className="mt-0 outline-none"><InsightView price={price} decimalPlaces={decimalPlaces} lastDigitTicks={analyzedDigits} priceHistory={analyzedPrices} selectedMarket={selectedMarket} onMarketChange={setSelectedMarket} maxTicks={maxTicks} /></TabsContent>
+                    <TabsContent value="analyzer" className="mt-0 outline-none animate-in fade-in duration-500">
+                        <AnalyzerView 
+                            price={price} 
+                            lastDigitTicks={analyzedDigits} 
+                            priceHistory={analyzedPrices} 
+                            maxTicks={maxTicks} 
+                            handleMaxTicksChange={handleMaxTicksChange} 
+                            handleMaxTicksBlur={handleMaxTicksBlur} 
+                            selectedMarket={selectedMarket} 
+                            onMarketChange={setSelectedMarket} 
+                            decimalPlaces={decimalPlaces} 
+                            tickTimestamps={tickTimestamps} 
+                        />
+                    </TabsContent>
+                    <TabsContent value="global-scan" className="mt-0 outline-none animate-in fade-in duration-500">
+                        <GlobalMarketScanner 
+                            onMarketSelect={setSelectedMarket} 
+                            lastDigitTicks={analyzedDigits} 
+                            price={price} 
+                            decimalPlaces={decimalPlaces} 
+                        />
+                    </TabsContent>
+                    <TabsContent value="last-digit-analysis" className="mt-0 outline-none animate-in fade-in duration-500">
+                        <ScannerView 
+                            price={price} 
+                            lastDigitTicks={analyzedDigits} 
+                            priceHistory={analyzedPrices} 
+                            maxTicks={maxTicks} 
+                            handleMaxTicksChange={handleMaxTicksChange} 
+                            handleMaxTicksBlur={handleMaxTicksBlur} 
+                            selectedMarket={selectedMarket} 
+                            onMarketChange={setSelectedMarket} 
+                            decimalPlaces={decimalPlaces} 
+                        />
+                    </TabsContent>
+                    <TabsContent value="frequency" className="mt-0 outline-none animate-in fade-in duration-500">
+                        <DigitFrequencyView 
+                            price={price} 
+                            lastDigitTicks={analyzedDigits} 
+                            priceHistory={analyzedPrices} 
+                            maxTicks={maxTicks} 
+                            handleMaxTicksChange={handleMaxTicksChange} 
+                            handleMaxTicksBlur={handleMaxTicksBlur} 
+                            selectedMarket={selectedMarket} 
+                            onMarketChange={setSelectedMarket} 
+                            decimalPlaces={decimalPlaces} 
+                        />
+                    </TabsContent>
+                    <TabsContent value="insight" className="mt-0 outline-none animate-in fade-in duration-500">
+                        <InsightView 
+                            price={price} 
+                            decimalPlaces={decimalPlaces} 
+                            lastDigitTicks={analyzedDigits} 
+                            priceHistory={analyzedPrices} 
+                            selectedMarket={selectedMarket} 
+                            onMarketChange={setSelectedMarket} 
+                            maxTicks={maxTicks} 
+                        />
+                    </TabsContent>
                 </Tabs>
             </main>
         </div>
