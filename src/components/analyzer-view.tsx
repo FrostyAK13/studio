@@ -198,32 +198,60 @@ export function AnalyzerView({
                 </CardContent>
             </Card>
 
-            {/* Analysis HUD - Now Smaller and Above Frequency */}
-            <Card className="border-none bg-slate-950/80 backdrop-blur-3xl rounded-xl sm:rounded-[2rem] border border-white/5 shadow-lg">
-                <CardContent className="p-4 sm:p-5">
-                    <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 items-center">
-                        <div className="text-center lg:text-left space-y-1.5">
+            {/* Combined Analysis HUD */}
+            <Card className="border-none bg-slate-950/90 backdrop-blur-3xl rounded-xl sm:rounded-[2rem] border border-white/5 shadow-2xl overflow-hidden relative">
+                <div className="absolute top-0 left-0 w-full h-[2px] bg-gradient-to-r from-primary/40 via-cyan-400/40 to-primary/40" />
+                <CardContent className="p-4 sm:p-6 space-y-4">
+                    <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 items-start">
+                        {/* Column 1: HUD Title & Badges */}
+                        <div className="text-center lg:text-left space-y-2">
                             <div className="flex items-center gap-2 justify-center lg:justify-start">
                                 <Crosshair className="h-4 w-4 text-primary" />
-                                <h3 className="text-sm sm:text-base font-black text-white tracking-tight uppercase">ANALYSIS HUD</h3>
+                                <h3 className="text-sm font-black text-white tracking-tight uppercase">ANALYSIS HUD</h3>
                             </div>
                             <div className="flex flex-wrap justify-center lg:justify-start gap-1.5">
-                                <Badge className="bg-primary/20 text-primary border-none font-black tracking-widest text-[7px] sm:text-[8px] px-1.5 py-0.5 uppercase">{stats.label1} vs {stats.label2}</Badge>
-                                <Badge className="bg-blue-500/10 text-blue-400 border-none font-black tracking-widest text-[7px] sm:text-[8px] px-1.5 py-0.5 uppercase">TARGET: {selectedDigit}</Badge>
+                                <Badge className="bg-primary/20 text-primary border-none font-black tracking-widest text-[7px] px-2 py-0.5 uppercase">{stats.label1} vs {stats.label2}</Badge>
+                                <Badge className="bg-blue-500/10 text-blue-400 border-none font-black tracking-widest text-[7px] px-2 py-0.5 uppercase">TARGET: {selectedDigit}</Badge>
                             </div>
                         </div>
                         
-                        <div className="flex col-span-1 lg:col-span-2 gap-4 sm:gap-10 items-center justify-center lg:justify-end">
-                            <div className="text-center space-y-0.5">
-                                <p className="text-[7px] font-black text-muted-foreground uppercase tracking-[0.2em]">LIVE PRICE</p>
-                                <p className="text-lg sm:text-2xl font-black text-white tabular-nums tracking-tighter">{price.toFixed(decimalPlaces)}</p>
+                        {/* Column 2: Stability Progress Bars */}
+                        <div className="grid grid-cols-2 gap-4 flex-1">
+                            <div className="space-y-1">
+                                <div className="flex justify-between items-end">
+                                    <p className="text-[7px] font-black uppercase text-emerald-400 tracking-widest">{stats.label1}</p>
+                                    <p className="text-[10px] font-black text-emerald-400 tabular-nums">{stats.val1.toFixed(1)}%</p>
+                                </div>
+                                <Progress value={stats.val1} className="h-1 bg-black/60 [&>div]:bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.2)]" />
                             </div>
-                            <div className="w-px h-8 sm:h-10 bg-white/10" />
-                            <div className="text-center space-y-0.5">
-                                <p className="text-[7px] font-black text-muted-foreground uppercase tracking-[0.2em]">VARIANCE</p>
-                                <p className="text-lg sm:text-2xl font-black text-emerald-400 tabular-nums tracking-tighter">{stats.delta.toFixed(1)}%</p>
+                            <div className="space-y-1">
+                                <div className="flex justify-between items-end">
+                                    <p className="text-[7px] font-black uppercase text-rose-500 tracking-widest">{stats.label2}</p>
+                                    <p className="text-[10px] font-black text-rose-500 tabular-nums">{stats.val2.toFixed(1)}%</p>
+                                </div>
+                                <Progress value={stats.val2} className="h-1 bg-black/60 [&>div]:bg-rose-500 shadow-[0_0_8px_rgba(244,63,94,0.2)]" />
                             </div>
                         </div>
+
+                        {/* Column 3: Live Price & Variance */}
+                        <div className="flex gap-4 items-center justify-center lg:justify-end">
+                            <div className="text-center space-y-0.5">
+                                <p className="text-[7px] font-black text-muted-foreground uppercase tracking-widest">LIVE PRICE</p>
+                                <p className="text-sm sm:text-lg font-black text-white tabular-nums tracking-tighter">{price.toFixed(decimalPlaces)}</p>
+                            </div>
+                            <div className="w-px h-6 bg-white/10" />
+                            <div className="text-center space-y-0.5">
+                                <p className="text-[7px] font-black text-muted-foreground uppercase tracking-widest">VARIANCE</p>
+                                <p className="text-sm sm:text-lg font-black text-emerald-400 tabular-nums tracking-tighter">{stats.delta.toFixed(1)}%</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* Summary Row */}
+                    <div className="pt-3 border-t border-white/5">
+                        <p className="text-[10px] font-medium text-white/70 leading-relaxed italic text-center lg:text-left">
+                            "Stability Engine identifies a <span className={cn("font-black px-1.5 py-0.5 rounded-md", stats.val1 > stats.val2 ? "text-emerald-400 bg-emerald-500/10" : "text-rose-500 bg-rose-500/10")}>{stats.val1 > stats.val2 ? stats.label1 : stats.label2}</span> bias. Confirmed accuracy for the current market cycle."
+                        </p>
                     </div>
                 </CardContent>
             </Card>
@@ -248,49 +276,6 @@ export function AnalyzerView({
                 <div className="flex flex-wrap justify-center gap-1.5 sm:gap-2">
                     {renderPattern()}
                 </div>
-            </Card>
-
-            {/* Stability Engine */}
-            <Card className="border-none shadow-lg bg-slate-950/90 backdrop-blur-3xl rounded-xl sm:rounded-[2rem] overflow-hidden border border-white/5">
-                <CardContent className="p-5 sm:p-8 space-y-6">
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                        <div className="space-y-2">
-                            <div className="flex justify-between items-end">
-                                <div>
-                                    <p className="text-[7px] font-black uppercase text-emerald-400 tracking-widest mb-0.5">STABILITY ALPHA</p>
-                                    <h4 className="text-[10px] sm:text-xs font-black text-white/60">{stats.label1}</h4>
-                                </div>
-                                <div className="text-right">
-                                    <p className="text-xl sm:text-2xl font-black text-emerald-400 tabular-nums">{stats.val1.toFixed(1)}%</p>
-                                    <Badge className="bg-emerald-500/10 text-emerald-400 border-none font-black text-[7px] mt-0.5">CONFIRMED</Badge>
-                                </div>
-                            </div>
-                            <Progress value={stats.val1} className="h-1.5 sm:h-2 bg-black/60 [&>div]:bg-emerald-500 shadow-[0_0_10px_rgba(16,185,129,0.3)]" />
-                        </div>
-                        <div className="space-y-2">
-                            <div className="flex justify-between items-end">
-                                <div>
-                                    <p className="text-[7px] font-black uppercase text-rose-500 tracking-widest mb-0.5">STABILITY BETA</p>
-                                    <h4 className="text-[10px] sm:text-xs font-black text-white/60">{stats.label2}</h4>
-                                </div>
-                                <div className="text-right">
-                                    <p className="text-xl sm:text-2xl font-black text-rose-500 tabular-nums">{stats.val2.toFixed(1)}%</p>
-                                    <Badge className="bg-rose-500/10 text-rose-500 border-none font-black text-[7px] mt-0.5">CONFIRMED</Badge>
-                                </div>
-                            </div>
-                            <Progress value={stats.val2} className="h-1.5 sm:h-2 bg-black/60 [&>div]:bg-rose-500 shadow-[0_0_10px_rgba(244,63,94,0.3)]" />
-                        </div>
-                    </div>
-
-                    <div className="p-4 sm:p-6 rounded-xl sm:rounded-[1.5rem] bg-slate-900/80 border border-white/10 text-center shadow-md">
-                        <h4 className="text-[8px] font-black uppercase tracking-[0.3em] text-primary mb-2 flex items-center justify-center gap-2">
-                            <Zap className="h-3 w-3" /> SUMMARY
-                        </h4>
-                        <p className="text-[10px] sm:text-sm font-medium text-white/90 leading-relaxed italic drop-shadow-md">
-                            "Stability Engine identifies a <span className={cn("font-black px-1.5 py-0.5 rounded-md", stats.val1 > stats.val2 ? "text-emerald-400 bg-emerald-500/10" : "text-rose-500 bg-rose-500/10")}>{stats.val1 > stats.val2 ? stats.label1 : stats.label2}</span> bias. Confirmed accuracy for the current market cycle."
-                        </p>
-                    </div>
-                </CardContent>
             </Card>
         </div>
     );
