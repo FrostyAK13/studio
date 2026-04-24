@@ -1,3 +1,4 @@
+
 'use client';
 
 import * as React from 'react';
@@ -5,11 +6,12 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { syntheticIndices } from '@/lib/mock-data';
 import { cn } from '@/lib/utils';
-import { Search, Zap, Target, Crosshair, Loader2, Network, Cpu, Orbit, BarChart3, Wallet, Activity, Flame } from 'lucide-react';
+import { Network, Cpu, Orbit, Activity, Flame, Zap, ArrowRight, ShieldCheck } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
 interface GlobalMarketScannerProps {
     onMarketSelect: (marketId: string) => void;
+    selectedMarket: string;
     lastDigitTicks?: number[];
     price: number;
     decimalPlaces: number;
@@ -35,25 +37,26 @@ const volatilityIndices = syntheticIndices.filter(m =>
     m.id.includes('HZ')
 );
 
-export function GlobalMarketScanner({ onMarketSelect, lastDigitTicks = [], price, decimalPlaces }: GlobalMarketScannerProps) {
+export function GlobalMarketScanner({ onMarketSelect, selectedMarket, lastDigitTicks = [], price, decimalPlaces }: GlobalMarketScannerProps) {
     const [status, setStatus] = React.useState<ScanStatus>('idle');
     const [currentScanIndex, setCurrentScanIndex] = React.useState(0);
     const [result, setResult] = React.useState<ScanResult | null>(null);
     const [entryDetected, setEntryDetected] = React.useState(false);
     const [stabilityTicks, setStabilityTicks] = React.useState(0);
-    const [entryPrice, setEntryPrice] = React.useState<number | null>(null);
+
+    // Only monitor entry if the dashboard is actually connected to the recommended market
+    const isMarketActive = result?.marketId === selectedMarket;
 
     React.useEffect(() => {
-        if (status !== 'results' || !result || entryDetected) return;
+        if (status !== 'results' || !result || entryDetected || !isMarketActive) return;
         if (lastDigitTicks.length === 0) return;
 
         const latestDigit = lastDigitTicks[0];
         if (latestDigit === result.triggerDigit) {
             setEntryDetected(true);
-            setEntryPrice(price);
             setStabilityTicks(result.stabilityWindow);
         }
-    }, [lastDigitTicks, result, status, entryDetected, price]);
+    }, [lastDigitTicks, result, status, entryDetected, isMarketActive]);
 
     React.useEffect(() => {
         if (entryDetected && stabilityTicks > 0) {
@@ -65,7 +68,6 @@ export function GlobalMarketScanner({ onMarketSelect, lastDigitTicks = [], price
         setResult(null);
         setEntryDetected(false);
         setStabilityTicks(0);
-        setEntryPrice(null);
         setStatus('scanning');
         setCurrentScanIndex(0);
 
@@ -84,8 +86,7 @@ export function GlobalMarketScanner({ onMarketSelect, lastDigitTicks = [], price
             const possibleTriggers = [3, 4, 5, 7];
             const triggerDigit = possibleTriggers[Math.floor(Math.random() * possibleTriggers.length)];
 
-            onMarketSelect(bestIndex.id);
-
+            // We no longer call onMarketSelect here to avoid changing global state during scan
             setResult({
                 marketId: bestIndex.id,
                 marketName: bestIndex.name,
@@ -101,22 +102,28 @@ export function GlobalMarketScanner({ onMarketSelect, lastDigitTicks = [], price
         }, 3000);
     };
 
+    const activateMarket = () => {
+        if (result) {
+            onMarketSelect(result.marketId);
+        }
+    };
+
     return (
         <div className="space-y-4 animate-in fade-in duration-700 pb-24">
             <Card className="border-none shadow-sm bg-card overflow-hidden relative rounded-xl border border-border">
-                <CardHeader className="text-center pt-6 px-4">
-                    <div className="flex flex-col items-center gap-2">
-                        <Network className="h-6 w-6 text-primary animate-pulse" />
-                        <CardTitle className="text-[10px] font-black uppercase tracking-[0.4em] text-foreground">MARKET SCANNER</CardTitle>
+                <CardHeader className="text-center pt-8 px-4">
+                    <div className="flex flex-col items-center gap-3">
+                        <Network className="h-8 w-8 text-primary animate-pulse" />
+                        <CardTitle className="text-[12px] font-black uppercase tracking-[0.5em] text-foreground">MARKET SCANNER</CardTitle>
                     </div>
                 </CardHeader>
-                <CardContent className="p-4 space-y-6">
+                <CardContent className="p-6 space-y-8">
                     <div className="flex justify-center">
                         <Button 
                             onClick={startScan} 
                             disabled={status === 'scanning'}
                             className={cn(
-                                "h-10 px-8 rounded-full font-black text-[8px] sm:text-[9px] uppercase tracking-widest shadow-md transition-all active:scale-95 group relative overflow-hidden",
+                                "h-12 px-10 rounded-full font-black text-[10px] uppercase tracking-widest shadow-lg transition-all active:scale-95 group relative overflow-hidden",
                                 status === 'scanning' ? "bg-muted text-muted-foreground" : "bg-primary text-primary-foreground hover:bg-primary/90"
                             )}
                         >
@@ -124,7 +131,7 @@ export function GlobalMarketScanner({ onMarketSelect, lastDigitTicks = [], price
                         </Button>
                     </div>
 
-                    <div className="relative min-h-[160px] flex flex-col items-center justify-center">
+                    <div className="relative min-h-[200px] flex flex-col items-center justify-center bg-muted/20 rounded-[2rem] border border-border shadow-inner p-6">
                         <AnimatePresence mode="wait">
                             {status === 'scanning' && (
                                 <motion.div 
@@ -132,26 +139,26 @@ export function GlobalMarketScanner({ onMarketSelect, lastDigitTicks = [], price
                                     initial={{ opacity: 0 }}
                                     animate={{ opacity: 1 }}
                                     exit={{ opacity: 0 }}
-                                    className="w-full max-w-lg space-y-4"
+                                    className="w-full max-w-2xl space-y-6"
                                 >
-                                    <div className="flex flex-wrap justify-center gap-1">
+                                    <div className="flex flex-wrap justify-center gap-2">
                                         {volatilityIndices.map((m, idx) => (
                                             <div 
                                                 key={m.id} 
                                                 className={cn(
-                                                    "px-2 py-0.5 rounded-full border text-[6px] sm:text-[7px] font-black uppercase transition-all duration-100",
+                                                    "px-3 py-1 rounded-full border text-[8px] font-black uppercase transition-all duration-100",
                                                     idx === currentScanIndex 
                                                         ? "bg-primary border-primary text-white scale-110 shadow-md z-10" 
-                                                        : "bg-muted border-border text-muted-foreground"
+                                                        : "bg-background border-border text-muted-foreground"
                                                 )}
                                             >
                                                 {m.id}
                                             </div>
                                         ))}
                                     </div>
-                                    <div className="text-center space-y-1">
-                                        <p className="text-[7px] sm:text-[8px] font-black text-primary animate-pulse tracking-widest uppercase">SCANNING: {volatilityIndices[currentScanIndex].name}</p>
-                                        <div className="w-full bg-muted h-1 rounded-full overflow-hidden border border-border">
+                                    <div className="text-center space-y-3">
+                                        <p className="text-[10px] font-black text-primary animate-pulse tracking-[0.3em] uppercase">ANALYZING: {volatilityIndices[currentScanIndex].name}</p>
+                                        <div className="w-full bg-background h-2 rounded-full overflow-hidden border border-border">
                                             <motion.div 
                                                 className="h-full bg-primary"
                                                 initial={{ width: '0%' }}
@@ -168,88 +175,100 @@ export function GlobalMarketScanner({ onMarketSelect, lastDigitTicks = [], price
                                     key="results-ui"
                                     initial={{ opacity: 0, scale: 0.98 }}
                                     animate={{ opacity: 1, scale: 1 }}
-                                    className="w-full space-y-6"
+                                    className="w-full space-y-8"
                                 >
-                                    <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
-                                        <Card className="bg-emerald-50 dark:bg-emerald-950/20 border border-emerald-200 dark:border-emerald-900 p-3 rounded-xl relative" >
-                                            <p className="text-[6px] font-black text-emerald-600 uppercase tracking-widest mb-1">MARKET</p>
-                                            <p className="text-[10px] font-black text-foreground leading-tight uppercase">{result.marketName}</p>
+                                    <div className="grid grid-cols-2 lg:grid-cols-5 gap-4">
+                                        <Card className="bg-emerald-50 dark:bg-emerald-950/10 border-emerald-200 dark:border-emerald-900 p-4 rounded-2xl">
+                                            <p className="text-[8px] font-black text-emerald-600 uppercase tracking-widest mb-1.5">MARKET</p>
+                                            <p className="text-[11px] font-black text-foreground leading-tight uppercase">{result.marketName}</p>
                                         </Card>
 
-                                        <Card className="bg-primary/5 border border-primary/20 p-3 rounded-xl relative">
-                                            <p className="text-[6px] font-black text-primary uppercase tracking-widest mb-1">STRATEGY</p>
-                                            <p className="text-[10px] font-black text-foreground leading-tight uppercase">{result.strategy}</p>
+                                        <Card className="bg-primary/5 border-primary/20 p-4 rounded-2xl">
+                                            <p className="text-[8px] font-black text-primary uppercase tracking-widest mb-1.5">STRATEGY</p>
+                                            <p className="text-[11px] font-black text-foreground leading-tight uppercase">{result.strategy}</p>
                                         </Card>
 
-                                        <Card className="bg-blue-50 dark:bg-blue-950/20 border border-blue-200 dark:border-blue-900 p-3 rounded-xl relative">
-                                            <p className="text-[6px] font-black text-blue-600 uppercase tracking-widest mb-1">LIVE PRICE</p>
-                                            <p className="text-[10px] font-black text-foreground tabular-nums uppercase">
-                                                {price === 0 ? "SYNCING..." : price.toFixed(decimalPlaces)}
+                                        <Card className="bg-blue-50 dark:bg-blue-950/10 border-blue-200 dark:border-blue-900 p-4 rounded-2xl">
+                                            <p className="text-[8px] font-black text-blue-600 uppercase tracking-widest mb-1.5">LIVE PRICE</p>
+                                            <p className="text-[11px] font-black text-foreground tabular-nums uppercase">
+                                                {isMarketActive ? price.toFixed(decimalPlaces) : "OFFLINE"}
                                             </p>
                                         </Card>
 
-                                        <Card className="bg-cyan-50 dark:bg-cyan-950/20 border border-cyan-200 dark:border-cyan-900 p-3 rounded-xl relative">
-                                            <p className="text-[6px] font-black text-cyan-600 uppercase tracking-widest mb-1">SIGNAL</p>
+                                        <Card className="bg-cyan-50 dark:bg-cyan-950/10 border-cyan-200 dark:border-cyan-900 p-4 rounded-2xl">
+                                            <p className="text-[8px] font-black text-cyan-600 uppercase tracking-widest mb-1.5">SIGNAL</p>
                                             <div className="flex items-center gap-2">
-                                                <p className="text-[10px] font-black text-foreground">{result.triggerDigit}</p>
-                                                <div className="w-px h-2 bg-border" />
-                                                <p className="text-[10px] font-black text-muted-foreground">{result.recoveryDigit}</p>
+                                                <p className="text-[11px] font-black text-foreground">{result.triggerDigit}</p>
+                                                <div className="w-px h-3 bg-border" />
+                                                <p className="text-[11px] font-black text-muted-foreground">{result.recoveryDigit}</p>
                                             </div>
                                         </Card>
 
-                                        <Card className="bg-amber-50 dark:bg-amber-950/20 border border-amber-200 dark:border-amber-900 p-3 rounded-xl relative">
-                                            <p className="text-[6px] font-black text-amber-600 uppercase tracking-widest mb-1">STABILITY</p>
-                                            <p className="text-[10px] font-black text-foreground tabular-nums uppercase">{result.successRate}%</p>
+                                        <Card className="bg-amber-50 dark:bg-amber-950/10 border-amber-200 dark:border-amber-900 p-4 rounded-2xl">
+                                            <p className="text-[8px] font-black text-amber-600 uppercase tracking-widest mb-1.5">STABILITY</p>
+                                            <p className="text-[11px] font-black text-foreground tabular-nums uppercase">{result.successRate}%</p>
                                         </Card>
                                     </div>
 
-                                    <Card className={cn(
-                                        "p-4 rounded-2xl border transition-all duration-500 relative overflow-hidden",
-                                        entryDetected ? "bg-emerald-50 dark:bg-emerald-950/20 border-emerald-500" : "bg-muted/30 border-border"
-                                    )}>
-                                        <div className="flex items-center justify-between gap-4">
-                                            <div className="flex items-center gap-3">
-                                                <div className={cn(
-                                                    "w-10 h-10 rounded-lg flex items-center justify-center transition-all duration-500",
-                                                    entryDetected ? "bg-emerald-500 shadow-sm" : "bg-card border border-border"
-                                                )}>
-                                                    {entryDetected ? <Flame className="h-5 w-5 text-white animate-bounce" /> : <Activity className="h-5 w-5 text-muted-foreground/30" />}
-                                                </div>
-                                                <div>
-                                                    <h3 className={cn(
-                                                        "text-xs sm:text-sm font-black uppercase tracking-tight leading-none",
-                                                        entryDetected ? "text-emerald-700 dark:text-emerald-400" : "text-muted-foreground/40"
+                                    {!isMarketActive ? (
+                                        <div className="flex flex-col items-center gap-4 py-4">
+                                            <p className="text-[10px] font-black text-muted-foreground uppercase tracking-[0.3em] flex items-center gap-2">
+                                                <Zap className="h-4 w-4 text-amber-500" /> ACTIVATE MARKET TO MONITOR LIVE VECTOR
+                                            </p>
+                                            <Button 
+                                                onClick={activateMarket}
+                                                className="bg-emerald-600 hover:bg-emerald-700 text-white font-black text-[11px] uppercase tracking-widest h-14 px-12 rounded-full shadow-2xl active:scale-95 transition-all"
+                                            >
+                                                ACTIVATE {result.marketName.toUpperCase()} <ArrowRight className="ml-3 h-5 w-5" />
+                                            </Button>
+                                        </div>
+                                    ) : (
+                                        <Card className={cn(
+                                            "p-6 rounded-[2rem] border transition-all duration-500 relative overflow-hidden",
+                                            entryDetected ? "bg-emerald-500/10 border-emerald-500 shadow-[0_0_20px_rgba(16,185,129,0.2)]" : "bg-background border-border"
+                                        )}>
+                                            <div className="flex items-center justify-between gap-6">
+                                                <div className="flex items-center gap-5">
+                                                    <div className={cn(
+                                                        "w-14 h-14 rounded-2xl flex items-center justify-center transition-all duration-500",
+                                                        entryDetected ? "bg-emerald-500 shadow-xl" : "bg-muted border border-border"
                                                     )}>
-                                                        {entryDetected ? "ENTRY DETECTED" : "AWAITING ENTRY"}
-                                                    </h3>
-                                                    <p className="text-[6px] sm:text-[7px] font-black uppercase tracking-[0.3em] text-primary/60 mt-1">
-                                                        {entryDetected ? "STABLE WINDOW ENGAGED" : `MONITORING FOR DIGIT ${result.triggerDigit}`}
-                                                    </p>
+                                                        {entryDetected ? <Flame className="h-8 w-8 text-white animate-bounce" /> : <Activity className="h-8 w-8 text-muted-foreground/30" />}
+                                                    </div>
+                                                    <div>
+                                                        <h3 className={cn(
+                                                            "text-lg sm:text-xl font-black uppercase tracking-tight leading-none",
+                                                            entryDetected ? "text-emerald-700 dark:text-emerald-400" : "text-muted-foreground/40"
+                                                        )}>
+                                                            {entryDetected ? "ENTRY DETECTED" : "AWAITING ENTRY"}
+                                                        </h3>
+                                                        <p className="text-[8px] sm:text-[9px] font-black uppercase tracking-[0.4em] text-primary/60 mt-2">
+                                                            {entryDetected ? "STABLE WINDOW ENGAGED" : `MONITORING FOR DIGIT ${result.triggerDigit}`}
+                                                        </p>
+                                                    </div>
                                                 </div>
-                                            </div>
 
-                                            <div className="flex items-center gap-4">
-                                                <div className="text-center">
-                                                    <p className="text-[6px] font-black text-muted-foreground uppercase tracking-widest mb-0.5">STABILITY LOCK</p>
-                                                    <div className="flex items-center gap-1">
+                                                <div className="text-right">
+                                                    <p className="text-[9px] font-black text-muted-foreground uppercase tracking-widest mb-1.5">STABILITY LOCK</p>
+                                                    <div className="flex items-center justify-end gap-2">
                                                         <span className={cn(
-                                                            "text-lg sm:text-xl font-black tabular-nums tracking-tighter leading-none",
+                                                            "text-3xl font-black tabular-nums tracking-tighter leading-none",
                                                             entryDetected ? "text-emerald-600" : "text-muted-foreground/20"
                                                         )}>
                                                             {stabilityTicks}
                                                         </span>
-                                                        <p className="text-[6px] font-black text-muted-foreground uppercase tracking-widest">TICKS</p>
+                                                        <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">TICKS</p>
                                                     </div>
                                                 </div>
                                             </div>
-                                        </div>
-                                    </Card>
+                                        </Card>
+                                    )}
 
-                                    <div className="p-4 bg-muted/30 rounded-2xl border border-border shadow-inner">
-                                        <p className="text-[7px] font-black text-primary uppercase tracking-widest mb-1.5 flex items-center gap-2">
-                                            <Cpu className="h-3 w-3" /> // MARKET ANALYSIS
+                                    <div className="p-6 bg-background rounded-[2rem] border border-border shadow-inner">
+                                        <p className="text-[9px] font-black text-primary uppercase tracking-widest mb-2 flex items-center gap-2">
+                                            <ShieldCheck className="h-4 w-4" /> // MARKET SYNOPSIS
                                         </p>
-                                        <p className="text-[9px] sm:text-[11px] font-medium text-foreground leading-relaxed italic">
+                                        <p className="text-[11px] sm:text-[13px] font-medium text-foreground leading-relaxed italic">
                                             "{result.reasoning}"
                                         </p>
                                     </div>
@@ -261,10 +280,10 @@ export function GlobalMarketScanner({ onMarketSelect, lastDigitTicks = [], price
                                     key="idle-ui"
                                     initial={{ opacity: 0 }}
                                     animate={{ opacity: 1 }}
-                                    className="text-center space-y-2"
+                                    className="text-center space-y-4"
                                 >
-                                    <Orbit className="h-6 w-6 text-muted-foreground/20 mx-auto" />
-                                    <p className="text-[8px] font-black uppercase tracking-[0.3em] text-muted-foreground">ENGINE STANDBY</p>
+                                    <Orbit className="h-10 w-10 text-muted-foreground/20 mx-auto" />
+                                    <p className="text-[10px] font-black uppercase tracking-[0.4em] text-muted-foreground">ENGINE STANDBY // AWAITING SCAN</p>
                                 </motion.div>
                             )}
                         </AnimatePresence>

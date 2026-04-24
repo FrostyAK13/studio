@@ -12,6 +12,7 @@ import { GlobalMarketScanner } from './global-market-scanner';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { RefreshCw, Radio, Activity, Moon, Sun, ExternalLink } from 'lucide-react';
+import { motion } from 'framer-motion';
 
 type EngineStatus = 'offline' | 'active';
 
@@ -168,23 +169,32 @@ export function Dashboard() {
 
     return (
         <div className="flex min-h-screen w-full flex-col bg-background font-sans overflow-x-hidden transition-colors duration-500">
-            <header className="sticky top-0 z-[100] flex h-[4rem] items-center border-b bg-background/95 backdrop-blur-xl px-4 shadow-sm">
+            <header className="sticky top-0 z-[100] flex h-[4.5rem] items-center border-b bg-background/95 backdrop-blur-xl px-4 shadow-sm">
                 <div className="flex w-full items-center justify-between max-w-[1600px] mx-auto">
                     <div className="flex items-center gap-3 shrink-0">
                         <Button 
                             variant="outline" 
                             onClick={() => window.location.reload()} 
-                            className="h-10 w-10 rounded-full border-border bg-card hover:bg-muted flex items-center justify-center shadow-lg group active:scale-90 transition-all duration-300"
+                            className="h-10 w-10 rounded-full border-border bg-card hover:bg-muted flex items-center justify-center shadow-lg group active:scale-90 transition-all duration-300 overflow-hidden"
                         >
-                            <RefreshCw className="h-5 w-5 text-foreground group-hover:rotate-180 transition-transform duration-500" />
+                            <motion.div
+                                whileHover={{ rotate: 360, scale: 1.2 }}
+                                transition={{ type: "spring", stiffness: 260, damping: 20 }}
+                            >
+                                <RefreshCw className="h-5 w-5 text-foreground" />
+                            </motion.div>
                         </Button>
                         <div className="relative group">
-                            <div className="absolute -inset-1 bg-gradient-to-r from-primary via-cyan-500 to-primary rounded-full blur opacity-40 group-hover:opacity-100 transition duration-1000 group-hover:duration-200 animate-pulse" />
+                            <motion.div 
+                                className="absolute -inset-1 bg-gradient-to-r from-primary via-cyan-500 to-primary rounded-full blur opacity-40 group-hover:opacity-100 transition duration-1000"
+                                animate={{ opacity: [0.4, 0.8, 0.4] }}
+                                transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
+                            />
                             <a 
                                 href="https://frostytraders.com" 
                                 target="_blank" 
                                 rel="noopener noreferrer"
-                                className="relative flex items-center gap-2 bg-card px-6 py-2 rounded-full border border-border shadow-xl hover:bg-muted transition-all active:scale-95"
+                                className="relative flex items-center gap-2 bg-card px-6 py-2.5 rounded-full border border-border shadow-xl hover:bg-muted transition-all active:scale-95"
                             >
                                 <span className="text-[10px] font-black text-foreground uppercase tracking-[0.4em]">FROSTY TRADERS</span>
                                 <ExternalLink className="h-3 w-3 text-primary" />
@@ -210,7 +220,13 @@ export function Dashboard() {
                             onClick={() => setTheme(theme === 'light' ? 'dark' : 'light')}
                             className="h-10 w-10 rounded-full border border-border bg-card shadow-xl hover:bg-muted text-foreground transition-all active:scale-95"
                         >
-                            {theme === 'light' ? <Moon className="h-5 w-5" /> : <Sun className="h-5 w-5" />}
+                            <motion.div
+                                initial={false}
+                                animate={{ rotate: theme === 'light' ? 0 : 180 }}
+                                transition={{ type: "spring", stiffness: 200, damping: 10 }}
+                            >
+                                {theme === 'light' ? <Moon className="h-5 w-5" /> : <Sun className="h-5 w-5" />}
+                            </motion.div>
                         </Button>
                     </div>
                 </div>
@@ -245,6 +261,7 @@ export function Dashboard() {
                     <TabsContent value="global-scan" className="mt-0 outline-none animate-in fade-in duration-500">
                         <GlobalMarketScanner 
                             onMarketSelect={setSelectedMarket} 
+                            selectedMarket={selectedMarket}
                             lastDigitTicks={analyzedDigits} 
                             price={price} 
                             decimalPlaces={decimalPlaces} 
