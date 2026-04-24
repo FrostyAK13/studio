@@ -6,10 +6,11 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { syntheticIndices } from '@/lib/mock-data';
 import { cn } from '@/lib/utils';
-import { Zap, Target, ArrowUp, ArrowDown, Hash, Layers, TrendingUp, TrendingDown, Crosshair, Cpu } from 'lucide-react';
+import { Zap, Crosshair, TrendingUp, TrendingDown, Target, Cpu } from 'lucide-react';
 import { Progress } from '@/components/ui/progress';
 import { Badge } from '@/components/ui/badge';
 import { motion } from 'framer-motion';
+import { DigitFrequencyCircles } from './correlation-view';
 
 interface AnalyzerViewProps {
     price: number;
@@ -156,15 +157,19 @@ export function AnalyzerView({
         });
     };
 
+    const handleDigitSelect = (d: number) => {
+        setSelectedDigit(d);
+    };
+
     return (
-        <div className="space-y-8 sm:space-y-12 animate-in fade-in slide-in-from-bottom-8 duration-1000 pb-24 max-w-7xl mx-auto">
-            <Card className="border-none shadow-2xl bg-slate-900/60 backdrop-blur-3xl rounded-[2rem] sm:rounded-[3.5rem] border border-white/5">
-                <CardContent className="p-8 sm:p-14 space-y-10">
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                        <div className="space-y-4">
-                            <Label className="text-[10px] sm:text-[12px] font-black uppercase tracking-[0.4em] text-primary ml-4">MARKET VECTOR</Label>
+        <div className="space-y-6 sm:space-y-10 animate-in fade-in slide-in-from-bottom-8 duration-1000 pb-24 max-w-7xl mx-auto">
+            <Card className="border-none shadow-2xl bg-slate-900/60 backdrop-blur-3xl rounded-[2rem] sm:rounded-[3rem] border border-white/5">
+                <CardContent className="p-6 sm:p-10 space-y-8">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div className="space-y-3">
+                            <Label className="text-[10px] font-black uppercase tracking-[0.4em] text-primary ml-4">MARKET VECTOR</Label>
                             <Select value={selectedMarket} onValueChange={onMarketChange}>
-                                <SelectTrigger className="h-14 sm:h-16 bg-black/50 border-white/10 rounded-2xl font-black text-xs sm:text-base">
+                                <SelectTrigger className="h-14 bg-black/50 border-white/10 rounded-2xl font-black text-xs sm:text-base">
                                     <SelectValue placeholder="Select Market" />
                                 </SelectTrigger>
                                 <SelectContent className="bg-slate-950 border-white/10 text-white rounded-2xl">
@@ -174,10 +179,10 @@ export function AnalyzerView({
                                 </SelectContent>
                             </Select>
                         </div>
-                        <div className="space-y-4">
-                            <Label className="text-[10px] sm:text-[12px] font-black uppercase tracking-[0.4em] text-primary ml-4">STRATEGY</Label>
+                        <div className="space-y-3">
+                            <Label className="text-[10px] font-black uppercase tracking-[0.4em] text-primary ml-4">STRATEGY</Label>
                             <Select value={tradeType} onValueChange={setTradeType}>
-                                <SelectTrigger className="h-14 sm:h-16 bg-black/50 border-white/10 rounded-2xl font-black text-xs sm:text-base">
+                                <SelectTrigger className="h-14 bg-black/50 border-white/10 rounded-2xl font-black text-xs sm:text-base">
                                     <SelectValue placeholder="Select Type" />
                                 </SelectTrigger>
                                 <SelectContent className="bg-slate-950 border-white/10 text-white rounded-2xl">
@@ -189,28 +194,15 @@ export function AnalyzerView({
                             </Select>
                         </div>
                     </div>
-
-                    <div className="space-y-6">
-                        <Label className="text-[10px] sm:text-[12px] font-black uppercase tracking-[0.4em] text-primary ml-4">DIGIT SELECT</Label>
-                        <div className="grid grid-cols-5 sm:grid-cols-10 gap-2 sm:gap-3">
-                            {Array.from({ length: 10 }, (_, i) => (
-                                <button
-                                    key={i}
-                                    onClick={() => setSelectedDigit(i)}
-                                    className={cn(
-                                        "h-10 sm:h-16 rounded-xl font-black text-sm sm:text-xl transition-all border",
-                                        selectedDigit === i 
-                                            ? "bg-primary border-white/20 text-white scale-110 shadow-[0_0_20px_rgba(var(--primary),0.5)]" 
-                                            : "bg-black/40 border-white/5 text-white/40 hover:bg-white/10"
-                                    )}
-                                >
-                                    {i}
-                                </button>
-                            ))}
-                        </div>
-                    </div>
                 </CardContent>
             </Card>
+
+            <DigitFrequencyCircles 
+                ticks={lastDigitTicks} 
+                selectedDigit={selectedDigit} 
+                onDigitSelect={handleDigitSelect} 
+                selectedMarket={selectedMarket} 
+            />
 
             <Card className="border-none bg-slate-950/80 backdrop-blur-3xl rounded-[2rem] sm:rounded-[3.5rem] border border-white/5 shadow-2xl">
                 <CardContent className="p-8 sm:p-14">
@@ -287,7 +279,7 @@ export function AnalyzerView({
 
                     <div className="p-8 sm:p-12 rounded-[2rem] sm:rounded-[3rem] bg-slate-900/80 border border-white/10 text-center shadow-2xl">
                         <h4 className="text-[10px] sm:text-[12px] font-black uppercase tracking-[0.4em] text-primary mb-6 flex items-center justify-center gap-3">
-                            <Zap className="h-5 w-5" /> STRATEGY SUMMARY
+                            <Zap className="h-5 w-5" /> SUMMARY
                         </h4>
                         <p className="text-base sm:text-2xl font-medium text-white/90 leading-relaxed italic drop-shadow-md">
                             "Stability Engine identifies a <span className={cn("font-black px-3 py-1 rounded-xl", stats.val1 > stats.val2 ? "text-emerald-400 bg-emerald-500/10" : "text-rose-500 bg-rose-500/10")}>{stats.val1 > stats.val2 ? stats.label1 : stats.label2}</span> bias. Confirmed accuracy for the current market cycle."
