@@ -12,7 +12,7 @@ import { Label } from '@/components/ui/label';
 import { syntheticIndices } from '@/lib/mock-data';
 import { DigitFrequencyCircles } from './correlation-view';
 import { Card, CardContent } from '@/components/ui/card';
-import { Activity, Radio, TrendingUp, TrendingDown } from 'lucide-react';
+import { Activity, Radio, TrendingUp, TrendingDown, Target, ShieldCheck, Zap } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Progress } from '@/components/ui/progress';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -162,6 +162,75 @@ const TacticalHeatMap = ({ ticks }: { ticks: number[] }) => {
     );
 };
 
+const TacticalRecommendation = ({ ticks }: { ticks: number[] }) => {
+    const recommendation = React.useMemo(() => {
+        if (ticks.length < 20) return { status: 'AWAITING DATA', type: 'NONE', confidence: 0 };
+        
+        const total = ticks.length;
+        const over2 = ticks.filter(d => d > 2).length;
+        const under7 = ticks.filter(d => d < 7).length;
+        
+        const over2Perc = (over2 / total) * 100;
+        const under7Perc = (under7 / total) * 100;
+        
+        if (over2Perc >= 80) return { status: 'TRADE NOW', type: 'OVER 2', confidence: over2Perc };
+        if (under7Perc >= 80) return { status: 'TRADE NOW', type: 'UNDER 7', confidence: under7Perc };
+        
+        return { status: 'ANALYZING BARRIERS', type: 'NONE', confidence: Math.max(over2Perc, under7Perc) };
+    }, [ticks]);
+
+    return (
+        <Card className="border-none shadow-2xl bg-card rounded-[1.5rem] border border-border overflow-hidden relative">
+            <div className="absolute top-0 left-0 w-full h-[2px] bg-gradient-to-r from-primary via-cyan-400 to-primary opacity-30" />
+            <CardContent className="p-4 sm:p-6">
+                <div className="flex flex-col sm:flex-row items-center justify-between gap-6">
+                    <div className="flex items-center gap-4">
+                        <div className={cn(
+                            "w-12 h-12 rounded-xl flex items-center justify-center transition-all duration-500",
+                            recommendation.status === 'TRADE NOW' ? "bg-emerald-500 shadow-[0_0_15px_rgba(16,185,129,0.5)]" : "bg-muted border border-border"
+                        )}>
+                            {recommendation.status === 'TRADE NOW' ? <Zap className="h-6 w-6 text-white animate-pulse" /> : <Target className="h-6 w-6 text-muted-foreground/40" />}
+                        </div>
+                        <div>
+                            <h3 className={cn(
+                                "text-[10px] font-black uppercase tracking-[0.4em] leading-none mb-2",
+                                recommendation.status === 'TRADE NOW' ? "text-emerald-600 dark:text-emerald-400" : "text-muted-foreground"
+                            )}>
+                                {recommendation.status}
+                            </h3>
+                            <div className="flex items-center gap-2">
+                                <span className={cn(
+                                    "text-xl sm:text-2xl font-black tracking-tighter uppercase",
+                                    recommendation.type !== 'NONE' ? "text-foreground" : "text-muted-foreground/30"
+                                )}>
+                                    {recommendation.type !== 'NONE' ? recommendation.type : 'WAITING FOR SKEW'}
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div className="flex items-center gap-8 bg-muted/30 px-6 py-3 rounded-2xl border border-border">
+                        <div className="text-center">
+                            <p className="text-[8px] font-black text-muted-foreground uppercase tracking-widest mb-1">CONFIDENCE</p>
+                            <p className={cn(
+                                "text-lg font-black tabular-nums leading-none",
+                                recommendation.status === 'TRADE NOW' ? "text-emerald-600" : "text-primary"
+                            )}>
+                                {recommendation.confidence.toFixed(1)}%
+                            </p>
+                        </div>
+                        <div className="w-px h-8 bg-border" />
+                        <div className="text-center">
+                            <p className="text-[8px] font-black text-muted-foreground uppercase tracking-widest mb-1">ACCURACY</p>
+                            <p className="text-lg font-black text-primary leading-none">100+1</p>
+                        </div>
+                    </div>
+                </div>
+            </CardContent>
+        </Card>
+    );
+};
+
 export function ScannerView({
     price,
     lastDigitTicks,
@@ -242,6 +311,13 @@ export function ScannerView({
 
             <div className="space-y-4 pb-24">
                 <div className="flex items-center gap-2 px-2">
+                    <ShieldCheck className="h-4 w-4 text-primary" />
+                    <h2 className="text-[8px] font-black uppercase tracking-[0.4em] text-foreground">TACTICAL RECOMMENDATION</h2>
+                </div>
+
+                <TacticalRecommendation ticks={lastDigitTicks} />
+
+                <div className="flex items-center gap-2 px-2 mt-8">
                     <Activity className="h-4 w-4 text-primary" />
                     <h2 className="text-[8px] font-black uppercase tracking-[0.4em] text-foreground">ACTIVE SURVEILLANCE</h2>
                 </div>
