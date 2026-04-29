@@ -12,7 +12,7 @@ import { Label } from '@/components/ui/label';
 import { syntheticIndices } from '@/lib/mock-data';
 import { DigitFrequencyCircles } from './correlation-view';
 import { Card, CardContent } from '@/components/ui/card';
-import { Activity, Radio, TrendingUp, TrendingDown, Target, ShieldCheck, Zap } from 'lucide-react';
+import { Activity, Radio, TrendingUp, TrendingDown, Target, ShieldCheck, Zap, AlertTriangle } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Progress } from '@/components/ui/progress';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -164,33 +164,95 @@ const TacticalHeatMap = ({ ticks }: { ticks: number[] }) => {
 
 const TacticalRecommendation = ({ ticks }: { ticks: number[] }) => {
     const recommendation = React.useMemo(() => {
-        if (ticks.length < 5) return { status: 'AWAITING DATA', type: 'NONE', confidence: 0 };
+        if (ticks.length < 50) return { status: 'INSUFFICIENT DATA', type: 'NONE', entry: null, confidence: 0, reasoning: 'Minimum 50 ticks required for high-precision mathematical analysis.' };
         
+        // Step 1: Normalize the distribution
+        const counts = Array(10).fill(0);
+        ticks.forEach(d => counts[d]++);
         const total = ticks.length;
-        const over2 = ticks.filter(d => d > 2).length;
-        const under7 = ticks.filter(d => d < 7).length;
+        const P = counts.map(c => (c / total) * 100);
+        const D = P.map(p => p - 10);
+
+        // Step 2: Compute weighted directional strength
+        // Under 8 (Digits 0-7)
+        let under8_score = 0;
+        for (let i = 0; i <= 7; i++) under8_score += D[i];
+        for (let i = 8; i <= 9; i++) under8_score -= Math.abs(D[i]);
+
+        // Over 1 (Digits 2-9)
+        let over1_score = 0;
+        for (let i = 2; i <= 9; i++) over1_score += D[i];
+        for (let i = 0; i <= 1; i++) over1_score -= Math.abs(D[i]);
+
+        const direction = under8_score > over1_score ? 'Under 8' : 'Over 1';
+
+        // Step 3: Apply stability filter
+        const mean = 10;
+        const variance = P.reduce((sum, p) => sum + Math.pow(p - mean, 2), 0) / 10;
+        const stdDev = Math.sqrt(variance);
         
-        const over2Perc = (over2 / total) * 100;
-        const under7Perc = (under7 / total) * 100;
+        // Moderate spread threshold: 0.5 to 6.0
+        if (stdDev < 0.5 || stdDev > 6.0) {
+            return { status: 'STABILITY ALERT', type: 'NONE', entry: null, confidence: 0, reasoning: `Distribution variance (${stdDev.toFixed(2)}) is outside moderate stable parameters.` };
+        }
+
+        // Step 4: Filter valid entry digits
+        let candidates: number[] = [];
+        if (direction === 'Under 8') {
+            candidates = [0, 1, 2, 3, 4, 5, 6, 7];
+        } else {
+            candidates = [2, 3, 4, 5, 6, 7, 8, 9];
+        }
+
+        // Exclude top 2 highest and bottom 2 lowest percentages
+        const sortedWithIndices = P.map((p, i) => ({ p, i })).sort((a, b) => b.p - a.p);
+        const top2 = [sortedWithIndices[0].i, sortedWithIndices[1].i];
+        const bottom2 = [sortedWithIndices[8].i, sortedWithIndices[9].i];
         
-        // High-Frequency Signal Logic: Lowered threshold for "As many signals as possible"
-        if (over2Perc >= 52) return { status: 'TRADE NOW', type: 'OVER 2', confidence: over2Perc };
-        if (under7Perc >= 52) return { status: 'TRADE NOW', type: 'UNDER 7', confidence: under7Perc };
+        candidates = candidates.filter(i => !top2.includes(i) && !bottom2.includes(i));
+
+        if (candidates.length === 0) {
+            return { status: 'GATES LOCKED', type: 'NONE', entry: null, confidence: 0, reasoning: 'No digits met the scoring criteria after outlier exclusion.' };
+        }
+
+        // Step 5: Score remaining digits
+        // Score[i]=(10−P[i])×(1−∣D[i+1]−D[i−1]∣)
+        // Using wrap-around for neighbor indices
+        const scores = candidates.map(i => {
+            const nextIdx = (i + 1) % 10;
+            const prevIdx = (i + 9) % 10;
+            const neighborVariance = Math.abs(D[nextIdx] - D[prevIdx]);
+            const score = (10 - P[i]) * (1 - neighborVariance);
+            return { digit: i, score };
+        });
+
+        // Step 6: Select entry digit
+        const best = scores.sort((a, b) => b.score - a.score)[0];
         
-        return { status: 'ANALYZING BARRIERS', type: 'NONE', confidence: Math.max(over2Perc, under7Perc) };
+        // Final Confidence Calculation (Derived from directional strength and score)
+        const rawConfidence = Math.max(under8_score, over1_score);
+        const confidence = Math.min(99.9, 50 + rawConfidence + (best.score * 2));
+
+        return {
+            status: 'TRADE NOW',
+            type: direction,
+            entry: best.digit,
+            confidence: confidence,
+            reasoning: `Selected ${direction} at Digit ${best.digit}. Distribution shows stable zones (StdDev: ${stdDev.toFixed(2)}) with minimal neighbor variance scoring.`
+        };
     }, [ticks]);
 
     return (
         <Card className="border-none shadow-2xl bg-card rounded-[1.5rem] border border-border overflow-hidden relative">
             <div className="absolute top-0 left-0 w-full h-[2px] bg-gradient-to-r from-primary via-cyan-400 to-primary opacity-30" />
             <CardContent className="p-4 sm:p-6">
-                <div className="flex flex-col sm:flex-row items-center justify-between gap-6">
+                <div className="flex flex-col lg:flex-row items-center justify-between gap-6">
                     <div className="flex items-center gap-4">
                         <div className={cn(
                             "w-12 h-12 rounded-xl flex items-center justify-center transition-all duration-500",
                             recommendation.status === 'TRADE NOW' ? "bg-emerald-500 shadow-[0_0_15px_rgba(16,185,129,0.5)]" : "bg-muted border border-border"
                         )}>
-                            {recommendation.status === 'TRADE NOW' ? <Zap className="h-6 w-6 text-white animate-pulse" /> : <Target className="h-6 w-6 text-muted-foreground/40" />}
+                            {recommendation.status === 'TRADE NOW' ? <Zap className="h-6 w-6 text-white animate-pulse" /> : <AlertTriangle className="h-6 w-6 text-muted-foreground/40" />}
                         </div>
                         <div>
                             <h3 className={cn(
@@ -204,15 +266,21 @@ const TacticalRecommendation = ({ ticks }: { ticks: number[] }) => {
                                     "text-xl sm:text-2xl font-black tracking-tighter uppercase",
                                     recommendation.type !== 'NONE' ? "text-foreground" : "text-muted-foreground/30"
                                 )}>
-                                    {recommendation.type !== 'NONE' ? recommendation.type : 'WAITING FOR SKEW'}
+                                    {recommendation.type !== 'NONE' ? `${recommendation.type} @ ${recommendation.entry}` : 'AWAITING LOCK'}
                                 </span>
                             </div>
                         </div>
                     </div>
 
+                    <div className="flex-1 max-w-md">
+                        <p className="text-[9px] font-medium text-muted-foreground leading-relaxed italic border-l-2 border-primary/30 pl-3">
+                           "{recommendation.reasoning}"
+                        </p>
+                    </div>
+
                     <div className="flex items-center gap-8 bg-muted/30 px-6 py-3 rounded-2xl border border-border">
                         <div className="text-center">
-                            <p className="text-[8px] font-black text-muted-foreground uppercase tracking-widest mb-1">CONFIDENCE</p>
+                            <p className="text-[8px] font-black text-muted-foreground uppercase tracking-widest mb-1">STABILITY</p>
                             <p className={cn(
                                 "text-lg font-black tabular-nums leading-none",
                                 recommendation.status === 'TRADE NOW' ? "text-emerald-600" : "text-primary"
@@ -222,7 +290,7 @@ const TacticalRecommendation = ({ ticks }: { ticks: number[] }) => {
                         </div>
                         <div className="w-px h-8 bg-border" />
                         <div className="text-center">
-                            <p className="text-[8px] font-black text-muted-foreground uppercase tracking-widest mb-1">ACCURACY</p>
+                            <p className="text-[8px] font-black text-muted-foreground uppercase tracking-widest mb-1">PROTOCOL</p>
                             <p className="text-lg font-black text-primary leading-none">100+1</p>
                         </div>
                     </div>
