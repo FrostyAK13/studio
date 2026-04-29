@@ -164,7 +164,7 @@ const TacticalHeatMap = ({ ticks }: { ticks: number[] }) => {
 
 const TacticalRecommendation = ({ ticks }: { ticks: number[] }) => {
     const recommendation = React.useMemo(() => {
-        if (ticks.length < 20) return { status: 'AWAITING DATA', type: 'NONE', confidence: 0 };
+        if (ticks.length < 5) return { status: 'AWAITING DATA', type: 'NONE', confidence: 0 };
         
         const total = ticks.length;
         const over2 = ticks.filter(d => d > 2).length;
@@ -173,8 +173,9 @@ const TacticalRecommendation = ({ ticks }: { ticks: number[] }) => {
         const over2Perc = (over2 / total) * 100;
         const under7Perc = (under7 / total) * 100;
         
-        if (over2Perc >= 80) return { status: 'TRADE NOW', type: 'OVER 2', confidence: over2Perc };
-        if (under7Perc >= 80) return { status: 'TRADE NOW', type: 'UNDER 7', confidence: under7Perc };
+        // High-Frequency Signal Logic: Lowered threshold for "As many signals as possible"
+        if (over2Perc >= 52) return { status: 'TRADE NOW', type: 'OVER 2', confidence: over2Perc };
+        if (under7Perc >= 52) return { status: 'TRADE NOW', type: 'UNDER 7', confidence: under7Perc };
         
         return { status: 'ANALYZING BARRIERS', type: 'NONE', confidence: Math.max(over2Perc, under7Perc) };
     }, [ticks]);
@@ -245,7 +246,7 @@ export function ScannerView({
     const [selectedDigit, setSelectedDigit] = React.useState<number | null>(null);
 
     const globalBias = React.useMemo(() => {
-        if (lastDigitTicks.length < 10) return 50;
+        if (lastDigitTicks.length < 5) return 50;
         const over = lastDigitTicks.filter(d => d > 4).length;
         const even = lastDigitTicks.filter(d => d % 2 === 0).length;
         const recent = lastDigitTicks.slice(0, 5).reduce((a, b) => a + b, 0) / 5;
