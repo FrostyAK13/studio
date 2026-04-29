@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
 import { cn } from '@/lib/utils';
-import { ScanLine, Loader2, ShieldCheck, Target, Activity } from 'lucide-react';
+import { ScanLine, Loader2, ShieldCheck, Target, Activity, Zap } from 'lucide-react';
 import { HackerAnimation } from './hacker-animation';
 import { syntheticIndices } from '@/lib/mock-data';
 import { ScannerAnimationContent } from './scanner-animation-content';
@@ -24,7 +24,6 @@ export function EvenOddAnalysis({ lastDigitTicks, selectedMarket, price, decimal
   const [outcomes, setOutcomes] = React.useState<Outcome[]>([]);
   const [streak, setStreak] = React.useState<{ type: Outcome; count: number }>({ type: 'E', count: 0 });
   const [percentages, setPercentages] = React.useState({ even: 0, odd: 0 });
-  const [showAllOutcomes, setShowAllOutcomes] = React.useState(false);
   const [isScanning, setIsScanning] = React.useState(false);
   const [scanResultLines, setScanResultLines] = React.useState<string[] | null>(null);
 
@@ -53,7 +52,6 @@ export function EvenOddAnalysis({ lastDigitTicks, selectedMarket, price, decimal
         setStreak({ type: 'E', count: 0 });
     }
 
-
     const evenCount = newOutcomes.filter(o => o === 'E').length;
     const oddCount = newOutcomes.length - evenCount;
     setPercentages({
@@ -61,6 +59,70 @@ export function EvenOddAnalysis({ lastDigitTicks, selectedMarket, price, decimal
       odd: newOutcomes.length > 0 ? (oddCount / newOutcomes.length) * 100 : 0,
     });
   }, [lastDigitTicks]);
+
+  const runAdvancedStrategy = () => {
+    if (lastDigitTicks.length < 50) return null;
+
+    // Step 1: Normalize distribution
+    const counts = Array(10).fill(0);
+    lastDigitTicks.forEach(d => counts[d]++);
+    const total = lastDigitTicks.length;
+    const P = counts.map(c => (c / total) * 100);
+    const D = P.map(p => p - 10);
+
+    // Step 2: Compute weighted directional strength
+    const sEven = (D[0] + D[2] + D[4] + D[6] + D[8]) - 
+                 (Math.abs(D[1]) + Math.abs(D[3]) + Math.abs(D[5]) + Math.abs(D[7]) + Math.abs(D[9]));
+    const sOdd = (D[1] + D[3] + D[5] + D[7] + D[9]) - 
+                (Math.abs(D[0]) + Math.abs(D[2]) + Math.abs(D[4]) + Math.abs(D[6]) + Math.abs(D[8]));
+
+    // Step 3: Select direction
+    const direction = sEven > sOdd ? 'Even' : 'Odd';
+
+    // Step 4: Stability filter
+    const mean = 10;
+    const variance = P.reduce((sum, p) => sum + Math.pow(p - mean, 2), 0) / 10;
+    const stdDev = Math.sqrt(variance);
+    
+    // Proceed only under moderate dispersion (e.g., 0.5 to 6.5)
+    if (stdDev < 0.5 || stdDev > 6.5) return null;
+
+    // Step 5: Filter entry candidates
+    const chosenSet = direction === 'Even' ? [0, 2, 4, 6, 8] : [1, 3, 5, 7, 9];
+    const sortedChosen = [...chosenSet].sort((a, b) => P[b] - P[a]);
+    
+    // Exclude top 2 and bottom 2
+    const candidates = sortedChosen.filter(d => 
+        d !== sortedChosen[0] && 
+        d !== sortedChosen[1] && 
+        d !== sortedChosen[sortedChosen.length - 1] && 
+        d !== sortedChosen[sortedChosen.length - 2]
+    );
+
+    if (candidates.length === 0) return null;
+
+    // Step 6 & 7: Structural balance filter & Score candidates
+    const scores = candidates.map(i => {
+        const nextIdx = (i + 1) % 10;
+        const prevIdx = (i + 9) % 10;
+        const jump = Math.abs(D[nextIdx] - D[prevIdx]);
+        const score = (10 - P[i]) * (1 - jump);
+        return { digit: i, score, jump };
+    });
+
+    // Step 8: Select entry digit
+    const best = scores.sort((a, b) => b.score - a.score)[0];
+    
+    const confidence = Math.min(99.9, 55 + Math.max(sEven, sOdd) + (best.score * 1.5));
+
+    return {
+        direction,
+        entryDigit: best.digit,
+        confidence,
+        stdDev,
+        reasoning: `Market identified subtle equilibrium deviation in ${direction} territory. Selected Digit ${best.digit} due to structural stability and zone flow.`
+    };
+  };
 
   const handleScan = () => {
     if (isScanning) return;
@@ -72,9 +134,9 @@ export function EvenOddAnalysis({ lastDigitTicks, selectedMarket, price, decimal
     
     setIsScanning(true);
 
-    if (lastDigitTicks.length < 20) {
+    if (lastDigitTicks.length < 50) {
         setTimeout(() => {
-            setScanResultLines(['ERROR: Insufficient data sequence.', 'Minimum 20 ticks required for high-accuracy protocol sync.']);
+            setScanResultLines(['ERROR: Low data precision.', 'Accumulate 50+ ticks for advanced parity analysis.']);
             setIsScanning(false);
             setTimeout(() => setScanResultLines(null), 3000);
         }, 1000);
@@ -82,36 +144,24 @@ export function EvenOddAnalysis({ lastDigitTicks, selectedMarket, price, decimal
     }
 
     setTimeout(() => {
-        const recentTicks = lastDigitTicks.slice(0, 30);
-        const tickSeq = [...recentTicks].slice(0, 10).reverse().join(',');
-        let predictedOutcome: Outcome;
-        let strategy = "";
+        const result = runAdvancedStrategy();
         
-        let triggerDigit = recentTicks.find(t => t > 1) || 5;
-
-        const cluster10 = outcomes.slice(0, 10);
-        const evenCount10 = cluster10.filter(o => o === 'E').length;
-        const oddCount10 = 10 - evenCount10;
-
-        if (streak.count >= 5) {
-            predictedOutcome = streak.type === 'E' ? 'O' : 'E';
-            strategy = `RECURSIVE REVERSAL: Detected ${streak.count}x ${streak.type} saturation. Statistical gravity favors immediate pivot to ${predictedOutcome === 'E' ? 'Even' : 'Odd'}.`;
-        } else if (Math.abs(evenCount10 - 5) >= 3) {
-            predictedOutcome = evenCount10 > oddCount10 ? 'E' : 'O';
-            strategy = `MOMENTUM FLOW: Cluster analysis identifies a ${Math.max(evenCount10, oddCount10)}0% directional bias. Following current ${predictedOutcome === 'E' ? 'Even' : 'Odd'} vector.`;
-        } else {
-            predictedOutcome = percentages.even >= percentages.odd ? 'O' : 'E';
-            strategy = `MEAN REVERSION: Global distribution [${percentages.even.toFixed(1)}%] is over-weighted. Targeting ${predictedOutcome === 'E' ? 'Even' : 'Odd'} for equilibrium correction.`;
+        if (!result) {
+            setScanResultLines(['ENGINE ALERT: No stable vector.', 'Market distribution currently too erratic for 100+1 execution.']);
+            setIsScanning(false);
+            return;
         }
 
+        const tickSeq = [...lastDigitTicks].slice(0, 10).reverse().join(',');
+
         const initialResults = [
-          'STRATEGY HUB V5.2 - FLAWLESS PRECISION',
-          `--> ENTRY TRIGGER: WATCH FOR DIGIT ${triggerDigit}`,
-          `--> PREDICTED VECTOR: ${predictedOutcome === 'E' ? 'EVEN' : 'ODD'}`,
-          `--> CONFIDENCE INDEX: 99.8%`,
+          'STRATEGY HUB - ADVANCED PARITY',
+          `--> ENTRY TRIGGER: WATCH FOR DIGIT ${result.entryDigit}`,
+          `--> DIRECTION: ${result.direction.toUpperCase()}`,
+          `--> CONFIDENCE: ${result.confidence.toFixed(1)}%`,
           '',
-          `STRATEGY REASONING: ${strategy}`,
-          `DATA HORIZON SCAN: [${tickSeq}]`,
+          `REASONING: ${result.reasoning}`,
+          `LIVE SEQUENCE: [${tickSeq}]`,
           ''
         ];
 
@@ -127,12 +177,12 @@ export function EvenOddAnalysis({ lastDigitTicks, selectedMarket, price, decimal
               };
               
               if (countdown >= 0) {
-                  const newLines = [...initialResults, `SIGNAL ACTIVE: Auto-entry sequence in ${countdown}s...`];
+                  const newLines = [...initialResults, `SIGNAL ACTIVE: Auto-entry in ${countdown}s...`];
                   countdown--;
                   return newLines;
               } else {
                   clearInterval(interval);
-                  const finalLines = [...initialResults, `SIGNAL ACTIVE: Entry confirmed at Trigger ${triggerDigit}.`, 'STABILITY CONFIRMED FOR 15+ TICKS.'];
+                  const finalLines = [...initialResults, `SIGNAL ACTIVE: Entry locked at Trigger ${result.entryDigit}.`, 'STABILITY CONFIRMED.'];
                   return finalLines;
               }
           });
@@ -140,7 +190,7 @@ export function EvenOddAnalysis({ lastDigitTicks, selectedMarket, price, decimal
     }, 2500);
   };
 
-  const displayedOutcomes = showAllOutcomes ? outcomes.slice(0, 24) : outcomes.slice(0, 8);
+  const displayedOutcomes = outcomes.slice(0, 8);
   const marketName = syntheticIndices.find(m => m.id === selectedMarket)?.name || selectedMarket;
 
   return (
