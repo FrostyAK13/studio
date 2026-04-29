@@ -2,11 +2,8 @@
 
 import * as React from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Bot, Zap, Activity, TrendingUp, TrendingDown, Layers, Crosshair, ShieldAlert, Gauge, ArrowUp, ArrowDown } from 'lucide-react';
+import { Bot, Zap, Activity, Layers, ShieldAlert, Gauge, RefreshCw, Hash, Target, History } from 'lucide-react';
 import { HackerAnimation } from './hacker-animation';
-import { ScannerAnimationContent } from './scanner-animation-content';
-import { generateInsight, type MultiProtocolOutput, type ProtocolInsight } from '@/lib/insight-generator';
 import { syntheticIndices } from '@/lib/mock-data';
 import { Badge } from '@/components/ui/badge';
 import { Label } from '@/components/ui/label';
@@ -25,92 +22,102 @@ interface InsightViewProps {
     maxTicks: number;
 }
 
-type AnalysisState = 'idle' | 'analyzing' | 'complete' | 'error';
-
 export function InsightView({ price, decimalPlaces, lastDigitTicks, priceHistory, selectedMarket, onMarketChange, maxTicks }: InsightViewProps) {
-    const [analysisState, setAnalysisState] = React.useState<AnalysisState>('idle');
-    const [multiInsight, setMultiInsight] = React.useState<MultiProtocolOutput | null>(null);
-    const [error, setError] = React.useState<string | null>(null);
     const [selectedDigit, setSelectedDigit] = React.useState<number | null>(null);
 
     const marketName = React.useMemo(() => {
         return syntheticIndices.find(m => m.id === selectedMarket)?.name || selectedMarket;
     }, [selectedMarket]);
 
-    const runAnalysis = () => {
-        setMultiInsight(null);
-        setError(null);
-        setAnalysisState('analyzing');
+    const repAnalysis = React.useMemo(() => {
+        if (lastDigitTicks.length < 50) return null;
 
-        setTimeout(() => {
-            if (lastDigitTicks.length < 50 || priceHistory.length < 50) {
-                setError(`Data sequence unstable. Minimum 50 ticks required for analysis.`);
-                setAnalysisState('error');
-                return;
-            }
-
-            try {
-                const result = generateInsight(lastDigitTicks, priceHistory);
-                setMultiInsight(result);
-                setAnalysisState('complete');
-            } catch (e: any) {
-                setError(e.message || "An unexpected error occurred during scan.");
-                setAnalysisState('error');
-            }
-        }, 2000);
-    };
-
-    const ProtocolCard = ({ insight }: { insight: ProtocolInsight }) => {
-        const isPositive = insight.direction.includes('RISE') || insight.direction.includes('OVER') || insight.direction.includes('EVEN') || insight.direction.includes('MATCH');
-        const riskLevel = insight.confidence > 90 ? 'STABLE' : insight.confidence > 80 ? 'LOW' : 'MODERATE';
+        const ticks = [...lastDigitTicks];
+        const total = ticks.length;
         
-        return (
-            <div className="p-3 sm:p-5 bg-card rounded-2xl border border-border relative overflow-hidden group shadow-sm transition-all hover:bg-muted/50">
-                <div className="flex items-center justify-between mb-2">
-                    <p className="font-black text-primary text-[7px] sm:text-[8px] uppercase tracking-widest flex items-center gap-1.5">
-                        <Zap className="h-3 w-3" /> // {insight.strategy.toUpperCase()}
-                    </p>
-                    <Badge variant="secondary" className={cn(
-                        "font-black tracking-widest text-[6px] sm:text-[7px] px-2 py-0.5 border-none uppercase",
-                        riskLevel === 'STABLE' ? "bg-emerald-100 dark:bg-emerald-900 text-emerald-700 dark:text-emerald-300" : riskLevel === 'LOW' ? "bg-amber-100 dark:bg-amber-900 text-amber-700 dark:text-amber-300" : "bg-rose-100 dark:bg-rose-900 text-rose-700 dark:text-rose-300"
-                    )}>
-                        {riskLevel}
-                    </Badge>
-                </div>
+        // Step 1: Normalize & Compute Concentration Index (CI)
+        const counts = Array(10).fill(0);
+        ticks.forEach(d => counts[d]++);
+        const P = counts.map(c => (c / total) * 100);
+        const CI = P.reduce((sum, p) => sum + Math.pow(p - 10, 2), 0);
 
-                <div className="space-y-3">
-                    <div>
-                        <div className="flex items-center gap-2 mb-1">
-                            <span className="text-sm sm:text-base font-black text-foreground tracking-tighter uppercase">{insight.direction}</span>
-                            {isPositive ? <ArrowUp className="h-3 w-3 text-emerald-600" /> : <ArrowDown className="h-3 w-3 text-rose-600" />}
-                        </div>
-                        <p className="text-[7px] sm:text-[8px] font-black text-muted-foreground uppercase tracking-widest">{insight.summary}</p>
-                    </div>
+        // Step 2: Dominant Digits (P[i] > 10)
+        const dominantDigits = P.map((p, i) => p > 10 ? i : null).filter(d => d !== null) as number[];
 
-                    <div className="space-y-1">
-                        <div className="flex justify-between items-end">
-                             <div className="flex items-baseline gap-1">
-                                <span className="text-xs sm:text-sm font-black text-emerald-600 tabular-nums tracking-tighter">
-                                    {insight.confidence.toFixed(0)}%
-                                </span>
-                                <p className="text-[6px] font-black text-muted-foreground uppercase tracking-widest">STABILITY</p>
-                             </div>
-                        </div>
-                        <Progress value={insight.confidence} className="h-1 bg-muted [&>div]:bg-emerald-500" />
-                    </div>
+        // Step 3: Measure Repetition Pressure (RP)
+        let repeatCount = 0;
+        for (let i = 0; i < ticks.length - 1; i++) {
+            if (ticks[i] === ticks[i + 1]) repeatCount++;
+        }
+        const RP = (repeatCount / (total - 1)); // Ratio of repeats
 
-                    <div className="pt-2 border-t border-border">
-                        <p className="text-[8px] sm:text-[10px] font-medium text-muted-foreground leading-relaxed italic border-l-2 border-primary/40 pl-2">
-                            "{insight.reasoning}"
-                        </p>
-                    </div>
-                </div>
-            </div>
-        );
-    };
+        // Thresholds for high/low
+        const CI_THRESHOLD_HIGH = 18; // Sensible threshold for high concentration
+        const CI_THRESHOLD_LOW = 10;
+        const RP_THRESHOLD_HIGH = 0.12; // >12% immediate repeats is high
+        const RP_THRESHOLD_LOW = 0.08;
+
+        const isCIHigh = CI > CI_THRESHOLD_HIGH;
+        const isCILow = CI < CI_THRESHOLD_LOW;
+        const isRPHigh = RP > RP_THRESHOLD_HIGH;
+        const isRPLow = RP < RP_THRESHOLD_LOW;
+
+        // Step 4: Direction Decision
+        let tradeType: 'MATCHES' | 'DIFFERS' | 'NO TRADE' = 'NO TRADE';
+        if (isCIHigh && isRPHigh) tradeType = 'MATCHES';
+        else if (isCILow && isRPLow) tradeType = 'DIFFERS';
+
+        // Step 5: Entry Digit Selection
+        const lastDigit = ticks[0];
+        let entryCondition = '';
+        let canExecute = false;
+
+        if (tradeType === 'MATCHES') {
+            const isDominant = P[lastDigit] > 10 && dominantDigits.includes(lastDigit);
+            const inRecent = ticks.slice(1, 15).includes(lastDigit);
+            if (isDominant && inRecent) {
+                entryCondition = `LAST DIGIT ${lastDigit}`;
+                canExecute = true;
+            } else {
+                entryCondition = 'AWAITING DOMINANT REPEAT';
+            }
+        } else if (tradeType === 'DIFFERS') {
+            const isWeak = P[lastDigit] < 10 && !dominantDigits.includes(lastDigit);
+            if (isWeak) {
+                entryCondition = `LAST DIGIT ${lastDigit}`;
+                canExecute = true;
+            } else {
+                entryCondition = 'AWAITING WEAK DIGIT';
+            }
+        }
+
+        // Step 6: Stability Filter
+        const extremeDominant = P.some(p => p > 12.5);
+        const tooFlat = CI < 5;
+        let stabilityStatus = 'STABLE';
+        if (extremeDominant) {
+            tradeType = 'NO TRADE';
+            stabilityStatus = 'ERRATIC SPIKES';
+        } else if (tooFlat) {
+            tradeType = 'NO TRADE';
+            stabilityStatus = 'NO EDGE (FLAT)';
+        }
+
+        return {
+            CI,
+            RP,
+            tradeType,
+            entryCondition,
+            canExecute,
+            stabilityStatus,
+            explanation: tradeType === 'NO TRADE' 
+                ? `System paused: ${stabilityStatus}. CI [${CI.toFixed(1)}] vs RP [${(RP * 100).toFixed(1)}%] mismatch.`
+                : `${tradeType} protocol active. Concentration [${CI.toFixed(1)}] and Repetition behavior [${(RP * 100).toFixed(1)}%] in sync.`
+        };
+    }, [lastDigitTicks]);
 
     return (
-        <div className="space-y-4 animate-in fade-in duration-700 pb-24">
+        <div className="space-y-4 animate-in fade-in duration-700 pb-24 max-w-[1600px] mx-auto">
              <Card className="border-none shadow-sm bg-card overflow-hidden relative rounded-xl border border-border">
                 <CardContent className="p-3 grid grid-cols-1 md:grid-cols-2 gap-4 items-center">
                     <div className="space-y-1">
@@ -140,7 +147,7 @@ export function InsightView({ price, decimalPlaces, lastDigitTicks, priceHistory
             <div className="space-y-4">
                 <div className="flex items-center gap-2 px-2">
                     <Bot className="h-4 w-4 text-primary" />
-                    <h3 className="text-[8px] font-black uppercase tracking-[0.4em] text-foreground">STRATEGY INTELLIGENCE</h3>
+                    <h3 className="text-[8px] font-black uppercase tracking-[0.4em] text-foreground">MATCHES/DIFFERS REPETITION MODEL</h3>
                 </div>
 
                 <div className="grid grid-cols-1 gap-4">
@@ -151,47 +158,111 @@ export function InsightView({ price, decimalPlaces, lastDigitTicks, priceHistory
                         selectedMarket={selectedMarket}
                     />
 
-                    <div className="text-center">
-                        <Button 
-                            onClick={runAnalysis} 
-                            disabled={analysisState === 'analyzing'} 
-                            className={cn(
-                                "h-10 px-8 rounded-full font-black text-[8px] sm:text-[9px] uppercase tracking-widest shadow-md transition-all active:scale-95",
-                                analysisState === 'analyzing' ? "bg-muted text-muted-foreground" : "bg-primary text-primary-foreground hover:bg-primary/90"
-                            )}
-                        >
-                            {analysisState === 'analyzing' ? "SCANNING..." : "INITIATE SCAN"}
-                        </Button>
-                    </div>
-                    
-                    {(analysisState === 'analyzing' || analysisState === 'complete' || analysisState === 'error') && (
-                        <HackerAnimation title={`INTELLIGENCE REPORT`}>
-                            {analysisState === 'analyzing' ? (
-                                <ScannerAnimationContent />
-                            ) : error ? (
-                                <div className="text-left text-rose-600 flex items-start gap-2 p-3 bg-rose-50 dark:bg-rose-950/20 rounded-xl border border-rose-200 dark:border-rose-900">
-                                    <ShieldAlert className="h-4 w-4 flex-shrink-0 mt-0.5"/>
-                                    <div>
-                                        <p className="font-black text-[8px] uppercase tracking-widest">ERROR</p>
-                                        <p className="font-mono text-[10px] opacity-80 mt-1">{error}</p>
-                                    </div>
+                    {!repAnalysis ? (
+                        <div className="flex flex-col items-center justify-center py-12 bg-muted/10 rounded-[2rem] border border-dashed border-border gap-4 opacity-40">
+                             <RefreshCw className="h-10 w-10 animate-spin text-muted-foreground" />
+                             <p className="text-[10px] font-black uppercase tracking-[0.4em]">ACCUMULATING TICK STREAM (MIN 50)</p>
+                        </div>
+                    ) : (
+                        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+                            <Card className="p-5 rounded-[1.5rem] bg-card border border-border shadow-sm space-y-4">
+                                <div className="flex justify-between items-start">
+                                    <h4 className="text-[8px] font-black uppercase tracking-widest text-primary flex items-center gap-2">
+                                        <Layers className="h-3 w-3" /> CONCENTRATION (CI)
+                                    </h4>
+                                    <Badge variant="outline" className="text-[8px] font-black border-none bg-primary/10 text-primary uppercase">
+                                        {repAnalysis.CI > 15 ? 'HIGH' : 'LOW'}
+                                    </Badge>
                                 </div>
-                            ) : multiInsight ? (
-                                <div className="text-left space-y-4 animate-in fade-in duration-700">
-                                    <div className="p-3 bg-muted/30 rounded-xl border border-border shadow-inner">
-                                        <p className="font-black text-primary text-[7px] uppercase tracking-widest mb-1.5 flex items-center gap-2">
-                                            <Layers className="h-3 w-3" /> // STRATEGY SYNOPSIS
-                                        </p>
-                                        <p className="text-[9px] sm:text-[11px] font-medium text-foreground leading-relaxed italic">"{multiInsight.globalSummary}"</p>
-                                    </div>
+                                <div className="text-center py-2">
+                                    <p className="text-3xl font-black text-foreground tabular-nums tracking-tighter">{repAnalysis.CI.toFixed(1)}</p>
+                                    <p className="text-[6px] font-bold text-muted-foreground uppercase mt-1 tracking-widest">CI INDEX</p>
+                                </div>
+                                <Progress value={Math.min(100, (repAnalysis.CI / 40) * 100)} className="h-1.5 bg-muted [&>div]:bg-primary" />
+                            </Card>
 
-                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                        {multiInsight.protocols.map((p, idx) => (
-                                            <ProtocolCard key={idx} insight={p} />
-                                        ))}
-                                    </div>
+                            <Card className="p-5 rounded-[1.5rem] bg-card border border-border shadow-sm space-y-4">
+                                <div className="flex justify-between items-start">
+                                    <h4 className="text-[8px] font-black uppercase tracking-widest text-emerald-600 flex items-center gap-2">
+                                        <History className="h-3 w-3" /> PRESSURE (RP)
+                                    </h4>
+                                    <Badge variant="outline" className="text-[8px] font-black border-none bg-emerald-500/10 text-emerald-600 uppercase">
+                                        {repAnalysis.RP > 0.1 ? 'ACTIVE' : 'STAGNANT'}
+                                    </Badge>
                                 </div>
-                            ) : null}
+                                <div className="text-center py-2">
+                                    <p className="text-3xl font-black text-foreground tabular-nums tracking-tighter">{(repAnalysis.RP * 100).toFixed(1)}%</p>
+                                    <p className="text-[6px] font-bold text-muted-foreground uppercase mt-1 tracking-widest">REPEAT RATE</p>
+                                </div>
+                                <Progress value={Math.min(100, repAnalysis.RP * 400)} className="h-1.5 bg-muted [&>div]:bg-emerald-500" />
+                            </Card>
+
+                            <Card className={cn(
+                                "p-5 rounded-[1.5rem] border shadow-md flex flex-col justify-between transition-all duration-500",
+                                repAnalysis.tradeType === 'NO TRADE' ? "bg-muted/30 border-border" : 
+                                repAnalysis.canExecute ? "bg-primary/5 border-primary shadow-primary/10" : "bg-card border-border"
+                            )}>
+                                <div className="flex justify-between items-start">
+                                    <h4 className={cn(
+                                        "text-[8px] font-black uppercase tracking-widest flex items-center gap-2",
+                                        repAnalysis.tradeType === 'NO TRADE' ? "text-muted-foreground" : "text-primary"
+                                    )}>
+                                        <Target className="h-3 w-3" /> TACTICAL LOCK
+                                    </h4>
+                                    {repAnalysis.canExecute && (
+                                        <div className="h-2 w-2 rounded-full bg-primary animate-ping" />
+                                    )}
+                                </div>
+                                
+                                <div className="text-center py-2">
+                                    <p className={cn(
+                                        "text-xl sm:text-2xl font-black tracking-tighter uppercase leading-none",
+                                        repAnalysis.tradeType === 'NO TRADE' ? "text-muted-foreground/30" : "text-foreground"
+                                    )}>
+                                        {repAnalysis.tradeType === 'NO TRADE' ? 'STANDBY' : repAnalysis.tradeType}
+                                    </p>
+                                    <p className={cn(
+                                        "text-[10px] font-black uppercase tracking-[0.2em] mt-2",
+                                        repAnalysis.canExecute ? "text-primary" : "text-muted-foreground"
+                                    )}>
+                                        {repAnalysis.entryCondition}
+                                    </p>
+                                </div>
+
+                                <div className="flex justify-center">
+                                     <Badge className={cn(
+                                         "text-[7px] font-black uppercase tracking-widest px-3 border-none",
+                                         repAnalysis.canExecute ? "bg-primary text-white" : "bg-muted text-muted-foreground"
+                                     )}>
+                                         {repAnalysis.canExecute ? 'TRADE NOW' : 'WAITING FOR GATE'}
+                                     </Badge>
+                                </div>
+                            </Card>
+                        </div>
+                    )}
+
+                    {repAnalysis && (
+                        <HackerAnimation title={`REPETITION INTELLIGENCE`}>
+                            <div className="text-left space-y-4 animate-in fade-in duration-700">
+                                <div className={cn(
+                                    "p-4 rounded-xl border shadow-inner",
+                                    repAnalysis.tradeType === 'NO TRADE' ? "bg-rose-500/5 border-rose-500/10" : "bg-emerald-500/5 border-emerald-500/10"
+                                )}>
+                                    <div className="flex items-center gap-3 mb-2">
+                                        {repAnalysis.tradeType === 'NO TRADE' ? (
+                                            <ShieldAlert className="h-4 w-4 text-rose-500" />
+                                        ) : (
+                                            <Zap className="h-4 w-4 text-emerald-500" />
+                                        )}
+                                        <p className="font-black text-[9px] uppercase tracking-widest">
+                                            {repAnalysis.tradeType === 'NO TRADE' ? 'PROTOCOL SUSPENDED' : 'PROTOCOL ACTIVE'}
+                                        </p>
+                                    </div>
+                                    <p className="text-[10px] sm:text-[12px] font-medium text-foreground leading-relaxed italic">
+                                        "{repAnalysis.explanation}"
+                                    </p>
+                                </div>
+                            </div>
                         </HackerAnimation>
                     )}
                 </div>
