@@ -8,11 +8,8 @@ import { Input } from '@/components/ui/input';
 import { syntheticIndices } from '@/lib/mock-data';
 import { cn } from '@/lib/utils';
 import { Badge } from '@/components/ui/badge';
-import { RiseFallAnalysis } from './rise-fall-analysis';
 import { EvenOddAnalysis } from './even-odd-analysis';
-import { OverUnderAnalysis } from './over-under-analysis';
-import { MatchesDiffersAnalysis } from './matches-differs-analysis';
-import { Flame, Activity, BarChart3, Binary, Zap, Cpu, Info } from 'lucide-react';
+import { Flame, Activity, Binary, Info } from 'lucide-react';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Button } from '@/components/ui/button';
 
@@ -208,55 +205,13 @@ export function DigitFrequencyView({
                 </div>
             </div>
 
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-                <div className="space-y-3">
-                    <div className="flex items-center gap-2 px-2">
-                        <Activity className="h-3 w-3 text-emerald-600" />
-                        <h3 className="text-[7px] font-black uppercase tracking-[0.4em] text-foreground">MOMENTUM PROTOCOL</h3>
-                    </div>
-                    <RiseFallAnalysis 
-                        priceHistory={priceHistory}
-                        selectedMarket={selectedMarket}
-                        price={price}
-                        decimalPlaces={decimalPlaces}
-                        variant="compact"
-                    />
-                </div>
-
+            <div className="grid grid-cols-1 gap-4">
                 <div className="space-y-3">
                     <div className="flex items-center gap-2 px-2">
                         <Binary className="h-3 w-3 text-blue-600" />
-                        <h3 className="text-[7px] font-black uppercase tracking-[0.4em] text-foreground">PARITY & BARRIER</h3>
+                        <h3 className="text-[7px] font-black uppercase tracking-[0.4em] text-foreground">LIVE PARITY ANALYSIS</h3>
                     </div>
                     <EvenOddAnalysis 
-                        lastDigitTicks={lastDigitTicks}
-                        selectedMarket={selectedMarket}
-                        price={price}
-                        decimalPlaces={decimalPlaces}
-                    />
-                </div>
-            </div>
-
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-                <div className="space-y-3">
-                    <div className="flex items-center gap-2 px-2">
-                        <Zap className="h-3 w-3 text-amber-600" />
-                        <h3 className="text-[7px] font-black uppercase tracking-[0.4em] text-foreground">GATEWAY OVER/UNDER</h3>
-                    </div>
-                    <OverUnderAnalysis 
-                        lastDigitTicks={lastDigitTicks}
-                        selectedMarket={selectedMarket}
-                        price={price}
-                        decimalPlaces={decimalPlaces}
-                    />
-                </div>
-
-                <div className="space-y-3">
-                    <div className="flex items-center gap-2 px-2">
-                        <Cpu className="h-3 w-3 text-primary" />
-                        <h3 className="text-[7px] font-black uppercase tracking-[0.4em] text-foreground">VARIANCE MATCH/DIFF</h3>
-                    </div>
-                    <MatchesDiffersAnalysis 
                         lastDigitTicks={lastDigitTicks}
                         selectedMarket={selectedMarket}
                         price={price}
