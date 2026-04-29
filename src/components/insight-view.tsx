@@ -5,7 +5,7 @@ import * as React from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
-import { Search, Zap, Activity, History, ShieldCheck, RefreshCw } from 'lucide-react';
+import { Search, Zap, Activity, History, ShieldCheck, RefreshCw, Target } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { GlobalAnalysisResult } from './dashboard';
 
@@ -32,7 +32,7 @@ export function InsightView({ globalResults, activeScanId }: InsightViewProps) {
                             </div>
                             <div>
                                 <CardTitle className="text-xl font-black text-white tracking-tight uppercase leading-none">GLOBAL REPETITION SCANNER</CardTitle>
-                                <CardDescription className="text-[10px] font-bold text-primary uppercase tracking-[0.3em] mt-2">AUTONOMOUS MATCHES/DIFFERS SURVEILLANCE</CardDescription>
+                                <CardDescription className="text-[10px] font-bold text-primary uppercase tracking-[0.3em] mt-2">SINGLE-DIGIT MATCHES PROTOCOL</CardDescription>
                             </div>
                         </div>
                         <div className="flex flex-col items-end gap-2">
@@ -66,21 +66,21 @@ export function InsightView({ globalResults, activeScanId }: InsightViewProps) {
 
                                             <div className="grid grid-cols-2 gap-2">
                                                 <div className="bg-black/20 p-2 rounded-xl border border-white/5">
-                                                    <p className="text-[6px] font-black text-muted-foreground uppercase mb-1">CI INDEX</p>
+                                                    <p className="text-[6px] font-black text-muted-foreground uppercase mb-1">STABILITY</p>
                                                     <p className="text-sm font-black text-white tabular-nums">{res.ci.toFixed(1)}</p>
                                                 </div>
                                                 <div className="bg-black/20 p-2 rounded-xl border border-white/5">
-                                                    <p className="text-[6px] font-black text-muted-foreground uppercase mb-1">REP RATE</p>
-                                                    <p className="text-sm font-black text-white tabular-nums">{(res.rp * 100).toFixed(1)}%</p>
+                                                    <p className="text-[6px] font-black text-muted-foreground uppercase mb-1">TRIGGER DIGIT</p>
+                                                    <p className="text-sm font-black text-primary tabular-nums">{res.entryDigit !== null ? res.entryDigit : '-'}</p>
                                                 </div>
                                             </div>
 
                                             <div className={cn(
                                                 "p-3 rounded-xl border flex items-center justify-between transition-all duration-500",
-                                                res.canExecute ? "bg-primary/20 border-primary animate-pulse" : "bg-muted/10 border-white/5"
+                                                res.canExecute ? "bg-primary/20 border-primary shadow-[0_0_15px_rgba(var(--primary),0.3)]" : "bg-muted/10 border-white/5"
                                             )}>
                                                 <div className="flex items-center gap-2">
-                                                    {res.canExecute ? <Zap className="h-3 w-3 text-white" /> : <Activity className="h-3 w-3 text-muted-foreground/30" />}
+                                                    {res.canExecute ? <Target className="h-3 w-3 text-white animate-pulse" /> : <Activity className="h-3 w-3 text-muted-foreground/30" />}
                                                     <span className={cn("text-[9px] font-black uppercase tracking-widest", res.canExecute ? "text-white" : "text-muted-foreground")}>{res.entryCondition}</span>
                                                 </div>
                                             </div>
@@ -94,7 +94,7 @@ export function InsightView({ globalResults, activeScanId }: InsightViewProps) {
                     {sortedResults.length === 0 && (
                         <div className="py-24 flex flex-col items-center justify-center gap-6 opacity-20 text-center">
                             <RefreshCw className="h-16 w-16 animate-spin text-primary" />
-                            <p className="text-sm font-black uppercase tracking-[0.5em]">INITIALIZING BACKGROUND SURVEILLANCE...</p>
+                            <p className="text-sm font-black uppercase tracking-[0.5em]">INITIALIZING REPETITION SURVEILLANCE...</p>
                         </div>
                     )}
                 </CardContent>
@@ -102,15 +102,15 @@ export function InsightView({ globalResults, activeScanId }: InsightViewProps) {
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <Card className="bg-card/40 border-white/5 p-6 rounded-[2rem]">
-                    <h4 className="text-[10px] font-black text-primary uppercase tracking-[0.4em] mb-4 flex items-center gap-2"><ShieldCheck className="h-4 w-4" /> // REPETITION PROTOCOL</h4>
+                    <h4 className="text-[10px] font-black text-primary uppercase tracking-[0.4em] mb-4 flex items-center gap-2"><ShieldCheck className="h-4 w-4" /> // SINGLE-DIGIT PROTOCOL</h4>
                     <p className="text-[11px] font-medium text-foreground leading-relaxed italic border-l-2 border-primary/30 pl-4">
-                        "Surveillance monitors behavioral echoes in the background. CI and RP synchronization identifies zero-error repetition gates autonomously across all markets."
+                        "Surveillance now pre-selects one statistically optimal digit. Instead of reacting to every tick, the system waits for the trigger digit to appear, aligning distribution strength with structural stability."
                     </p>
                 </Card>
                 <Card className="bg-card/40 border-white/5 p-6 rounded-[2rem] flex items-center justify-between">
                     <div className="flex items-center gap-4">
-                        <div className="h-10 w-10 rounded-xl bg-emerald-500/10 flex items-center justify-center border border-emerald-500/20"><History className="h-5 w-5 text-emerald-500" /></div>
-                        <div><p className="text-[10px] font-black text-white uppercase tracking-widest">NETWORK LATENCY</p><p className="text-[8px] font-bold text-muted-foreground uppercase mt-1">OPTIMIZED FOR ZERO-ERROR EXECUTION</p></div>
+                        <div className="h-10 w-10 rounded-xl bg-emerald-500/10 flex items-center justify-center border border-emerald-500/20"><Zap className="h-5 w-5 text-emerald-500" /></div>
+                        <div><p className="text-[10px] font-black text-white uppercase tracking-widest">ZERO-ERROR GATES</p><p className="text-[8px] font-bold text-muted-foreground uppercase mt-1">OPTIMIZED FOR SINGLE-TRIGGER ENGAGEMENT</p></div>
                     </div>
                     <Badge className="bg-emerald-500/20 text-emerald-400 border-none font-black text-[9px] px-4">ULTRA-STABLE</Badge>
                 </Card>
@@ -118,4 +118,3 @@ export function InsightView({ globalResults, activeScanId }: InsightViewProps) {
         </div>
     );
 }
-

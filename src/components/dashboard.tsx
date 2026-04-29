@@ -11,7 +11,7 @@ import { InsightView } from './insight-view';
 import { GlobalMarketScanner } from './global-market-scanner';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
-import { RefreshCw, Radio, Activity, Moon, Sun, ExternalLink, Lock } from 'lucide-react';
+import { RefreshCw, Radio, Activity, Moon, Sun, ExternalLink } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { LockScreen } from './lock-screen';
 
@@ -20,13 +20,14 @@ type EngineStatus = 'offline' | 'active';
 export interface GlobalAnalysisResult {
     marketId: string;
     marketName: string;
-    // Repetition Strategy (Insight)
+    // Repetition Strategy (Insight - Single-Digit Model)
     ci: number;
     rp: number;
     tradeType: 'MATCHES' | 'DIFFERS' | 'NO TRADE';
+    entryDigit: number | null;
     entryCondition: string;
     canExecute: boolean;
-    // Distribution Strategy (Scanner)
+    // Distribution Strategy (Scanner - O3/U6 Model)
     scannerStrategy: 'OVER 3' | 'UNDER 6' | 'NONE';
     scannerEntry: number | null;
     scannerConfidence: number;
@@ -45,7 +46,6 @@ export function Dashboard() {
     const [tickTimestamps, setTickTimestamps] = React.useState<number[]>([]);
     
     const [surveillanceStatus, setSurveillanceStatus] = React.useState<EngineStatus>('offline');
-    const [wsInstance, setWsInstance] = React.useState<WebSocket | null>(null);
     const [globalResults, setGlobalResults] = React.useState<Record<string, GlobalAnalysisResult>>({});
     const [activeScanId, setActiveScanId] = React.useState<string | null>(null);
 
@@ -86,7 +86,7 @@ export function Dashboard() {
         currentMarketRef.current = selectedMarket;
     }, [selectedMarket, maxTicks, mounted]);
 
-    // Background Global Scanner Logic
+    // Background Global Surveillance Engine
     React.useEffect(() => {
         if (!mounted || isLocked) return;
 
@@ -128,46 +128,64 @@ export function Dashboard() {
                     return parseInt(dec[pip - 1] || '0');
                 }).reverse();
 
-                // 1. Repetition Strategy (Insight)
                 const total = ticks.length || 1;
                 const counts = Array(10).fill(0);
                 ticks.forEach(d => counts[d]++);
                 const P = counts.map(c => (c / total) * 100);
+                const D = P.map(p => p - 10);
                 const CI = P.reduce((sum, p) => sum + Math.pow(p - 10, 2), 0);
+                
                 let repeats = 0;
                 for (let i = 0; i < ticks.length - 1; i++) if (ticks[i] === ticks[i+1]) repeats++;
-                const RP = repeats / (total - 1);
+                const RP = (total > 1) ? repeats / (total - 1) : 0;
 
-                let tradeType: 'MATCHES' | 'DIFFERS' | 'NO TRADE' = 'NO TRADE';
-                if (CI > 18 && RP > 0.12) tradeType = 'MATCHES';
-                else if (CI < 10 && RP < 0.08) tradeType = 'DIFFERS';
+                // --- 1. Single-Digit Matches Strategy (Insight) ---
+                const insightScores = D.map((di, i) => {
+                    const nextIdx = (i + 1) % 10;
+                    const prevIdx = (i + 9) % 10;
+                    const neighborDiff = Math.abs(D[nextIdx] - D[prevIdx]);
+                    // Score[i] = |D[i]| * (1 - |D[i+1] - D[i-1]|)
+                    // We scale the neighborDiff slightly to prevent negative scores in high-noise environments
+                    return { digit: i, score: Math.abs(di) * (1 - (neighborDiff / 8)) };
+                });
+                
+                const bestInsightDigit = insightScores.reduce((prev, curr) => (prev.score > curr.score) ? prev : curr).digit;
+                const d = bestInsightDigit;
+                const neighborDiffD = Math.abs(D[(d+1)%10] - D[(d+9)%10]);
 
-                // 2. O3 / U6 Strategy (Scanner)
-                const D = P.map(p => p - 10);
+                let insightTradeType: 'MATCHES' | 'DIFFERS' | 'NO TRADE' = 'NO TRADE';
+                
+                // Safety Filters: Min Imbalance, Stable Neighbors, Min Concentration
+                if (Math.abs(D[d]) > 1.5 && neighborDiffD < 4 && CI > 12) {
+                    insightTradeType = D[d] > 0 ? 'MATCHES' : 'DIFFERS';
+                }
+
+                // --- 2. Advanced O3/U6 Strategy (Scanner) ---
                 let S_U6 = 0;
                 for (let i = 0; i <= 5; i++) S_U6 += D[i];
                 for (let i = 6; i <= 9; i++) S_U6 -= Math.abs(D[i]);
+                
                 let S_O3 = 0;
                 for (let i = 4; i <= 9; i++) S_O3 += D[i];
                 for (let i = 0; i <= 3; i++) S_O3 -= Math.abs(D[i]);
 
-                const direction = S_U6 > S_O3 ? 'UNDER 6' : 'OVER 3';
-                let candidates = direction === 'UNDER 6' ? [0, 1, 2, 3, 4, 5] : [4, 5, 6, 7, 8, 9];
+                const scannerDirection = S_U6 > S_O3 ? 'UNDER 6' : 'OVER 3';
+                let scannerCandidates = scannerDirection === 'UNDER 6' ? [0, 1, 2, 3, 4, 5] : [4, 5, 6, 7, 8, 9];
                 
-                // Mid-zone control
-                if (direction === 'UNDER 6') {
-                    if (P[4] + P[5] <= 20) candidates = candidates.filter(i => i !== 4 && i !== 5);
+                // Mid-zone control (4,5)
+                if (scannerDirection === 'UNDER 6') {
+                    if (P[4] + P[5] <= 20) scannerCandidates = scannerCandidates.filter(i => i !== 4 && i !== 5);
                 } else {
-                    if (P[4] <= 10) candidates = candidates.filter(i => i !== 4);
-                    if (P[5] <= 10) candidates = candidates.filter(i => i !== 5);
+                    if (P[4] <= 10) scannerCandidates = scannerCandidates.filter(i => i !== 4);
+                    if (P[5] <= 10) scannerCandidates = scannerCandidates.filter(i => i !== 5);
                 }
 
-                const scores = candidates.map(i => {
+                const scannerScores = scannerCandidates.map(i => {
                     const n1 = (i + 1) % 10;
                     const n2 = (i + 9) % 10;
-                    return { digit: i, score: (10 - P[i]) * (1 - Math.abs(D[n1] - D[n2])) };
+                    return { digit: i, score: (10 - P[i]) * (1 - Math.abs(D[n1] - D[n2]) / 8) };
                 });
-                const best = scores.sort((a, b) => b.score - a.score)[0];
+                const bestScanner = scannerScores.sort((a, b) => b.score - a.score)[0];
 
                 setGlobalResults(prev => ({
                     ...prev,
@@ -176,12 +194,13 @@ export function Dashboard() {
                         marketName,
                         ci: CI,
                         rp: RP,
-                        tradeType,
-                        entryCondition: tradeType === 'MATCHES' ? `MATCH @ ${ticks[0]}` : `DIFF @ ${ticks[0]}`,
-                        canExecute: tradeType !== 'NO TRADE',
-                        scannerStrategy: direction,
-                        scannerEntry: best?.digit ?? null,
-                        scannerConfidence: 60 + Math.max(S_U6, S_O3) + (best?.score ?? 0)
+                        tradeType: insightTradeType,
+                        entryDigit: d,
+                        entryCondition: insightTradeType !== 'NO TRADE' ? `WAIT FOR DIGIT ${d}` : 'AWAITING LOCK',
+                        canExecute: insightTradeType !== 'NO TRADE',
+                        scannerStrategy: scannerDirection,
+                        scannerEntry: bestScanner?.digit ?? null,
+                        scannerConfidence: 60 + Math.max(S_U6, S_O3) + (bestScanner?.score ?? 0)
                     }
                 }));
 
@@ -198,7 +217,6 @@ export function Dashboard() {
         if (!mounted || isLocked) return;
 
         const ws = new WebSocket('wss://ws.derivws.com/websockets/v3?app_id=84799');
-        setWsInstance(ws);
 
         ws.onopen = () => {
             setSurveillanceStatus('active');
@@ -327,4 +345,3 @@ export function Dashboard() {
         </div>
     );
 }
-
