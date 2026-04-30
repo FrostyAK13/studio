@@ -4,9 +4,10 @@ import * as React from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
-import { Search, Zap, Activity, ShieldCheck, RefreshCw, Target, TrendingUp, Crosshair, Wallet } from 'lucide-react';
+import { Search, Zap, Activity, ShieldCheck, RefreshCw, Target, TrendingUp, Crosshair, Wallet, Lock, Unlock, Timer } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { GlobalAnalysisResult } from './dashboard';
+import { Progress } from '@/components/ui/progress';
 
 interface InsightViewProps {
     globalResults: Record<string, GlobalAnalysisResult>;
@@ -15,21 +16,66 @@ interface InsightViewProps {
     dashboardMarketId: string;
 }
 
+const SIGNAL_LOCK_DURATION = 120000; // 2 minutes in milliseconds
+
 export function InsightView({ globalResults, activeScanId, dashboardPrice, dashboardMarketId }: InsightViewProps) {
     const [livePrice, setLivePrice] = React.useState<number>(0);
     const [liveDigits, setLiveDigits] = React.useState<number[]>([]);
     const [livePip, setLivePip] = React.useState<number>(2);
     
-    // Sniper Step: Select ONLY the single best market globally
-    const topSniperMatch = React.useMemo(() => {
-        return Object.values(globalResults)
+    // Signal Lock States
+    const [lockedSignal, setLockedSignal] = React.useState<GlobalAnalysisResult | null>(null);
+    const [lockTimestamp, setLockTimestamp] = React.useState<number>(0);
+    const [timeRemaining, setTimeRemaining] = React.useState<number>(0);
+
+    // Sniper Step: Global Best Market Selection with Lock-in Logic
+    React.useEffect(() => {
+        const sortedMatches = Object.values(globalResults)
             .filter(r => r.tradeType === 'MATCHES' && r.entryDigit !== null)
-            .sort((a, b) => b.marketScore - a.marketScore)[0];
-    }, [globalResults]);
+            .sort((a, b) => b.marketScore - a.marketScore);
 
-    const targetMarketId = topSniperMatch?.marketId;
+        const bestGlobal = sortedMatches[0];
+        const now = Date.now();
 
-    // Independent Real-Time Subscription for the Sniper Market
+        if (!lockedSignal && bestGlobal) {
+            // Initial Lock
+            setLockedSignal(bestGlobal);
+            setLockTimestamp(now);
+        } else if (lockedSignal) {
+            const elapsed = now - lockTimestamp;
+            
+            // If lock expired, check if there's a better (or same) signal to re-lock
+            if (elapsed >= SIGNAL_LOCK_DURATION) {
+                if (bestGlobal) {
+                    setLockedSignal(bestGlobal);
+                    setLockTimestamp(now);
+                }
+            } else {
+                // Keep the current locked signal but update its data from the global results if market matches
+                const updatedData = globalResults[lockedSignal.marketId];
+                if (updatedData) {
+                    setLockedSignal(updatedData);
+                }
+            }
+        }
+    }, [globalResults, lockedSignal, lockTimestamp]);
+
+    // Timer Update Effect
+    React.useEffect(() => {
+        if (!lockTimestamp) return;
+
+        const interval = setInterval(() => {
+            const elapsed = Date.now() - lockTimestamp;
+            const remaining = Math.max(0, SIGNAL_LOCK_DURATION - elapsed);
+            setTimeRemaining(remaining);
+        }, 100);
+
+        return () => clearInterval(interval);
+    }, [lockTimestamp]);
+
+    const targetMarketId = lockedSignal?.marketId;
+
+    // Independent Real-Time Subscription for the Locked Sniper Market
     React.useEffect(() => {
         if (!targetMarketId) return;
 
@@ -61,11 +107,12 @@ export function InsightView({ globalResults, activeScanId, dashboardPrice, dashb
             if (ws.readyState === WebSocket.OPEN || ws.readyState === WebSocket.CONNECTING) {
                 ws.close();
             }
-            // Reset local live states when market changes
             setLivePrice(0);
             setLiveDigits([]);
         };
     }, [targetMarketId]);
+
+    const progressValue = (timeRemaining / SIGNAL_LOCK_DURATION) * 100;
 
     return (
         <div className="space-y-6 animate-in fade-in duration-1000 pb-24 max-w-[1600px] mx-auto px-2">
@@ -92,7 +139,7 @@ export function InsightView({ globalResults, activeScanId, dashboardPrice, dashb
                 </CardHeader>
                 <CardContent className="p-8 sm:p-12">
                     <AnimatePresence mode="wait">
-                        {!topSniperMatch ? (
+                        {!lockedSignal ? (
                             <motion.div 
                                 key="idle" 
                                 initial={{ opacity: 0 }} 
@@ -111,7 +158,7 @@ export function InsightView({ globalResults, activeScanId, dashboardPrice, dashb
                             </motion.div>
                         ) : (
                             <motion.div 
-                                key={topSniperMatch.marketId} 
+                                key={lockedSignal.marketId} 
                                 initial={{ opacity: 0, scale: 0.98, y: 30 }} 
                                 animate={{ opacity: 1, scale: 1, y: 0 }}
                                 transition={{ type: "spring", stiffness: 200, damping: 20 }}
@@ -119,11 +166,30 @@ export function InsightView({ globalResults, activeScanId, dashboardPrice, dashb
                             >
                                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
                                     <div className="space-y-8">
+                                        <div className="flex items-center justify-between gap-4 bg-black/20 p-4 rounded-2xl border border-white/5">
+                                            <div className="flex items-center gap-3">
+                                                <div className="p-2 bg-amber-500/20 rounded-lg">
+                                                    <Lock className="h-4 w-4 text-amber-500" />
+                                                </div>
+                                                <div>
+                                                    <p className="text-[10px] font-black text-amber-500 uppercase tracking-widest leading-none">SIGNAL LOCKED</p>
+                                                    <p className="text-[8px] font-bold text-muted-foreground uppercase tracking-widest mt-1">TRADER STABILIZATION ACTIVE</p>
+                                                </div>
+                                            </div>
+                                            <div className="flex-1 max-w-[150px] space-y-1.5">
+                                                <div className="flex justify-between items-center text-[8px] font-black text-muted-foreground uppercase tracking-widest">
+                                                    <span>REFRESH</span>
+                                                    <span>{Math.ceil(timeRemaining / 1000)}S</span>
+                                                </div>
+                                                <Progress value={progressValue} className="h-1.5 bg-white/5 [&>div]:bg-amber-500" />
+                                            </div>
+                                        </div>
+
                                         <div className="flex items-center gap-5">
                                             <div className="w-2 h-16 bg-emerald-500 rounded-full shadow-[0_0_25px_rgba(16,185,129,0.9)]" />
                                             <div>
                                                 <p className="text-[11px] font-black text-emerald-400 uppercase tracking-[0.4em] mb-2">ELITE MARKET IDENTIFIED</p>
-                                                <h2 className="text-3xl sm:text-5xl font-black text-white tracking-tighter uppercase leading-none">{topSniperMatch.marketName}</h2>
+                                                <h2 className="text-3xl sm:text-5xl font-black text-white tracking-tighter uppercase leading-none">{lockedSignal.marketName}</h2>
                                             </div>
                                         </div>
 
@@ -131,7 +197,7 @@ export function InsightView({ globalResults, activeScanId, dashboardPrice, dashb
                                             <div className="bg-black/60 p-6 rounded-[2rem] border border-white/5 shadow-2xl group hover:border-primary/20 transition-all duration-500">
                                                 <p className="text-[9px] font-black text-primary uppercase tracking-[0.4em] mb-3">TRIGGER DIGIT</p>
                                                 <div className="flex items-baseline gap-4">
-                                                    <span className="text-6xl font-black text-white tabular-nums group-hover:text-primary transition-colors">{topSniperMatch.entryDigit}</span>
+                                                    <span className="text-6xl font-black text-white tabular-nums group-hover:text-primary transition-colors">{lockedSignal.entryDigit}</span>
                                                     <Badge className="bg-emerald-500/20 text-emerald-400 border-none text-[9px] font-black uppercase px-3 py-1">STABLE CLUSTER</Badge>
                                                 </div>
                                             </div>
@@ -163,7 +229,7 @@ export function InsightView({ globalResults, activeScanId, dashboardPrice, dashb
                                                     </div>
                                                     <div>
                                                         <p className="text-[11px] font-black text-white uppercase tracking-widest">TACTICAL COMMAND</p>
-                                                        <p className="text-2xl font-black text-white uppercase mt-1">WAIT FOR TRIGGER: {topSniperMatch.entryDigit}</p>
+                                                        <p className="text-2xl font-black text-white uppercase mt-1">WAIT FOR TRIGGER: {lockedSignal.entryDigit}</p>
                                                     </div>
                                                 </div>
                                                 <Zap className="h-8 w-8 text-emerald-400 opacity-30 group-hover:opacity-100 transition-opacity" />
@@ -179,7 +245,7 @@ export function InsightView({ globalResults, activeScanId, dashboardPrice, dashb
                                                             animate={{ scale: 1, opacity: 1 }}
                                                             className={cn(
                                                                 "w-10 h-10 rounded-xl flex items-center justify-center font-black text-xs border transition-all shrink-0",
-                                                                digit === topSniperMatch.entryDigit 
+                                                                digit === lockedSignal?.entryDigit 
                                                                     ? "bg-primary border-primary text-primary-foreground shadow-lg ring-2 ring-primary ring-offset-2 ring-offset-slate-900" 
                                                                     : "bg-white/5 border-white/10 text-white/60"
                                                             )}
@@ -201,12 +267,12 @@ export function InsightView({ globalResults, activeScanId, dashboardPrice, dashb
                                                 <div className="space-y-2.5">
                                                     <div className="flex justify-between items-end px-1">
                                                         <p className="text-[9px] font-black uppercase text-muted-foreground tracking-widest">CONFIDENCE INDEX</p>
-                                                        <p className="text-lg font-black text-emerald-400 tabular-nums">{topSniperMatch.confidence.toFixed(1)}%</p>
+                                                        <p className="text-lg font-black text-emerald-400 tabular-nums">{lockedSignal.confidence.toFixed(1)}%</p>
                                                     </div>
                                                     <div className="h-3 bg-white/5 rounded-full overflow-hidden p-0.5 border border-white/5">
                                                         <motion.div 
                                                             initial={{ width: 0 }} 
-                                                            animate={{ width: `${topSniperMatch.confidence}%` }} 
+                                                            animate={{ width: `${lockedSignal.confidence}%` }} 
                                                             className="h-full bg-gradient-to-r from-primary to-emerald-500 rounded-full shadow-[0_0_15px_rgba(16,185,129,0.6)]" 
                                                         />
                                                     </div>
@@ -214,11 +280,11 @@ export function InsightView({ globalResults, activeScanId, dashboardPrice, dashb
                                                 <div className="p-4 bg-white/5 rounded-2xl border border-white/5">
                                                     <p className="text-[8px] font-black text-primary uppercase tracking-widest mb-2">EXECUTION RULE</p>
                                                     <p className="text-[10px] font-bold text-white uppercase leading-relaxed">
-                                                        "Trade on first appearance of {topSniperMatch.entryDigit}, re-enter only after {topSniperMatch.entryDigit} repeats consecutively."
+                                                        "Trade on first appearance of {lockedSignal.entryDigit}, re-enter only after {lockedSignal.entryDigit} repeats consecutively."
                                                     </p>
                                                 </div>
                                                 <p className="text-[13px] font-medium text-foreground leading-relaxed italic border-l-4 border-emerald-500/40 pl-6 py-1">
-                                                    "Sniper model identifies optimal structural flow in {topSniperMatch.marketName}. Digit {topSniperMatch.entryDigit} selected via multi-factor cluster analysis. Enter MATCHES exclusively upon manifestation."
+                                                    "Sniper model identifies optimal structural flow in {lockedSignal.marketName}. Digit {lockedSignal.entryDigit} selected via multi-factor cluster analysis. Enter MATCHES exclusively upon manifestation."
                                                 </p>
                                             </div>
                                         </Card>
@@ -244,7 +310,7 @@ export function InsightView({ globalResults, activeScanId, dashboardPrice, dashb
                 <Card className="bg-slate-900/40 backdrop-blur-3xl border-white/5 p-8 rounded-[2rem]">
                     <h4 className="text-[11px] font-black text-primary uppercase tracking-[0.5em] mb-5 flex items-center gap-3"><Activity className="h-5 w-5" /> // SNIPER PROTOCOL</h4>
                     <p className="text-[12px] font-medium text-foreground/80 leading-relaxed italic border-l-2 border-primary/30 pl-5">
-                        "The Sniper Model filters out noise by analyzing global market scores (Direction, Concentration, Stability). Only the absolute highest probability setup is displayed, ensuring tactical focus remains on zero-error environments."
+                        "The Sniper Model filters out noise by analyzing global market scores (Direction, Concentration, Stability). To prevent overtrading, signals are locked for 120 seconds, allowing for focused strategic execution."
                     </p>
                 </Card>
                 <Card className="bg-slate-900/40 backdrop-blur-3xl border-white/5 p-8 rounded-[2rem] flex items-center justify-between">
