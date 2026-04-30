@@ -5,7 +5,7 @@ import * as React from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
-import { Search, Zap, Activity, ShieldCheck, RefreshCw, Target, TrendingUp, Crosshair, Wallet, Lock, Timer, ArrowRight } from 'lucide-react';
+import { Search, Zap, Activity, ShieldCheck, RefreshCw, Target, TrendingUp, Crosshair, Wallet, Lock, Timer, ArrowRight, AlertCircle } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { GlobalAnalysisResult } from './dashboard';
 import { Progress } from '@/components/ui/progress';
@@ -115,6 +115,9 @@ export function InsightView({ globalResults, activeScanId, dashboardPrice, dashb
 
     const progressValue = (timeRemaining / SIGNAL_LOCK_DURATION) * 100;
 
+    // Sequential Trigger Logic: Has the trigger appeared in the latest tick?
+    const isTriggerActive = liveDigits.length > 0 && liveDigits[0] === lockedSignal?.entryDigit;
+
     return (
         <div className="space-y-6 animate-in fade-in duration-1000 pb-24 max-w-[1600px] mx-auto px-2">
             <Card className="border-none shadow-2xl bg-slate-900/40 backdrop-blur-3xl rounded-[2.5rem] border border-white/5 overflow-hidden relative">
@@ -127,7 +130,7 @@ export function InsightView({ globalResults, activeScanId, dashboardPrice, dashb
                             </div>
                             <div>
                                 <CardTitle className="text-2xl font-black text-white tracking-tighter uppercase leading-none">PROBABILITY FLOW SNIPER</CardTitle>
-                                <CardDescription className="text-[10px] font-black text-primary uppercase tracking-[0.4em] mt-3">ZERO-ERROR TRANSITION SURVEILLANCE</CardDescription>
+                                <CardDescription className="text-[10px] font-black text-primary uppercase tracking-[0.4em] mt-3">TRIGGER-FIRST FLOW PROTOCOL</CardDescription>
                             </div>
                         </div>
                         <div className="flex flex-col items-end gap-3">
@@ -195,11 +198,16 @@ export function InsightView({ globalResults, activeScanId, dashboardPrice, dashb
                                         </div>
 
                                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
-                                            <div className="bg-black/60 p-6 rounded-[2rem] border border-white/5 shadow-2xl group hover:border-primary/20 transition-all duration-500">
-                                                <p className="text-[9px] font-black text-primary uppercase tracking-[0.4em] mb-3">TRIGGER DIGIT (e)</p>
+                                            <div className={cn(
+                                                "p-6 rounded-[2rem] border transition-all duration-500 shadow-2xl group",
+                                                isTriggerActive ? "bg-amber-500 border-amber-400" : "bg-black/60 border-white/5 hover:border-primary/20"
+                                            )}>
+                                                <p className={cn("text-[9px] font-black uppercase tracking-[0.4em] mb-3", isTriggerActive ? "text-white" : "text-primary")}>TRIGGER DIGIT (e)</p>
                                                 <div className="flex items-baseline gap-4">
-                                                    <span className="text-6xl font-black text-white tabular-nums group-hover:text-amber-500 transition-colors">{lockedSignal.entryDigit}</span>
-                                                    <Badge className="bg-amber-500/20 text-amber-400 border-none text-[9px] font-black uppercase px-3 py-1">TRANSITION ZONE</Badge>
+                                                    <span className={cn("text-6xl font-black tabular-nums transition-colors", isTriggerActive ? "text-white" : "text-white group-hover:text-amber-500")}>{lockedSignal.entryDigit}</span>
+                                                    <Badge className={cn("border-none text-[9px] font-black uppercase px-3 py-1", isTriggerActive ? "bg-white/20 text-white" : "bg-amber-500/20 text-amber-400")}>
+                                                        {isTriggerActive ? "SIGNAL ACTIVE" : "TRANSITION ZONE"}
+                                                    </Badge>
                                                 </div>
                                             </div>
                                             <div className="bg-black/60 p-6 rounded-[2rem] border border-white/5 shadow-2xl group hover:border-primary/20 transition-all duration-500">
@@ -211,22 +219,40 @@ export function InsightView({ globalResults, activeScanId, dashboardPrice, dashb
                                             </div>
                                         </div>
 
-                                        <div className="p-8 bg-emerald-500/20 rounded-[2.5rem] border border-emerald-500/40 shadow-2xl shadow-emerald-500/10 flex flex-col gap-6 group">
+                                        <div className={cn(
+                                            "p-8 rounded-[2.5rem] border shadow-2xl transition-all duration-500 flex flex-col gap-6 group",
+                                            isTriggerActive 
+                                                ? "bg-emerald-500/20 border-emerald-500/60 shadow-emerald-500/20" 
+                                                : "bg-white/5 border-white/5 opacity-80"
+                                        )}>
                                             <div className="flex items-center justify-between">
                                                 <div className="flex items-center gap-6">
-                                                    <div className="p-3 bg-emerald-500 rounded-2xl shadow-lg">
-                                                        <Target className="h-8 w-8 text-white animate-pulse" />
+                                                    <div className={cn(
+                                                        "p-3 rounded-2xl transition-all duration-500 shadow-lg",
+                                                        isTriggerActive ? "bg-emerald-500" : "bg-white/10"
+                                                    )}>
+                                                        <Target className={cn("h-8 w-8 text-white", isTriggerActive && "animate-pulse")} />
                                                     </div>
                                                     <div>
-                                                        <p className="text-[11px] font-black text-white uppercase tracking-widest">TACTICAL COMMAND</p>
+                                                        <p className={cn("text-[11px] font-black uppercase tracking-widest", isTriggerActive ? "text-white" : "text-white/40")}>TACTICAL COMMAND</p>
                                                         <div className="flex items-center gap-3 mt-1">
                                                             <span className="text-2xl font-black text-white uppercase">{lockedSignal.entryDigit}</span>
-                                                            <ArrowRight className="h-5 w-5 text-emerald-400" />
+                                                            <ArrowRight className={cn("h-5 w-5", isTriggerActive ? "text-emerald-400" : "text-white/20")} />
                                                             <span className="text-2xl font-black text-white uppercase">{lockedSignal.targetDigit}</span>
                                                         </div>
                                                     </div>
                                                 </div>
-                                                <Zap className="h-8 w-8 text-emerald-400 opacity-30 group-hover:opacity-100 transition-opacity" />
+                                                {isTriggerActive ? (
+                                                    <div className="flex flex-col items-end">
+                                                        <span className="text-[10px] font-black text-emerald-400 uppercase tracking-[0.2em] animate-pulse">EXECUTE NOW</span>
+                                                        <Zap className="h-6 w-6 text-emerald-400 mt-1" />
+                                                    </div>
+                                                ) : (
+                                                    <div className="flex items-center gap-2 opacity-30">
+                                                        <span className="text-[8px] font-black text-white uppercase tracking-widest">AWAITING TRIGGER</span>
+                                                        <Timer className="h-4 w-4 text-white" />
+                                                    </div>
+                                                )}
                                             </div>
                                             
                                             <div className="space-y-2">
@@ -238,23 +264,31 @@ export function InsightView({ globalResults, activeScanId, dashboardPrice, dashb
                                                     </div>
                                                 </div>
                                                 <div className="flex gap-2 justify-start overflow-hidden h-12 items-center">
-                                                    {liveDigits.map((digit, idx) => (
-                                                        <motion.div
-                                                            key={`${digit}-${idx}-${livePrice}`}
-                                                            initial={{ scale: 0.8, opacity: 0 }}
-                                                            animate={{ scale: 1, opacity: 1 }}
-                                                            className={cn(
-                                                                "w-10 h-10 rounded-xl flex items-center justify-center font-black text-xs border transition-all shrink-0",
-                                                                digit === lockedSignal?.entryDigit 
-                                                                    ? "bg-amber-500 border-amber-500 text-white shadow-lg ring-2 ring-amber-500 ring-offset-2 ring-offset-slate-900" 
-                                                                    : digit === lockedSignal?.targetDigit
-                                                                    ? "bg-emerald-500 border-emerald-500 text-white shadow-lg ring-2 ring-emerald-500 ring-offset-2 ring-offset-slate-900"
-                                                                    : "bg-white/5 border-white/10 text-white/60"
-                                                            )}
-                                                        >
-                                                            {digit}
-                                                        </motion.div>
-                                                    ))}
+                                                    {liveDigits.map((digit, idx) => {
+                                                        const isTriggerMark = digit === lockedSignal?.entryDigit;
+                                                        // CRITICAL: Target is only marked if it was preceded by a trigger (digit at idx was preceded by digit at idx+1)
+                                                        const isTargetMark = digit === lockedSignal?.targetDigit && 
+                                                                           idx < liveDigits.length - 1 && 
+                                                                           liveDigits[idx + 1] === lockedSignal?.entryDigit;
+
+                                                        return (
+                                                            <motion.div
+                                                                key={`${digit}-${idx}-${livePrice}`}
+                                                                initial={{ scale: 0.8, opacity: 0 }}
+                                                                animate={{ scale: 1, opacity: 1 }}
+                                                                className={cn(
+                                                                    "w-10 h-10 rounded-xl flex items-center justify-center font-black text-xs border transition-all shrink-0",
+                                                                    isTriggerMark 
+                                                                        ? "bg-amber-500 border-amber-500 text-white shadow-lg ring-2 ring-amber-500 ring-offset-2 ring-offset-slate-900" 
+                                                                        : isTargetMark
+                                                                        ? "bg-emerald-500 border-emerald-500 text-white shadow-lg ring-2 ring-emerald-500 ring-offset-2 ring-offset-slate-900"
+                                                                        : "bg-white/5 border-white/10 text-white/60"
+                                                                )}
+                                                            >
+                                                                {digit}
+                                                            </motion.div>
+                                                        );
+                                                    })}
                                                 </div>
                                             </div>
                                         </div>
@@ -280,13 +314,16 @@ export function InsightView({ globalResults, activeScanId, dashboardPrice, dashb
                                                     </div>
                                                 </div>
                                                 <div className="p-4 bg-white/5 rounded-2xl border border-white/5">
-                                                    <p className="text-[8px] font-black text-primary uppercase tracking-widest mb-2">EXECUTION RULE</p>
+                                                    <div className="flex items-center gap-2 mb-2">
+                                                        <AlertCircle className="h-3 w-3 text-amber-500" />
+                                                        <p className="text-[8px] font-black text-amber-500 uppercase tracking-widest">STRICT EXECUTION RULE</p>
+                                                    </div>
                                                     <p className="text-[10px] font-bold text-white uppercase leading-relaxed">
-                                                        "Wait for trigger digit {lockedSignal.entryDigit} to appear. Immediately execute trade targeting {lockedSignal.targetDigit} on the very next tick. Do not re-enter on {lockedSignal.entryDigit} unless it repeats consecutively."
+                                                        "Sequential confirmation required. Wait for trigger digit {lockedSignal.entryDigit} to appear. Only then is the target digit {lockedSignal.targetDigit} valid for the subsequent tick. Do not mark or trade target {lockedSignal.targetDigit} unless preceded by {lockedSignal.entryDigit}."
                                                     </p>
                                                 </div>
                                                 <p className="text-[13px] font-medium text-foreground leading-relaxed italic border-l-4 border-emerald-500/40 pl-6 py-1">
-                                                    "Sniper identifies a transition vector from underrepresented zone {lockedSignal.entryDigit} toward dominant strength zone {lockedSignal.targetDigit}. This flow breaks static repetition cycles by entering on measurable probability transitions."
+                                                    "This model eliminates false target signals by requiring transition evidence. Trigger {lockedSignal.entryDigit} acts as the gatekeeper for flow toward strength zone {lockedSignal.targetDigit}."
                                                 </p>
                                             </div>
                                         </Card>
@@ -298,7 +335,7 @@ export function InsightView({ globalResults, activeScanId, dashboardPrice, dashb
                                                 </div>
                                                 <p className="text-[11px] font-black text-white uppercase tracking-widest">FLOW VECTOR ACTIVE</p>
                                             </div>
-                                            <Badge className="bg-emerald-500/20 text-emerald-400 border-none font-black text-[10px] px-6 py-1.5 uppercase tracking-tighter">ULTRA-STABLE</Badge>
+                                            <Badge className="bg-emerald-500/20 text-emerald-400 border-none font-black text-[10px] px-5 py-2 uppercase tracking-tighter">SURVEILLANCE LIVE</Badge>
                                         </div>
                                     </div>
                                 </div>
@@ -310,9 +347,9 @@ export function InsightView({ globalResults, activeScanId, dashboardPrice, dashb
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <Card className="bg-slate-900/40 backdrop-blur-3xl border-white/5 p-8 rounded-[2rem]">
-                    <h4 className="text-[11px] font-black text-primary uppercase tracking-[0.5em] mb-5 flex items-center gap-3"><Activity className="h-5 w-5" /> // FLOW PROTOCOL</h4>
+                    <h4 className="text-[11px] font-black text-primary uppercase tracking-[0.5em] mb-5 flex items-center gap-3"><Activity className="h-5 w-5" /> // SEQUENTIAL PROTOCOL</h4>
                     <p className="text-[12px] font-medium text-foreground/80 leading-relaxed italic border-l-2 border-primary/30 pl-5">
-                        "The Flow Model identifies market weakness at trigger $e$ and captures the high-probability transition toward dominant zone $t$. Trigger digit $e$ MUST appear first, acting as the gateway for your prediction on the subsequent tick."
+                        "Trigger $e$ represents the imbalance event. Target $t$ represents the probability restoration. The system strictly enforces the $e \to t$ sequence, ignoring isolated target spikes that lack trigger confirmation."
                     </p>
                 </Card>
                 <Card className="bg-slate-900/40 backdrop-blur-3xl border-white/5 p-8 rounded-[2rem] flex items-center justify-between">
@@ -325,7 +362,7 @@ export function InsightView({ globalResults, activeScanId, dashboardPrice, dashb
                             <p className="text-[9px] font-bold text-muted-foreground uppercase mt-1.5 tracking-widest">TRANSITION MONITORING ACTIVE</p>
                         </div>
                     </div>
-                    <Badge className="bg-primary/20 text-primary border-none font-black text-[10px] px-5 py-2 uppercase tracking-tighter">SURVEILLANCE LIVE</Badge>
+                    <Badge className="bg-primary/20 text-primary border-none font-black text-[10px] px-5 py-2 uppercase tracking-tighter">ZERO-ERROR SYNC</Badge>
                 </Card>
             </div>
         </div>
