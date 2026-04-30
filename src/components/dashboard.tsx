@@ -23,10 +23,11 @@ export interface GlobalAnalysisResult {
     // Repetition Strategy (Insight - Single-Digit Model)
     ci: number;
     rp: number;
-    tradeType: 'MATCHES' | 'DIFFERS' | 'NO TRADE';
+    tradeType: 'MATCHES' | 'NO TRADE';
     entryDigit: number | null;
     entryCondition: string;
     canExecute: boolean;
+    confidence: number;
     // Distribution Strategy (Scanner - O3/U6 Model)
     scannerStrategy: 'OVER 3' | 'UNDER 6' | 'NONE';
     scannerEntry: number | null;
@@ -137,27 +138,32 @@ export function Dashboard() {
                 
                 let repeats = 0;
                 for (let i = 0; i < ticks.length - 1; i++) if (ticks[i] === ticks[i+1]) repeats++;
-                const RP = (total > 1) ? repeats / (total - 1) : 0;
+                const RP = (total > 1) ? (repeats / (total - 1)) * 100 : 0;
 
                 // --- 1. Single-Digit Matches Strategy (Insight) ---
+                // Step 4: Score each digit
                 const insightScores = D.map((di, i) => {
                     const nextIdx = (i + 1) % 10;
                     const prevIdx = (i + 9) % 10;
                     const neighborDiff = Math.abs(D[nextIdx] - D[prevIdx]);
-                    // Score[i] = |D[i]| * (1 - |D[i+1] - D[i-1]|)
-                    // We scale the neighborDiff slightly to prevent negative scores in high-noise environments
-                    return { digit: i, score: Math.abs(di) * (1 - (neighborDiff / 8)) };
+                    // Score[i] = |D[i]| * (1 - |D[i+1] - D[i-1]| / factor)
+                    const neighborStability = 1 - (neighborDiff / 10);
+                    return { digit: i, score: di * neighborStability };
                 });
                 
-                const bestInsightDigit = insightScores.reduce((prev, curr) => (prev.score > curr.score) ? prev : curr).digit;
-                const d = bestInsightDigit;
+                // Find highest score candidate
+                const bestCand = insightScores.reduce((prev, curr) => (curr.score > prev.score) ? curr : prev);
+                const d = bestCand.digit;
                 const neighborDiffD = Math.abs(D[(d+1)%10] - D[(d+9)%10]);
 
-                let insightTradeType: 'MATCHES' | 'DIFFERS' | 'NO TRADE' = 'NO TRADE';
+                let insightTradeType: 'MATCHES' | 'NO TRADE' = 'NO TRADE';
+                let confidence = 0;
                 
-                // Safety Filters: Min Imbalance, Stable Neighbors, Min Concentration
-                if (Math.abs(D[d]) > 1.5 && neighborDiffD < 4 && CI > 12) {
-                    insightTradeType = D[d] > 0 ? 'MATCHES' : 'DIFFERS';
+                // Matches Only Logic: d must be dominant (D[d] > 0)
+                // Safety Filter: Imbalance > 1.5, stable neighbors, Min CI
+                if (D[d] > 1.5 && neighborDiffD < 4 && CI > 12) {
+                    insightTradeType = 'MATCHES';
+                    confidence = 50 + (D[d] * 2) + (RP * 0.5);
                 }
 
                 // --- 2. Advanced O3/U6 Strategy (Scanner) ---
@@ -195,9 +201,10 @@ export function Dashboard() {
                         ci: CI,
                         rp: RP,
                         tradeType: insightTradeType,
-                        entryDigit: d,
+                        entryDigit: insightTradeType !== 'NO TRADE' ? d : null,
                         entryCondition: insightTradeType !== 'NO TRADE' ? `WAIT FOR DIGIT ${d}` : 'AWAITING LOCK',
                         canExecute: insightTradeType !== 'NO TRADE',
+                        confidence: confidence,
                         scannerStrategy: scannerDirection,
                         scannerEntry: bestScanner?.digit ?? null,
                         scannerConfidence: 60 + Math.max(S_U6, S_O3) + (bestScanner?.score ?? 0)
