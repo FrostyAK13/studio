@@ -19,15 +19,14 @@ type EngineStatus = 'offline' | 'active';
 export interface GlobalAnalysisResult {
     marketId: string;
     marketName: string;
-    // Sniper 8.5+ Metrics
+    // Sniper 8.5+ Flow Metrics
     ci: number;
     ss: number;
-    stability: number;
-    localDominance: number;
-    marketScore: number;
+    flowScore: number;
     // Strategy Parameters
-    tradeType: 'MATCHES' | 'NO TRADE';
-    entryDigit: number | null; 
+    tradeType: 'FLOW' | 'NO TRADE';
+    triggerDigit: number | null; // e
+    targetDigit: number | null;  // t
     confidence: number;
     // Price data
     currentPrice: number;
@@ -91,7 +90,7 @@ export function Dashboard() {
         currentMarketRef.current = selectedMarket;
     }, [selectedMarket, maxTicks, mounted]);
 
-    // Background Global Sniper Engine - v8.5+ Local Dominance Strategy
+    // Background Global Sniper Engine - Decoupled Flow Strategy
     React.useEffect(() => {
         if (!mounted || isLocked) return;
 
@@ -134,69 +133,66 @@ export function Dashboard() {
                     return parseInt(dec[pip - 1] || '0');
                 }).reverse();
 
-                // Sniper v8.5+ Local Dominance Strategy
+                // Sniper Flow Strategy Logic
                 const total = ticks.length || 1;
                 const counts = Array(10).fill(0);
                 ticks.forEach(d => counts[d]++);
                 const P = counts.map(c => (c / total) * 100);
                 const D = P.map(p => p - 10); // Deviation D[i]
 
-                // CI: Concentration Index
+                // Step 2: Market Quality
                 const CI = D.reduce((sum, d) => sum + Math.pow(d, 2), 0);
-                
-                // SS: Stability Score (1 - stdDev)
                 const mean = 10;
                 const variance = P.reduce((sum, p) => sum + Math.pow(p - mean, 2), 0) / 10;
                 const stdDev = Math.sqrt(variance);
                 const SS = Math.max(0, 1 - (stdDev / 10));
 
-                // Market Quality Filter
-                const isModerateMarket = CI > 5 && CI < 200;
-
-                // Candidate Selection: 0.4 <= D[i] <= 0.9 (Refined Band)
-                const maxD = Math.max(...D);
-                const candidateIndices = [0,1,2,3,4,5,6,7,8,9].filter(i => {
-                    const d = D[i];
-                    return d >= 0.4 && d <= 0.9 && d < maxD;
+                // Step 3: Candidate Selection
+                // Entry (e): -1.0 <= D[e] <= -0.2
+                const entryCandidates = [0,1,2,3,4,5,6,7,8,9].filter(i => D[i] >= -1.0 && D[i] <= -0.2);
+                
+                // Target (t): D[t] > 0.3 and LD[t] > 0
+                const targetCandidates = [0,1,2,3,4,5,6,7,8,9].filter(i => {
+                    if (D[i] <= 0.3) return false;
+                    const prevIdx = (i + 9) % 10;
+                    const nextIdx = (i + 1) % 10;
+                    const ld = D[i] - (D[prevIdx] + D[nextIdx]) / 2;
+                    return ld > 0;
                 });
 
-                let entryDigit: number | null = null;
-                let tradeType: 'MATCHES' | 'NO TRADE' = 'NO TRADE';
-                let confidence = 0;
-                let bestFinalScore = -1000;
-                let bestLD = 0;
-                let bestS = 0;
+                let bestE: number | null = null;
+                let bestT: number | null = null;
+                let bestFlowScore = -1000;
+                let finalConfidence = 0;
 
-                if (isModerateMarket && candidateIndices.length > 0) {
-                    candidateIndices.forEach(i => {
-                        const nextIdx = (i + 1) % 10;
-                        const prevIdx = (i + 9) % 10;
-                        
-                        // LD: Local Dominance (Stronger than immediate neighbors)
-                        const ld = D[i] - (D[prevIdx] + D[nextIdx]) / 2;
-                        
-                        // S: Smoothness (Difference between neighbors)
-                        const s = Math.abs(D[nextIdx] - D[prevIdx]);
+                // Step 4: Flow Alignment
+                if (entryCandidates.length > 0 && targetCandidates.length > 0 && CI > 5 && CI < 250) {
+                    entryCandidates.forEach(e => {
+                        targetCandidates.forEach(t => {
+                            if (e === t) return;
+                            
+                            // Stability Filter: Neighbor variance of target
+                            const tPrev = (t + 9) % 10;
+                            const tNext = (t + 1) % 10;
+                            const tStability = Math.abs(D[tNext] - D[tPrev]);
 
-                        if (ld > 0) {
-                            const score = D[i] + ld - s;
-                            if (score > bestFinalScore) {
-                                bestFinalScore = score;
-                                entryDigit = i;
-                                bestLD = ld;
-                                bestS = s;
+                            if (tStability < 2.5) {
+                                const score = Math.abs(D[t]) - Math.abs(D[e]);
+                                if (score > bestFlowScore) {
+                                    bestFlowScore = score;
+                                    bestE = e;
+                                    bestT = t;
+                                }
                             }
-                        }
+                        });
                     });
 
-                    if (entryDigit !== null) {
-                        tradeType = 'MATCHES';
-                        // Confidence: Weighted blend of FinalScore and Market Stability
-                        confidence = Math.min(99.9, 60 + (bestFinalScore * 10) + (SS * 20));
+                    if (bestE !== null && bestT !== null) {
+                        finalConfidence = Math.min(99.9, 65 + (bestFlowScore * 12) + (SS * 15));
                     }
                 }
 
-                // O3/U6 Secondary Strategy Scan
+                // O3/U6 Secondary Scan
                 let S_U6 = 0;
                 for (let i = 0; i <= 5; i++) S_U6 += D[i];
                 let S_O3 = 0;
@@ -211,12 +207,11 @@ export function Dashboard() {
                         marketName,
                         ci: CI,
                         ss: SS,
-                        stability: bestS,
-                        localDominance: bestLD,
-                        marketScore: confidence,
-                        tradeType,
-                        entryDigit,
-                        confidence,
+                        flowScore: bestFlowScore,
+                        tradeType: bestE !== null ? 'FLOW' : 'NO TRADE',
+                        triggerDigit: bestE,
+                        targetDigit: bestT,
+                        confidence: finalConfidence,
                         currentPrice: latestPrice,
                         pip: pip,
                         scannerStrategy: scannerDirection,
