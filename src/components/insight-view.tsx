@@ -109,7 +109,7 @@ export function InsightView({ globalResults, activeScanId, dashboardPrice, dashb
                                                 <div className="absolute top-0 right-0 p-3 opacity-10 group-hover:opacity-30 transition-opacity">
                                                     <Wallet className="h-10 w-10 text-primary" />
                                                 </div>
-                                                <p className="text-[9px] font-black text-primary uppercase tracking-[0.4em] mb-3">LIVE VECTOR PRICE</p>
+                                                <p className="text-[9px] font-black text-primary uppercase tracking-[0.4em] mb-3">LIVE PRICE</p>
                                                 <div className="flex items-baseline gap-2">
                                                     <motion.span 
                                                         key={displayPrice}
