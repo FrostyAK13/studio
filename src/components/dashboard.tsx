@@ -20,21 +20,19 @@ type EngineStatus = 'offline' | 'active';
 export interface GlobalAnalysisResult {
     marketId: string;
     marketName: string;
-    // Sniper Model Metrics
+    // Sniper 8.5+ Metrics
     ci: number;
     ss: number;
-    de: number;
-    cs: number;
+    stability: number;
     marketScore: number;
-    // Execution (Probability Flow Strategy)
+    // Strategy Parameters
     tradeType: 'MATCHES' | 'NO TRADE';
-    entryDigit: number | null; // This is Trigger (e)
-    targetDigit: number | null; // This is Target (t)
+    entryDigit: number | null; 
     confidence: number;
     // Price data
     currentPrice: number;
     pip: number;
-    // Distribution Strategy (Scanner - O3/U6 Model)
+    // Secondary Scan Metrics (O3/U6)
     scannerStrategy: 'OVER 3' | 'UNDER 6' | 'NONE';
     scannerEntry: number | null;
     scannerConfidence: number;
@@ -93,7 +91,7 @@ export function Dashboard() {
         currentMarketRef.current = selectedMarket;
     }, [selectedMarket, maxTicks, mounted]);
 
-    // Background Global Sniper Engine
+    // Background Global Sniper Engine - v8.5+ Structural Logic
     React.useEffect(() => {
         if (!mounted || isLocked) return;
 
@@ -112,7 +110,7 @@ export function Dashboard() {
             if (scanWs.readyState === WebSocket.OPEN) {
                 scanWs.send(JSON.stringify({
                     "ticks_history": market.id,
-                    "count": 250,
+                    "count": 500, // Higher sample for v8.5+ stability
                     "end": "latest",
                     "style": "ticks"
                 }));
@@ -136,66 +134,65 @@ export function Dashboard() {
                     return parseInt(dec[pip - 1] || '0');
                 }).reverse();
 
-                // Sniper Step 1: Normalize
+                // Sniper v8.5+ Logic: Deviation Control
                 const total = ticks.length || 1;
                 const counts = Array(10).fill(0);
                 ticks.forEach(d => counts[d]++);
                 const P = counts.map(c => (c / total) * 100);
-                const D = P.map(p => p - 10);
+                const D = P.map(p => p - 10); // Deviation D[i]
 
-                // Sniper Step 2: Market Quality Score
+                // CI: Concentration Index
                 const CI = D.reduce((sum, d) => sum + Math.pow(d, 2), 0);
-                const mean = P.reduce((a, b) => a + b) / 10;
-                const variance = P.reduce((sum, p) => sum + Math.pow(p - mean, 2), 0) / 10;
-                const stdDev = Math.sqrt(variance);
-                const SS = 1 - (stdDev / 10); 
-                const CS = [...D].sort((a, b) => b - a).slice(0, 3).reduce((a, b) => a + Math.abs(b), 0);
+                
+                // Market Quality Filter
+                const isModerateMarket = CI > 5 && CI < 150;
 
-                // Sniper Step 3: Probability Flow Strategy (Trigger e -> Target t)
-                let entryDigit: number | null = null; // Trigger (e)
-                let targetDigit: number | null = null; // Target (t)
-                let sniperTradeType: 'MATCHES' | 'NO TRADE' = 'NO TRADE';
+                // Candidate Selection Rule (0.3 <= D[i] <= 1.0)
+                let candidates = P.map((p, i) => ({ p, i, d: D[i] }))
+                    .filter(c => c.d >= 0.3 && c.d <= 1.0);
+
+                // Remove Highest Deviation (v8.5 Rule)
+                if (candidates.length > 0) {
+                    const maxD = Math.max(...candidates.map(c => c.d));
+                    candidates = candidates.filter(c => c.d < maxD);
+                }
+
+                let entryDigit: number | null = null;
+                let tradeType: 'MATCHES' | 'NO TRADE' = 'NO TRADE';
                 let confidence = 0;
+                let bestStability = 100;
 
-                if (CI > 5 && CI < 120 && SS > 0.40) {
-                    // Selection Rule for Entry (e): Underrepresented (P[e] < 10), Transition Zone
-                    const candidatesE = P.map((p, i) => {
-                        const nextIdx = (i + 1) % 10;
-                        const prevIdx = (i + 9) % 10;
-                        const nearStrength = Math.max(P[nextIdx], P[prevIdx]);
-                        return { p, i, nearStrength };
-                    })
-                    .filter(d => d.p < 9.5 && d.p > 4) // Not absolute lowest, but underrepresented
-                    .sort((a, b) => b.nearStrength - a.nearStrength); // Prefer near strong neighbors
+                if (isModerateMarket && candidates.length > 0) {
+                    // Stability Filter: |D[d+1] - D[d-1]|
+                    const scoredCandidates = candidates.map(c => {
+                        const nextIdx = (c.i + 1) % 10;
+                        const prevIdx = (c.i + 9) % 10;
+                        const stability = Math.abs(D[nextIdx] - D[prevIdx]);
+                        return { ...c, stability };
+                    }).sort((a, b) => a.stability - b.stability);
 
-                    // Selection Rule for Target (t): Dominant (P[t] > 10), Not saturated
-                    const sortedP = [...P].sort((a, b) => b - a);
-                    const absoluteHighest = sortedP[0];
-                    const candidatesT = P.map((p, i) => ({ p, i }))
-                        .filter(d => d.p > 10.5 && d.p < absoluteHighest) // Dominant but not absolute saturated peak
-                        .sort((a, b) => b.p - a.p);
-
-                    if (candidatesE.length > 0 && candidatesT.length > 0) {
-                        entryDigit = candidatesE[0].i;
-                        targetDigit = candidatesT[0].i;
-                        sniperTradeType = 'MATCHES';
+                    const bestCandidate = scoredCandidates[0];
+                    if (bestCandidate.stability < 4.0) { // Small stability rule
+                        entryDigit = bestCandidate.i;
+                        tradeType = 'MATCHES';
+                        bestStability = bestCandidate.stability;
                         
-                        // Final Market Score for ranking
-                        const marketScore = (CI * 0.4) + (SS * 0.3) + (CS * 0.3);
-                        confidence = Math.min(99.9, 60 + (marketScore * 1.5));
+                        // Normalized MarketScore for Ranking
+                        const mean = P.reduce((a, b) => a + b) / 10;
+                        const variance = P.reduce((sum, p) => sum + Math.pow(p - mean, 2), 0) / 10;
+                        const SS = 1 - (Math.sqrt(variance) / 10);
+                        
+                        confidence = Math.min(99.9, 70 + (CI * 0.1) + (SS * 10) - (bestStability * 2));
                     }
                 }
 
-                // Distribution Strategy (O3/U6) - Background Scanner
+                // O3/U6 Secondary Strategy Scan
                 let S_U6 = 0;
                 for (let i = 0; i <= 5; i++) S_U6 += D[i];
-                for (let i = 6; i <= 9; i++) S_U6 -= Math.abs(D[i]);
                 let S_O3 = 0;
                 for (let i = 4; i <= 9; i++) S_O3 += D[i];
-                for (let i = 0; i <= 3; i++) S_O3 -= Math.abs(D[i]);
                 const scannerDirection = S_U6 > S_O3 ? 'UNDER 6' : 'OVER 3';
-                const scannerCandidates = scannerDirection === 'UNDER 6' ? [0, 1, 2, 3, 4, 5] : [4, 5, 6, 7, 8, 9];
-                const bestScanner = scannerCandidates.map(i => ({ digit: i, score: (10 - P[i]) * (1 - Math.abs(D[(i+1)%10] - D[(i+9)%10]) / 10) })).sort((a, b) => b.score - a.score)[0];
+                const bestScanner = P.map((p, i) => ({ i, p })).sort((a, b) => b.p - a.p)[0];
 
                 setGlobalResults(prev => ({
                     ...prev,
@@ -203,18 +200,16 @@ export function Dashboard() {
                         marketId,
                         marketName,
                         ci: CI,
-                        ss: SS,
-                        de: 0,
-                        cs: CS,
+                        ss: 0.8, // Fallback SS
+                        stability: bestStability,
                         marketScore: confidence,
-                        tradeType: sniperTradeType,
+                        tradeType,
                         entryDigit,
-                        targetDigit,
                         confidence,
                         currentPrice: latestPrice,
                         pip: pip,
                         scannerStrategy: scannerDirection,
-                        scannerEntry: bestScanner?.digit ?? null,
+                        scannerEntry: bestScanner?.i ?? null,
                         scannerConfidence: 60 + Math.max(S_U6, S_O3)
                     }
                 }));
@@ -331,14 +326,17 @@ export function Dashboard() {
                     </div>
                 </header>
                 <main className="flex-1 flex flex-col max-w-[1600px] mx-auto w-full relative p-2 sm:p-4">
-                    <Tabs defaultValue="analyzer" className="w-full">
+                    <Tabs defaultValue="insight" className="w-full">
                         <TabsList className="flex items-center justify-start md:justify-center gap-1.5 md:gap-2 bg-transparent h-auto p-0 mb-4 md:mb-6 overflow-x-auto no-scrollbar w-full pb-2">
-                            {['analyzer', 'global-scan', 'last-digit-analysis', 'frequency', 'insight'].map((tab) => (
+                            {['insight', 'analyzer', 'global-scan', 'last-digit-analysis', 'frequency'].map((tab) => (
                                 <TabsTrigger key={tab} value={tab} className="flex-shrink-0 px-3 md:px-5 py-2 md:py-2.5 rounded-full border border-transparent data-[state=active]:bg-primary/10 data-[state=active]:text-primary text-muted-foreground font-black text-[8px] md:text-[10px] uppercase tracking-[0.1em] md:tracking-[0.2em] transition-all shadow-sm hover:bg-muted/50">
                                     {tab.toUpperCase().replace(/-/g, ' ')}
                                 </TabsTrigger>
                             ))}
                         </TabsList>
+                        <TabsContent value="insight" className="mt-0 outline-none animate-in fade-in duration-500">
+                            <InsightView globalResults={globalResults} activeScanId={activeScanId} dashboardPrice={price} dashboardMarketId={selectedMarket} />
+                        </TabsContent>
                         <TabsContent value="analyzer" className="mt-0 outline-none animate-in fade-in duration-500">
                             <AnalyzerView price={price} lastDigitTicks={analyzedDigits} priceHistory={analyzedPrices} maxTicks={maxTicks} handleMaxTicksChange={handleMaxTicksChange} handleMaxTicksBlur={handleMaxTicksBlur} selectedMarket={selectedMarket} onMarketChange={setSelectedMarket} decimalPlaces={decimalPlaces} tickTimestamps={tickTimestamps} />
                         </TabsContent>
@@ -351,13 +349,9 @@ export function Dashboard() {
                         <TabsContent value="frequency" className="mt-0 outline-none animate-in fade-in duration-500">
                             <DigitFrequencyView price={price} lastDigitTicks={analyzedDigits} priceHistory={analyzedPrices} maxTicks={maxTicks} handleMaxTicksChange={handleMaxTicksChange} handleMaxTicksBlur={handleMaxTicksBlur} selectedMarket={selectedMarket} onMarketChange={setSelectedMarket} decimalPlaces={decimalPlaces} />
                         </TabsContent>
-                        <TabsContent value="insight" className="mt-0 outline-none animate-in fade-in duration-500">
-                            <InsightView globalResults={globalResults} activeScanId={activeScanId} dashboardPrice={price} dashboardMarketId={selectedMarket} />
-                        </TabsContent>
                     </Tabs>
                 </main>
             </div>
         </div>
     );
 }
-
