@@ -1,3 +1,4 @@
+
 'use client';
 
 import * as React from 'react';
@@ -25,10 +26,10 @@ export interface GlobalAnalysisResult {
     de: number;
     cs: number;
     marketScore: number;
-    // Execution
+    // Execution (Probability Flow Strategy)
     tradeType: 'MATCHES' | 'NO TRADE';
-    entryDigit: number | null; // This is 'e' (Trigger)
-    targetDigit: number | null; // This is 't' (Target)
+    entryDigit: number | null; // This is Trigger (e)
+    targetDigit: number | null; // This is Target (t)
     confidence: number;
     // Price data
     currentPrice: number;
@@ -148,40 +149,44 @@ export function Dashboard() {
                 const variance = P.reduce((sum, p) => sum + Math.pow(p - mean, 2), 0) / 10;
                 const stdDev = Math.sqrt(variance);
                 const SS = 1 - (stdDev / 10); 
-                const DE = Math.max(...D);
                 const CS = [...D].sort((a, b) => b - a).slice(0, 3).reduce((a, b) => a + Math.abs(b), 0);
 
-                const marketScore = (DE * 0.4) + (CI * 0.3) + (SS * 0.2) + (CS * 0.1);
-
-                // Sniper Step 3: Trigger (e) and Target (t) Selection
-                let entryDigit: number | null = null; // e
-                let targetDigit: number | null = null; // t
+                // Sniper Step 3: Probability Flow Strategy (Trigger e -> Target t)
+                let entryDigit: number | null = null; // Trigger (e)
+                let targetDigit: number | null = null; // Target (t)
                 let sniperTradeType: 'MATCHES' | 'NO TRADE' = 'NO TRADE';
                 let confidence = 0;
 
-                if (CI > 5 && CI < 85 && SS > 0.45) {
-                    // Filter for Entry (e): P[e] < 10, skip lowest 2
-                    const candidatesE = P.map((p, i) => ({ p, i }))
-                        .filter(d => d.p < 10)
-                        .sort((a, b) => a.p - b.p)
-                        .slice(2);
+                if (CI > 5 && CI < 120 && SS > 0.40) {
+                    // Selection Rule for Entry (e): Underrepresented (P[e] < 10), Transition Zone
+                    const candidatesE = P.map((p, i) => {
+                        const nextIdx = (i + 1) % 10;
+                        const prevIdx = (i + 9) % 10;
+                        const nearStrength = Math.max(P[nextIdx], P[prevIdx]);
+                        return { p, i, nearStrength };
+                    })
+                    .filter(d => d.p < 9.5 && d.p > 4) // Not absolute lowest, but underrepresented
+                    .sort((a, b) => b.nearStrength - a.nearStrength); // Prefer near strong neighbors
 
-                    // Filter for Target (t): P[t] > 10, not absolute highest
+                    // Selection Rule for Target (t): Dominant (P[t] > 10), Not saturated
                     const sortedP = [...P].sort((a, b) => b - a);
                     const absoluteHighest = sortedP[0];
                     const candidatesT = P.map((p, i) => ({ p, i }))
-                        .filter(d => d.p > 10 && d.p < absoluteHighest)
+                        .filter(d => d.p > 10.5 && d.p < absoluteHighest) // Dominant but not absolute saturated peak
                         .sort((a, b) => b.p - a.p);
 
                     if (candidatesE.length > 0 && candidatesT.length > 0) {
                         entryDigit = candidatesE[0].i;
                         targetDigit = candidatesT[0].i;
                         sniperTradeType = 'MATCHES';
-                        confidence = Math.min(99.9, 65 + (marketScore * 2));
+                        
+                        // Final Market Score for ranking
+                        const marketScore = (CI * 0.4) + (SS * 0.3) + (CS * 0.3);
+                        confidence = Math.min(99.9, 60 + (marketScore * 1.5));
                     }
                 }
 
-                // Distribution Strategy (O3/U6)
+                // Distribution Strategy (O3/U6) - Background Scanner
                 let S_U6 = 0;
                 for (let i = 0; i <= 5; i++) S_U6 += D[i];
                 for (let i = 6; i <= 9; i++) S_U6 -= Math.abs(D[i]);
@@ -199,9 +204,9 @@ export function Dashboard() {
                         marketName,
                         ci: CI,
                         ss: SS,
-                        de: DE,
+                        de: 0,
                         cs: CS,
-                        marketScore,
+                        marketScore: confidence,
                         tradeType: sniperTradeType,
                         entryDigit,
                         targetDigit,
@@ -355,3 +360,4 @@ export function Dashboard() {
         </div>
     );
 }
+

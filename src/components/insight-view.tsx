@@ -1,10 +1,11 @@
+
 'use client';
 
 import * as React from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
-import { Search, Zap, Activity, ShieldCheck, RefreshCw, Target, TrendingUp, Crosshair, Wallet, Lock, Timer } from 'lucide-react';
+import { Search, Zap, Activity, ShieldCheck, RefreshCw, Target, TrendingUp, Crosshair, Wallet, Lock, Timer, ArrowRight } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { GlobalAnalysisResult } from './dashboard';
 import { Progress } from '@/components/ui/progress';
@@ -125,7 +126,7 @@ export function InsightView({ globalResults, activeScanId, dashboardPrice, dashb
                                 <Crosshair className="h-7 w-7 text-primary animate-pulse" />
                             </div>
                             <div>
-                                <CardTitle className="text-2xl font-black text-white tracking-tighter uppercase leading-none">SNIPER PROBABILITY FLOW</CardTitle>
+                                <CardTitle className="text-2xl font-black text-white tracking-tighter uppercase leading-none">PROBABILITY FLOW SNIPER</CardTitle>
                                 <CardDescription className="text-[10px] font-black text-primary uppercase tracking-[0.4em] mt-3">ZERO-ERROR TRANSITION SURVEILLANCE</CardDescription>
                             </div>
                         </div>
@@ -218,7 +219,11 @@ export function InsightView({ globalResults, activeScanId, dashboardPrice, dashb
                                                     </div>
                                                     <div>
                                                         <p className="text-[11px] font-black text-white uppercase tracking-widest">TACTICAL COMMAND</p>
-                                                        <p className="text-2xl font-black text-white uppercase mt-1">TRIGGER ON {lockedSignal.entryDigit}, TRADE {lockedSignal.targetDigit}</p>
+                                                        <div className="flex items-center gap-3 mt-1">
+                                                            <span className="text-2xl font-black text-white uppercase">{lockedSignal.entryDigit}</span>
+                                                            <ArrowRight className="h-5 w-5 text-emerald-400" />
+                                                            <span className="text-2xl font-black text-white uppercase">{lockedSignal.targetDigit}</span>
+                                                        </div>
                                                     </div>
                                                 </div>
                                                 <Zap className="h-8 w-8 text-emerald-400 opacity-30 group-hover:opacity-100 transition-opacity" />
@@ -277,11 +282,11 @@ export function InsightView({ globalResults, activeScanId, dashboardPrice, dashb
                                                 <div className="p-4 bg-white/5 rounded-2xl border border-white/5">
                                                     <p className="text-[8px] font-black text-primary uppercase tracking-widest mb-2">EXECUTION RULE</p>
                                                     <p className="text-[10px] font-bold text-white uppercase leading-relaxed">
-                                                        "Trigger on first appearance of {lockedSignal.entryDigit}, execute trade targeting {lockedSignal.targetDigit} on next tick. Re-enter only after trigger digit repeats consecutively."
+                                                        "Wait for trigger digit {lockedSignal.entryDigit} to appear. Immediately execute trade targeting {lockedSignal.targetDigit} on the very next tick. Do not re-enter on {lockedSignal.entryDigit} unless it repeats consecutively."
                                                     </p>
                                                 </div>
                                                 <p className="text-[13px] font-medium text-foreground leading-relaxed italic border-l-4 border-emerald-500/40 pl-6 py-1">
-                                                    "Sniper identifies probability flow from transition zone {lockedSignal.entryDigit} toward strength zone {lockedSignal.targetDigit} in {lockedSignal.marketName}. Enter Digit Match exclusively for {lockedSignal.targetDigit}."
+                                                    "Sniper identifies a transition vector from underrepresented zone {lockedSignal.entryDigit} toward dominant strength zone {lockedSignal.targetDigit}. This flow breaks static repetition cycles by entering on measurable probability transitions."
                                                 </p>
                                             </div>
                                         </Card>
@@ -307,7 +312,7 @@ export function InsightView({ globalResults, activeScanId, dashboardPrice, dashb
                 <Card className="bg-slate-900/40 backdrop-blur-3xl border-white/5 p-8 rounded-[2rem]">
                     <h4 className="text-[11px] font-black text-primary uppercase tracking-[0.5em] mb-5 flex items-center gap-3"><Activity className="h-5 w-5" /> // FLOW PROTOCOL</h4>
                     <p className="text-[12px] font-medium text-foreground/80 leading-relaxed italic border-l-2 border-primary/30 pl-5">
-                        "The Flow Model identifies market weakness at trigger $e$ and captures the high-probability transition toward dominant zone $t$. Signals are locked for 120 seconds to allow for disciplined strategic execution."
+                        "The Flow Model identifies market weakness at trigger $e$ and captures the high-probability transition toward dominant zone $t$. Trigger digit $e$ MUST appear first, acting as the gateway for your prediction on the subsequent tick."
                     </p>
                 </Card>
                 <Card className="bg-slate-900/40 backdrop-blur-3xl border-white/5 p-8 rounded-[2rem] flex items-center justify-between">
@@ -316,8 +321,8 @@ export function InsightView({ globalResults, activeScanId, dashboardPrice, dashb
                             <Zap className="h-6 w-6 text-emerald-500" />
                         </div>
                         <div>
-                            <p className="text-[11px] font-black text-white uppercase tracking-widest">AUTONOMOUS FLOW</p>
-                            <p className="text-[9px] font-bold text-muted-foreground uppercase mt-1.5 tracking-widest">REAL-TIME SNIPER SCOPE ACTIVE</p>
+                            <p className="text-[11px] font-black text-white uppercase tracking-widest">AUTONOMOUS SNIPER</p>
+                            <p className="text-[9px] font-bold text-muted-foreground uppercase mt-1.5 tracking-widest">TRANSITION MONITORING ACTIVE</p>
                         </div>
                     </div>
                     <Badge className="bg-primary/20 text-primary border-none font-black text-[10px] px-5 py-2 uppercase tracking-tighter">SURVEILLANCE LIVE</Badge>
@@ -326,3 +331,4 @@ export function InsightView({ globalResults, activeScanId, dashboardPrice, dashb
         </div>
     );
 }
+
