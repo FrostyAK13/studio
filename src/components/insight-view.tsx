@@ -17,7 +17,7 @@ interface InsightViewProps {
     dashboardMarketId: string;
 }
 
-const SIGNAL_LOCK_DURATION = 120000; // 2 minutes in milliseconds
+const SIGNAL_LOCK_DURATION = 60000; // 1 minute lock-on duration as requested
 
 export function InsightView({ globalResults, activeScanId, dashboardPrice, dashboardMarketId }: InsightViewProps) {
     const [livePrice, setLivePrice] = React.useState<number>(0);
@@ -28,38 +28,41 @@ export function InsightView({ globalResults, activeScanId, dashboardPrice, dashb
     const [lockedSignal, setLockedSignal] = React.useState<GlobalAnalysisResult | null>(null);
     const [lockTimestamp, setLockTimestamp] = React.useState<number>(0);
     const [timeRemaining, setTimeRemaining] = React.useState<number>(0);
+    const [lastMarketId, setLastMarketId] = React.useState<string | null>(null);
 
-    // Sniper Step: Global Best Market Selection with Lock-in Logic
+    // Sniper Step: Global Best Market Selection with Lock-in and Rotation Logic
     React.useEffect(() => {
+        const now = Date.now();
         const sortedMatches = Object.values(globalResults)
             .filter(r => r.tradeType === 'MATCHES' && r.entryDigit !== null && r.targetDigit !== null)
             .sort((a, b) => b.marketScore - a.marketScore);
 
-        const bestGlobal = sortedMatches[0];
-        const now = Date.now();
-
-        if (!lockedSignal && bestGlobal) {
-            // Initial Lock
-            setLockedSignal(bestGlobal);
-            setLockTimestamp(now);
-        } else if (lockedSignal) {
+        if (!lockedSignal) {
+            // Pick the best market that isn't the one we just finished with (rotation)
+            const bestGlobal = sortedMatches.find(r => r.marketId !== lastMarketId) || sortedMatches[0];
+            
+            if (bestGlobal) {
+                setLockedSignal(bestGlobal);
+                setLockTimestamp(now);
+                setLastMarketId(bestGlobal.marketId);
+            }
+        } else {
             const elapsed = now - lockTimestamp;
             
-            // If lock expired, check if there's a better (or same) signal to re-lock
+            // If lock expired, clear current to trigger rotation on next tick
             if (elapsed >= SIGNAL_LOCK_DURATION) {
-                if (bestGlobal) {
-                    setLockedSignal(bestGlobal);
-                    setLockTimestamp(now);
-                }
+                setLockedSignal(null);
+                setLivePrice(0);
+                setLiveDigits([]);
             } else {
-                // Keep the current locked signal but update its data from the global results if market matches
+                // Keep the current locked signal updated with live score/data if still valid
                 const updatedData = globalResults[lockedSignal.marketId];
                 if (updatedData) {
                     setLockedSignal(updatedData);
                 }
             }
         }
-    }, [globalResults, lockedSignal, lockTimestamp]);
+    }, [globalResults, lockedSignal, lockTimestamp, lastMarketId]);
 
     // Timer Update Effect
     React.useEffect(() => {
@@ -108,8 +111,6 @@ export function InsightView({ globalResults, activeScanId, dashboardPrice, dashb
             if (ws.readyState === WebSocket.OPEN || ws.readyState === WebSocket.CONNECTING) {
                 ws.close();
             }
-            setLivePrice(0);
-            setLiveDigits([]);
         };
     }, [targetMarketId]);
 
@@ -157,7 +158,7 @@ export function InsightView({ globalResults, activeScanId, dashboardPrice, dashb
                                 </div>
                                 <div className="space-y-2">
                                     <p className="text-sm font-black uppercase tracking-[0.6em] text-white">SCANNING GLOBAL SECTORS</p>
-                                    <p className="text-[9px] font-bold text-muted-foreground uppercase tracking-[0.3em]">IDENTIFYING TRANSITION VECTORS...</p>
+                                    <p className="text-[9px] font-bold text-muted-foreground uppercase tracking-[0.3em]">ROTATING MARKET VECTORS...</p>
                                 </div>
                             </motion.div>
                         ) : (
@@ -177,13 +178,13 @@ export function InsightView({ globalResults, activeScanId, dashboardPrice, dashb
                                                 </div>
                                                 <div>
                                                     <p className="text-[10px] font-black text-amber-500 uppercase tracking-widest leading-none">SIGNAL LOCKED</p>
-                                                    <p className="text-[8px] font-bold text-muted-foreground uppercase tracking-widest mt-1">TRADER STABILIZATION ACTIVE</p>
+                                                    <p className="text-[8px] font-bold text-muted-foreground uppercase tracking-widest mt-1">ROTATING IN {Math.ceil(timeRemaining / 1000)}S</p>
                                                 </div>
                                             </div>
                                             <div className="flex-1 max-w-[150px] space-y-1.5">
                                                 <div className="flex justify-between items-center text-[8px] font-black text-muted-foreground uppercase tracking-widest">
-                                                    <span>REFRESH</span>
-                                                    <span>{Math.ceil(timeRemaining / 1000)}S</span>
+                                                    <span>STABILITY</span>
+                                                    <span>{Math.ceil(progressValue)}%</span>
                                                 </div>
                                                 <Progress value={progressValue} className="h-1.5 bg-white/5 [&>div]:bg-amber-500" />
                                             </div>
@@ -206,7 +207,7 @@ export function InsightView({ globalResults, activeScanId, dashboardPrice, dashb
                                                 <div className="flex items-baseline gap-4">
                                                     <span className={cn("text-6xl font-black tabular-nums transition-colors", isTriggerActive ? "text-white" : "text-white group-hover:text-amber-500")}>{lockedSignal.entryDigit}</span>
                                                     <Badge className={cn("border-none text-[9px] font-black uppercase px-3 py-1", isTriggerActive ? "bg-white/20 text-white" : "bg-amber-500/20 text-amber-400")}>
-                                                        {isTriggerActive ? "SIGNAL ACTIVE" : "TRANSITION ZONE"}
+                                                        {isTriggerActive ? "SIGNAL ACTIVE" : "AWAITING ZONE"}
                                                     </Badge>
                                                 </div>
                                             </div>
@@ -266,7 +267,7 @@ export function InsightView({ globalResults, activeScanId, dashboardPrice, dashb
                                                 <div className="flex gap-2 justify-start overflow-hidden h-12 items-center">
                                                     {liveDigits.map((digit, idx) => {
                                                         const isTriggerMark = digit === lockedSignal?.entryDigit;
-                                                        // CRITICAL: Target is only marked if it was preceded by a trigger (digit at idx was preceded by digit at idx+1)
+                                                        // Highlight Target ONLY if preceded by Trigger immediately
                                                         const isTargetMark = digit === lockedSignal?.targetDigit && 
                                                                            idx < liveDigits.length - 1 && 
                                                                            liveDigits[idx + 1] === lockedSignal?.entryDigit;
@@ -281,7 +282,7 @@ export function InsightView({ globalResults, activeScanId, dashboardPrice, dashb
                                                                     isTriggerMark 
                                                                         ? "bg-amber-500 border-amber-500 text-white shadow-lg ring-2 ring-amber-500 ring-offset-2 ring-offset-slate-900" 
                                                                         : isTargetMark
-                                                                        ? "bg-emerald-500 border-emerald-500 text-white shadow-lg ring-2 ring-emerald-500 ring-offset-2 ring-offset-slate-900"
+                                                                        ? "bg-emerald-500 border-emerald-500 text-white shadow-lg ring-2 ring-emerald-500 ring-offset-2 ring-offset-slate-900 animate-pulse"
                                                                         : "bg-white/5 border-white/10 text-white/60"
                                                                 )}
                                                             >
@@ -316,14 +317,14 @@ export function InsightView({ globalResults, activeScanId, dashboardPrice, dashb
                                                 <div className="p-4 bg-white/5 rounded-2xl border border-white/5">
                                                     <div className="flex items-center gap-2 mb-2">
                                                         <AlertCircle className="h-3 w-3 text-amber-500" />
-                                                        <p className="text-[8px] font-black text-amber-500 uppercase tracking-widest">STRICT EXECUTION RULE</p>
+                                                        <p className="text-[8px] font-black text-amber-500 uppercase tracking-widest">SEQUENTIAL EXECUTION</p>
                                                     </div>
                                                     <p className="text-[10px] font-bold text-white uppercase leading-relaxed">
-                                                        "Sequential confirmation required. Wait for trigger digit {lockedSignal.entryDigit} to appear. Only then is the target digit {lockedSignal.targetDigit} valid for the subsequent tick. Do not mark or trade target {lockedSignal.targetDigit} unless preceded by {lockedSignal.entryDigit}."
+                                                        "Protocol requires trigger {lockedSignal.entryDigit} to precede target {lockedSignal.targetDigit}. Target is highlighted immediately upon valid sequence detection. Market rotates every 60 seconds to maintain high-density probability edges."
                                                     </p>
                                                 </div>
                                                 <p className="text-[13px] font-medium text-foreground leading-relaxed italic border-l-4 border-emerald-500/40 pl-6 py-1">
-                                                    "This model eliminates false target signals by requiring transition evidence. Trigger {lockedSignal.entryDigit} acts as the gatekeeper for flow toward strength zone {lockedSignal.targetDigit}."
+                                                    "Current vector identified in {lockedSignal.marketName}. Sniper engine is locked for 1 minute before forcing a rotation to the next highest-probability global sector."
                                                 </p>
                                             </div>
                                         </Card>
@@ -347,9 +348,9 @@ export function InsightView({ globalResults, activeScanId, dashboardPrice, dashb
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <Card className="bg-slate-900/40 backdrop-blur-3xl border-white/5 p-8 rounded-[2rem]">
-                    <h4 className="text-[11px] font-black text-primary uppercase tracking-[0.5em] mb-5 flex items-center gap-3"><Activity className="h-5 w-5" /> // SEQUENTIAL PROTOCOL</h4>
+                    <h4 className="text-[11px] font-black text-primary uppercase tracking-[0.5em] mb-5 flex items-center gap-3"><Activity className="h-5 w-5" /> // ROTATION PROTOCOL</h4>
                     <p className="text-[12px] font-medium text-foreground/80 leading-relaxed italic border-l-2 border-primary/30 pl-5">
-                        "Trigger $e$ represents the imbalance event. Target $t$ represents the probability restoration. The system strictly enforces the $e \to t$ sequence, ignoring isolated target spikes that lack trigger confirmation."
+                        "Markets are locked for 60-second intervals to allow manual setup. After each lock expires, the engine rotates to a different high-probability sector, ensuring a constant stream of fresh, zero-error tactical vectors."
                     </p>
                 </Card>
                 <Card className="bg-slate-900/40 backdrop-blur-3xl border-white/5 p-8 rounded-[2rem] flex items-center justify-between">
@@ -359,7 +360,7 @@ export function InsightView({ globalResults, activeScanId, dashboardPrice, dashb
                         </div>
                         <div>
                             <p className="text-[11px] font-black text-white uppercase tracking-widest">AUTONOMOUS SNIPER</p>
-                            <p className="text-[9px] font-bold text-muted-foreground uppercase mt-1.5 tracking-widest">TRANSITION MONITORING ACTIVE</p>
+                            <p className="text-[9px] font-bold text-muted-foreground uppercase mt-1.5 tracking-widest">MARKET ROTATION ACTIVE</p>
                         </div>
                     </div>
                     <Badge className="bg-primary/20 text-primary border-none font-black text-[10px] px-5 py-2 uppercase tracking-tighter">ZERO-ERROR SYNC</Badge>
