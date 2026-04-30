@@ -30,6 +30,9 @@ export interface GlobalAnalysisResult {
     tradeType: 'MATCHES' | 'NO TRADE';
     entryDigit: number | null;
     confidence: number;
+    // Price data
+    currentPrice: number;
+    pip: number;
     // Distribution Strategy (Scanner - O3/U6 Model)
     scannerStrategy: 'OVER 3' | 'UNDER 6' | 'NONE';
     scannerEntry: number | null;
@@ -121,6 +124,7 @@ export function Dashboard() {
             const data = JSON.parse(event.data);
             if (data.msg_type === 'history' && data.history) {
                 const prices = data.history.prices;
+                const latestPrice = prices[prices.length - 1];
                 const marketId = data.echo_req.ticks_history;
                 const marketName = syntheticIndices.find(m => m.id === marketId)?.name || marketId;
                 const pip = data.echo_req.pip_size || 2;
@@ -139,31 +143,20 @@ export function Dashboard() {
                 const D = P.map(p => p - 10);
 
                 // Sniper Step 2: Market Quality Score
-                // CI = sum(D[i]^2)
                 const CI = D.reduce((sum, d) => sum + Math.pow(d, 2), 0);
-                
-                // SS = 1 - standard deviation of P[i] (Normalized roughly)
                 const mean = P.reduce((a, b) => a + b) / 10;
                 const stdDev = Math.sqrt(P.map(x => Math.pow(x - mean, 2)).reduce((a, b) => a + b) / 10);
                 const SS = 1 - (stdDev / 10); 
-                
-                // DE (Directional Edge) - Higher CI for Matches is better
                 const DE = Math.max(...D);
-                
-                // CS (Cluster Strength) - Top 3 deviations
                 const CS = [...D].sort((a, b) => b - a).slice(0, 3).reduce((a, b) => a + Math.abs(b), 0);
 
-                // Weights: Direction > CI > SS > CS
                 const marketScore = (DE * 0.4) + (CI * 0.3) + (SS * 0.2) + (CS * 0.1);
 
-                // Sniper Step 4: Filter markets
                 let sniperTradeType: 'MATCHES' | 'NO TRADE' = 'NO TRADE';
                 let bestEntryDigit: number | null = null;
                 let normalizedScore = 0;
 
-                // Thresholds: Moderate dispersion
                 if (CI > 5 && CI < 80 && SS > 0.4) {
-                    // Sniper Step 6: Single-Digit Strategy on Selected Market
                     const digitScores = P.map((pi, i) => {
                         const n1 = (i + 1) % 10;
                         const n2 = (i + 9) % 10;
@@ -172,7 +165,6 @@ export function Dashboard() {
                         return { digit: i, score: finalScore, percentage: pi };
                     });
 
-                    // Rules: Above average, not the absolute highest, in stable cluster
                     const highestP = Math.max(...P);
                     const candidates = digitScores.filter(ds => 
                         ds.percentage > 10 && 
@@ -186,7 +178,7 @@ export function Dashboard() {
                     }
                 }
 
-                // Distribution Strategy (Global Scan Logic)
+                // Distribution Strategy
                 let S_U6 = 0;
                 for (let i = 0; i <= 5; i++) S_U6 += D[i];
                 for (let i = 6; i <= 9; i++) S_U6 -= Math.abs(D[i]);
@@ -210,6 +202,8 @@ export function Dashboard() {
                         tradeType: sniperTradeType,
                         entryDigit: bestEntryDigit,
                         confidence: normalizedScore,
+                        currentPrice: latestPrice,
+                        pip: pip,
                         scannerStrategy: scannerDirection,
                         scannerEntry: bestScanner?.digit ?? null,
                         scannerConfidence: 60 + Math.max(S_U6, S_O3)
@@ -349,7 +343,7 @@ export function Dashboard() {
                             <DigitFrequencyView price={price} lastDigitTicks={analyzedDigits} priceHistory={analyzedPrices} maxTicks={maxTicks} handleMaxTicksChange={handleMaxTicksChange} handleMaxTicksBlur={handleMaxTicksBlur} selectedMarket={selectedMarket} onMarketChange={setSelectedMarket} decimalPlaces={decimalPlaces} />
                         </TabsContent>
                         <TabsContent value="insight" className="mt-0 outline-none animate-in fade-in duration-500">
-                            <InsightView globalResults={globalResults} activeScanId={activeScanId} />
+                            <InsightView globalResults={globalResults} activeScanId={activeScanId} dashboardPrice={price} dashboardMarketId={selectedMarket} />
                         </TabsContent>
                     </Tabs>
                 </main>

@@ -5,22 +5,37 @@ import * as React from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
-import { Search, Zap, Activity, ShieldCheck, RefreshCw, Target, Flame, TrendingUp, Crosshair } from 'lucide-react';
+import { Search, Zap, Activity, ShieldCheck, RefreshCw, Target, Flame, TrendingUp, Crosshair, Wallet } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { GlobalAnalysisResult } from './dashboard';
 
 interface InsightViewProps {
     globalResults: Record<string, GlobalAnalysisResult>;
     activeScanId: string | null;
+    dashboardPrice: number;
+    dashboardMarketId: string;
 }
 
-export function InsightView({ globalResults, activeScanId }: InsightViewProps) {
+export function InsightView({ globalResults, activeScanId, dashboardPrice, dashboardMarketId }: InsightViewProps) {
     // Sniper Step 5: Select ONLY the single best market globally
     const topSniperMatch = React.useMemo(() => {
         return Object.values(globalResults)
             .filter(r => r.tradeType === 'MATCHES' && r.entryDigit !== null)
             .sort((a, b) => b.marketScore - a.marketScore)[0];
     }, [globalResults]);
+
+    // Determine the most "live" price possible for the sniper market
+    const displayPrice = React.useMemo(() => {
+        if (!topSniperMatch) return 0;
+        // If the top sniper market is the same as the one selected in the dashboard, use the high-frequency tick price
+        if (topSniperMatch.marketId === dashboardMarketId) {
+            return dashboardPrice;
+        }
+        // Otherwise use the price captured during the background scan cycle
+        return topSniperMatch.currentPrice;
+    }, [topSniperMatch, dashboardPrice, dashboardMarketId]);
+
+    const displayPip = topSniperMatch?.pip || 2;
 
     return (
         <div className="space-y-6 animate-in fade-in duration-1000 pb-24 max-w-[1600px] mx-auto px-2">
@@ -90,12 +105,23 @@ export function InsightView({ globalResults, activeScanId }: InsightViewProps) {
                                                     <Badge className="bg-emerald-500/20 text-emerald-400 border-none text-[9px] font-black uppercase px-3 py-1">STABLE CLUSTER</Badge>
                                                 </div>
                                             </div>
-                                            <div className="bg-black/60 p-6 rounded-[2rem] border border-white/5 shadow-2xl">
-                                                <p className="text-[9px] font-black text-primary uppercase tracking-[0.4em] mb-3">MARKET SCORE</p>
-                                                <div className="flex items-baseline gap-4">
-                                                    <span className="text-6xl font-black text-white tabular-nums">{(topSniperMatch.marketScore * 10).toFixed(1)}</span>
-                                                    <span className="text-xs text-muted-foreground font-black uppercase">UNITS</span>
+                                            <div className="bg-black/60 p-6 rounded-[2rem] border border-white/5 shadow-2xl relative overflow-hidden group">
+                                                <div className="absolute top-0 right-0 p-3 opacity-10 group-hover:opacity-30 transition-opacity">
+                                                    <Wallet className="h-10 w-10 text-primary" />
                                                 </div>
+                                                <p className="text-[9px] font-black text-primary uppercase tracking-[0.4em] mb-3">LIVE VECTOR PRICE</p>
+                                                <div className="flex items-baseline gap-2">
+                                                    <motion.span 
+                                                        key={displayPrice}
+                                                        initial={{ opacity: 0.5, y: -2 }}
+                                                        animate={{ opacity: 1, y: 0 }}
+                                                        className="text-2xl sm:text-3xl font-black text-white tabular-nums tracking-tighter"
+                                                    >
+                                                        {displayPrice === 0 ? "---" : displayPrice.toFixed(displayPip)}
+                                                    </motion.span>
+                                                    <div className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                                                </div>
+                                                <p className="text-[7px] font-bold text-muted-foreground uppercase tracking-widest mt-2">REAL-TIME TACTICAL SYNC</p>
                                             </div>
                                         </div>
 
