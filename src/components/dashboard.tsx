@@ -1,4 +1,3 @@
-
 'use client';
 
 import * as React from 'react';
@@ -28,7 +27,8 @@ export interface GlobalAnalysisResult {
     marketScore: number;
     // Execution
     tradeType: 'MATCHES' | 'NO TRADE';
-    entryDigit: number | null;
+    entryDigit: number | null; // This is 'e' (Trigger)
+    targetDigit: number | null; // This is 't' (Target)
     confidence: number;
     // Price data
     currentPrice: number;
@@ -135,7 +135,7 @@ export function Dashboard() {
                     return parseInt(dec[pip - 1] || '0');
                 }).reverse();
 
-                // Sniper Step 1: Normalize each market
+                // Sniper Step 1: Normalize
                 const total = ticks.length || 1;
                 const counts = Array(10).fill(0);
                 ticks.forEach(d => counts[d]++);
@@ -145,40 +145,43 @@ export function Dashboard() {
                 // Sniper Step 2: Market Quality Score
                 const CI = D.reduce((sum, d) => sum + Math.pow(d, 2), 0);
                 const mean = P.reduce((a, b) => a + b) / 10;
-                const stdDev = Math.sqrt(P.map(x => Math.pow(x - mean, 2)).reduce((a, b) => a + b) / 10);
+                const variance = P.reduce((sum, p) => sum + Math.pow(p - mean, 2), 0) / 10;
+                const stdDev = Math.sqrt(variance);
                 const SS = 1 - (stdDev / 10); 
                 const DE = Math.max(...D);
                 const CS = [...D].sort((a, b) => b - a).slice(0, 3).reduce((a, b) => a + Math.abs(b), 0);
 
                 const marketScore = (DE * 0.4) + (CI * 0.3) + (SS * 0.2) + (CS * 0.1);
 
+                // Sniper Step 3: Trigger (e) and Target (t) Selection
+                let entryDigit: number | null = null; // e
+                let targetDigit: number | null = null; // t
                 let sniperTradeType: 'MATCHES' | 'NO TRADE' = 'NO TRADE';
-                let bestEntryDigit: number | null = null;
-                let normalizedScore = 0;
+                let confidence = 0;
 
-                if (CI > 5 && CI < 80 && SS > 0.4) {
-                    const digitScores = P.map((pi, i) => {
-                        const n1 = (i + 1) % 10;
-                        const n2 = (i + 9) % 10;
-                        const neighborVar = Math.abs(P[n1] - P[n2]);
-                        const finalScore = (pi - 10) * (1 - (neighborVar / 10));
-                        return { digit: i, score: finalScore, percentage: pi };
-                    });
+                if (CI > 5 && CI < 85 && SS > 0.45) {
+                    // Filter for Entry (e): P[e] < 10, skip lowest 2
+                    const candidatesE = P.map((p, i) => ({ p, i }))
+                        .filter(d => d.p < 10)
+                        .sort((a, b) => a.p - b.p)
+                        .slice(2);
 
-                    const highestP = Math.max(...P);
-                    const candidates = digitScores.filter(ds => 
-                        ds.percentage > 10 && 
-                        ds.percentage < highestP
-                    ).sort((a, b) => b.score - a.score);
+                    // Filter for Target (t): P[t] > 10, not absolute highest
+                    const sortedP = [...P].sort((a, b) => b - a);
+                    const absoluteHighest = sortedP[0];
+                    const candidatesT = P.map((p, i) => ({ p, i }))
+                        .filter(d => d.p > 10 && d.p < absoluteHighest)
+                        .sort((a, b) => b.p - a.p);
 
-                    if (candidates.length > 0) {
-                        bestEntryDigit = candidates[0].digit;
+                    if (candidatesE.length > 0 && candidatesT.length > 0) {
+                        entryDigit = candidatesE[0].i;
+                        targetDigit = candidatesT[0].i;
                         sniperTradeType = 'MATCHES';
-                        normalizedScore = Math.min(99.9, 60 + (marketScore * 2));
+                        confidence = Math.min(99.9, 65 + (marketScore * 2));
                     }
                 }
 
-                // Distribution Strategy
+                // Distribution Strategy (O3/U6)
                 let S_U6 = 0;
                 for (let i = 0; i <= 5; i++) S_U6 += D[i];
                 for (let i = 6; i <= 9; i++) S_U6 -= Math.abs(D[i]);
@@ -200,8 +203,9 @@ export function Dashboard() {
                         cs: CS,
                         marketScore,
                         tradeType: sniperTradeType,
-                        entryDigit: bestEntryDigit,
-                        confidence: normalizedScore,
+                        entryDigit,
+                        targetDigit,
+                        confidence,
                         currentPrice: latestPrice,
                         pip: pip,
                         scannerStrategy: scannerDirection,

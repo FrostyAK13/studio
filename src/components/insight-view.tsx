@@ -4,7 +4,7 @@ import * as React from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
-import { Search, Zap, Activity, ShieldCheck, RefreshCw, Target, TrendingUp, Crosshair, Wallet, Lock, Unlock, Timer } from 'lucide-react';
+import { Search, Zap, Activity, ShieldCheck, RefreshCw, Target, TrendingUp, Crosshair, Wallet, Lock, Timer } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { GlobalAnalysisResult } from './dashboard';
 import { Progress } from '@/components/ui/progress';
@@ -31,7 +31,7 @@ export function InsightView({ globalResults, activeScanId, dashboardPrice, dashb
     // Sniper Step: Global Best Market Selection with Lock-in Logic
     React.useEffect(() => {
         const sortedMatches = Object.values(globalResults)
-            .filter(r => r.tradeType === 'MATCHES' && r.entryDigit !== null)
+            .filter(r => r.tradeType === 'MATCHES' && r.entryDigit !== null && r.targetDigit !== null)
             .sort((a, b) => b.marketScore - a.marketScore);
 
         const bestGlobal = sortedMatches[0];
@@ -125,8 +125,8 @@ export function InsightView({ globalResults, activeScanId, dashboardPrice, dashb
                                 <Crosshair className="h-7 w-7 text-primary animate-pulse" />
                             </div>
                             <div>
-                                <CardTitle className="text-2xl font-black text-white tracking-tighter uppercase leading-none">SNIPER MATCHES ENGINE</CardTitle>
-                                <CardDescription className="text-[10px] font-black text-primary uppercase tracking-[0.4em] mt-3">ZERO-ERROR GLOBAL SURVEILLANCE</CardDescription>
+                                <CardTitle className="text-2xl font-black text-white tracking-tighter uppercase leading-none">SNIPER PROBABILITY FLOW</CardTitle>
+                                <CardDescription className="text-[10px] font-black text-primary uppercase tracking-[0.4em] mt-3">ZERO-ERROR TRANSITION SURVEILLANCE</CardDescription>
                             </div>
                         </div>
                         <div className="flex flex-col items-end gap-3">
@@ -153,7 +153,7 @@ export function InsightView({ globalResults, activeScanId, dashboardPrice, dashb
                                 </div>
                                 <div className="space-y-2">
                                     <p className="text-sm font-black uppercase tracking-[0.6em] text-white">SCANNING GLOBAL SECTORS</p>
-                                    <p className="text-[9px] font-bold text-muted-foreground uppercase tracking-[0.3em]">REJECTING LOW-PROBABILITY VECTORS...</p>
+                                    <p className="text-[9px] font-bold text-muted-foreground uppercase tracking-[0.3em]">IDENTIFYING TRANSITION VECTORS...</p>
                                 </div>
                             </motion.div>
                         ) : (
@@ -188,36 +188,25 @@ export function InsightView({ globalResults, activeScanId, dashboardPrice, dashb
                                         <div className="flex items-center gap-5">
                                             <div className="w-2 h-16 bg-emerald-500 rounded-full shadow-[0_0_25px_rgba(16,185,129,0.9)]" />
                                             <div>
-                                                <p className="text-[11px] font-black text-emerald-400 uppercase tracking-[0.4em] mb-2">ELITE MARKET IDENTIFIED</p>
+                                                <p className="text-[11px] font-black text-emerald-400 uppercase tracking-[0.4em] mb-2">OPTIMAL FLOW IDENTIFIED</p>
                                                 <h2 className="text-3xl sm:text-5xl font-black text-white tracking-tighter uppercase leading-none">{lockedSignal.marketName}</h2>
                                             </div>
                                         </div>
 
                                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
                                             <div className="bg-black/60 p-6 rounded-[2rem] border border-white/5 shadow-2xl group hover:border-primary/20 transition-all duration-500">
-                                                <p className="text-[9px] font-black text-primary uppercase tracking-[0.4em] mb-3">TRIGGER DIGIT</p>
+                                                <p className="text-[9px] font-black text-primary uppercase tracking-[0.4em] mb-3">TRIGGER DIGIT (e)</p>
                                                 <div className="flex items-baseline gap-4">
-                                                    <span className="text-6xl font-black text-white tabular-nums group-hover:text-primary transition-colors">{lockedSignal.entryDigit}</span>
-                                                    <Badge className="bg-emerald-500/20 text-emerald-400 border-none text-[9px] font-black uppercase px-3 py-1">STABLE CLUSTER</Badge>
+                                                    <span className="text-6xl font-black text-white tabular-nums group-hover:text-amber-500 transition-colors">{lockedSignal.entryDigit}</span>
+                                                    <Badge className="bg-amber-500/20 text-amber-400 border-none text-[9px] font-black uppercase px-3 py-1">TRANSITION ZONE</Badge>
                                                 </div>
                                             </div>
-                                            <div className="bg-black/60 p-6 rounded-[2rem] border border-white/5 shadow-2xl relative overflow-hidden group">
-                                                <div className="absolute top-0 right-0 p-3 opacity-10 group-hover:opacity-30 transition-opacity">
-                                                    <Wallet className="h-10 w-10 text-primary" />
+                                            <div className="bg-black/60 p-6 rounded-[2rem] border border-white/5 shadow-2xl group hover:border-primary/20 transition-all duration-500">
+                                                <p className="text-[9px] font-black text-emerald-400 uppercase tracking-[0.4em] mb-3">TARGET DIGIT (t)</p>
+                                                <div className="flex items-baseline gap-4">
+                                                    <span className="text-6xl font-black text-white tabular-nums group-hover:text-emerald-400 transition-colors">{lockedSignal.targetDigit}</span>
+                                                    <Badge className="bg-emerald-500/20 text-emerald-400 border-none text-[9px] font-black uppercase px-3 py-1">STRENGTH ZONE</Badge>
                                                 </div>
-                                                <p className="text-[9px] font-black text-primary uppercase tracking-[0.4em] mb-3">LIVE PRICE</p>
-                                                <div className="flex items-baseline gap-2">
-                                                    <motion.span 
-                                                        key={livePrice}
-                                                        initial={{ opacity: 0.5, y: -2 }}
-                                                        animate={{ opacity: 1, y: 0 }}
-                                                        className="text-2xl sm:text-3xl font-black text-white tabular-nums tracking-tighter"
-                                                    >
-                                                        {livePrice === 0 ? "---" : livePrice.toFixed(livePip)}
-                                                    </motion.span>
-                                                    <div className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" />
-                                                </div>
-                                                <p className="text-[7px] font-bold text-muted-foreground uppercase tracking-widest mt-2">ACTIVE SNIPER FEED</p>
                                             </div>
                                         </div>
 
@@ -229,14 +218,20 @@ export function InsightView({ globalResults, activeScanId, dashboardPrice, dashb
                                                     </div>
                                                     <div>
                                                         <p className="text-[11px] font-black text-white uppercase tracking-widest">TACTICAL COMMAND</p>
-                                                        <p className="text-2xl font-black text-white uppercase mt-1">WAIT FOR TRIGGER: {lockedSignal.entryDigit}</p>
+                                                        <p className="text-2xl font-black text-white uppercase mt-1">TRIGGER ON {lockedSignal.entryDigit}, TRADE {lockedSignal.targetDigit}</p>
                                                     </div>
                                                 </div>
                                                 <Zap className="h-8 w-8 text-emerald-400 opacity-30 group-hover:opacity-100 transition-opacity" />
                                             </div>
                                             
                                             <div className="space-y-2">
-                                                <p className="text-[8px] font-black text-white/40 uppercase tracking-[0.4em]">LIVE DIGIT STREAM</p>
+                                                <div className="flex items-center justify-between">
+                                                    <p className="text-[8px] font-black text-white/40 uppercase tracking-[0.4em]">LIVE DIGIT STREAM</p>
+                                                    <div className="flex items-center gap-2">
+                                                        <p className="text-[8px] font-black text-white uppercase tracking-widest leading-none">LIVE PRICE:</p>
+                                                        <span className="text-[10px] font-black text-emerald-400 tabular-nums">{livePrice.toFixed(livePip)}</span>
+                                                    </div>
+                                                </div>
                                                 <div className="flex gap-2 justify-start overflow-hidden h-12 items-center">
                                                     {liveDigits.map((digit, idx) => (
                                                         <motion.div
@@ -246,7 +241,9 @@ export function InsightView({ globalResults, activeScanId, dashboardPrice, dashb
                                                             className={cn(
                                                                 "w-10 h-10 rounded-xl flex items-center justify-center font-black text-xs border transition-all shrink-0",
                                                                 digit === lockedSignal?.entryDigit 
-                                                                    ? "bg-primary border-primary text-primary-foreground shadow-lg ring-2 ring-primary ring-offset-2 ring-offset-slate-900" 
+                                                                    ? "bg-amber-500 border-amber-500 text-white shadow-lg ring-2 ring-amber-500 ring-offset-2 ring-offset-slate-900" 
+                                                                    : digit === lockedSignal?.targetDigit
+                                                                    ? "bg-emerald-500 border-emerald-500 text-white shadow-lg ring-2 ring-emerald-500 ring-offset-2 ring-offset-slate-900"
                                                                     : "bg-white/5 border-white/10 text-white/60"
                                                             )}
                                                         >
@@ -261,7 +258,7 @@ export function InsightView({ globalResults, activeScanId, dashboardPrice, dashb
                                     <div className="space-y-8">
                                         <Card className="bg-black/40 border-white/5 p-8 rounded-[2.5rem] shadow-inner">
                                             <h4 className="text-[11px] font-black text-primary uppercase tracking-[0.5em] mb-6 flex items-center gap-3">
-                                                <ShieldCheck className="h-5 w-5" /> // SNIPER ANALYSIS
+                                                <ShieldCheck className="h-5 w-5" /> // FLOW ANALYSIS
                                             </h4>
                                             <div className="space-y-6">
                                                 <div className="space-y-2.5">
@@ -280,11 +277,11 @@ export function InsightView({ globalResults, activeScanId, dashboardPrice, dashb
                                                 <div className="p-4 bg-white/5 rounded-2xl border border-white/5">
                                                     <p className="text-[8px] font-black text-primary uppercase tracking-widest mb-2">EXECUTION RULE</p>
                                                     <p className="text-[10px] font-bold text-white uppercase leading-relaxed">
-                                                        "Trade on first appearance of {lockedSignal.entryDigit}, re-enter only after {lockedSignal.entryDigit} repeats consecutively."
+                                                        "Trigger on first appearance of {lockedSignal.entryDigit}, execute trade targeting {lockedSignal.targetDigit} on next tick. Re-enter only after trigger digit repeats consecutively."
                                                     </p>
                                                 </div>
                                                 <p className="text-[13px] font-medium text-foreground leading-relaxed italic border-l-4 border-emerald-500/40 pl-6 py-1">
-                                                    "Sniper model identifies optimal structural flow in {lockedSignal.marketName}. Digit {lockedSignal.entryDigit} selected via multi-factor cluster analysis. Enter MATCHES exclusively upon manifestation."
+                                                    "Sniper identifies probability flow from transition zone {lockedSignal.entryDigit} toward strength zone {lockedSignal.targetDigit} in {lockedSignal.marketName}. Enter Digit Match exclusively for {lockedSignal.targetDigit}."
                                                 </p>
                                             </div>
                                         </Card>
@@ -294,7 +291,7 @@ export function InsightView({ globalResults, activeScanId, dashboardPrice, dashb
                                                 <div className="h-10 w-10 bg-emerald-500/10 rounded-full flex items-center justify-center">
                                                     <TrendingUp className="h-5 w-5 text-emerald-400" />
                                                 </div>
-                                                <p className="text-[11px] font-black text-white uppercase tracking-widest">ELITE MATCHES VECTOR ACTIVE</p>
+                                                <p className="text-[11px] font-black text-white uppercase tracking-widest">FLOW VECTOR ACTIVE</p>
                                             </div>
                                             <Badge className="bg-emerald-500/20 text-emerald-400 border-none font-black text-[10px] px-6 py-1.5 uppercase tracking-tighter">ULTRA-STABLE</Badge>
                                         </div>
@@ -308,9 +305,9 @@ export function InsightView({ globalResults, activeScanId, dashboardPrice, dashb
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <Card className="bg-slate-900/40 backdrop-blur-3xl border-white/5 p-8 rounded-[2rem]">
-                    <h4 className="text-[11px] font-black text-primary uppercase tracking-[0.5em] mb-5 flex items-center gap-3"><Activity className="h-5 w-5" /> // SNIPER PROTOCOL</h4>
+                    <h4 className="text-[11px] font-black text-primary uppercase tracking-[0.5em] mb-5 flex items-center gap-3"><Activity className="h-5 w-5" /> // FLOW PROTOCOL</h4>
                     <p className="text-[12px] font-medium text-foreground/80 leading-relaxed italic border-l-2 border-primary/30 pl-5">
-                        "The Sniper Model filters out noise by analyzing global market scores (Direction, Concentration, Stability). To prevent overtrading, signals are locked for 120 seconds, allowing for focused strategic execution."
+                        "The Flow Model identifies market weakness at trigger $e$ and captures the high-probability transition toward dominant zone $t$. Signals are locked for 120 seconds to allow for disciplined strategic execution."
                     </p>
                 </Card>
                 <Card className="bg-slate-900/40 backdrop-blur-3xl border-white/5 p-8 rounded-[2rem] flex items-center justify-between">
@@ -320,10 +317,10 @@ export function InsightView({ globalResults, activeScanId, dashboardPrice, dashb
                         </div>
                         <div>
                             <p className="text-[11px] font-black text-white uppercase tracking-widest">AUTONOMOUS FLOW</p>
-                            <p className="text-[9px] font-bold text-muted-foreground uppercase mt-1.5 tracking-widest">REAL-TIME GLOBAL TACTICAL HUD</p>
+                            <p className="text-[9px] font-bold text-muted-foreground uppercase mt-1.5 tracking-widest">REAL-TIME SNIPER SCOPE ACTIVE</p>
                         </div>
                     </div>
-                    <Badge className="bg-primary/20 text-primary border-none font-black text-[10px] px-5 py-2 uppercase tracking-tighter">LIVE FEED ACTIVE</Badge>
+                    <Badge className="bg-primary/20 text-primary border-none font-black text-[10px] px-5 py-2 uppercase tracking-tighter">SURVEILLANCE LIVE</Badge>
                 </Card>
             </div>
         </div>
