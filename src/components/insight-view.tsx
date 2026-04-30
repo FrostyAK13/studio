@@ -1,11 +1,10 @@
-
 'use client';
 
 import * as React from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
-import { Search, Zap, Activity, ShieldCheck, RefreshCw, Target, Flame, TrendingUp, Crosshair, Wallet } from 'lucide-react';
+import { Search, Zap, Activity, ShieldCheck, RefreshCw, Target, TrendingUp, Crosshair, Wallet } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { GlobalAnalysisResult } from './dashboard';
 
@@ -17,25 +16,56 @@ interface InsightViewProps {
 }
 
 export function InsightView({ globalResults, activeScanId, dashboardPrice, dashboardMarketId }: InsightViewProps) {
-    // Sniper Step 5: Select ONLY the single best market globally
+    const [livePrice, setLivePrice] = React.useState<number>(0);
+    const [liveDigits, setLiveDigits] = React.useState<number[]>([]);
+    const [livePip, setLivePip] = React.useState<number>(2);
+    
+    // Sniper Step: Select ONLY the single best market globally
     const topSniperMatch = React.useMemo(() => {
         return Object.values(globalResults)
             .filter(r => r.tradeType === 'MATCHES' && r.entryDigit !== null)
             .sort((a, b) => b.marketScore - a.marketScore)[0];
     }, [globalResults]);
 
-    // Determine the most "live" price possible for the sniper market
-    const displayPrice = React.useMemo(() => {
-        if (!topSniperMatch) return 0;
-        // If the top sniper market is the same as the one selected in the dashboard, use the high-frequency tick price
-        if (topSniperMatch.marketId === dashboardMarketId) {
-            return dashboardPrice;
-        }
-        // Otherwise use the price captured during the background scan cycle
-        return topSniperMatch.currentPrice;
-    }, [topSniperMatch, dashboardPrice, dashboardMarketId]);
+    const targetMarketId = topSniperMatch?.marketId;
 
-    const displayPip = topSniperMatch?.pip || 2;
+    // Independent Real-Time Subscription for the Sniper Market
+    React.useEffect(() => {
+        if (!targetMarketId) return;
+
+        const ws = new WebSocket('wss://ws.derivws.com/websockets/v3?app_id=84799');
+        
+        ws.onopen = () => {
+            ws.send(JSON.stringify({
+                "ticks": targetMarketId,
+                "subscribe": 1
+            }));
+        };
+
+        ws.onmessage = (event) => {
+            const data = JSON.parse(event.data);
+            if (data.msg_type === 'tick' && data.tick) {
+                const pip = data.tick.pip_size ?? 2;
+                const quote = data.tick.quote;
+                const pStr = quote.toFixed(8);
+                const dec = pStr.split('.')[1] || '00';
+                const digit = parseInt(dec[pip - 1] || '0');
+
+                setLivePip(pip);
+                setLivePrice(quote);
+                setLiveDigits(prev => [digit, ...prev].slice(0, 15));
+            }
+        };
+
+        return () => {
+            if (ws.readyState === WebSocket.OPEN || ws.readyState === WebSocket.CONNECTING) {
+                ws.close();
+            }
+            // Reset local live states when market changes
+            setLivePrice(0);
+            setLiveDigits([]);
+        };
+    }, [targetMarketId]);
 
     return (
         <div className="space-y-6 animate-in fade-in duration-1000 pb-24 max-w-[1600px] mx-auto px-2">
@@ -112,30 +142,53 @@ export function InsightView({ globalResults, activeScanId, dashboardPrice, dashb
                                                 <p className="text-[9px] font-black text-primary uppercase tracking-[0.4em] mb-3">LIVE PRICE</p>
                                                 <div className="flex items-baseline gap-2">
                                                     <motion.span 
-                                                        key={displayPrice}
+                                                        key={livePrice}
                                                         initial={{ opacity: 0.5, y: -2 }}
                                                         animate={{ opacity: 1, y: 0 }}
                                                         className="text-2xl sm:text-3xl font-black text-white tabular-nums tracking-tighter"
                                                     >
-                                                        {displayPrice === 0 ? "---" : displayPrice.toFixed(displayPip)}
+                                                        {livePrice === 0 ? "---" : livePrice.toFixed(livePip)}
                                                     </motion.span>
                                                     <div className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" />
                                                 </div>
-                                                <p className="text-[7px] font-bold text-muted-foreground uppercase tracking-widest mt-2">REAL-TIME TACTICAL SYNC</p>
+                                                <p className="text-[7px] font-bold text-muted-foreground uppercase tracking-widest mt-2">ACTIVE SNIPER FEED</p>
                                             </div>
                                         </div>
 
-                                        <div className="p-8 bg-emerald-500/20 rounded-[2.5rem] border border-emerald-500/40 shadow-2xl shadow-emerald-500/10 flex items-center justify-between group">
-                                            <div className="flex items-center gap-6">
-                                                <div className="p-3 bg-emerald-500 rounded-2xl shadow-lg">
-                                                    <Target className="h-8 w-8 text-white animate-pulse" />
+                                        <div className="p-8 bg-emerald-500/20 rounded-[2.5rem] border border-emerald-500/40 shadow-2xl shadow-emerald-500/10 flex flex-col gap-6 group">
+                                            <div className="flex items-center justify-between">
+                                                <div className="flex items-center gap-6">
+                                                    <div className="p-3 bg-emerald-500 rounded-2xl shadow-lg">
+                                                        <Target className="h-8 w-8 text-white animate-pulse" />
+                                                    </div>
+                                                    <div>
+                                                        <p className="text-[11px] font-black text-white uppercase tracking-widest">TACTICAL COMMAND</p>
+                                                        <p className="text-2xl font-black text-white uppercase mt-1">WAIT FOR TRIGGER: {topSniperMatch.entryDigit}</p>
+                                                    </div>
                                                 </div>
-                                                <div>
-                                                    <p className="text-[11px] font-black text-white uppercase tracking-widest">TACTICAL COMMAND</p>
-                                                    <p className="text-2xl font-black text-white uppercase mt-1">WAIT FOR TRIGGER: {topSniperMatch.entryDigit}</p>
+                                                <Zap className="h-8 w-8 text-emerald-400 opacity-30 group-hover:opacity-100 transition-opacity" />
+                                            </div>
+                                            
+                                            <div className="space-y-2">
+                                                <p className="text-[8px] font-black text-white/40 uppercase tracking-[0.4em]">LIVE DIGIT STREAM</p>
+                                                <div className="flex gap-2 justify-start overflow-hidden h-12 items-center">
+                                                    {liveDigits.map((digit, idx) => (
+                                                        <motion.div
+                                                            key={`${digit}-${idx}-${livePrice}`}
+                                                            initial={{ scale: 0.8, opacity: 0 }}
+                                                            animate={{ scale: 1, opacity: 1 }}
+                                                            className={cn(
+                                                                "w-10 h-10 rounded-xl flex items-center justify-center font-black text-xs border transition-all shrink-0",
+                                                                digit === topSniperMatch.entryDigit 
+                                                                    ? "bg-primary border-primary text-primary-foreground shadow-lg ring-2 ring-primary ring-offset-2 ring-offset-slate-900" 
+                                                                    : "bg-white/5 border-white/10 text-white/60"
+                                                            )}
+                                                        >
+                                                            {digit}
+                                                        </motion.div>
+                                                    ))}
                                                 </div>
                                             </div>
-                                            <Zap className="h-8 w-8 text-emerald-400 opacity-30 group-hover:opacity-100 transition-opacity" />
                                         </div>
                                     </div>
 
