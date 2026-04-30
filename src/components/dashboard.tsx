@@ -1,4 +1,3 @@
-
 'use client';
 
 import * as React from 'react';
@@ -20,13 +19,15 @@ type EngineStatus = 'offline' | 'active';
 export interface GlobalAnalysisResult {
     marketId: string;
     marketName: string;
-    // Repetition Strategy (Insight - Single-Digit Model)
+    // Sniper Model Metrics
     ci: number;
-    rp: number;
+    ss: number;
+    de: number;
+    cs: number;
+    marketScore: number;
+    // Execution
     tradeType: 'MATCHES' | 'NO TRADE';
     entryDigit: number | null;
-    entryCondition: string;
-    canExecute: boolean;
     confidence: number;
     // Distribution Strategy (Scanner - O3/U6 Model)
     scannerStrategy: 'OVER 3' | 'UNDER 6' | 'NONE';
@@ -87,7 +88,7 @@ export function Dashboard() {
         currentMarketRef.current = selectedMarket;
     }, [selectedMarket, maxTicks, mounted]);
 
-    // Background Global Surveillance Engine
+    // Background Global Sniper Engine
     React.useEffect(() => {
         if (!mounted || isLocked) return;
 
@@ -97,7 +98,7 @@ export function Dashboard() {
         const runGlobalScan = () => {
             if (currentIndex >= syntheticIndices.length) {
                 currentIndex = 0;
-                setTimeout(runGlobalScan, 3000); 
+                setTimeout(runGlobalScan, 2000); 
                 return;
             }
 
@@ -106,7 +107,7 @@ export function Dashboard() {
             if (scanWs.readyState === WebSocket.OPEN) {
                 scanWs.send(JSON.stringify({
                     "ticks_history": market.id,
-                    "count": 200,
+                    "count": 250,
                     "end": "latest",
                     "style": "ticks"
                 }));
@@ -129,69 +130,64 @@ export function Dashboard() {
                     return parseInt(dec[pip - 1] || '0');
                 }).reverse();
 
+                // Sniper Step 1: Normalize each market
                 const total = ticks.length || 1;
                 const counts = Array(10).fill(0);
                 ticks.forEach(d => counts[d]++);
                 const P = counts.map(c => (c / total) * 100);
                 const D = P.map(p => p - 10);
-                const CI = P.reduce((sum, p) => sum + Math.pow(p - 10, 2), 0);
-                
-                let repeats = 0;
-                for (let i = 0; i < ticks.length - 1; i++) if (ticks[i] === ticks[i+1]) repeats++;
-                const RP = (total > 1) ? (repeats / (total - 1)) * 100 : 0;
 
-                // --- 1. Single-Digit Matches Strategy (Insight) ---
-                // Step 4: Score each digit
-                const insightScores = D.map((di, i) => {
-                    const nextIdx = (i + 1) % 10;
-                    const prevIdx = (i + 9) % 10;
-                    const neighborDiff = Math.abs(D[nextIdx] - D[prevIdx]);
-                    // Score[i] = |D[i]| * (1 - |D[i+1] - D[i-1]| / factor)
-                    const neighborStability = 1 - (neighborDiff / 10);
-                    return { digit: i, score: di * neighborStability };
-                });
-                
-                // Find highest score candidate
-                const bestCand = insightScores.reduce((prev, curr) => (curr.score > prev.score) ? curr : prev);
-                const d = bestCand.digit;
-                const neighborDiffD = Math.abs(D[(d+1)%10] - D[(d+9)%10]);
+                // Sniper Step 2: Market Quality Score
+                const CI = D.reduce((sum, d) => sum + Math.pow(d, 2), 0);
+                const mean = P.reduce((a, b) => a + b) / 10;
+                const stdDev = Math.sqrt(P.map(x => Math.pow(x - mean, 2)).reduce((a, b) => a + b) / 10);
+                const SS = 1 - (stdDev / 10); 
+                const DE = Math.max(...D);
+                const CS = [...D].sort((a, b) => b - a).slice(0, 3).reduce((a, b) => a + Math.abs(b), 0);
 
-                let insightTradeType: 'MATCHES' | 'NO TRADE' = 'NO TRADE';
-                let confidence = 0;
-                
-                // Matches Only Logic: d must be dominant (D[d] > 0)
-                // Safety Filter: Imbalance > 1.5, stable neighbors, Min CI
-                if (D[d] > 1.5 && neighborDiffD < 4 && CI > 12) {
-                    insightTradeType = 'MATCHES';
-                    confidence = 50 + (D[d] * 2) + (RP * 0.5);
+                // Weights: Direction > CI > SS > CS
+                const marketScore = (DE * 0.4) + (CI * 0.3) + (SS * 0.2) + (CS * 0.1);
+
+                // Sniper Step 4: Filter markets
+                let sniperTradeType: 'MATCHES' | 'NO TRADE' = 'NO TRADE';
+                let bestEntryDigit: number | null = null;
+                let normalizedScore = 0;
+
+                // Thresholds: Moderate dispersion
+                if (CI > 5 && CI < 80 && SS > 0.4) {
+                    // Sniper Step 6: Single-Digit Strategy on Selected Market
+                    const digitScores = P.map((pi, i) => {
+                        const n1 = (i + 1) % 10;
+                        const n2 = (i + 9) % 10;
+                        const neighborVar = Math.abs(P[n1] - P[n2]);
+                        const finalScore = (pi - 10) * (1 - (neighborVar / 10));
+                        return { digit: i, score: finalScore, percentage: pi };
+                    });
+
+                    // Rules: Above average, not the absolute highest, in stable cluster
+                    const highestP = Math.max(...P);
+                    const candidates = digitScores.filter(ds => 
+                        ds.percentage > 10 && 
+                        ds.percentage < highestP
+                    ).sort((a, b) => b.score - a.score);
+
+                    if (candidates.length > 0) {
+                        bestEntryDigit = candidates[0].digit;
+                        sniperTradeType = 'MATCHES';
+                        normalizedScore = Math.min(99.9, 60 + (marketScore * 2));
+                    }
                 }
 
-                // --- 2. Advanced O3/U6 Strategy (Scanner) ---
+                // Distribution Strategy (Global Scan Logic)
                 let S_U6 = 0;
                 for (let i = 0; i <= 5; i++) S_U6 += D[i];
                 for (let i = 6; i <= 9; i++) S_U6 -= Math.abs(D[i]);
-                
                 let S_O3 = 0;
                 for (let i = 4; i <= 9; i++) S_O3 += D[i];
                 for (let i = 0; i <= 3; i++) S_O3 -= Math.abs(D[i]);
-
                 const scannerDirection = S_U6 > S_O3 ? 'UNDER 6' : 'OVER 3';
-                let scannerCandidates = scannerDirection === 'UNDER 6' ? [0, 1, 2, 3, 4, 5] : [4, 5, 6, 7, 8, 9];
-                
-                // Mid-zone control (4,5)
-                if (scannerDirection === 'UNDER 6') {
-                    if (P[4] + P[5] <= 20) scannerCandidates = scannerCandidates.filter(i => i !== 4 && i !== 5);
-                } else {
-                    if (P[4] <= 10) scannerCandidates = scannerCandidates.filter(i => i !== 4);
-                    if (P[5] <= 10) scannerCandidates = scannerCandidates.filter(i => i !== 5);
-                }
-
-                const scannerScores = scannerCandidates.map(i => {
-                    const n1 = (i + 1) % 10;
-                    const n2 = (i + 9) % 10;
-                    return { digit: i, score: (10 - P[i]) * (1 - Math.abs(D[n1] - D[n2]) / 8) };
-                });
-                const bestScanner = scannerScores.sort((a, b) => b.score - a.score)[0];
+                const scannerCandidates = scannerDirection === 'UNDER 6' ? [0, 1, 2, 3, 4, 5] : [4, 5, 6, 7, 8, 9];
+                const bestScanner = scannerCandidates.map(i => ({ digit: i, score: (10 - P[i]) * (1 - Math.abs(D[(i+1)%10] - D[(i+9)%10]) / 10) })).sort((a, b) => b.score - a.score)[0];
 
                 setGlobalResults(prev => ({
                     ...prev,
@@ -199,15 +195,16 @@ export function Dashboard() {
                         marketId,
                         marketName,
                         ci: CI,
-                        rp: RP,
-                        tradeType: insightTradeType,
-                        entryDigit: insightTradeType !== 'NO TRADE' ? d : null,
-                        entryCondition: insightTradeType !== 'NO TRADE' ? `WAIT FOR DIGIT ${d}` : 'AWAITING LOCK',
-                        canExecute: insightTradeType !== 'NO TRADE',
-                        confidence: confidence,
+                        ss: SS,
+                        de: DE,
+                        cs: CS,
+                        marketScore,
+                        tradeType: sniperTradeType,
+                        entryDigit: bestEntryDigit,
+                        confidence: normalizedScore,
                         scannerStrategy: scannerDirection,
                         scannerEntry: bestScanner?.digit ?? null,
-                        scannerConfidence: 60 + Math.max(S_U6, S_O3) + (bestScanner?.score ?? 0)
+                        scannerConfidence: 60 + Math.max(S_U6, S_O3)
                     }
                 }));
 
