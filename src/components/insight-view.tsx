@@ -1,4 +1,3 @@
-
 'use client';
 
 import * as React from 'react';
@@ -29,10 +28,6 @@ export function InsightView({ globalResults, activeScanId, dashboardPrice, dashb
     const [lockTimestamp, setLockTimestamp] = React.useState<number>(0);
     const [timeRemaining, setTimeRemaining] = React.useState<number>(0);
     const [lastMarketId, setLastMarketId] = React.useState<string | null>(null);
-    
-    // Repetition Lock Rule (v8.5+)
-    const [lockedTrigger, setLockedTrigger] = React.useState<number | null>(null);
-    const [lockCounter, setLockCounter] = React.useState(0);
 
     // Sniper 8.5+ Market Selection
     React.useEffect(() => {
@@ -95,11 +90,12 @@ export function InsightView({ globalResults, activeScanId, dashboardPrice, dashb
         return () => { if (ws.readyState < 2) ws.close(); };
     }, [targetMarketId]);
 
-    // v8.5+ Execution Logic
+    // v8.5+ Execution Logic: Repetition + Local Dominance Stability
     const repetitionActivation = React.useMemo(() => {
         if (!lockedSignal || liveDigits.length < 8) return false;
+        // Digit must appear >= 2 times in the last 8 ticks to activate sniper pressure
         const count = liveDigits.slice(0, 8).filter(d => d === lockedSignal.entryDigit).length;
-        return count >= 2; // Digit d must appear >= 2 times in last 8 ticks
+        return count >= 2;
     }, [liveDigits, lockedSignal]);
 
     const isTriggerActive = React.useMemo(() => {
@@ -107,7 +103,7 @@ export function InsightView({ globalResults, activeScanId, dashboardPrice, dashb
         const current = liveDigits[0];
         const prev = liveDigits[1];
         
-        // v8.5+ Rule: Current = d, Prev != d
+        // Rule: Current = d, Previous != d (Enter on manifestation, not mid-run)
         return current === lockedSignal.entryDigit && prev !== lockedSignal.entryDigit && repetitionActivation;
     }, [liveDigits, lockedSignal, repetitionActivation]);
 
@@ -125,7 +121,7 @@ export function InsightView({ globalResults, activeScanId, dashboardPrice, dashb
                             </div>
                             <div>
                                 <CardTitle className="text-2xl font-black text-white tracking-tighter uppercase leading-none">SNIPER PROTOCOL v8.5+</CardTitle>
-                                <CardDescription className="text-[10px] font-black text-primary uppercase tracking-[0.4em] mt-3">STRUCTURAL DEVIATION ENGINE</CardDescription>
+                                <CardDescription className="text-[10px] font-black text-primary uppercase tracking-[0.4em] mt-3">LOCAL DOMINANCE ENGINE</CardDescription>
                             </div>
                         </div>
                         <div className="flex items-center gap-3">
@@ -141,7 +137,7 @@ export function InsightView({ globalResults, activeScanId, dashboardPrice, dashb
                         {!lockedSignal ? (
                             <motion.div key="idle" initial={{ opacity: 0 }} animate={{ opacity: 0.6 }} exit={{ opacity: 0 }} className="py-32 flex flex-col items-center justify-center gap-8 text-center">
                                 <RefreshCw className="h-20 w-20 animate-spin text-primary opacity-20" />
-                                <p className="text-sm font-black uppercase tracking-[0.6em] text-white">SCANNING FOR STRUCTURAL IMBALANCE</p>
+                                <p className="text-sm font-black uppercase tracking-[0.6em] text-white">SCANNING FOR LOCAL PEAKS</p>
                             </motion.div>
                         ) : (
                             <motion.div key={lockedSignal.marketId} initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} className="max-w-6xl mx-auto">
@@ -162,14 +158,17 @@ export function InsightView({ globalResults, activeScanId, dashboardPrice, dashb
 
                                         <div className="p-8 rounded-[2.5rem] bg-black/60 border border-white/5 shadow-2xl relative group overflow-hidden">
                                             <div className="absolute top-0 left-0 w-1 h-full bg-primary" />
-                                            <p className="text-[10px] font-black text-primary uppercase tracking-[0.4em] mb-4">TARGET DIGIT v8.5+</p>
+                                            <div className="flex justify-between items-start mb-4">
+                                                <p className="text-[10px] font-black text-primary uppercase tracking-[0.4em]">TRIGGER DIGIT [d]</p>
+                                                <Badge className="bg-primary/20 text-primary border-none text-[8px] font-black uppercase tracking-widest">LOCAL PEAK</Badge>
+                                            </div>
                                             <div className="flex items-baseline gap-6">
                                                 <span className="text-8xl font-black text-white tabular-nums tracking-tighter">{lockedSignal.entryDigit}</span>
                                                 <div className="space-y-2">
                                                     <Badge className={cn("border-none text-[10px] font-black uppercase px-4 py-1.5", repetitionActivation ? "bg-emerald-500 text-white" : "bg-white/10 text-white/40")}>
-                                                        {repetitionActivation ? "REPETITION ACTIVE" : "AWAITING FREQUENCY"}
+                                                        {repetitionActivation ? "REPETITION ACTIVE" : "AWAITING PRESSURE"}
                                                     </Badge>
-                                                    <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">STABILITY: {lockedSignal.stability.toFixed(2)}</p>
+                                                    <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">LD SCORE: {lockedSignal.localDominance.toFixed(2)}</p>
                                                 </div>
                                             </div>
                                         </div>
@@ -184,8 +183,8 @@ export function InsightView({ globalResults, activeScanId, dashboardPrice, dashb
                                                         <Target className="h-8 w-8 text-white" />
                                                     </div>
                                                     <div>
-                                                        <p className="text-[11px] font-black text-white uppercase tracking-[0.4em]">EXECUTION COMMAND</p>
-                                                        <h4 className="text-2xl font-black text-white uppercase mt-1">MATCHES @ {lockedSignal.entryDigit}</h4>
+                                                        <p className="text-[11px] font-black text-white uppercase tracking-[0.4em]">EXECUTION GATES</p>
+                                                        <h4 className="text-2xl font-black text-white uppercase mt-1">MATCHES AT TRIGGER {lockedSignal.entryDigit}</h4>
                                                     </div>
                                                 </div>
                                                 {isTriggerActive && <Zap className="h-8 w-8 text-emerald-400 animate-pulse" />}
@@ -193,8 +192,8 @@ export function InsightView({ globalResults, activeScanId, dashboardPrice, dashb
 
                                             <div className="space-y-4">
                                                 <div className="flex items-center justify-between px-2">
-                                                    <p className="text-[8px] font-black text-white/40 uppercase tracking-[0.5em]">LIVE STREAM HUD</p>
-                                                    <span className="text-[10px] font-black text-emerald-400 tabular-nums">{livePrice.toFixed(livePip)}</span>
+                                                    <p className="text-[8px] font-black text-white/40 uppercase tracking-[0.5em]">LIVE FEED</p>
+                                                    <span className="text-[10px] font-black text-emerald-400 tabular-nums">{(livePrice || lockedSignal.currentPrice).toFixed(livePip || lockedSignal.pip)}</span>
                                                 </div>
                                                 <div className="flex gap-2.5 justify-start overflow-hidden h-14 items-center">
                                                     {liveDigits.map((digit, idx) => (
@@ -213,7 +212,7 @@ export function InsightView({ globalResults, activeScanId, dashboardPrice, dashb
                                     <div className="lg:col-span-5 space-y-6">
                                         <Card className="bg-black/40 border-white/5 p-8 rounded-[2.5rem] space-y-8">
                                             <h4 className="text-[11px] font-black text-primary uppercase tracking-[0.5em] flex items-center gap-3">
-                                                <Cpu className="h-5 w-5" /> // QUALITY MATRIX
+                                                <Cpu className="h-5 w-5" /> // STABILITY HUBS
                                             </h4>
                                             
                                             <div className="space-y-6">
@@ -222,15 +221,23 @@ export function InsightView({ globalResults, activeScanId, dashboardPrice, dashb
                                                         <p className="text-[9px] font-black text-muted-foreground uppercase tracking-widest">CONCENTRATION (CI)</p>
                                                         <p className="text-sm font-black text-emerald-400 tabular-nums">{lockedSignal.ci.toFixed(1)}</p>
                                                     </div>
-                                                    <Progress value={Math.min(100, (lockedSignal.ci / 150) * 100)} className="h-2 bg-white/5 [&>div]:bg-emerald-500" />
+                                                    <Progress value={Math.min(100, (lockedSignal.ci / 200) * 100)} className="h-2 bg-white/5 [&>div]:bg-emerald-500" />
                                                 </div>
                                                 
                                                 <div className="space-y-2">
                                                     <div className="flex justify-between px-1">
-                                                        <p className="text-[9px] font-black text-muted-foreground uppercase tracking-widest">NEIGHBOR STABILITY</p>
-                                                        <p className="text-sm font-black text-blue-400 tabular-nums">{(4 - lockedSignal.stability).toFixed(2)}</p>
+                                                        <p className="text-[9px] font-black text-muted-foreground uppercase tracking-widest">CLUSTER SMOOTHNESS</p>
+                                                        <p className="text-sm font-black text-blue-400 tabular-nums">{(1 - (lockedSignal.stability / 2)).toFixed(2)}</p>
                                                     </div>
-                                                    <Progress value={Math.max(0, (1 - (lockedSignal.stability / 4)) * 100)} className="h-2 bg-white/5 [&>div]:bg-blue-500" />
+                                                    <Progress value={Math.max(0, (1 - (lockedSignal.stability / 2)) * 100)} className="h-2 bg-white/5 [&>div]:bg-blue-500" />
+                                                </div>
+
+                                                <div className="space-y-2">
+                                                    <div className="flex justify-between px-1">
+                                                        <p className="text-[9px] font-black text-muted-foreground uppercase tracking-widest">GLOBAL STABILITY (SS)</p>
+                                                        <p className="text-sm font-black text-cyan-400 tabular-nums">{lockedSignal.ss.toFixed(2)}</p>
+                                                    </div>
+                                                    <Progress value={lockedSignal.ss * 100} className="h-2 bg-white/5 [&>div]:bg-cyan-500" />
                                                 </div>
                                             </div>
 
@@ -239,8 +246,8 @@ export function InsightView({ globalResults, activeScanId, dashboardPrice, dashb
                                                     <ShieldCheck className="h-4 w-4 text-emerald-500" />
                                                     <p className="text-[9px] font-black text-white uppercase tracking-widest">v8.5+ EXECUTION RULE</p>
                                                 </div>
-                                                <p className="text-[11px] font-bold text-white/80 leading-relaxed italic uppercase">
-                                                    "Trade strictly on first appearance of {lockedSignal.entryDigit}. Re-enter ONLY if {lockedSignal.entryDigit} appears ≥ 2 times in the last 8 ticks. Lock digit after trade until structural reset."
+                                                <p className="text-[10px] font-bold text-white/80 leading-relaxed italic uppercase">
+                                                    "Sniper identifies local peak at {lockedSignal.entryDigit}. Trade only on manifestation of {lockedSignal.entryDigit} after repetition pressure is confirmed. Lock digit for cycle reset after execution."
                                                 </p>
                                             </div>
                                         </Card>
@@ -248,7 +255,7 @@ export function InsightView({ globalResults, activeScanId, dashboardPrice, dashb
                                         <div className="p-6 bg-primary/5 rounded-[2rem] border border-primary/20 flex items-center justify-between">
                                             <div className="flex items-center gap-4">
                                                 <Layers className="h-5 w-5 text-primary" />
-                                                <p className="text-[10px] font-black text-white uppercase tracking-widest">SNIPER CONFIDENCE</p>
+                                                <p className="text-[10px] font-black text-white uppercase tracking-widest">SNIPER SCORE</p>
                                             </div>
                                             <span className="text-xl font-black text-primary">{lockedSignal.confidence.toFixed(1)}%</span>
                                         </div>

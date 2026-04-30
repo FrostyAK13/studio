@@ -1,4 +1,3 @@
-
 'use client';
 
 import * as React from 'react';
@@ -24,6 +23,7 @@ export interface GlobalAnalysisResult {
     ci: number;
     ss: number;
     stability: number;
+    localDominance: number;
     marketScore: number;
     // Strategy Parameters
     tradeType: 'MATCHES' | 'NO TRADE';
@@ -91,7 +91,7 @@ export function Dashboard() {
         currentMarketRef.current = selectedMarket;
     }, [selectedMarket, maxTicks, mounted]);
 
-    // Background Global Sniper Engine - v8.5+ Structural Logic
+    // Background Global Sniper Engine - v8.5+ Local Dominance Strategy
     React.useEffect(() => {
         if (!mounted || isLocked) return;
 
@@ -110,7 +110,7 @@ export function Dashboard() {
             if (scanWs.readyState === WebSocket.OPEN) {
                 scanWs.send(JSON.stringify({
                     "ticks_history": market.id,
-                    "count": 500, // Higher sample for v8.5+ stability
+                    "count": 1000, 
                     "end": "latest",
                     "style": "ticks"
                 }));
@@ -134,7 +134,7 @@ export function Dashboard() {
                     return parseInt(dec[pip - 1] || '0');
                 }).reverse();
 
-                // Sniper v8.5+ Logic: Deviation Control
+                // Sniper v8.5+ Local Dominance Strategy
                 const total = ticks.length || 1;
                 const counts = Array(10).fill(0);
                 ticks.forEach(d => counts[d]++);
@@ -144,45 +144,55 @@ export function Dashboard() {
                 // CI: Concentration Index
                 const CI = D.reduce((sum, d) => sum + Math.pow(d, 2), 0);
                 
+                // SS: Stability Score (1 - stdDev)
+                const mean = 10;
+                const variance = P.reduce((sum, p) => sum + Math.pow(p - mean, 2), 0) / 10;
+                const stdDev = Math.sqrt(variance);
+                const SS = Math.max(0, 1 - (stdDev / 10));
+
                 // Market Quality Filter
-                const isModerateMarket = CI > 5 && CI < 150;
+                const isModerateMarket = CI > 5 && CI < 200;
 
-                // Candidate Selection Rule (0.3 <= D[i] <= 1.0)
-                let candidates = P.map((p, i) => ({ p, i, d: D[i] }))
-                    .filter(c => c.d >= 0.3 && c.d <= 1.0);
-
-                // Remove Highest Deviation (v8.5 Rule)
-                if (candidates.length > 0) {
-                    const maxD = Math.max(...candidates.map(c => c.d));
-                    candidates = candidates.filter(c => c.d < maxD);
-                }
+                // Candidate Selection: 0.4 <= D[i] <= 0.9 (Refined Band)
+                const maxD = Math.max(...D);
+                const candidateIndices = [0,1,2,3,4,5,6,7,8,9].filter(i => {
+                    const d = D[i];
+                    return d >= 0.4 && d <= 0.9 && d < maxD;
+                });
 
                 let entryDigit: number | null = null;
                 let tradeType: 'MATCHES' | 'NO TRADE' = 'NO TRADE';
                 let confidence = 0;
-                let bestStability = 100;
+                let bestFinalScore = -1000;
+                let bestLD = 0;
+                let bestS = 0;
 
-                if (isModerateMarket && candidates.length > 0) {
-                    // Stability Filter: |D[d+1] - D[d-1]|
-                    const scoredCandidates = candidates.map(c => {
-                        const nextIdx = (c.i + 1) % 10;
-                        const prevIdx = (c.i + 9) % 10;
-                        const stability = Math.abs(D[nextIdx] - D[prevIdx]);
-                        return { ...c, stability };
-                    }).sort((a, b) => a.stability - b.stability);
+                if (isModerateMarket && candidateIndices.length > 0) {
+                    candidateIndices.forEach(i => {
+                        const nextIdx = (i + 1) % 10;
+                        const prevIdx = (i + 9) % 10;
+                        
+                        // LD: Local Dominance (Stronger than immediate neighbors)
+                        const ld = D[i] - (D[prevIdx] + D[nextIdx]) / 2;
+                        
+                        // S: Smoothness (Difference between neighbors)
+                        const s = Math.abs(D[nextIdx] - D[prevIdx]);
 
-                    const bestCandidate = scoredCandidates[0];
-                    if (bestCandidate.stability < 4.0) { // Small stability rule
-                        entryDigit = bestCandidate.i;
+                        if (ld > 0) {
+                            const score = D[i] + ld - s;
+                            if (score > bestFinalScore) {
+                                bestFinalScore = score;
+                                entryDigit = i;
+                                bestLD = ld;
+                                bestS = s;
+                            }
+                        }
+                    });
+
+                    if (entryDigit !== null) {
                         tradeType = 'MATCHES';
-                        bestStability = bestCandidate.stability;
-                        
-                        // Normalized MarketScore for Ranking
-                        const mean = P.reduce((a, b) => a + b) / 10;
-                        const variance = P.reduce((sum, p) => sum + Math.pow(p - mean, 2), 0) / 10;
-                        const SS = 1 - (Math.sqrt(variance) / 10);
-                        
-                        confidence = Math.min(99.9, 70 + (CI * 0.1) + (SS * 10) - (bestStability * 2));
+                        // Confidence: Weighted blend of FinalScore and Market Stability
+                        confidence = Math.min(99.9, 60 + (bestFinalScore * 10) + (SS * 20));
                     }
                 }
 
@@ -200,8 +210,9 @@ export function Dashboard() {
                         marketId,
                         marketName,
                         ci: CI,
-                        ss: 0.8, // Fallback SS
-                        stability: bestStability,
+                        ss: SS,
+                        stability: bestS,
+                        localDominance: bestLD,
                         marketScore: confidence,
                         tradeType,
                         entryDigit,
