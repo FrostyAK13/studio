@@ -1,3 +1,4 @@
+
 'use client';
 
 import * as React from 'react';
@@ -130,6 +131,12 @@ export function InsightView({ globalResults, activeScanId }: InsightViewProps) {
                                                             className="h-full bg-gradient-to-r from-primary to-emerald-500 rounded-full shadow-[0_0_15px_rgba(16,185,129,0.6)]" 
                                                         />
                                                     </div>
+                                                </div>
+                                                <div className="p-4 bg-white/5 rounded-2xl border border-white/5">
+                                                    <p className="text-[8px] font-black text-primary uppercase tracking-widest mb-2">EXECUTION RULE</p>
+                                                    <p className="text-[10px] font-bold text-white uppercase leading-relaxed">
+                                                        "Trade on first appearance of {topSniperMatch.entryDigit}, re-enter only after {topSniperMatch.entryDigit} repeats consecutively."
+                                                    </p>
                                                 </div>
                                                 <p className="text-[13px] font-medium text-foreground leading-relaxed italic border-l-4 border-emerald-500/40 pl-6 py-1">
                                                     "Sniper model identifies optimal structural flow in {topSniperMatch.marketName}. Digit {topSniperMatch.entryDigit} selected via multi-factor cluster analysis. Enter MATCHES exclusively upon manifestation."

@@ -1,3 +1,4 @@
+
 'use client';
 
 import * as React from 'react';
@@ -138,11 +139,18 @@ export function Dashboard() {
                 const D = P.map(p => p - 10);
 
                 // Sniper Step 2: Market Quality Score
+                // CI = sum(D[i]^2)
                 const CI = D.reduce((sum, d) => sum + Math.pow(d, 2), 0);
+                
+                // SS = 1 - standard deviation of P[i] (Normalized roughly)
                 const mean = P.reduce((a, b) => a + b) / 10;
                 const stdDev = Math.sqrt(P.map(x => Math.pow(x - mean, 2)).reduce((a, b) => a + b) / 10);
                 const SS = 1 - (stdDev / 10); 
+                
+                // DE (Directional Edge) - Higher CI for Matches is better
                 const DE = Math.max(...D);
+                
+                // CS (Cluster Strength) - Top 3 deviations
                 const CS = [...D].sort((a, b) => b - a).slice(0, 3).reduce((a, b) => a + Math.abs(b), 0);
 
                 // Weights: Direction > CI > SS > CS
