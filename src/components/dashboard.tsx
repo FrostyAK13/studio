@@ -364,7 +364,7 @@ export function Dashboard() {
                         <TabsContent value="global-scan" className="mt-0 outline-none animate-in fade-in duration-500">
                             <ScannerView price={Number(price) || 0} lastDigitTicks={analyzedDigits} priceHistory={analyzedPrices} maxTicks={maxTicks} handleMaxTicksChange={handleMaxTicksChange} handleMaxTicksBlur={handleMaxTicksBlur} selectedMarket={selectedMarket} onMarketChange={setSelectedMarket} decimalPlaces={decimalPlaces} />
                         </TabsContent>
-                        <TabsContent value="chart" className="mt-0 outline-none animate-in fade-in duration-500 h-[80vh]">
+                        <TabsContent value="chart" className="mt-0 outline-none animate-in fade-in duration-500 h-[88vh]">
                             <DerivChart 
                                 priceHistory={priceHistory} 
                                 tickTimestamps={tickTimestamps} 
