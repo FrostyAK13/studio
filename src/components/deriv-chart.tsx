@@ -3,7 +3,7 @@
 
 import * as React from 'react';
 import { createChart, ColorType, IChartApi, ISeriesApi, UTCTimestamp } from 'lightweight-charts';
-import { AreaChart, CandlestickChart, Triangle, ChevronDown, Search, Undo2, Redo2, Maximize2, Camera, FunctionSquare } from 'lucide-react';
+import { AreaChart, CandlestickChart, Triangle, ChevronDown, Search, Undo2, Redo2, Maximize2, Camera, FunctionSquare, Star } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { motion } from 'framer-motion';
@@ -37,6 +37,16 @@ const timeIntervals = [
     { label: '4h', id: '4h', category: 'HOURS' },
     { label: '8h', id: '8h', category: 'HOURS' },
     { label: '24h', id: '1d', category: 'HOURS' },
+];
+
+const indicatorScripts = [
+  "Bollinger Bands",
+  "Bollinger Bands Width",
+  "Double EMA",
+  "MACD",
+  "Moving Average Exponential",
+  "Relative Strength Index",
+  "Stochastic RSI"
 ];
 
 const DigitStatsOverlay = ({ ticks }: { ticks: number[] }) => {
@@ -129,9 +139,11 @@ export function DerivChart({
     const candleSeriesRef = React.useRef<ISeriesApi<"Candlestick"> | null>(null);
     const [chartType, setChartType] = React.useState<'line' | 'candles'>('candles');
     const [searchQuery, setSearchQuery] = React.useState('');
+    const [indicatorSearch, setIndicatorSearch] = React.useState('');
 
     const currentMarket = syntheticIndices.find(m => m.id === selectedMarket);
     const filteredIndices = syntheticIndices.filter(m => m.name.toLowerCase().includes(searchQuery.toLowerCase()));
+    const filteredIndicators = indicatorScripts.filter(s => s.toLowerCase().includes(indicatorSearch.toLowerCase()));
 
     const ohlcData = React.useMemo(() => {
         if (!candleData || candleData.length === 0) return null;
@@ -221,7 +233,6 @@ export function DerivChart({
         if (!lineSeriesRef.current || !candleSeriesRef.current) return;
 
         if (candleData && candleData.length > 0) {
-            // Deduplicate and sort by time for lightweight-charts
             const uniqueData = Array.from(new Map(candleData.map(item => [item.time, item])).values())
                 .sort((a, b) => a.time - b.time)
                 .map(c => ({
@@ -337,9 +348,41 @@ export function DerivChart({
                         {chartType === 'candles' ? <CandlestickChart className="h-4 w-4" /> : <AreaChart className="h-4 w-4" />}
                     </button>
 
-                    <button className="p-2 hover:bg-slate-50 rounded transition-colors text-slate-500">
-                        <FunctionSquare className="h-4 w-4" />
-                    </button>
+                    <Popover>
+                        <PopoverTrigger asChild>
+                            <button className="p-2 hover:bg-slate-50 rounded transition-colors text-slate-500">
+                                <FunctionSquare className="h-4 w-4" />
+                            </button>
+                        </PopoverTrigger>
+                        <PopoverContent className="w-[320px] p-0 shadow-2xl border-border rounded-xl overflow-hidden">
+                            <div className="p-3 border-b bg-slate-50/50">
+                                <p className="text-[10px] font-black text-slate-400 tracking-[0.2em] mb-2 uppercase">Indicators</p>
+                                <div className="relative">
+                                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
+                                    <Input 
+                                        placeholder="Search scripts..." 
+                                        className="pl-9 h-9 border-slate-200"
+                                        value={indicatorSearch}
+                                        onChange={(e) => setIndicatorSearch(e.target.value)}
+                                    />
+                                </div>
+                            </div>
+                            <div className="max-h-[300px] overflow-y-auto no-scrollbar">
+                                <div className="p-1">
+                                    <p className="px-3 py-2 text-[10px] font-black text-slate-300 uppercase tracking-widest">Script Name</p>
+                                    {filteredIndicators.map((script) => (
+                                        <button 
+                                            key={script}
+                                            className="w-full flex items-center gap-3 px-3 py-2.5 hover:bg-slate-50 transition-colors group text-left"
+                                        >
+                                            <Star className="h-3.5 w-3.5 text-amber-400 fill-amber-400" />
+                                            <span className="text-[11px] font-bold text-slate-700 group-hover:text-primary">{script}</span>
+                                        </button>
+                                    ))}
+                                </div>
+                            </div>
+                        </PopoverContent>
+                    </Popover>
 
                     <div className="w-px h-6 bg-slate-200 mx-1" />
 
