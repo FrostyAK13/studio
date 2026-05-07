@@ -110,10 +110,10 @@ export const DigitFrequencyCircles = ({
                     <span className="w-1 h-1 rounded-full bg-border" />
                     <span>{marketName.toUpperCase()}</span>
                 </div>
-                <h2 className="text-sm font-black uppercase tracking-[0.4em] text-foreground">FREQUENCY</h2>
+                <h2 className="text-[10px] font-black uppercase tracking-[0.4em] text-foreground">LAST DIGIT PREDICTION</h2>
             </div>
             <CardContent className="p-6 sm:p-10">
-                <div className="grid grid-cols-2 xs:grid-cols-3 sm:grid-cols-5 gap-3 sm:gap-4">
+                <div className="grid grid-cols-5 gap-3 sm:gap-4">
                     {digitData.map((data) => (
                         <DigitCard 
                             key={data.index} 

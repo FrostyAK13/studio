@@ -1,3 +1,4 @@
+
 'use client';
 
 import * as React from 'react';
@@ -25,6 +26,25 @@ interface AnalyzerViewProps {
     decimalPlaces: number;
     tickTimestamps: number[];
 }
+
+const HeroPrice = ({ price, decimalPlaces }: { price: number; decimalPlaces: number }) => {
+    const priceStr = price.toFixed(decimalPlaces);
+    const mainPart = priceStr.slice(0, -1);
+    const lastDigit = priceStr.slice(-1);
+
+    return (
+        <div className="flex flex-col items-center justify-center py-12 bg-transparent select-none">
+            <div className="flex items-baseline font-black tracking-tighter transition-all duration-300">
+                <span className="text-6xl sm:text-8xl text-foreground">{mainPart}</span>
+                <span className="text-7xl sm:text-9xl text-primary drop-shadow-[0_0_15px_rgba(var(--primary),0.3)] ml-1">{lastDigit}</span>
+            </div>
+            <div className="mt-4 flex items-center gap-2 bg-muted/50 px-4 py-1 rounded-full border border-border">
+                <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+                <span className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground">LIVE TICK FEED</span>
+            </div>
+        </div>
+    );
+};
 
 const CheatSheet = ({ type }: { type: string }) => {
     const guides: Record<string, { title: string, logic: string, tip: string }> = {
@@ -183,6 +203,8 @@ export function AnalyzerView({
 
     return (
         <div className="space-y-6 animate-in fade-in slide-in-from-bottom-8 duration-1000 pb-24 max-w-7xl mx-auto">
+            <HeroPrice price={price} decimalPlaces={decimalPlaces} />
+            
             <Card className="border-none shadow-sm bg-card rounded-xl border border-border">
                 <CardContent className="p-4 grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div className="space-y-1.5">
@@ -226,6 +248,8 @@ export function AnalyzerView({
                     </div>
                 </CardContent>
             </Card>
+
+            <DigitFrequencyCircles ticks={lastDigitTicks} selectedDigit={selectedDigit} onDigitSelect={setSelectedDigit} selectedMarket={selectedMarket} />
 
             <Card className="border-none bg-card rounded-2xl border border-border shadow-2xl overflow-hidden relative">
                 <div className="absolute top-0 left-0 w-full h-[2px] bg-gradient-to-r from-primary via-cyan-400 to-primary" />
@@ -286,8 +310,6 @@ export function AnalyzerView({
                     {renderPattern()}
                 </div>
             </Card>
-
-            <DigitFrequencyCircles ticks={lastDigitTicks} selectedDigit={selectedDigit} onDigitSelect={setSelectedDigit} selectedMarket={selectedMarket} />
         </div>
     );
 }
