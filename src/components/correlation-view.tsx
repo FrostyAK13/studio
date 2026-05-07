@@ -1,12 +1,11 @@
+
 'use client';
 
 import * as React from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Label } from '@/components/ui/label';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Card, CardContent } from '@/components/ui/card';
 import { syntheticIndices } from '@/lib/mock-data';
 import { cn } from '@/lib/utils';
-import { Network, Cpu, Layers, ArrowRight, Triangle } from 'lucide-react';
+import { Triangle } from 'lucide-react';
 
 interface CorrelationViewProps {
     selectedMarket: string;
@@ -36,14 +35,24 @@ export const DigitFrequencyCircles = ({
         const counts = Array(10).fill(0);
         ticks.forEach(d => { if (d >= 0 && d <= 9) counts[d]++; });
         const total = ticks.length || 1;
-        const mapped = counts.map((count, index) => ({ index, count, percentage: (count / total) * 100 }));
+        
+        const mapped = counts.map((count, index) => {
+            let gap = 0;
+            for (let i = 0; i < ticks.length; i++) {
+                if (ticks[i] === index) break;
+                gap++;
+            }
+            return { index, count, percentage: (count / total) * 100, gap };
+        });
+
         const sorted = [...mapped].sort((a, b) => b.count - a.count);
+        
         return {
             digitData: mapped.map(item => {
                 let colorClass = "text-muted-foreground"; 
-                if (total > 50) {
-                    if (item.count === sorted[0].count) colorClass = "text-[#2dd4bf]";
-                    else if (item.count === sorted[sorted.length - 1].count) colorClass = "text-[#ea580c]";
+                if (total > 20) {
+                    if (item.count === sorted[0].count) colorClass = "text-emerald-500";
+                    else if (item.count === sorted[sorted.length - 1].count) colorClass = "text-rose-500";
                 }
                 return { ...item, colorClass };
             }),
@@ -51,30 +60,52 @@ export const DigitFrequencyCircles = ({
         };
     }, [ticks]);
 
-    const DigitCircle = ({ digit, percentage, colorClass, isLast, isSelected }: { 
-        digit: number, percentage: number, colorClass: string, isLast: boolean, isSelected: boolean 
+    const DigitCard = ({ digit, percentage, colorClass, isLast, isSelected, gap }: { 
+        digit: number, percentage: number, colorClass: string, isLast: boolean, isSelected: boolean, gap: number 
     }) => {
         return (
-            <div className="flex flex-col items-center relative cursor-pointer group transition-all" onClick={() => onDigitSelect(digit)}>
-                <div className={cn("relative w-16 h-16 sm:w-20 md:w-24 rounded-full flex items-center justify-center border-2", isSelected ? "bg-muted/50 border-primary scale-110" : "bg-card border-transparent")}>
-                    <svg className="absolute inset-0 w-full h-full -rotate-90">
-                        <circle cx="50%" cy="50%" r="42%" stroke="currentColor" strokeWidth="6" fill="transparent" className="text-muted/20" />
-                        <circle cx="50%" cy="50%" r="42%" stroke={isSelected ? "hsl(var(--primary))" : "currentColor"} strokeWidth="8" fill="transparent" pathLength="100" strokeDasharray="100" strokeDashoffset={100 - percentage} strokeLinecap="round" className={cn("transition-all duration-1000", isSelected ? "" : colorClass)} />
-                    </svg>
-                    <div className="flex flex-col items-center justify-center z-10 leading-none">
-                        <span className={cn("text-xl sm:text-2xl font-black", isSelected ? "text-primary" : "text-foreground")}>{digit}</span>
-                        <span className={cn("text-[8px] sm:text-[10px] font-bold mt-0.5", isSelected ? "text-primary/60" : "text-muted-foreground")}>{percentage.toFixed(1)}%</span>
+            <div 
+                onClick={() => onDigitSelect(digit)}
+                className={cn(
+                    "relative flex flex-col items-center justify-center p-3 sm:p-5 rounded-[1.2rem] border transition-all cursor-pointer group shadow-sm",
+                    isSelected 
+                        ? "bg-slate-950 border-slate-900 text-white scale-105 z-10 shadow-xl" 
+                        : "bg-white dark:bg-slate-900/50 border-slate-100 dark:border-white/5 hover:border-primary/20 hover:bg-slate-50 dark:hover:bg-slate-900"
+                )}
+            >
+                <span className={cn(
+                    "text-xl sm:text-3xl font-black mb-1",
+                    isSelected ? "text-white" : "text-slate-800 dark:text-slate-100"
+                )}>
+                    {digit}
+                </span>
+                <span className={cn(
+                    "text-[9px] sm:text-[11px] font-black tabular-nums",
+                    isSelected ? "text-slate-400" : colorClass
+                )}>
+                    {percentage.toFixed(1)}%
+                </span>
+                
+                {isLast && (
+                    <div className="absolute -bottom-1 left-1/2 -translate-x-1/2">
+                        <Triangle className={cn("w-2.5 h-2.5 fill-primary text-primary")} />
                     </div>
-                </div>
-                <div className="h-4 mt-1">{isLast && <Triangle className="w-2.5 h-2.5 fill-muted-foreground text-muted-foreground" />}</div>
+                )}
+                
+                {isSelected && (
+                    <div className="absolute top-2 right-2 flex flex-col items-end opacity-40">
+                        <span className="text-[6px] font-black uppercase tracking-widest text-white/50">GAP</span>
+                        <span className="text-[8px] font-black text-white leading-none">{gap}</span>
+                    </div>
+                )}
             </div>
         );
     };
 
     return (
-        <Card className="overflow-hidden border-none shadow-sm bg-card rounded-2xl border border-border">
-            <div className="px-6 sm:px-12 pt-6 sm:pt-8 flex flex-col sm:flex-row items-center justify-between gap-4">
-                <div className="flex items-center gap-3 bg-muted px-5 py-2 rounded-full text-[10px] text-muted-foreground font-black uppercase tracking-widest">
+        <Card className="overflow-hidden border-none shadow-sm bg-muted/20 dark:bg-card/20 rounded-[2rem] border border-border">
+            <div className="px-8 pt-8 flex flex-col sm:flex-row items-center justify-between gap-4">
+                <div className="flex items-center gap-3 bg-white dark:bg-slate-900 px-5 py-2 rounded-full text-[10px] text-muted-foreground font-black uppercase tracking-widest border border-slate-100 dark:border-white/5 shadow-sm">
                     <span>SAMPLE: {ticks.length}</span>
                     <span className="w-1 h-1 rounded-full bg-border" />
                     <span>{marketName.toUpperCase()}</span>
@@ -82,9 +113,18 @@ export const DigitFrequencyCircles = ({
                 <h2 className="text-sm font-black uppercase tracking-[0.4em] text-foreground">FREQUENCY</h2>
             </div>
             <CardContent className="p-6 sm:p-10">
-                <div className="space-y-8 sm:space-y-12">
-                    <div className="grid grid-cols-5 gap-3 sm:gap-6">{digitData.slice(0, 5).map((data) => (<DigitCircle key={data.index} digit={data.index} percentage={data.percentage} colorClass={data.colorClass} isLast={lastDigit === data.index} isSelected={selectedDigit === data.index} />))}</div>
-                    <div className="grid grid-cols-5 gap-3 sm:gap-6">{digitData.slice(5, 10).map((data) => (<DigitCircle key={data.index} digit={data.index} percentage={data.percentage} colorClass={data.colorClass} isLast={lastDigit === data.index} isSelected={selectedDigit === data.index} />))}</div>
+                <div className="grid grid-cols-2 xs:grid-cols-3 sm:grid-cols-5 gap-3 sm:gap-4">
+                    {digitData.map((data) => (
+                        <DigitCard 
+                            key={data.index} 
+                            digit={data.index} 
+                            percentage={data.percentage} 
+                            colorClass={data.colorClass} 
+                            isLast={lastDigit === data.index} 
+                            isSelected={selectedDigit === data.index}
+                            gap={data.gap}
+                        />
+                    ))}
                 </div>
             </CardContent>
         </Card>
