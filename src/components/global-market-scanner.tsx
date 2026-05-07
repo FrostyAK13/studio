@@ -1,4 +1,3 @@
-
 'use client';
 
 import * as React from 'react';
@@ -41,7 +40,7 @@ export function GlobalMarketScanner({
                 <CardHeader className="text-center pt-8 px-4">
                     <div className="flex flex-col items-center gap-3">
                         <Network className="h-8 w-8 text-primary animate-pulse" />
-                        <CardTitle className="text-[12px] font-black uppercase tracking-[0.5em] text-foreground">MARKET SCANNER</CardTitle>
+                        <CardTitle className="text-[12px] font-black uppercase tracking-[0.5em] text-foreground">SCANNER</CardTitle>
                     </div>
                 </CardHeader>
                 <CardContent className="p-6 space-y-8">
@@ -51,7 +50,7 @@ export function GlobalMarketScanner({
                                 <motion.div key="loading" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="text-center space-y-4">
                                     <div className="flex items-center gap-3 bg-primary/10 px-6 py-2 rounded-full border border-primary/20">
                                         <Activity className="h-4 w-4 text-primary animate-spin" />
-                                        <span className="text-[10px] font-black uppercase tracking-widest text-primary">BACKGROUND SURVEILLANCE ACTIVE</span>
+                                        <span className="text-[10px] font-black uppercase tracking-widest text-primary">SURVEILLANCE ACTIVE</span>
                                     </div>
                                     <p className="text-[8px] font-black text-muted-foreground uppercase tracking-[0.4em]">SYNCING GLOBAL VECTORS: {activeScanId}</p>
                                 </motion.div>
@@ -102,7 +101,7 @@ export function GlobalMarketScanner({
 
                                     <div className="p-6 bg-background rounded-[2rem] border border-border shadow-inner">
                                         <p className="text-[9px] font-black text-primary uppercase tracking-widest mb-2 flex items-center gap-2">
-                                            <ShieldCheck className="h-4 w-4" /> // MARKET SYNOPSIS
+                                            <ShieldCheck className="h-4 w-4" /> // SYNOPSIS
                                         </p>
                                         <p className="text-[11px] sm:text-[13px] font-medium text-foreground leading-relaxed italic">
                                             "Background engine identifies a stable mid-zone flow in {bestOpportunity.marketName}. Correctly positioned for {bestOpportunity.scannerStrategy} payoffs with high structural stability."
@@ -117,4 +116,3 @@ export function GlobalMarketScanner({
         </div>
     );
 }
-

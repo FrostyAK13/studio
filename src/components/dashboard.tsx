@@ -317,7 +317,7 @@ export function Dashboard() {
                             <div className="flex items-center bg-card border border-border rounded-full shadow-2xl h-8 md:h-10 px-0.5 md:px-1 overflow-hidden">
                                 <div className="flex items-center gap-1.5 md:gap-3 px-2 md:px-5 py-1 md:py-2 border-r border-border">
                                     <div className={cn("h-2 w-2 md:h-2.5 md:w-2.5 rounded-full animate-pulse transition-all duration-500", surveillanceStatus === 'active' ? "bg-emerald-500 shadow-[0_0_12px_rgba(16,185,129,0.9)]" : "bg-rose-500 shadow-[0_0_12px_rgba(244,63,94,0.9)]")} />
-                                    <span className="text-[7px] md:text-[10px] font-black text-foreground uppercase tracking-[0.2em] md:tracking-[0.3em] hidden sm:inline">SURVEILLANCE</span>
+                                    <span className="text-[7px] md:text-[10px] font-black text-foreground uppercase tracking-[0.2em] md:tracking-[0.3em] hidden sm:inline">LIVE</span>
                                 </div>
                                 <div className="flex items-center gap-1 md:gap-2 px-2 md:px-5 py-1 md:py-2 bg-muted/30">
                                     <Radio className={cn("h-3 w-3 md:h-3.5 md:w-3.5 transition-all duration-500", surveillanceStatus === 'active' ? 'text-emerald-500 animate-pulse' : 'text-rose-500')} />

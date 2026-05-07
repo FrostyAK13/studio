@@ -29,22 +29,22 @@ interface AnalyzerViewProps {
 const CheatSheet = ({ type }: { type: string }) => {
     const guides: Record<string, { title: string, logic: string, tip: string }> = {
         'over-under': {
-            title: 'OVER/UNDER PROTOCOL',
+            title: 'OVER/UNDER',
             logic: 'Monitors barrier saturation. 100+1 logic triggers when a 15%+ frequency skew is detected in specific digit ranges.',
             tip: 'Target Over 2 when Under 2 digits show extreme exhaustion (>15 ticks gap).'
         },
         'even-odd': {
-            title: 'EVEN/ODD PARITY',
+            title: 'EVEN/ODD',
             logic: 'Tracks recursive binary patterns. Probability pivots after 4-5 consecutive streaks of a single parity.',
             tip: 'Wait for 5x Even streak before entering Odd for immediate mean reversion.'
         },
         'matches-differs': {
-            title: 'MATCH/DIFF VARIANCE',
+            title: 'MATCH/DIFF',
             logic: 'Zero-Error protocol focusing on the 90% probability of Differ. Analyzes cold-digit cycles.',
             tip: 'Differ the "Hottest" digit for maximum stability, or wait for the digit to appear before execution.'
         },
         'rise-fall': {
-            title: 'MOMENTUM VECTOR',
+            title: 'MOMENTUM',
             logic: 'Calculates Rate of Change (ROC) and EMA crossovers in the last 10 ticks.',
             tip: 'Execution is safest during high-flow intervals (Tick pacing < 1000ms).'
         }
@@ -230,7 +230,7 @@ export function AnalyzerView({
                     </div>
                     <div className="space-y-1.5">
                         <div className="flex items-center justify-between px-2">
-                            <Label className="text-[9px] font-black uppercase tracking-[0.4em] text-primary">TACTICAL STRATEGY</Label>
+                            <Label className="text-[9px] font-black uppercase tracking-[0.4em] text-primary">TACTICAL</Label>
                             <Popover>
                                 <PopoverTrigger asChild>
                                     <Button variant="ghost" size="icon" className="h-5 w-5 hover:bg-primary/10 text-primary">
@@ -267,13 +267,13 @@ export function AnalyzerView({
                                     <Crosshair className="h-4 w-4 text-primary" />
                                 </div>
                                 <div>
-                                    <h3 className="text-[9px] font-black text-foreground tracking-[0.3em] uppercase leading-none">ANALYSIS HUD</h3>
+                                    <h3 className="text-[9px] font-black text-foreground tracking-[0.3em] uppercase leading-none">ANALYSIS</h3>
                                     <p className="text-[7px] font-bold text-muted-foreground uppercase tracking-widest mt-1.5">{analysis.summary}</p>
                                 </div>
                             </div>
                             <div className="pt-1">
                                 <p className="text-[9px] font-medium text-muted-foreground leading-relaxed italic border-l-2 border-primary/30 pl-3">
-                                    "STABILITY PROTOCOL: Safety index identifies a <span className={cn("font-black px-1 py-0.5 rounded-md", analysis.isStable ? "text-emerald-600 bg-emerald-500/10" : "text-amber-600 bg-amber-500/10")}>{analysis.isStable ? "HIGH" : "LOW"}</span> reliability vector."
+                                    "STABILITY: Safety index identifies a <span className={cn("font-black px-1 py-0.5 rounded-md", analysis.isStable ? "text-emerald-600 bg-emerald-500/10" : "text-amber-600 bg-amber-500/10")}>{analysis.isStable ? "HIGH" : "LOW"}</span> reliability vector."
                                 </p>
                             </div>
                         </div>
@@ -314,7 +314,7 @@ export function AnalyzerView({
                 <div className="flex flex-col sm:flex-row items-center justify-between gap-4 mb-6">
                     <div className="flex items-center gap-3">
                         <div className="w-1.5 h-1.5 rounded-full bg-primary animate-pulse shadow-[0_0_8px_hsl(var(--primary))]" />
-                        <h3 className="text-[10px] font-black uppercase tracking-[0.4em] text-foreground">STREAM SEQUENCE</h3>
+                        <h3 className="text-[10px] font-black uppercase tracking-[0.4em] text-foreground">SEQUENCE</h3>
                     </div>
                     <div className="flex items-center gap-2 px-4 py-1.5 bg-card rounded-full border border-border shadow-sm">
                          <div className="h-2 w-2 rounded-full bg-blue-500 animate-pulse" />

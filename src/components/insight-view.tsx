@@ -125,15 +125,15 @@ export function InsightView({ globalResults, activeScanId, dashboardPrice, dashb
                                 <Crosshair className="h-7 w-7 text-primary animate-pulse" />
                             </div>
                             <div>
-                                <CardTitle className="text-2xl font-black text-white tracking-tighter uppercase leading-none">PROBABILITY FLOW v8.5+</CardTitle>
-                                <CardDescription className="text-[10px] font-black text-primary uppercase tracking-[0.4em] mt-3">SNIPER SURVEILLANCE</CardDescription>
+                                <CardTitle className="text-2xl font-black text-white tracking-tighter uppercase leading-none">PROBABILITY FLOW</CardTitle>
+                                <CardDescription className="text-[10px] font-black text-primary uppercase tracking-[0.4em] mt-3">SNIPER</CardDescription>
                             </div>
                         </div>
                         <div className="flex items-center gap-3">
                             <div className="flex items-center gap-2 px-5 py-2 bg-emerald-500/10 rounded-full border border-emerald-500/20">
                                 <div className="h-2 w-2 rounded-full bg-emerald-500 animate-ping" />
                                 <span className="text-[10px] font-black text-emerald-400 uppercase tracking-widest">
-                                    {lockedSignal ? `ACTIVE SECTOR: ${lockedSignal.marketName}` : 'SURVEILLANCE ACTIVE'}
+                                    {lockedSignal ? `SECTOR: ${lockedSignal.marketName}` : 'SURVEILLANCE'}
                                 </span>
                             </div>
                         </div>
@@ -157,13 +157,13 @@ export function InsightView({ globalResults, activeScanId, dashboardPrice, dashb
 
                                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                         <div className="bg-black/40 border border-white/5 p-4 rounded-2xl flex flex-col items-center justify-center">
-                                            <p className="text-[8px] font-black text-primary uppercase tracking-widest mb-1">CURRENT SECTOR</p>
+                                            <p className="text-[8px] font-black text-primary uppercase tracking-widest mb-1">SECTOR</p>
                                             <p className="text-sm font-black text-white truncate w-full uppercase">
                                                 {currentScanMarket?.name || 'INITIALIZING...'}
                                             </p>
                                         </div>
                                         <div className="bg-black/40 border border-white/5 p-4 rounded-2xl flex flex-col items-center justify-center">
-                                            <p className="text-[8px] font-black text-primary uppercase tracking-widest mb-1">LIVE FEED</p>
+                                            <p className="text-[8px] font-black text-primary uppercase tracking-widest mb-1">FEED</p>
                                             <p className="text-sm font-black text-emerald-400 tabular-nums">
                                                 {globalResults[activeScanId || '']?.currentPrice?.toFixed(globalResults[activeScanId || '']?.pip || 2) || 'SYNCING'}
                                             </p>
@@ -240,7 +240,7 @@ export function InsightView({ globalResults, activeScanId, dashboardPrice, dashb
                                                         {triggerDetected ? <Zap className="h-8 w-8 text-white animate-pulse" /> : <Target className="h-8 w-8 text-white/20" />}
                                                     </div>
                                                     <div>
-                                                        <p className="text-[11px] font-black text-white uppercase tracking-[0.4em]">EXECUTION GATE</p>
+                                                        <p className="text-[11px] font-black text-white uppercase tracking-[0.4em]">EXECUTION</p>
                                                         <h4 className="text-2xl font-black text-white uppercase mt-1">
                                                             {targetHit ? "SEQUENCE MATCH" : triggerDetected ? "AWAITING TARGET" : "AWAITING TRIGGER"}
                                                         </h4>
@@ -256,10 +256,10 @@ export function InsightView({ globalResults, activeScanId, dashboardPrice, dashb
 
                                             <div className="space-y-4">
                                                 <div className="flex items-center justify-between px-2">
-                                                    <p className="text-[8px] font-black text-white/40 uppercase tracking-[0.5em]">TICK STREAM</p>
+                                                    <p className="text-[8px] font-black text-white/40 uppercase tracking-[0.5em]">TICKS</p>
                                                     <div className="flex items-center gap-1.5 bg-black/40 px-3 py-1 rounded-full border border-white/5">
                                                          <div className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" />
-                                                         <span className="text-[9px] font-black text-white uppercase tracking-widest">REAL-TIME SYNC</span>
+                                                         <span className="text-[9px] font-black text-white uppercase tracking-widest">LIVE SYNC</span>
                                                     </div>
                                                 </div>
                                                 <div className="flex gap-2.5 justify-start overflow-hidden h-14 items-center">
@@ -289,7 +289,7 @@ export function InsightView({ globalResults, activeScanId, dashboardPrice, dashb
                                     <div className="lg:col-span-5 space-y-6">
                                         <Card className="bg-black/40 border-white/5 p-8 rounded-[2.5rem] space-y-8">
                                             <h4 className="text-[11px] font-black text-primary uppercase tracking-[0.5em] flex items-center gap-3">
-                                                <Cpu className="h-5 w-5" /> // STABILITY HUBS
+                                                <Cpu className="h-5 w-5" /> // ANALYSIS
                                             </h4>
                                             
                                             <div className="space-y-6">
@@ -311,7 +311,7 @@ export function InsightView({ globalResults, activeScanId, dashboardPrice, dashb
 
                                                 <div className="space-y-2">
                                                     <div className="flex justify-between px-1">
-                                                        <p className="text-[9px] font-black text-muted-foreground uppercase tracking-widest">GLOBAL STABILITY (SS)</p>
+                                                        <p className="text-[9px] font-black text-muted-foreground uppercase tracking-widest">STABILITY (SS)</p>
                                                         <p className="text-sm font-black text-cyan-400 tabular-nums">{lockedSignal.ss.toFixed(2)}</p>
                                                     </div>
                                                     <Progress value={lockedSignal.ss * 100} className="h-2 bg-white/5 [&>div]:bg-cyan-500" />
@@ -321,7 +321,7 @@ export function InsightView({ globalResults, activeScanId, dashboardPrice, dashb
                                             <div className="p-6 bg-white/5 rounded-3xl border border-white/5 space-y-4">
                                                 <div className="flex items-center gap-2">
                                                     <ShieldCheck className="h-4 w-4 text-emerald-500" />
-                                                    <p className="text-[9px] font-black text-white uppercase tracking-widest">v8.5+ EXECUTION RULE</p>
+                                                    <p className="text-[9px] font-black text-white uppercase tracking-widest">v8.5+ RULE</p>
                                                 </div>
                                                 <p className="text-[10px] font-bold text-white/80 leading-relaxed italic uppercase">
                                                     "TRIGGER ON <span className="text-primary">{lockedSignal.triggerDigit}</span>, TRADE TOWARD <span className="text-emerald-500">{lockedSignal.targetDigit}</span> ON NEXT TICK. DO NOT RE-ENTER ON SAME TRIGGER UNLESS CONSECUTIVE APPEARANCE DETECTED."
@@ -332,7 +332,7 @@ export function InsightView({ globalResults, activeScanId, dashboardPrice, dashb
                                         <div className="p-6 bg-primary/5 rounded-[2rem] border border-primary/20 flex items-center justify-between">
                                             <div className="flex items-center gap-4">
                                                 <Layers className="h-5 w-5 text-primary" />
-                                                <p className="text-[10px] font-black text-white uppercase tracking-widest">FLOW CONFIDENCE</p>
+                                                <p className="text-[10px] font-black text-white uppercase tracking-widest">CONFIDENCE</p>
                                             </div>
                                             <span className="text-xl font-black text-primary">{lockedSignal.confidence.toFixed(1)}%</span>
                                         </div>

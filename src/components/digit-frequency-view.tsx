@@ -150,7 +150,7 @@ export function DigitFrequencyView({
                         </Select>
                     </div>
                     <div className="space-y-1">
-                        <Label className="text-[7px] font-black uppercase tracking-[0.3em] text-primary ml-1">DATA HORIZON</Label>
+                        <Label className="text-[7px] font-black uppercase tracking-[0.3em] text-primary ml-1">HORIZON</Label>
                         <Input
                             type="number"
                             min="1"
@@ -174,7 +174,7 @@ export function DigitFrequencyView({
                 <div className="flex items-center justify-between px-2">
                     <div className="flex items-center gap-2">
                         <Flame className="h-3 w-3 text-rose-600" />
-                        <h3 className="text-[7px] font-black uppercase tracking-[0.4em] text-foreground">STATISTICAL Z-CORE MATRIX</h3>
+                        <h3 className="text-[7px] font-black uppercase tracking-[0.4em] text-foreground">Z-CORE</h3>
                     </div>
                     <Popover>
                         <PopoverTrigger asChild>
@@ -209,7 +209,7 @@ export function DigitFrequencyView({
                 <div className="space-y-3">
                     <div className="flex items-center gap-2 px-2">
                         <Binary className="h-3 w-3 text-blue-600" />
-                        <h3 className="text-[7px] font-black uppercase tracking-[0.4em] text-foreground">LIVE PARITY ANALYSIS</h3>
+                        <h3 className="text-[7px] font-black uppercase tracking-[0.4em] text-foreground">PARITY</h3>
                     </div>
                     <EvenOddAnalysis 
                         lastDigitTicks={lastDigitTicks}

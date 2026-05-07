@@ -290,7 +290,7 @@ const TacticalRecommendation = ({ ticks }: { ticks: number[] }) => {
                         </div>
                         <div className="w-px h-8 bg-border" />
                         <div className="text-center">
-                            <p className="text-[8px] font-black text-muted-foreground uppercase tracking-widest mb-1">PROTOCOL</p>
+                            <p className="text-[8px] font-black text-muted-foreground uppercase tracking-widest mb-1">100+1</p>
                             <p className="text-lg font-black text-primary leading-none">100+1</p>
                         </div>
                     </div>
@@ -365,7 +365,7 @@ export function ScannerView({
                 <Card className="border-none shadow-sm bg-card rounded-xl p-4 flex flex-col justify-between border border-border relative overflow-hidden">
                     <div className="absolute top-0 right-0 p-2 opacity-10"><Radio size={24} className="text-primary" /></div>
                     <div>
-                        <p className="text-[8px] font-black uppercase tracking-[0.3em] text-primary mb-2">MARKET BIAS</p>
+                        <p className="text-[8px] font-black uppercase tracking-[0.3em] text-primary mb-2">BIAS</p>
                         <span className="text-2xl font-black text-foreground tracking-tighter tabular-nums">{globalBias.toFixed(0)}</span>
                     </div>
                     <div className="space-y-1 mt-2">
@@ -381,14 +381,14 @@ export function ScannerView({
             <div className="space-y-4 pb-24">
                 <div className="flex items-center gap-2 px-2">
                     <ShieldCheck className="h-4 w-4 text-primary" />
-                    <h2 className="text-[8px] font-black uppercase tracking-[0.4em] text-foreground">TACTICAL RECOMMENDATION</h2>
+                    <h2 className="text-[8px] font-black uppercase tracking-[0.4em] text-foreground">TACTICAL</h2>
                 </div>
 
                 <TacticalRecommendation ticks={lastDigitTicks} />
 
                 <div className="flex items-center gap-2 px-2 mt-8">
                     <Activity className="h-4 w-4 text-primary" />
-                    <h2 className="text-[8px] font-black uppercase tracking-[0.4em] text-foreground">ACTIVE SURVEILLANCE</h2>
+                    <h2 className="text-[8px] font-black uppercase tracking-[0.4em] text-foreground">SURVEILLANCE</h2>
                 </div>
 
                 <DigitFrequencyCircles 

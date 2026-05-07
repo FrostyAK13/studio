@@ -129,7 +129,7 @@ export function EvenOddAnalysis({ lastDigitTicks, selectedMarket, price, decimal
             <CardContent className="p-4">
                 <div className="flex justify-between items-start mb-4 gap-2">
                     <div>
-                        <h3 className="text-[10px] font-black tracking-widest uppercase text-primary">PARITY SURVEILLANCE</h3>
+                        <h3 className="text-[10px] font-black tracking-widest uppercase text-primary">PARITY</h3>
                         <p className="text-[7px] text-muted-foreground font-black tracking-[0.2em] uppercase truncate">{marketName}</p>
                     </div>
                     <div className="text-right">
@@ -173,7 +173,7 @@ export function EvenOddAnalysis({ lastDigitTicks, selectedMarket, price, decimal
                 {!analysisResult ? (
                     <div className="flex flex-col items-center justify-center py-6 gap-3 opacity-20">
                         <Activity className="h-10 w-10 text-muted-foreground animate-pulse" />
-                        <p className="text-[8px] font-black uppercase tracking-[0.4em] text-center">INITIALIZING ENGINE // ACCUMULATING DATA</p>
+                        <p className="text-[8px] font-black uppercase tracking-[0.4em] text-center">INITIALIZING // ACCUMULATING</p>
                     </div>
                 ) : (
                     <div className="flex flex-col lg:flex-row items-center justify-between gap-6">
@@ -223,14 +223,14 @@ export function EvenOddAnalysis({ lastDigitTicks, selectedMarket, price, decimal
                                 <Popover>
                                     <PopoverTrigger asChild>
                                         <div className="cursor-help group">
-                                            <p className="text-[8px] font-black text-muted-foreground uppercase tracking-widest mb-1 group-hover:text-primary transition-colors">PROTOCOL</p>
+                                            <p className="text-[8px] font-black text-muted-foreground uppercase tracking-widest mb-1 group-hover:text-primary transition-colors">V8.1</p>
                                             <p className="text-lg font-black text-primary leading-none">V8.1</p>
                                         </div>
                                     </PopoverTrigger>
                                     <PopoverContent className="w-64 bg-card border-border shadow-2xl rounded-2xl p-4">
                                         <div className="space-y-3">
                                             <h4 className="text-[10px] font-black text-primary uppercase tracking-widest flex items-center gap-2">
-                                                <Activity className="h-3 w-3" /> ADVANCED PARITY V8.1
+                                                <Activity className="h-3 w-3" /> PARITY V8.1
                                             </h4>
                                             <p className="text-[9px] font-medium text-foreground leading-relaxed italic border-l-2 border-primary/30 pl-3">
                                                 "Extracts edge via deviation from equilibrium, structural stability, and neighbor variance filters."

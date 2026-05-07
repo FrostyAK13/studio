@@ -129,7 +129,7 @@ export const DigitFrequencyCircles = ({
                     <span className="w-1 h-1 rounded-full bg-border" />
                     <span>{marketName.toUpperCase()}</span>
                 </div>
-                <h2 className="text-sm font-black uppercase tracking-[0.4em] text-foreground">DIGIT FREQUENCY</h2>
+                <h2 className="text-sm font-black uppercase tracking-[0.4em] text-foreground">FREQUENCY</h2>
             </div>
             <CardContent className="p-6 sm:p-10">
                 <div className="space-y-8 sm:space-y-12">
@@ -178,7 +178,7 @@ export const DigitAnalysisMatrix = ({ digit, ticks }: { digit: number, ticks: nu
                             <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center border border-primary/20">
                                 <Network className="h-5 w-5 text-primary" />
                             </div>
-                            <CardTitle className="text-xl font-black text-foreground tracking-tight uppercase leading-none">DIGIT ANALYSIS</CardTitle>
+                            <CardTitle className="text-xl font-black text-foreground tracking-tight uppercase leading-none">ANALYSIS</CardTitle>
                         </div>
                         <div className="bg-muted/50 border border-border px-6 py-2 rounded-2xl flex items-center gap-4 shadow-sm">
                             <div className="text-center">
@@ -193,7 +193,7 @@ export const DigitAnalysisMatrix = ({ digit, ticks }: { digit: number, ticks: nu
                         <div className="space-y-3 p-5 rounded-[1.5rem] bg-muted/30 border border-border shadow-inner">
                             <div className="flex items-center justify-between border-b border-border pb-3 mb-4">
                                 <h4 className="text-[10px] font-black uppercase tracking-widest text-muted-foreground flex items-center gap-2">
-                                    <Cpu className="h-4 w-4 text-emerald-600" /> SUCCESSION BIAS
+                                    <Cpu className="h-4 w-4 text-emerald-600" /> BIAS
                                 </h4>
                             </div>
                             <div className="grid grid-cols-5 gap-3">
@@ -208,7 +208,7 @@ export const DigitAnalysisMatrix = ({ digit, ticks }: { digit: number, ticks: nu
                         <div className="space-y-3 p-5 rounded-[1.5rem] bg-muted/30 border border-border shadow-inner">
                             <div className="flex items-center justify-between border-b border-border pb-3 mb-4">
                                 <h4 className="text-[10px] font-black uppercase tracking-widest text-muted-foreground flex items-center gap-2">
-                                    <Layers className="h-4 w-4 text-blue-600" /> RECURSION MATRIX
+                                    <Layers className="h-4 w-4 text-blue-600" /> RECURSION
                                 </h4>
                             </div>
                             <div className="grid grid-cols-2 gap-3">
@@ -260,13 +260,13 @@ export function CorrelationView({
                         </Select>
                     </div>
                     <div className="space-y-2 text-center">
-                        <Label className="text-[10px] font-black uppercase tracking-widest text-primary">LIVE PRICE</Label>
+                        <Label className="text-[10px] font-black uppercase tracking-widest text-primary">PRICE</Label>
                         <div className="h-14 bg-primary text-primary-foreground rounded-[1.25rem] flex items-center justify-center shadow-md border border-white/10">
                              <span className="text-2xl font-black tabular-nums">{price.toFixed(decimalPlaces)}</span>
                         </div>
                     </div>
                     <div className="space-y-2 text-center">
-                        <Label className="text-[10px] font-black uppercase tracking-widest text-primary">SAMPLE HORIZON</Label>
+                        <Label className="text-[10px] font-black uppercase tracking-widest text-primary">HORIZON</Label>
                         <div className="h-14 bg-muted/50 border-border rounded-[1.25rem] flex items-center justify-center font-black text-3xl text-primary shadow-inner">{lastDigitTicks.length}</div>
                     </div>
                 </CardContent>
