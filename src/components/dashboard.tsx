@@ -1,4 +1,3 @@
-
 'use client';
 
 import * as React from 'react';
@@ -10,10 +9,12 @@ import { DigitFrequencyView } from './digit-frequency-view';
 import { InsightView } from './insight-view';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
-import { RefreshCw, Radio, Activity, Moon, Sun, ExternalLink } from 'lucide-react';
+import { RefreshCw, Radio, Activity, Moon, Sun, ExternalLink, ChevronDown, Search, TrendingUp, TrendingDown } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { LockScreen } from './lock-screen';
 import { DerivChart } from './deriv-chart';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { Input } from '@/components/ui/input';
 
 type EngineStatus = 'offline' | 'active';
 
@@ -49,6 +50,7 @@ export function Dashboard() {
     const [surveillanceStatus, setSurveillanceStatus] = React.useState<EngineStatus>('offline');
     const [globalResults, setGlobalResults] = React.useState<Record<string, GlobalAnalysisResult>>({});
     const [activeScanId, setActiveScanId] = React.useState<string | null>(null);
+    const [searchQuery, setSearchQuery] = React.useState('');
 
     const currentMarketRef = React.useRef(selectedMarket);
     const pipSizeRef = React.useRef<number | null>(null);
@@ -256,6 +258,9 @@ export function Dashboard() {
 
     const handleMaxTicksBlur = () => { if (maxTicks < 1) setMaxTicks(1); };
 
+    const currentMarket = syntheticIndices.find(m => m.id === selectedMarket);
+    const filteredIndices = syntheticIndices.filter(m => m.name.toLowerCase().includes(searchQuery.toLowerCase()));
+
     if (!mounted) return <div className="flex min-h-screen items-center justify-center bg-background"><Activity className="h-4 w-4 animate-spin text-primary" /></div>;
 
     const analyzedDigits = lastDigitTicks.slice(0, maxTicks);
@@ -269,33 +274,108 @@ export function Dashboard() {
 
             <div className={cn("flex flex-col flex-1 transition-all duration-700", isLocked ? "blur-xl scale-95 opacity-50 pointer-events-none" : "blur-0 scale-100 opacity-100")}>
                 <header className="sticky top-0 z-[100] flex h-16 md:h-[4.5rem] items-center border-b bg-background/95 backdrop-blur-xl px-4 shadow-sm">
-                    <div className="flex w-full items-center justify-between max-w-[1600px] mx-auto">
-                        <div className="flex items-center gap-2 md:gap-3 shrink-0">
-                            <Button variant="outline" onClick={() => window.location.reload()} className="h-8 w-8 md:h-10 md:w-10 rounded-full border-border bg-card hover:bg-muted flex items-center justify-center shadow-lg active:scale-90 transition-all">
-                                <RefreshCw className="h-4 w-4 md:h-5 md:w-5 text-foreground" />
-                            </Button>
-                            <div className="relative group">
-                                <motion.div className="absolute -inset-1 bg-gradient-to-r from-primary via-cyan-500 to-primary rounded-full blur opacity-40 group-hover:opacity-100 transition duration-1000" animate={{ opacity: [0.4, 0.8, 0.4] }} transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }} />
-                                <a href="https://frostytraders.com" target="_blank" rel="noopener noreferrer" className="relative flex items-center gap-1.5 md:gap-2 bg-card px-3 md:px-6 py-1.5 md:py-2.5 rounded-full border border-border shadow-xl hover:bg-muted transition-all active:scale-95">
-                                    <span className="text-[8px] md:text-[10px] font-black text-foreground uppercase tracking-[0.2em] md:tracking-[0.4em] whitespace-nowrap">FROSTY TRADERS</span>
-                                    <ExternalLink className="h-2.5 w-2.5 md:h-3 md:w-3 text-primary" />
+                    <div className="flex w-full items-center justify-between max-w-[1600px] mx-auto gap-4">
+                        <div className="flex items-center gap-2 md:gap-4 shrink-0">
+                            <Popover>
+                                <PopoverTrigger asChild>
+                                    <button className="flex items-center gap-3 bg-card border border-border px-3 md:px-5 py-2 md:py-2.5 rounded-2xl hover:bg-muted transition-all shadow-lg active:scale-95 group">
+                                        <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center group-hover:bg-primary/20 transition-colors">
+                                            <Activity className="h-4 w-4 text-primary" />
+                                        </div>
+                                        <div className="text-left hidden sm:block">
+                                            <p className="text-[10px] font-black text-muted-foreground uppercase leading-none tracking-widest">{currentMarket?.name}</p>
+                                            <p className="text-sm font-black text-foreground tabular-nums mt-1">{price.toFixed(decimalPlaces)}</p>
+                                        </div>
+                                        <ChevronDown className="h-4 w-4 text-muted-foreground group-hover:text-primary transition-colors" />
+                                    </button>
+                                </PopoverTrigger>
+                                <PopoverContent className="w-[320px] md:w-[480px] p-0 bg-card border-border shadow-2xl rounded-[1.5rem] overflow-hidden">
+                                    <div className="p-4 border-b border-border bg-muted/30">
+                                        <div className="relative">
+                                            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                                            <Input 
+                                                placeholder="Search assets..." 
+                                                className="pl-10 h-11 bg-card border-border rounded-xl font-medium focus:ring-primary/20"
+                                                value={searchQuery}
+                                                onChange={(e) => setSearchQuery(e.target.value)}
+                                            />
+                                        </div>
+                                    </div>
+                                    <div className="max-h-[400px] overflow-y-auto no-scrollbar">
+                                        <div className="px-2 py-3 space-y-1">
+                                            {filteredIndices.map((market) => {
+                                                const res = globalResults[market.id];
+                                                const marketPrice = res?.currentPrice || market.price;
+                                                const marketChange = market.change;
+                                                const isSelected = selectedMarket === market.id;
+                                                
+                                                return (
+                                                    <button 
+                                                        key={market.id}
+                                                        onClick={() => setSelectedMarket(market.id)}
+                                                        className={cn(
+                                                            "w-full flex items-center justify-between p-3 rounded-xl transition-all hover:bg-primary/5 group",
+                                                            isSelected ? "bg-primary/10" : "bg-transparent"
+                                                        )}
+                                                    >
+                                                        <div className="flex items-center gap-3">
+                                                            <div className={cn(
+                                                                "w-10 h-10 rounded-xl flex items-center justify-center transition-colors",
+                                                                isSelected ? "bg-primary text-white" : "bg-muted text-muted-foreground group-hover:bg-primary/10 group-hover:text-primary"
+                                                            )}>
+                                                                <Activity className="h-5 w-5" />
+                                                            </div>
+                                                            <div className="text-left">
+                                                                <p className={cn("text-[11px] font-black uppercase tracking-wider", isSelected ? "text-primary" : "text-foreground")}>{market.name}</p>
+                                                                <p className="text-[10px] font-bold text-muted-foreground uppercase">{market.category}</p>
+                                                            </div>
+                                                        </div>
+                                                        <div className="text-right">
+                                                            <p className="text-[11px] font-black tabular-nums text-foreground">{marketPrice.toFixed(res?.pip || 2)}</p>
+                                                            <div className={cn(
+                                                                "flex items-center justify-end gap-1 text-[9px] font-black mt-0.5",
+                                                                marketChange >= 0 ? "text-emerald-500" : "text-rose-500"
+                                                            )}>
+                                                                {marketChange >= 0 ? <TrendingUp className="h-2 w-2" /> : <TrendingDown className="h-2 w-2" />}
+                                                                {Math.abs(marketChange).toFixed(2)}%
+                                                            </div>
+                                                        </div>
+                                                    </button>
+                                                );
+                                            })}
+                                        </div>
+                                    </div>
+                                </PopoverContent>
+                            </Popover>
+                        </div>
+                        
+                        <div className="flex-1 flex justify-center hidden lg:flex">
+                             <div className="relative group transition-all duration-300 hover:scale-105 active:scale-95">
+                                <motion.div 
+                                    className="absolute -inset-1 bg-gradient-to-r from-primary via-cyan-500 to-primary rounded-full blur opacity-25 group-hover:opacity-75 transition duration-1000"
+                                    animate={{ opacity: [0.25, 0.5, 0.25] }}
+                                    transition={{ duration: 4, repeat: Infinity }}
+                                />
+                                <a href="https://frostytraders.com" target="_blank" rel="noopener noreferrer" className="relative flex items-center gap-3 px-8 py-2.5 bg-card border border-white/5 rounded-full shadow-2xl">
+                                    <span className="text-[11px] font-black text-foreground uppercase tracking-[0.4em] whitespace-nowrap">FROSTY TRADERS</span>
+                                    <ExternalLink className="h-3 w-3 text-primary" />
                                 </a>
                             </div>
                         </div>
-                        
+
                         <div className="flex items-center gap-2 md:gap-4 shrink-0">
-                            <div className="flex items-center bg-card border border-border rounded-full shadow-2xl h-8 md:h-10 px-0.5 md:px-1 overflow-hidden">
-                                <div className="flex items-center gap-1.5 md:gap-3 px-2 md:px-5 py-1 md:py-2 border-r border-border">
-                                    <div className={cn("h-2 w-2 md:h-2.5 md:w-2.5 rounded-full animate-pulse", surveillanceStatus === 'active' ? "bg-emerald-500 shadow-[0_0_12px_rgba(16,185,129,0.9)]" : "bg-rose-500 shadow-[0_0_12px_rgba(244,63,94,0.9)]")} />
-                                    <span className="text-[7px] md:text-[10px] font-black text-foreground uppercase tracking-[0.2em] md:tracking-[0.3em] hidden sm:inline">LIVE</span>
+                            <div className="flex items-center bg-card border border-border rounded-full shadow-2xl h-10 px-1 overflow-hidden">
+                                <div className="flex items-center gap-3 px-5 py-2 border-r border-border">
+                                    <div className={cn("h-2.5 w-2.5 rounded-full animate-pulse", surveillanceStatus === 'active' ? "bg-emerald-500 shadow-[0_0_12px_rgba(16,185,129,0.9)]" : "bg-rose-500 shadow-[0_0_12px_rgba(244,63,94,0.9)]")} />
+                                    <span className="text-[10px] font-black text-foreground uppercase tracking-[0.3em] hidden sm:inline">LIVE</span>
                                 </div>
-                                <div className="flex items-center gap-1 md:gap-2 px-2 md:px-5 py-1 md:py-2 bg-muted/30">
-                                    <Radio className={cn("h-3 w-3 md:h-3.5 md:w-3.5 transition-all", surveillanceStatus === 'active' ? 'text-emerald-500 animate-pulse' : 'text-rose-500')} />
-                                    <span className="text-[7px] md:text-[10px] font-black uppercase text-foreground tracking-[0.1em] md:tracking-[0.2em]">{surveillanceStatus === 'active' ? 'LIVE' : 'OFFLINE'}</span>
+                                <div className="flex items-center gap-2 px-5 py-2 bg-muted/30">
+                                    <Radio className={cn("h-3.5 w-3.5 transition-all", surveillanceStatus === 'active' ? 'text-emerald-500 animate-pulse' : 'text-rose-500')} />
+                                    <span className="text-[10px] font-black uppercase text-foreground tracking-[0.2em]">{surveillanceStatus === 'active' ? 'LIVE' : 'OFFLINE'}</span>
                                 </div>
                             </div>
-                            <Button variant="ghost" size="icon" onClick={() => setTheme(theme === 'light' ? 'dark' : 'light')} className="h-8 w-8 md:h-10 md:w-10 rounded-full border border-border bg-card shadow-xl hover:bg-muted text-foreground transition-all">
-                                {theme === 'light' ? <Moon className="h-4 w-4 md:h-5 md:w-5" /> : <Sun className="h-4 w-4 md:h-5 md:w-5" />}
+                            <Button variant="ghost" size="icon" onClick={() => setTheme(theme === 'light' ? 'dark' : 'light')} className="h-10 w-10 rounded-full border border-border bg-card shadow-xl hover:bg-muted text-foreground transition-all">
+                                {theme === 'light' ? <Moon className="h-5 w-5" /> : <Sun className="h-5 w-5" />}
                             </Button>
                         </div>
                     </div>

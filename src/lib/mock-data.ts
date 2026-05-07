@@ -3,22 +3,23 @@ export type SyntheticIndex = {
   name: string;
   price: number;
   change: number;
+  category: 'Synthetic' | 'Derived' | 'Forex' | 'Commodities';
 };
 
 export const syntheticIndices: SyntheticIndex[] = [
-  { id: '1HZ10V', name: 'Volatility 10 (1s) Index', price: 3456.78, change: 0.99 },
-  { id: 'R_10', name: 'Volatility 10 Index', price: 3456.78, change: 0.99 },
-  { id: '1HZ15V', name: '1hz15v', price: 123.45, change: 0.88 },
-  { id: '1HZ25V', name: 'Volatility 25 (1s) Index', price: 616.25, change: -1.12 },
-  { id: 'R_25', name: 'Volatility 25 Index', price: 616.25, change: -1.12 },
-  { id: '1HZ30V', name: '1hz30v', price: 890.12, change: -0.15 },
-  { id: '1HZ50V', name: 'Volatility 50 (1s) Index', price: 104.0489, change: 2.31 },
-  { id: 'R_50', name: 'Volatility 50 Index', price: 104.0489, change: 2.31 },
-  { id: '1HZ75V', name: 'Volatility 75 (1s) Index', price: 834521.45, change: -0.56 },
-  { id: 'R_75', name: 'Volatility 75 Index', price: 834521.45, change: -0.56 },
-  { id: '1HZ90V', name: '1hz90v', price: 543.21, change: 0.45 },
-  { id: '1HZ100V', name: 'Volatility 100 (1s) Index', price: 12543.78, change: 1.25 },
-  { id: 'R_100', name: 'Volatility 100 Index', price: 12543.78, change: 1.25 },
+  { id: '1HZ10V', name: 'Volatility 10 (1s) Index', price: 3456.78, change: 0.99, category: 'Synthetic' },
+  { id: 'R_10', name: 'Volatility 10 Index', price: 3456.78, change: 0.99, category: 'Synthetic' },
+  { id: '1HZ15V', name: 'Volatility 15 (1s) Index', price: 123.45, change: 0.88, category: 'Synthetic' },
+  { id: '1HZ25V', name: 'Volatility 25 (1s) Index', price: 616.25, change: -1.12, category: 'Synthetic' },
+  { id: 'R_25', name: 'Volatility 25 Index', price: 616.25, change: -1.12, category: 'Synthetic' },
+  { id: '1HZ30V', name: 'Volatility 30 (1s) Index', price: 890.12, change: -0.15, category: 'Synthetic' },
+  { id: '1HZ50V', name: 'Volatility 50 (1s) Index', price: 104.0489, change: 2.31, category: 'Synthetic' },
+  { id: 'R_50', name: 'Volatility 50 Index', price: 104.0489, change: 2.31, category: 'Synthetic' },
+  { id: '1HZ75V', name: 'Volatility 75 (1s) Index', price: 834521.45, change: -0.56, category: 'Synthetic' },
+  { id: 'R_75', name: 'Volatility 75 Index', price: 834521.45, change: -0.56, category: 'Synthetic' },
+  { id: '1HZ90V', name: 'Volatility 90 (1s) Index', price: 543.21, change: 0.45, category: 'Synthetic' },
+  { id: '1HZ100V', name: 'Volatility 100 (1s) Index', price: 12543.78, change: 1.25, category: 'Synthetic' },
+  { id: 'R_100', name: 'Volatility 100 Index', price: 12543.78, change: 1.25, category: 'Synthetic' },
 ];
 
 export const generateChartData = (points = 100) => {
