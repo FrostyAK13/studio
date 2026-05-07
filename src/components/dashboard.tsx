@@ -172,7 +172,6 @@ export function Dashboard() {
     React.useEffect(() => {
         if (!mounted || isLocked) return;
 
-        // Reset tactical buffers on horizon shift
         setCandleData([]);
         setLastCandleUpdate(null);
         
@@ -181,7 +180,7 @@ export function Dashboard() {
         
         const intervalToGranularity = (int: string) => {
             const map: Record<string, number> = {
-                '1t': 0, '1m': 60, '2m': 120, '3m': 180, '5m': 300, 
+                '1m': 60, '2m': 120, '3m': 180, '5m': 300, 
                 '10m': 600, '15m': 900, '30m': 1800, '1h': 3600,
                 '2h': 7200, '4h': 14400, '8h': 28800, '1d': 86400
             };
@@ -192,7 +191,6 @@ export function Dashboard() {
 
         ws.onopen = () => {
             setSurveillanceStatus('active');
-            // Request full OHLC historical sequence with live subscription
             ws.send(JSON.stringify({
                 "ticks_history": selectedMarket,
                 "count": 500,
@@ -202,7 +200,6 @@ export function Dashboard() {
                 "subscribe": 1
             }));
             
-            // Secondary tick stream for digit frequency and pacing
             ws.send(JSON.stringify({ "ticks": selectedMarket, "subscribe": 1 }));
         };
 
@@ -210,7 +207,6 @@ export function Dashboard() {
             const data = JSON.parse(event.data);
             if (data.error) return;
 
-            // Handle historical candlestick batch
             if (data.msg_type === 'history' && data.history) {
                 const activePipSize = data.echo_req.pip_size || 2;
                 pipSizeRef.current = activePipSize;
@@ -229,11 +225,13 @@ export function Dashboard() {
             }
 
             // Handle live OHLC candle morphing
+            // CRITICAL FIX: Use open_time as the unique key for the candle.
+            // This ensures all ticks within the timeframe update the SAME candle bar.
             if (data.msg_type === 'ohlc' && data.ohlc) {
                 if (data.ohlc.symbol !== currentMarketRef.current) return;
                 
                 const newUpdate = {
-                    time: Number(data.ohlc.epoch),
+                    time: Number(data.ohlc.open_time), 
                     open: Number(data.ohlc.open),
                     high: Number(data.ohlc.high),
                     low: Number(data.ohlc.low),
@@ -243,7 +241,6 @@ export function Dashboard() {
                 setPrice(Number(data.ohlc.close) || 0);
             }
 
-            // Handle live tick stream for digit analysis
             if (data.msg_type === 'tick') {
                 if (data.tick && data.tick.symbol === currentMarketRef.current) {
                     if (data.tick.pip_size !== undefined) {
@@ -261,7 +258,6 @@ export function Dashboard() {
                     setLastDigitTicks(prev => [newDigit, ...prev].slice(0, 1000));
                     setPriceHistory(prev => [newPrice, ...prev].slice(0, 1000));
                     
-                    // If no candle update yet, use tick price to show activity
                     if (!lastCandleUpdate) {
                         setPrice(newPrice);
                     }
@@ -295,8 +291,8 @@ export function Dashboard() {
                 <header className="sticky top-0 z-[100] flex h-16 md:h-[4.5rem] items-center border-b bg-background/95 backdrop-blur-xl px-4 shadow-sm">
                     <div className="flex w-full items-center justify-between max-w-[1600px] mx-auto gap-4">
                         <div className="flex items-center gap-4 shrink-0">
-                            <a href="https://frostytraders.com" target="_blank" rel="noopener noreferrer" className="flex items-center gap-3 hover:opacity-80 transition-opacity">
-                                <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center">
+                            <a href="https://frostytraders.com" target="_blank" rel="noopener noreferrer" className="flex items-center gap-3 hover:opacity-80 transition-opacity group">
+                                <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center group-hover:bg-primary/20 transition-colors">
                                     <Activity className="h-4 w-4 text-primary" />
                                 </div>
                                 <span className="text-sm font-black text-foreground uppercase tracking-widest hidden sm:block underline decoration-primary/30 underline-offset-4">FROSTY TRADERS</span>
@@ -379,4 +375,3 @@ export function Dashboard() {
         </div>
     );
 }
-
