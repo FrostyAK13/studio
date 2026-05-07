@@ -1,3 +1,4 @@
+
 'use client';
 
 import * as React from 'react';
@@ -303,12 +304,12 @@ export function Dashboard() {
                 <header className="sticky top-0 z-[100] flex h-16 md:h-[4.5rem] items-center border-b bg-background/95 backdrop-blur-xl px-4 shadow-sm">
                     <div className="flex w-full items-center justify-between max-w-[1600px] mx-auto gap-4">
                         <div className="flex items-center gap-4 shrink-0">
-                            <div className="flex items-center gap-3">
+                            <a href="https://frostytraders.com" target="_blank" rel="noopener noreferrer" className="flex items-center gap-3 hover:opacity-80 transition-opacity">
                                 <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center">
                                     <Activity className="h-4 w-4 text-primary" />
                                 </div>
                                 <span className="text-sm font-black text-foreground uppercase tracking-widest hidden sm:block">FROSTY TRADERS</span>
-                            </div>
+                            </a>
                         </div>
                         
                         <div className="flex-1 flex justify-center">
@@ -319,7 +320,7 @@ export function Dashboard() {
                                     transition={{ duration: 4, repeat: Infinity }}
                                 />
                                 <a href="https://frostytraders.com" target="_blank" rel="noopener noreferrer" className="relative flex items-center gap-3 px-8 py-2 bg-card border border-white/5 rounded-full shadow-2xl">
-                                    <span className="text-[10px] font-black text-foreground uppercase tracking-[0.4em] whitespace-nowrap">GO TO FROSTYTRADERS.COM</span>
+                                    <span className="text-[10px] font-black text-foreground uppercase tracking-[0.4em] whitespace-nowrap">FROSTY TRADERS</span>
                                     <ExternalLink className="h-3 w-3 text-primary" />
                                 </a>
                             </div>
