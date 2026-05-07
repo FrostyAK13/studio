@@ -332,28 +332,28 @@ export function Dashboard() {
                     </div>
                 </header>
                 <main className="flex-1 flex flex-col max-w-[1600px] mx-auto w-full relative p-2 sm:p-4">
-                    <Tabs defaultValue="insight" className="w-full">
+                    <Tabs defaultValue="analyzer" className="w-full">
                         <TabsList className="flex items-center justify-start md:justify-center gap-1.5 md:gap-2 bg-transparent h-auto p-0 mb-4 md:mb-6 overflow-x-auto no-scrollbar w-full pb-2">
-                            {['insight', 'analyzer', 'global-scan', 'last-digit-analysis', 'frequency'].map((tab) => (
+                            {['analyzer', 'last-digit-analysis', 'frequency', 'global-scan', 'insight'].map((tab) => (
                                 <TabsTrigger key={tab} value={tab} className="flex-shrink-0 px-3 md:px-5 py-2 md:py-2.5 rounded-full border border-transparent data-[state=active]:bg-primary/10 data-[state=active]:text-primary text-muted-foreground font-black text-[8px] md:text-[10px] uppercase tracking-[0.1em] md:tracking-[0.2em] transition-all shadow-sm hover:bg-muted/50">
                                     {tab.toUpperCase().replace(/-/g, ' ')}
                                 </TabsTrigger>
                             ))}
                         </TabsList>
-                        <TabsContent value="insight" className="mt-0 outline-none animate-in fade-in duration-500">
-                            <InsightView globalResults={globalResults} activeScanId={activeScanId} dashboardPrice={price} dashboardMarketId={selectedMarket} />
-                        </TabsContent>
                         <TabsContent value="analyzer" className="mt-0 outline-none animate-in fade-in duration-500">
                             <AnalyzerView price={price} lastDigitTicks={analyzedDigits} priceHistory={analyzedPrices} maxTicks={maxTicks} handleMaxTicksChange={handleMaxTicksChange} handleMaxTicksBlur={handleMaxTicksBlur} selectedMarket={selectedMarket} onMarketChange={setSelectedMarket} decimalPlaces={decimalPlaces} tickTimestamps={tickTimestamps} />
-                        </TabsContent>
-                        <TabsContent value="global-scan" className="mt-0 outline-none animate-in fade-in duration-500">
-                            <GlobalMarketScanner onMarketSelect={setSelectedMarket} selectedMarket={selectedMarket} lastDigitTicks={analyzedDigits} price={price} decimalPlaces={decimalPlaces} globalResults={globalResults} activeScanId={activeScanId} />
                         </TabsContent>
                         <TabsContent value="last-digit-analysis" className="mt-0 outline-none animate-in fade-in duration-500">
                             <ScannerView price={price} lastDigitTicks={analyzedDigits} priceHistory={analyzedPrices} maxTicks={maxTicks} handleMaxTicksChange={handleMaxTicksChange} handleMaxTicksBlur={handleMaxTicksBlur} selectedMarket={selectedMarket} onMarketChange={setSelectedMarket} decimalPlaces={decimalPlaces} />
                         </TabsContent>
                         <TabsContent value="frequency" className="mt-0 outline-none animate-in fade-in duration-500">
                             <DigitFrequencyView price={price} lastDigitTicks={analyzedDigits} priceHistory={analyzedPrices} maxTicks={maxTicks} handleMaxTicksChange={handleMaxTicksChange} handleMaxTicksBlur={handleMaxTicksBlur} selectedMarket={selectedMarket} onMarketChange={setSelectedMarket} decimalPlaces={decimalPlaces} />
+                        </TabsContent>
+                        <TabsContent value="global-scan" className="mt-0 outline-none animate-in fade-in duration-500">
+                            <GlobalMarketScanner onMarketSelect={setSelectedMarket} selectedMarket={selectedMarket} lastDigitTicks={analyzedDigits} price={price} decimalPlaces={decimalPlaces} globalResults={globalResults} activeScanId={activeScanId} />
+                        </TabsContent>
+                        <TabsContent value="insight" className="mt-0 outline-none animate-in fade-in duration-500">
+                            <InsightView globalResults={globalResults} activeScanId={activeScanId} dashboardPrice={price} dashboardMarketId={selectedMarket} />
                         </TabsContent>
                     </Tabs>
                 </main>
