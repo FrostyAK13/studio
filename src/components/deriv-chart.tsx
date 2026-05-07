@@ -2,7 +2,7 @@
 'use client';
 
 import * as React from 'react';
-import { createChart, ColorType, IChartApi, ISeriesApi, UTCTimestamp } from 'lightweight-charts';
+import { createChart, ColorType, IChartApi, ISeriesApi, UTCTimestamp, SeriesMarker } from 'lightweight-charts';
 import { AreaChart, CandlestickChart, Triangle, ChevronDown, Search, Undo2, Redo2, Maximize2, Camera, FunctionSquare, Star } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
@@ -41,13 +41,42 @@ const timeIntervals = [
 
 const indicatorScripts = [
   "Bollinger Bands",
-  "Bollinger Bands Width",
+  "Moving Average Exponential",
   "Double EMA",
   "MACD",
-  "Moving Average Exponential",
   "Relative Strength Index",
   "Stochastic RSI"
 ];
+
+// Calculation Utilities
+const calculateEMA = (data: any[], period: number) => {
+    if (data.length < period) return [];
+    const k = 2 / (period + 1);
+    let ema = data[0].close;
+    const results = [];
+    for (let i = 0; i < data.length; i++) {
+        ema = data[i].close * k + ema * (1 - k);
+        results.push({ time: data[i].time, value: ema });
+    }
+    return results;
+};
+
+const calculateBollingerBands = (data: any[], period: number, stdDev: number) => {
+    if (data.length < period) return { upper: [], lower: [], middle: [] };
+    const results = { upper: [] as any[], lower: [] as any[], middle: [] as any[] };
+    
+    for (let i = period - 1; i < data.length; i++) {
+        const slice = data.slice(i - period + 1, i + 1);
+        const avg = slice.reduce((sum, item) => sum + item.close, 0) / period;
+        const variance = slice.reduce((sum, item) => sum + Math.pow(item.close - avg, 2), 0) / period;
+        const dev = Math.sqrt(variance);
+        
+        results.middle.push({ time: data[i].time, value: avg });
+        results.upper.push({ time: data[i].time, value: avg + (stdDev * dev) });
+        results.lower.push({ time: data[i].time, value: avg - (stdDev * dev) });
+    }
+    return results;
+};
 
 const DigitStatsOverlay = ({ ticks }: { ticks: number[] }) => {
     const stats = React.useMemo(() => {
@@ -137,9 +166,17 @@ export function DerivChart({
     const chartRef = React.useRef<IChartApi | null>(null);
     const lineSeriesRef = React.useRef<ISeriesApi<"Area"> | null>(null);
     const candleSeriesRef = React.useRef<ISeriesApi<"Candlestick"> | null>(null);
+    
+    // Indicator Series Refs
+    const emaSeriesRef = React.useRef<ISeriesApi<"Line"> | null>(null);
+    const bbUpperSeriesRef = React.useRef<ISeriesApi<"Line"> | null>(null);
+    const bbLowerSeriesRef = React.useRef<ISeriesApi<"Line"> | null>(null);
+    const bbMiddleSeriesRef = React.useRef<ISeriesApi<"Line"> | null>(null);
+
     const [chartType, setChartType] = React.useState<'line' | 'candles'>('candles');
     const [searchQuery, setSearchQuery] = React.useState('');
     const [indicatorSearch, setIndicatorSearch] = React.useState('');
+    const [activeIndicators, setActiveIndicators] = React.useState<string[]>([]);
 
     const currentMarket = syntheticIndices.find(m => m.id === selectedMarket);
     const filteredIndices = syntheticIndices.filter(m => m.name.toLowerCase().includes(searchQuery.toLowerCase()));
@@ -153,6 +190,12 @@ export function DerivChart({
         const perc = (diff / (prev.close || 1)) * 100;
         return { ...last, diff, perc };
     }, [candleData]);
+
+    const toggleIndicator = (name: string) => {
+        setActiveIndicators(prev => 
+            prev.includes(name) ? prev.filter(i => i !== name) : [...prev, name]
+        );
+    };
 
     React.useEffect(() => {
         if (!chartContainerRef.current) return;
@@ -191,7 +234,6 @@ export function DerivChart({
                 borderColor: '#e5e7eb',
                 timeVisible: true,
                 secondsVisible: true,
-                shiftVisibleRangeOnNewBar: true,
             },
             crosshair: {
                 vertLine: { color: '#94a3b8', width: 1, style: 1 },
@@ -218,37 +260,81 @@ export function DerivChart({
             visible: chartType === 'candles',
         });
 
+        // Initialize Indicator Series
+        const emaSeries = chart.addLineSeries({
+            color: '#3b82f6',
+            lineWidth: 1.5,
+            priceFormat: { type: 'price', precision: decimalPlaces },
+            visible: activeIndicators.includes("Moving Average Exponential"),
+        });
+
+        const bbUpper = chart.addLineSeries({
+            color: 'rgba(0, 166, 156, 0.5)',
+            lineWidth: 1,
+            lineStyle: 2,
+            priceFormat: { type: 'price', precision: decimalPlaces },
+            visible: activeIndicators.includes("Bollinger Bands"),
+        });
+
+        const bbLower = chart.addLineSeries({
+            color: 'rgba(0, 166, 156, 0.5)',
+            lineWidth: 1,
+            lineStyle: 2,
+            priceFormat: { type: 'price', precision: decimalPlaces },
+            visible: activeIndicators.includes("Bollinger Bands"),
+        });
+
+        const bbMiddle = chart.addLineSeries({
+            color: 'rgba(0, 166, 156, 0.3)',
+            lineWidth: 1,
+            priceFormat: { type: 'price', precision: decimalPlaces },
+            visible: activeIndicators.includes("Bollinger Bands"),
+        });
+
         chartRef.current = chart;
         lineSeriesRef.current = areaSeries;
         candleSeriesRef.current = candlestickSeries;
+        emaSeriesRef.current = emaSeries;
+        bbUpperSeriesRef.current = bbUpper;
+        bbLowerSeriesRef.current = bbLower;
+        bbMiddleSeriesRef.current = bbMiddle;
 
         window.addEventListener('resize', handleResize);
         return () => {
             window.removeEventListener('resize', handleResize);
             chart.remove();
         };
-    }, [decimalPlaces, chartType]);
+    }, [decimalPlaces, chartType, activeIndicators]);
 
     React.useEffect(() => {
         if (!lineSeriesRef.current || !candleSeriesRef.current) return;
 
         if (candleData && candleData.length > 0) {
-            const uniqueData = Array.from(new Map(candleData.map(item => [item.time, item])).values())
-                .sort((a, b) => a.time - b.time)
-                .map(c => ({
-                    time: Number(c.time) as UTCTimestamp,
-                    open: Number(c.open),
-                    high: Number(c.high),
-                    low: Number(c.low),
-                    close: Number(c.close)
-                }));
+            const formatted = candleData.map(c => ({
+                time: Number(c.time) as UTCTimestamp,
+                open: Number(c.open),
+                high: Number(c.high),
+                low: Number(c.low),
+                close: Number(c.close)
+            }));
             
-            candleSeriesRef.current.setData(uniqueData);
-            
-            const areaLine = uniqueData.map(c => ({ time: c.time, value: c.close }));
-            lineSeriesRef.current.setData(areaLine);
+            candleSeriesRef.current.setData(formatted);
+            lineSeriesRef.current.setData(formatted.map(c => ({ time: c.time, value: c.close })));
+
+            // Calculate Indicators
+            if (activeIndicators.includes("Moving Average Exponential") && emaSeriesRef.current) {
+                const emaData = calculateEMA(formatted, 20);
+                emaSeriesRef.current.setData(emaData);
+            }
+
+            if (activeIndicators.includes("Bollinger Bands") && bbUpperSeriesRef.current && bbLowerSeriesRef.current && bbMiddleSeriesRef.current) {
+                const bbData = calculateBollingerBands(formatted, 20, 2);
+                bbUpperSeriesRef.current.setData(bbData.upper);
+                bbLowerSeriesRef.current.setData(bbData.lower);
+                bbMiddleSeriesRef.current.setData(bbData.middle);
+            }
         }
-    }, [candleData]);
+    }, [candleData, activeIndicators]);
 
     return (
         <div className="w-full h-full relative flex flex-col bg-white border border-border rounded-xl overflow-hidden shadow-2xl">
@@ -370,15 +456,22 @@ export function DerivChart({
                             <div className="max-h-[300px] overflow-y-auto no-scrollbar">
                                 <div className="p-1">
                                     <p className="px-3 py-2 text-[10px] font-black text-slate-300 uppercase tracking-widest">Script Name</p>
-                                    {filteredIndicators.map((script) => (
-                                        <button 
-                                            key={script}
-                                            className="w-full flex items-center gap-3 px-3 py-2.5 hover:bg-slate-50 transition-colors group text-left"
-                                        >
-                                            <Star className="h-3.5 w-3.5 text-amber-400 fill-amber-400" />
-                                            <span className="text-[11px] font-bold text-slate-700 group-hover:text-primary">{script}</span>
-                                        </button>
-                                    ))}
+                                    {filteredIndicators.map((script) => {
+                                        const isActive = activeIndicators.includes(script);
+                                        return (
+                                            <button 
+                                                key={script}
+                                                onClick={() => toggleIndicator(script)}
+                                                className={cn(
+                                                    "w-full flex items-center gap-3 px-3 py-2.5 hover:bg-slate-50 transition-colors group text-left",
+                                                    isActive ? "bg-primary/5" : ""
+                                                )}
+                                            >
+                                                <Star className={cn("h-3.5 w-3.5", isActive ? "text-amber-400 fill-amber-400" : "text-slate-300")} />
+                                                <span className={cn("text-[11px] font-bold", isActive ? "text-primary" : "text-slate-700 group-hover:text-primary")}>{script}</span>
+                                            </button>
+                                        );
+                                    })}
                                 </div>
                             </div>
                         </PopoverContent>
