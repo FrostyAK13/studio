@@ -3,10 +3,13 @@
 import * as React from 'react';
 import { createChart, ColorType, IChartApi, ISeriesApi, UTCTimestamp } from 'lightweight-charts';
 import { Button } from '@/components/ui/button';
-import { AreaChart, Settings2, CandlestickChart, Activity, Info, Triangle } from 'lucide-react';
+import { AreaChart, Settings2, CandlestickChart, Activity, Info, Triangle, ChevronDown, Search, TrendingUp, TrendingDown } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { motion } from 'framer-motion';
+import { Input } from '@/components/ui/input';
+import { syntheticIndices } from '@/lib/mock-data';
+import { GlobalAnalysisResult } from './dashboard';
 
 interface DerivChartProps {
     priceHistory: number[];
@@ -16,6 +19,9 @@ interface DerivChartProps {
     selectedInterval: string;
     onIntervalChange: (interval: string) => void;
     candleData?: any[];
+    selectedMarket: string;
+    onMarketChange: (marketId: string) => void;
+    globalResults: Record<string, GlobalAnalysisResult>;
 }
 
 const timeIntervals = [
@@ -116,13 +122,20 @@ export function DerivChart({
     lastDigitTicks,
     selectedInterval,
     onIntervalChange,
-    candleData = []
+    candleData = [],
+    selectedMarket,
+    onMarketChange,
+    globalResults
 }: DerivChartProps) {
     const chartContainerRef = React.useRef<HTMLDivElement>(null);
     const chartRef = React.useRef<IChartApi | null>(null);
     const lineSeriesRef = React.useRef<ISeriesApi<"Area"> | null>(null);
     const candleSeriesRef = React.useRef<ISeriesApi<"Candlestick"> | null>(null);
     const [chartType, setChartType] = React.useState<'line' | 'candles'>('line');
+    const [searchQuery, setSearchQuery] = React.useState('');
+
+    const currentMarket = syntheticIndices.find(m => m.id === selectedMarket);
+    const filteredIndices = syntheticIndices.filter(m => m.name.toLowerCase().includes(searchQuery.toLowerCase()));
 
     React.useEffect(() => {
         if (!chartContainerRef.current) return;
@@ -155,7 +168,7 @@ export function DerivChart({
                 alignLabels: true,
                 scaleMargins: {
                     top: 0.1,
-                    bottom: 0.3, // Leave 30% space at the bottom for the digits
+                    bottom: 0.3, 
                 },
             },
             timeScale: {
@@ -236,7 +249,6 @@ export function DerivChart({
             const uniqueLineData = lineData.filter((v, i, a) => a.findIndex(t => t.time === v.time) === i);
             lineSeriesRef.current.setData(uniqueLineData);
 
-            // Generate temporary candles from ticks for '1t' candles view
             const tempCandles = [];
             const windowSize = 5;
             const reversedPrices = [...priceHistory].reverse();
@@ -254,7 +266,6 @@ export function DerivChart({
             }
             candleSeriesRef.current.setData(tempCandles.filter((v, i, a) => a.findIndex(t => t.time === v.time) === i));
         } else {
-            // Use real candle data for non-tick intervals
             if (candleData && candleData.length > 0) {
                 const sanitizedCandleData = candleData.map(c => ({
                     time: Number(c.time) as UTCTimestamp,
@@ -264,7 +275,6 @@ export function DerivChart({
                     close: Number(c.close)
                 }));
                 candleSeriesRef.current.setData(sanitizedCandleData);
-                // Also show a line for candles if needed
                 const candleLine = sanitizedCandleData.map(c => ({ time: c.time, value: c.close }));
                 lineSeriesRef.current.setData(candleLine);
             }
@@ -277,7 +287,80 @@ export function DerivChart({
                 <div className="bg-slate-900/90 backdrop-blur-xl px-4 py-2 rounded-xl border border-white/5 shadow-2xl pointer-events-auto flex items-center gap-4">
                     <Popover>
                         <PopoverTrigger asChild>
-                            <Button variant="ghost" size="icon" className="h-8 w-8 text-white/70 hover:text-white hover:bg-white/10 transition-colors">
+                            <button className="flex items-center gap-3 bg-white/5 hover:bg-white/10 px-4 py-1.5 rounded-lg border border-white/10 transition-all active:scale-95 group">
+                                <Activity className="h-4 w-4 text-emerald-400" />
+                                <div className="text-left">
+                                    <p className="text-[10px] font-black text-white/60 uppercase leading-none tracking-widest">{currentMarket?.name}</p>
+                                    <p className="text-sm font-black text-white tabular-nums mt-0.5">
+                                        {priceHistory.length > 0 ? (Number(priceHistory[0]) || 0).toFixed(decimalPlaces) : '0.00'}
+                                    </p>
+                                </div>
+                                <ChevronDown className="h-4 w-4 text-white/40 group-hover:text-white transition-colors" />
+                            </button>
+                        </PopoverTrigger>
+                        <PopoverContent className="w-[320px] md:w-[420px] p-0 bg-card border-border shadow-2xl rounded-2xl overflow-hidden">
+                            <div className="p-4 border-b border-border bg-muted/30">
+                                <div className="relative">
+                                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                                    <Input 
+                                        placeholder="Search assets..." 
+                                        className="pl-10 h-10 bg-card border-border rounded-xl font-medium"
+                                        value={searchQuery}
+                                        onChange={(e) => setSearchQuery(e.target.value)}
+                                    />
+                                </div>
+                            </div>
+                            <div className="max-h-[350px] overflow-y-auto no-scrollbar">
+                                <div className="px-2 py-3 space-y-1">
+                                    {filteredIndices.map((market) => {
+                                        const res = globalResults[market.id];
+                                        const marketPrice = res?.currentPrice || market.price;
+                                        const isSelected = selectedMarket === market.id;
+                                        
+                                        return (
+                                            <button 
+                                                key={market.id}
+                                                onClick={() => onMarketChange(market.id)}
+                                                className={cn(
+                                                    "w-full flex items-center justify-between p-2.5 rounded-xl transition-all hover:bg-primary/5 group",
+                                                    isSelected ? "bg-primary/10" : "bg-transparent"
+                                                )}
+                                            >
+                                                <div className="flex items-center gap-3">
+                                                    <div className={cn(
+                                                        "w-8 h-8 rounded-lg flex items-center justify-center",
+                                                        isSelected ? "bg-primary text-white" : "bg-muted text-muted-foreground"
+                                                    )}>
+                                                        <Activity className="h-4 w-4" />
+                                                    </div>
+                                                    <div className="text-left">
+                                                        <p className={cn("text-[11px] font-black uppercase tracking-wider", isSelected ? "text-primary" : "text-foreground")}>{market.name}</p>
+                                                        <p className="text-[9px] font-bold text-muted-foreground uppercase">{market.category}</p>
+                                                    </div>
+                                                </div>
+                                                <div className="text-right">
+                                                    <p className="text-[11px] font-black tabular-nums text-foreground">{(Number(marketPrice) || 0).toFixed(res?.pip || 2)}</p>
+                                                    <div className={cn(
+                                                        "flex items-center justify-end gap-1 text-[9px] font-black mt-0.5",
+                                                        market.change >= 0 ? "text-emerald-500" : "text-rose-500"
+                                                    )}>
+                                                        {market.change >= 0 ? <TrendingUp className="h-2 w-2" /> : <TrendingDown className="h-2 w-2" />}
+                                                        {Math.abs(market.change).toFixed(2)}%
+                                                    </div>
+                                                </div>
+                                            </button>
+                                        );
+                                    })}
+                                </div>
+                            </div>
+                        </PopoverContent>
+                    </Popover>
+
+                    <div className="w-px h-6 bg-white/10" />
+
+                    <Popover>
+                        <PopoverTrigger asChild>
+                            <Button variant="ghost" size="icon" className="h-8 w-8 text-white/70 hover:text-white hover:bg-white/10 transition-colors pointer-events-auto">
                                 <Settings2 className="h-4 w-4" />
                             </Button>
                         </PopoverTrigger>
@@ -329,15 +412,6 @@ export function DerivChart({
                             </div>
                         </PopoverContent>
                     </Popover>
-
-                    <div className="w-px h-4 bg-white/10" />
-                    
-                    <div>
-                        <p className="text-[9px] font-black text-emerald-400 uppercase tracking-widest leading-none">LIVE FEED</p>
-                        <p className="text-lg font-black text-white tabular-nums mt-1">
-                            {priceHistory.length > 0 ? (Number(priceHistory[0]) || 0).toFixed(decimalPlaces) : '0.00'}
-                        </p>
-                    </div>
                 </div>
             </div>
 
