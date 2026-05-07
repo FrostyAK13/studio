@@ -213,7 +213,7 @@ export function Dashboard() {
 
             if (data.msg_type === 'history' && data.history) {
                 const prices = (data.history.prices || []).map((p: any) => Number(p));
-                const times = (data.history.times || []).map((t: number) => t * 1000);
+                const times = (data.history.times || []).map((t: number) => Number(t) * 1000); // ms
                 const activePipSize = data.echo_req.pip_size || 2;
                 pipSizeRef.current = activePipSize;
                 setDecimalPlaces(activePipSize);
@@ -223,7 +223,7 @@ export function Dashboard() {
                     return parseInt(dec[activePipSize - 1] || '0');
                 }).reverse();
                 
-                const latestPrice = prices.length > 0 ? prices[prices.length - 1] : 0;
+                const latestPrice = prices.length > 0 ? Number(prices[prices.length - 1]) : 0;
                 setPrice(latestPrice);
                 setLastDigitTicks(ticks);
                 setPriceHistory([...prices].reverse());
@@ -267,8 +267,9 @@ export function Dashboard() {
                     const fullPriceStr = newPrice.toFixed(8);
                     const decimalsStr = fullPriceStr.split('.')[1] || '00000000';
                     const newDigit = parseInt(decimalsStr[activePipSize - 1] || '0');
+                    const epochMs = Number(data.tick.epoch) * 1000;
 
-                    setTickTimestamps(prev => [Date.now(), ...prev].slice(0, 1000));
+                    setTickTimestamps(prev => [epochMs, ...prev].slice(0, 1000));
                     setPrice(newPrice);
                     setLastDigitTicks(prev => [newDigit, ...prev].slice(0, 1000));
                     if (granularity === 0) {

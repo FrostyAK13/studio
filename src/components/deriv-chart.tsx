@@ -1,3 +1,4 @@
+
 'use client';
 
 import * as React from 'react';
@@ -242,13 +243,16 @@ export function DerivChart({
         if (!lineSeriesRef.current || !candleSeriesRef.current) return;
 
         if (selectedInterval === '1t') {
-            const lineData = priceHistory.map((price, index) => ({
-                time: (Math.floor(tickTimestamps[index] / 1000)) as UTCTimestamp,
-                value: Number(price)
+            const lineData = priceHistory.map((p, index) => ({
+                time: (Math.floor(Number(tickTimestamps[index]) / 1000)) as UTCTimestamp,
+                value: Number(p)
             })).reverse();
+            
+            // Deduplicate timestamps for lightweight-charts
             const uniqueLineData = lineData.filter((v, i, a) => a.findIndex(t => t.time === v.time) === i);
             lineSeriesRef.current.setData(uniqueLineData);
 
+            // Generate fake candles from tick data
             const tempCandles = [];
             const windowSize = 5;
             const reversedPrices = [...priceHistory].reverse();
@@ -256,15 +260,18 @@ export function DerivChart({
             for (let i = 0; i < reversedPrices.length; i += windowSize) {
                 const window = reversedPrices.slice(i, i + windowSize);
                 if (window.length === 0) continue;
-                tempCandles.push({
-                    time: (Math.floor(reversedTimes[i] / 1000)) as UTCTimestamp,
-                    open: Number(window[0]),
-                    high: Number(Math.max(...window)),
-                    low: Number(Math.min(...window)),
-                    close: Number(window[window.length - 1]),
-                });
+                
+                const open = Number(window[0]);
+                const close = Number(window[window.length - 1]);
+                const high = Number(Math.max(...window));
+                const low = Number(Math.min(...window));
+                const time = (Math.floor(Number(reversedTimes[i]) / 1000)) as UTCTimestamp;
+
+                tempCandles.push({ time, open, high, low, close });
             }
-            candleSeriesRef.current.setData(tempCandles.filter((v, i, a) => a.findIndex(t => t.time === v.time) === i));
+            // Ensure unique timestamps for candles
+            const uniqueCandles = tempCandles.filter((v, i, a) => a.findIndex(t => t.time === v.time) === i);
+            candleSeriesRef.current.setData(uniqueCandles);
         } else {
             if (candleData && candleData.length > 0) {
                 const sanitizedCandleData = candleData.map(c => ({
@@ -273,9 +280,13 @@ export function DerivChart({
                     high: Number(c.high),
                     low: Number(c.low),
                     close: Number(c.close)
-                }));
-                candleSeriesRef.current.setData(sanitizedCandleData);
-                const candleLine = sanitizedCandleData.map(c => ({ time: c.time, value: c.close }));
+                })).sort((a, b) => (a.time as number) - (b.time as number));
+                
+                // Final unique filter to prevent lightweight-charts errors
+                const uniqueSanitized = sanitizedCandleData.filter((v, i, a) => a.findIndex(t => t.time === v.time) === i);
+                candleSeriesRef.current.setData(uniqueSanitized);
+                
+                const candleLine = uniqueSanitized.map(c => ({ time: c.time, value: c.close }));
                 lineSeriesRef.current.setData(candleLine);
             }
         }
