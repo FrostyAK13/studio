@@ -252,7 +252,7 @@ export function DerivChart({
             const uniqueLineData = lineData.filter((v, i, a) => a.findIndex(t => t.time === v.time) === i);
             lineSeriesRef.current.setData(uniqueLineData);
 
-            // Generate fake candles from tick data
+            // Generate fake candles from tick data for preview when on 1t
             const tempCandles = [];
             const windowSize = 5;
             const reversedPrices = [...priceHistory].reverse();
@@ -269,7 +269,6 @@ export function DerivChart({
 
                 tempCandles.push({ time, open, high, low, close });
             }
-            // Ensure unique timestamps for candles
             const uniqueCandles = tempCandles.filter((v, i, a) => a.findIndex(t => t.time === v.time) === i);
             candleSeriesRef.current.setData(uniqueCandles);
         } else {

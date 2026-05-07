@@ -203,6 +203,7 @@ export function Dashboard() {
                     "granularity": granularity,
                     "subscribe": 1
                 }));
+                // Also subscribe to ticks for digit analysis while on candle chart
                 ws.send(JSON.stringify({ "ticks": selectedMarket, "subscribe": 1 }));
             }
         };
