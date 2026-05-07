@@ -4,10 +4,11 @@ import * as React from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
-import { Zap, Activity, ShieldCheck, RefreshCw, Target, TrendingUp, Crosshair, Lock, Timer, ArrowRight, AlertCircle, Cpu, Layers, MoveRight } from 'lucide-react';
+import { Zap, Activity, ShieldCheck, RefreshCw, Target, TrendingUp, Crosshair, Lock, Timer, ArrowRight, AlertCircle, Cpu, Layers, MoveRight, Radio } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { GlobalAnalysisResult } from './dashboard';
 import { Progress } from '@/components/ui/progress';
+import { syntheticIndices } from '@/lib/mock-data';
 
 interface InsightViewProps {
     globalResults: Record<string, GlobalAnalysisResult>;
@@ -93,17 +94,20 @@ export function InsightView({ globalResults, activeScanId, dashboardPrice, dashb
     // Trigger Logic: Sequence e -> t
     const triggerDetected = React.useMemo(() => {
         if (!lockedSignal || liveDigits.length < 2) return false;
-        // Trigger d appears as current
         return liveDigits[0] === lockedSignal.triggerDigit;
     }, [liveDigits, lockedSignal]);
 
     const targetHit = React.useMemo(() => {
         if (!lockedSignal || liveDigits.length < 2) return false;
-        // Target t appears as current AND Trigger e was previous
         return liveDigits[0] === lockedSignal.targetDigit && liveDigits[1] === lockedSignal.triggerDigit;
     }, [liveDigits, lockedSignal]);
 
     const progressValue = (timeRemaining / SIGNAL_LOCK_DURATION) * 100;
+
+    const currentScanMarket = React.useMemo(() => {
+        if (!activeScanId) return null;
+        return syntheticIndices.find(m => m.id === activeScanId);
+    }, [activeScanId]);
 
     return (
         <div className="space-y-6 animate-in fade-in duration-1000 pb-24 max-w-[1600px] mx-auto px-2">
@@ -131,9 +135,38 @@ export function InsightView({ globalResults, activeScanId, dashboardPrice, dashb
                 <CardContent className="p-8 sm:p-12">
                     <AnimatePresence mode="wait">
                         {!lockedSignal ? (
-                            <motion.div key="idle" initial={{ opacity: 0 }} animate={{ opacity: 0.6 }} exit={{ opacity: 0 }} className="py-32 flex flex-col items-center justify-center gap-8 text-center">
-                                <RefreshCw className="h-20 w-20 animate-spin text-primary opacity-20" />
-                                <p className="text-sm font-black uppercase tracking-[0.6em] text-white">SEARCHING FOR TRANSITION VECTORS</p>
+                            <motion.div key="idle" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="py-20 flex flex-col items-center justify-center gap-10 text-center">
+                                <div className="relative">
+                                    <RefreshCw className="h-24 w-24 animate-spin text-primary opacity-20" />
+                                    <div className="absolute inset-0 flex items-center justify-center">
+                                        <Radio className="h-8 w-8 text-primary animate-pulse" />
+                                    </div>
+                                </div>
+                                <div className="space-y-6 max-w-xl w-full">
+                                    <div className="space-y-2">
+                                        <p className="text-[11px] font-black uppercase tracking-[0.6em] text-white/80">SURVEILLANCE IN PROGRESS</p>
+                                        <div className="h-[1px] w-full bg-gradient-to-r from-transparent via-white/10 to-transparent" />
+                                    </div>
+
+                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                        <div className="bg-black/40 border border-white/5 p-4 rounded-2xl flex flex-col items-center justify-center">
+                                            <p className="text-[8px] font-black text-primary uppercase tracking-widest mb-1">CURRENT INVESTIGATION</p>
+                                            <p className="text-sm font-black text-white truncate w-full">
+                                                {currentScanMarket?.name.toUpperCase() || 'INITIALIZING...'}
+                                            </p>
+                                        </div>
+                                        <div className="bg-black/40 border border-white/5 p-4 rounded-2xl flex flex-col items-center justify-center">
+                                            <p className="text-[8px] font-black text-primary uppercase tracking-widest mb-1">VERIFIED PRICE</p>
+                                            <p className="text-sm font-black text-emerald-400 tabular-nums">
+                                                {globalResults[activeScanId || '']?.currentPrice?.toFixed(globalResults[activeScanId || '']?.pip || 2) || '0.00'}
+                                            </p>
+                                        </div>
+                                    </div>
+
+                                    <p className="text-[9px] font-medium text-muted-foreground leading-relaxed italic border-l-2 border-primary/30 pl-4 mx-auto text-left max-w-sm">
+                                        "Global engine is cycling synthetic sectors. Every digit distribution is being analyzed for 8.5+ flow stability."
+                                    </p>
+                                </div>
                             </motion.div>
                         ) : (
                             <motion.div key={lockedSignal.marketId} initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} className="max-w-6xl mx-auto">
