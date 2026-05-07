@@ -2,7 +2,7 @@
 'use client';
 
 import * as React from 'react';
-import { createChart, ColorType, IChartApi, ISeriesApi, UTCTimestamp, SeriesMarker } from 'lightweight-charts';
+import { createChart, ColorType, IChartApi, ISeriesApi, UTCTimestamp } from 'lightweight-charts';
 import { AreaChart, CandlestickChart, Triangle, ChevronDown, Search, Undo2, Redo2, Maximize2, Camera, FunctionSquare, Star } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
@@ -19,6 +19,7 @@ interface DerivChartProps {
     selectedInterval: string;
     onIntervalChange: (interval: string) => void;
     candleData?: any[];
+    lastCandleUpdate?: any;
     selectedMarket: string;
     onMarketChange: (marketId: string) => void;
     globalResults: Record<string, GlobalAnalysisResult>;
@@ -48,7 +49,6 @@ const indicatorScripts = [
   "Stochastic RSI"
 ];
 
-// Calculation Utilities
 const calculateEMA = (data: any[], period: number) => {
     if (data.length < period) return [];
     const k = 2 / (period + 1);
@@ -100,10 +100,10 @@ const DigitStatsOverlay = ({ ticks }: { ticks: number[] }) => {
     }, [ticks]);
 
     return (
-        <div className="absolute bottom-12 left-0 w-full flex justify-center pointer-events-none z-[60]">
-            <div className="flex gap-1.5 sm:gap-4 p-2 sm:p-4 bg-white/80 dark:bg-slate-900/80 backdrop-blur-md rounded-2xl border border-border shadow-xl pointer-events-auto items-end">
+        <div className="absolute bottom-8 left-0 w-full flex justify-center pointer-events-none z-[60]">
+            <div className="flex gap-2 sm:gap-4 p-3 bg-white/90 dark:bg-slate-900/90 backdrop-blur-md rounded-2xl border border-border shadow-2xl pointer-events-auto items-end">
                 {stats.map((s) => {
-                    const radius = 18;
+                    const radius = 16;
                     const circumference = 2 * Math.PI * radius;
                     const offset = circumference - (s.percentage / 20) * circumference; 
                     
@@ -136,9 +136,9 @@ const DigitStatsOverlay = ({ ticks }: { ticks: number[] }) => {
                                     <motion.div 
                                         initial={{ scale: 0 }} 
                                         animate={{ scale: 1 }} 
-                                        className="text-orange-500"
+                                        className="text-[#ff9100]"
                                     >
-                                        <Triangle className="w-2 h-2 sm:w-3 sm:h-3 fill-current rotate-180" />
+                                        <Triangle className="w-2.5 h-2.5 fill-current rotate-180" />
                                     </motion.div>
                                 )}
                             </div>
@@ -158,6 +158,7 @@ export function DerivChart({
     selectedInterval,
     onIntervalChange,
     candleData = [],
+    lastCandleUpdate,
     selectedMarket,
     onMarketChange,
     globalResults
@@ -167,7 +168,6 @@ export function DerivChart({
     const lineSeriesRef = React.useRef<ISeriesApi<"Area"> | null>(null);
     const candleSeriesRef = React.useRef<ISeriesApi<"Candlestick"> | null>(null);
     
-    // Indicator Series Refs
     const emaSeriesRef = React.useRef<ISeriesApi<"Line"> | null>(null);
     const bbUpperSeriesRef = React.useRef<ISeriesApi<"Line"> | null>(null);
     const bbLowerSeriesRef = React.useRef<ISeriesApi<"Line"> | null>(null);
@@ -182,14 +182,14 @@ export function DerivChart({
     const filteredIndices = syntheticIndices.filter(m => m.name.toLowerCase().includes(searchQuery.toLowerCase()));
     const filteredIndicators = indicatorScripts.filter(s => s.toLowerCase().includes(indicatorSearch.toLowerCase()));
 
-    const ohlcData = React.useMemo(() => {
-        if (!candleData || candleData.length === 0) return null;
-        const last = candleData[candleData.length - 1];
+    const ohlcDisplay = React.useMemo(() => {
+        const last = lastCandleUpdate || (candleData.length > 0 ? candleData[candleData.length - 1] : null);
+        if (!last) return null;
         const prev = candleData.length > 1 ? candleData[candleData.length - 2] : last;
         const diff = last.close - prev.close;
         const perc = (diff / (prev.close || 1)) * 100;
         return { ...last, diff, perc };
-    }, [candleData]);
+    }, [candleData, lastCandleUpdate]);
 
     const toggleIndicator = (name: string) => {
         setActiveIndicators(prev => 
@@ -217,8 +217,8 @@ export function DerivChart({
                 fontFamily: 'Poppins',
             },
             grid: {
-                vertLines: { color: '#f0f0f0' },
-                horzLines: { color: '#f0f0f0' },
+                vertLines: { color: '#f3f4f6' },
+                horzLines: { color: '#f3f4f6' },
             },
             width: chartContainerRef.current.clientWidth,
             height: chartContainerRef.current.clientHeight,
@@ -236,8 +236,8 @@ export function DerivChart({
                 secondsVisible: true,
             },
             crosshair: {
-                vertLine: { color: '#94a3b8', width: 1, style: 1 },
-                horzLine: { color: '#94a3b8', width: 1, style: 1 },
+                vertLine: { color: '#00a69c', width: 1, style: 1 },
+                horzLine: { color: '#00a69c', width: 1, style: 1 },
             },
         });
 
@@ -260,7 +260,6 @@ export function DerivChart({
             visible: chartType === 'candles',
         });
 
-        // Initialize Indicator Series
         const emaSeries = chart.addLineSeries({
             color: '#3b82f6',
             lineWidth: 1.5,
@@ -306,6 +305,7 @@ export function DerivChart({
         };
     }, [decimalPlaces, chartType, activeIndicators]);
 
+    // History Loader
     React.useEffect(() => {
         if (!lineSeriesRef.current || !candleSeriesRef.current) return;
 
@@ -316,15 +316,13 @@ export function DerivChart({
                 high: Number(c.high),
                 low: Number(c.low),
                 close: Number(c.close)
-            }));
+            })).sort((a, b) => a.time - b.time);
             
             candleSeriesRef.current.setData(formatted);
             lineSeriesRef.current.setData(formatted.map(c => ({ time: c.time, value: c.close })));
 
-            // Calculate Indicators
             if (activeIndicators.includes("Moving Average Exponential") && emaSeriesRef.current) {
-                const emaData = calculateEMA(formatted, 20);
-                emaSeriesRef.current.setData(emaData);
+                emaSeriesRef.current.setData(calculateEMA(formatted, 20));
             }
 
             if (activeIndicators.includes("Bollinger Bands") && bbUpperSeriesRef.current && bbLowerSeriesRef.current && bbMiddleSeriesRef.current) {
@@ -336,16 +334,39 @@ export function DerivChart({
         }
     }, [candleData, activeIndicators]);
 
+    // Real-Time Mover
+    React.useEffect(() => {
+        if (!lastCandleUpdate || !candleSeriesRef.current || !lineSeriesRef.current) return;
+
+        const updateData = {
+            time: Number(lastCandleUpdate.time) as UTCTimestamp,
+            open: Number(lastCandleUpdate.open),
+            high: Number(lastCandleUpdate.high),
+            low: Number(lastCandleUpdate.low),
+            close: Number(lastCandleUpdate.close)
+        };
+
+        candleSeriesRef.current.update(updateData);
+        lineSeriesRef.current.update({ time: updateData.time, value: updateData.close });
+        
+        // Dynamic Indicator Update
+        if (emaSeriesRef.current && activeIndicators.includes("Moving Average Exponential")) {
+            const allData = candleData.concat(lastCandleUpdate);
+            const emaVal = calculateEMA(allData.slice(-21), 20).pop();
+            if (emaVal) emaSeriesRef.current.update(emaVal);
+        }
+    }, [lastCandleUpdate, activeIndicators]);
+
     return (
-        <div className="w-full h-full relative flex flex-col bg-white border border-border rounded-xl overflow-hidden shadow-2xl">
+        <div className="w-full h-full relative flex flex-col bg-white border border-border rounded-2xl overflow-hidden shadow-2xl">
             <div className="flex h-12 items-center border-b bg-white px-4 justify-between z-50">
                 <div className="flex items-center gap-1.5 h-full">
                     <Popover>
                         <PopoverTrigger asChild>
-                            <button className="flex items-center gap-2 hover:bg-slate-50 px-2 py-1 rounded transition-colors group">
-                                <Search className="h-4 w-4 text-slate-400" />
+                            <button className="flex items-center gap-2 hover:bg-slate-50 px-3 py-1.5 rounded-lg transition-colors group">
+                                <Search className="h-4 w-4 text-slate-400 group-hover:text-primary" />
                                 <span className="text-sm font-bold text-slate-700 tracking-tight">{currentMarket?.name}</span>
-                                <ChevronDown className="h-3 w-3 text-slate-400 group-hover:text-slate-600" />
+                                <ChevronDown className="h-3 w-3 text-slate-400" />
                             </button>
                         </PopoverTrigger>
                         <PopoverContent className="w-[420px] p-0 shadow-2xl border-border rounded-xl">
@@ -368,9 +389,7 @@ export function DerivChart({
                                         return (
                                             <button 
                                                 key={market.id}
-                                                onClick={() => {
-                                                    onMarketChange(market.id);
-                                                }}
+                                                onClick={() => onMarketChange(market.id)}
                                                 className={cn(
                                                     "w-full flex items-center justify-between p-2 rounded-lg transition-all hover:bg-slate-50",
                                                     isSelected ? "bg-slate-100" : "bg-transparent"
@@ -397,7 +416,7 @@ export function DerivChart({
 
                     <Popover>
                         <PopoverTrigger asChild>
-                            <button className="flex items-center gap-1.5 hover:bg-slate-50 px-3 py-1 rounded transition-colors group min-w-[50px]">
+                            <button className="flex items-center gap-1.5 hover:bg-slate-50 px-3 py-1.5 rounded-lg transition-colors group">
                                 <span className="text-xs font-bold text-slate-700">{selectedInterval}</span>
                                 <ChevronDown className="h-3 w-3 text-slate-400" />
                             </button>
@@ -429,14 +448,14 @@ export function DerivChart({
 
                     <button 
                         onClick={() => setChartType(chartType === 'line' ? 'candles' : 'line')}
-                        className={cn("p-2 rounded transition-colors hover:bg-slate-50", chartType === 'candles' ? "text-primary" : "text-slate-500")}
+                        className={cn("p-2 rounded-lg transition-colors hover:bg-slate-50", chartType === 'candles' ? "text-primary" : "text-slate-500")}
                     >
                         {chartType === 'candles' ? <CandlestickChart className="h-4 w-4" /> : <AreaChart className="h-4 w-4" />}
                     </button>
 
                     <Popover>
                         <PopoverTrigger asChild>
-                            <button className="p-2 hover:bg-slate-50 rounded transition-colors text-slate-500">
+                            <button className="p-2 hover:bg-slate-50 rounded-lg transition-colors text-slate-500">
                                 <FunctionSquare className="h-4 w-4" />
                             </button>
                         </PopoverTrigger>
@@ -455,7 +474,6 @@ export function DerivChart({
                             </div>
                             <div className="max-h-[300px] overflow-y-auto no-scrollbar">
                                 <div className="p-1">
-                                    <p className="px-3 py-2 text-[10px] font-black text-slate-300 uppercase tracking-widest">Script Name</p>
                                     {filteredIndicators.map((script) => {
                                         const isActive = activeIndicators.includes(script);
                                         return (
@@ -495,15 +513,15 @@ export function DerivChart({
 
             <div className="flex items-center gap-4 px-4 py-2 border-b bg-white text-[11px] font-medium text-slate-500">
                 <div className="flex items-center gap-1.5">
-                    <div className={cn("w-2 h-2 rounded-full", (ohlcData?.perc || 0) >= 0 ? "bg-emerald-500" : "bg-rose-500")} />
-                    <span className="flex gap-1.5">
-                        <span className="text-rose-500 font-bold">O</span> {Number(ohlcData?.open || 0).toFixed(decimalPlaces)}
-                        <span className="text-rose-500 font-bold ml-1">H</span> {Number(ohlcData?.high || 0).toFixed(decimalPlaces)}
-                        <span className="text-rose-500 font-bold ml-1">L</span> {Number(ohlcData?.low || 0).toFixed(decimalPlaces)}
-                        <span className="text-rose-500 font-bold ml-1">C</span> {Number(ohlcData?.close || 0).toFixed(decimalPlaces)}
+                    <div className={cn("w-2 h-2 rounded-full", (ohlcDisplay?.perc || 0) >= 0 ? "bg-emerald-500" : "bg-rose-500")} />
+                    <span className="flex gap-2">
+                        <span className="flex gap-0.5"><span className="text-muted-foreground/60 font-bold">O:</span> {Number(ohlcDisplay?.open || 0).toFixed(decimalPlaces)}</span>
+                        <span className="flex gap-0.5"><span className="text-muted-foreground/60 font-bold">H:</span> {Number(ohlcDisplay?.high || 0).toFixed(decimalPlaces)}</span>
+                        <span className="flex gap-0.5"><span className="text-muted-foreground/60 font-bold">L:</span> {Number(ohlcDisplay?.low || 0).toFixed(decimalPlaces)}</span>
+                        <span className="flex gap-0.5"><span className="text-muted-foreground/60 font-bold">C:</span> {Number(ohlcDisplay?.close || 0).toFixed(decimalPlaces)}</span>
                     </span>
-                    <span className={cn("ml-2 font-black", (ohlcData?.diff || 0) >= 0 ? "text-emerald-500" : "text-rose-500")}>
-                        {(ohlcData?.diff || 0).toFixed(decimalPlaces)} ({(ohlcData?.perc || 0).toFixed(2)}%)
+                    <span className={cn("ml-2 font-black tabular-nums", (ohlcDisplay?.diff || 0) >= 0 ? "text-emerald-500" : "text-rose-500")}>
+                        {(ohlcDisplay?.diff || 0).toFixed(decimalPlaces)} ({(ohlcDisplay?.perc || 0).toFixed(2)}%)
                     </span>
                 </div>
             </div>

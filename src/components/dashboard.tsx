@@ -47,6 +47,7 @@ export function Dashboard() {
     const [tickTimestamps, setTickTimestamps] = React.useState<number[]>([]);
     const [chartInterval, setChartInterval] = React.useState('1m');
     const [candleData, setCandleData] = React.useState<any[]>([]);
+    const [lastCandleUpdate, setLastCandleUpdate] = React.useState<any>(null);
     
     const [surveillanceStatus, setSurveillanceStatus] = React.useState<EngineStatus>('offline');
     const [globalResults, setGlobalResults] = React.useState<Record<string, GlobalAnalysisResult>>({});
@@ -186,7 +187,6 @@ export function Dashboard() {
 
         ws.onopen = () => {
             setSurveillanceStatus('active');
-            // Re-subscribe with correct granularity for chart
             ws.send(JSON.stringify({
                 "ticks_history": selectedMarket,
                 "count": 500,
@@ -195,7 +195,6 @@ export function Dashboard() {
                 "granularity": granularity,
                 "subscribe": 1
             }));
-            // Also subscribe to ticks for digit analysis
             ws.send(JSON.stringify({ "ticks": selectedMarket, "subscribe": 1 }));
         };
 
@@ -209,7 +208,6 @@ export function Dashboard() {
                 pipSizeRef.current = activePipSize;
                 setDecimalPlaces(activePipSize);
                 
-                // History message from tick subscription
                 if (data.echo_req.style === 'ticks') {
                     setPriceHistory([...prices].reverse());
                 }
@@ -227,17 +225,14 @@ export function Dashboard() {
             }
 
             if (data.msg_type === 'ohlc' && data.ohlc) {
-                const newCandle = {
+                const newUpdate = {
                     time: Number(data.ohlc.epoch),
                     open: Number(data.ohlc.open),
                     high: Number(data.ohlc.high),
                     low: Number(data.ohlc.low),
                     close: Number(data.ohlc.close)
                 };
-                setCandleData(prev => {
-                    const filtered = prev.filter(c => c.time !== newCandle.time);
-                    return [...filtered, newCandle].sort((a, b) => a.time - b.time).slice(-500);
-                });
+                setLastCandleUpdate(newUpdate);
                 setPrice(Number(data.ohlc.close) || 0);
             }
 
@@ -357,6 +352,7 @@ export function Dashboard() {
                                 selectedInterval={chartInterval}
                                 onIntervalChange={setChartInterval}
                                 candleData={candleData}
+                                lastCandleUpdate={lastCandleUpdate}
                                 selectedMarket={selectedMarket}
                                 onMarketChange={setSelectedMarket}
                                 globalResults={globalResults}
