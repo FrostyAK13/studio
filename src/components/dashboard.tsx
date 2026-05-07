@@ -45,7 +45,7 @@ export function Dashboard() {
     const [selectedMarket, setSelectedMarket] = React.useState('1HZ10V');
     const [decimalPlaces, setDecimalPlaces] = React.useState(2);
     const [tickTimestamps, setTickTimestamps] = React.useState<number[]>([]);
-    const [chartInterval, setChartInterval] = React.useState('1t');
+    const [chartInterval, setChartInterval] = React.useState('1m');
     const [candleData, setCandleData] = React.useState<any[]>([]);
     
     const [surveillanceStatus, setSurveillanceStatus] = React.useState<EngineStatus>('offline');
@@ -179,33 +179,23 @@ export function Dashboard() {
                 '10m': 600, '15m': 900, '30m': 1800, '1h': 3600,
                 '2h': 7200, '4h': 14400, '8h': 28800, '1d': 86400
             };
-            return map[int] || 0;
+            return map[int] || 60;
         };
 
         const granularity = intervalToGranularity(chartInterval);
 
         ws.onopen = () => {
             setSurveillanceStatus('active');
-            if (granularity === 0) {
-                ws.send(JSON.stringify({ 
-                    "ticks_history": selectedMarket, 
-                    "count": 1000, 
-                    "end": "latest", 
-                    "style": "ticks", 
-                    "subscribe": 1 
-                }));
-            } else {
-                ws.send(JSON.stringify({
-                    "ticks_history": selectedMarket,
-                    "count": 500,
-                    "end": "latest",
-                    "style": "candles",
-                    "granularity": granularity,
-                    "subscribe": 1
-                }));
-                // Also subscribe to ticks for digit analysis while on candle chart
-                ws.send(JSON.stringify({ "ticks": selectedMarket, "subscribe": 1 }));
-            }
+            ws.send(JSON.stringify({
+                "ticks_history": selectedMarket,
+                "count": 500,
+                "end": "latest",
+                "style": "candles",
+                "granularity": granularity,
+                "subscribe": 1
+            }));
+            // Also subscribe to ticks for digit analysis
+            ws.send(JSON.stringify({ "ticks": selectedMarket, "subscribe": 1 }));
         };
 
         ws.onmessage = (event) => {
@@ -214,21 +204,9 @@ export function Dashboard() {
 
             if (data.msg_type === 'history' && data.history) {
                 const prices = (data.history.prices || []).map((p: any) => Number(p));
-                const times = (data.history.times || []).map((t: number) => Number(t) * 1000); // ms
                 const activePipSize = data.echo_req.pip_size || 2;
                 pipSizeRef.current = activePipSize;
                 setDecimalPlaces(activePipSize);
-                const ticks = prices.map((p: number) => {
-                    const pStr = p.toFixed(8);
-                    const dec = pStr.split('.')[1] || '00';
-                    return parseInt(dec[activePipSize - 1] || '0');
-                }).reverse();
-                
-                const latestPrice = prices.length > 0 ? Number(prices[prices.length - 1]) : 0;
-                setPrice(latestPrice);
-                setLastDigitTicks(ticks);
-                setPriceHistory([...prices].reverse());
-                setTickTimestamps([...times].reverse());
             }
 
             if (data.msg_type === 'candles' && data.candles) {
@@ -273,9 +251,6 @@ export function Dashboard() {
                     setTickTimestamps(prev => [epochMs, ...prev].slice(0, 1000));
                     setPrice(newPrice);
                     setLastDigitTicks(prev => [newDigit, ...prev].slice(0, 1000));
-                    if (granularity === 0) {
-                        setPriceHistory(prev => [newPrice, ...prev].slice(0, 1000));
-                    }
                 }
             }
         };
@@ -389,3 +364,4 @@ export function Dashboard() {
         </div>
     );
 }
+

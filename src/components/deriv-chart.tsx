@@ -4,7 +4,7 @@
 import * as React from 'react';
 import { createChart, ColorType, IChartApi, ISeriesApi, UTCTimestamp } from 'lightweight-charts';
 import { Button } from '@/components/ui/button';
-import { AreaChart, Settings2, CandlestickChart, Activity, Info, Triangle, ChevronDown, Search, TrendingUp, TrendingDown } from 'lucide-react';
+import { AreaChart, CandlestickChart, Activity, Info, Triangle, ChevronDown, Search, TrendingUp, TrendingDown, Undo2, Redo2, Maximize2, Camera, Save, FunctionSquare } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { motion } from 'framer-motion';
@@ -26,19 +26,18 @@ interface DerivChartProps {
 }
 
 const timeIntervals = [
-    { label: '1 tick', id: '1t' },
-    { label: '1 minute', id: '1m' },
-    { label: '2 minutes', id: '2m' },
-    { label: '3 minutes', id: '3m' },
-    { label: '5 minutes', id: '5m' },
-    { label: '10 minutes', id: '10m' },
-    { label: '15 minutes', id: '15m' },
-    { label: '30 minutes', id: '30m' },
-    { label: '1 hour', id: '1h' },
-    { label: '2 hours', id: '2h' },
-    { label: '4 hours', id: '4h' },
-    { label: '8 hours', id: '8h' },
-    { label: '1 day', id: '1d' },
+    { label: '1m', id: '1m', category: 'MINUTES' },
+    { label: '2m', id: '2m', category: 'MINUTES' },
+    { label: '3m', id: '3m', category: 'MINUTES' },
+    { label: '5m', id: '5m', category: 'MINUTES' },
+    { label: '10m', id: '10m', category: 'MINUTES' },
+    { label: '15m', id: '15m', category: 'MINUTES' },
+    { label: '30m', id: '30m', category: 'MINUTES' },
+    { label: '1h', id: '1h', category: 'HOURS' },
+    { label: '2h', id: '2h', category: 'HOURS' },
+    { label: '4h', id: '4h', category: 'HOURS' },
+    { label: '8h', id: '8h', category: 'HOURS' },
+    { label: '24h', id: '1d', category: 'HOURS' },
 ];
 
 const DigitStatsOverlay = ({ ticks }: { ticks: number[] }) => {
@@ -64,7 +63,7 @@ const DigitStatsOverlay = ({ ticks }: { ticks: number[] }) => {
 
     return (
         <div className="absolute bottom-12 left-0 w-full flex justify-center pointer-events-none z-[60]">
-            <div className="flex gap-1.5 sm:gap-4 p-2 sm:p-4 bg-background/20 backdrop-blur-md rounded-2xl border border-white/5 pointer-events-auto items-end">
+            <div className="flex gap-1.5 sm:gap-4 p-2 sm:p-4 bg-white/80 dark:bg-slate-900/80 backdrop-blur-md rounded-2xl border border-border shadow-xl pointer-events-auto items-end">
                 {stats.map((s) => {
                     const radius = 18;
                     const circumference = 2 * Math.PI * radius;
@@ -81,7 +80,7 @@ const DigitStatsOverlay = ({ ticks }: { ticks: number[] }) => {
                                     />
                                     <circle 
                                         cx="50%" cy="50%" r={radius} 
-                                        stroke={s.isMax ? "#2dd4bf" : s.isMin ? "#f43f5e" : "#94a3b8"} 
+                                        stroke={s.isMax ? "#00a69c" : s.isMin ? "#ff444f" : "#94a3b8"} 
                                         strokeWidth="3" fill="transparent" 
                                         strokeDasharray={circumference}
                                         strokeDashoffset={offset}
@@ -108,9 +107,6 @@ const DigitStatsOverlay = ({ ticks }: { ticks: number[] }) => {
                         </div>
                     );
                 })}
-                <button className="h-8 w-8 rounded-full bg-white/5 flex items-center justify-center hover:bg-white/10 transition-colors ml-2 mb-4">
-                    <Info className="h-3 w-3 text-white/40" />
-                </button>
             </div>
         </div>
     );
@@ -132,11 +128,20 @@ export function DerivChart({
     const chartRef = React.useRef<IChartApi | null>(null);
     const lineSeriesRef = React.useRef<ISeriesApi<"Area"> | null>(null);
     const candleSeriesRef = React.useRef<ISeriesApi<"Candlestick"> | null>(null);
-    const [chartType, setChartType] = React.useState<'line' | 'candles'>('line');
+    const [chartType, setChartType] = React.useState<'line' | 'candles'>('candles');
     const [searchQuery, setSearchQuery] = React.useState('');
 
     const currentMarket = syntheticIndices.find(m => m.id === selectedMarket);
     const filteredIndices = syntheticIndices.filter(m => m.name.toLowerCase().includes(searchQuery.toLowerCase()));
+
+    const ohlcData = React.useMemo(() => {
+        if (!candleData || candleData.length === 0) return null;
+        const last = candleData[candleData.length - 1];
+        const prev = candleData.length > 1 ? candleData[candleData.length - 2] : last;
+        const diff = last.close - prev.close;
+        const perc = (diff / (prev.close || 1)) * 100;
+        return { ...last, diff, perc };
+    }, [candleData]);
 
     React.useEffect(() => {
         if (!chartContainerRef.current) return;
@@ -152,72 +157,65 @@ export function DerivChart({
 
         const chart = createChart(chartContainerRef.current, {
             layout: {
-                background: { type: ColorType.Solid, color: 'transparent' },
-                textColor: '#94a3b8',
-                fontSize: 10,
+                background: { type: ColorType.Solid, color: '#ffffff' },
+                textColor: '#333333',
+                fontSize: 11,
                 fontFamily: 'Poppins',
             },
             grid: {
-                vertLines: { color: 'rgba(148, 163, 184, 0.03)' },
-                horzLines: { color: 'rgba(148, 163, 184, 0.03)' },
+                vertLines: { color: '#f0f0f0' },
+                horzLines: { color: '#f0f0f0' },
             },
             width: chartContainerRef.current.clientWidth,
             height: chartContainerRef.current.clientHeight,
             rightPriceScale: {
-                borderColor: 'rgba(148, 163, 184, 0.1)',
+                borderColor: '#e5e7eb',
                 autoScale: true,
-                alignLabels: true,
                 scaleMargins: {
                     top: 0.1,
                     bottom: 0.3, 
                 },
             },
             timeScale: {
-                borderColor: 'rgba(148, 163, 184, 0.1)',
+                borderColor: '#e5e7eb',
                 timeVisible: true,
                 secondsVisible: true,
             },
             crosshair: {
                 vertLine: {
-                    color: '#2dd4bf',
+                    color: '#94a3b8',
                     width: 1,
                     style: 1,
-                    labelBackgroundColor: '#2dd4bf',
                 },
                 horzLine: {
-                    color: '#2dd4bf',
+                    color: '#94a3b8',
                     width: 1,
                     style: 1,
-                    labelBackgroundColor: '#2dd4bf',
                 },
             },
-            handleScroll: true,
-            handleScale: true,
         });
 
         const areaSeries = chart.addAreaSeries({
-            lineColor: '#2dd4bf',
-            topColor: 'rgba(45, 212, 191, 0.3)',
-            bottomColor: 'rgba(45, 212, 191, 0)',
+            lineColor: '#00a69c',
+            topColor: 'rgba(0, 166, 156, 0.2)',
+            bottomColor: 'rgba(0, 166, 156, 0)',
             lineWidth: 2,
             priceFormat: {
                 type: 'price',
                 precision: decimalPlaces,
-                minMove: 1 / Math.pow(10, decimalPlaces),
             },
             visible: chartType === 'line',
         });
 
         const candlestickSeries = chart.addCandlestickSeries({
-            upColor: '#10b981',
-            downColor: '#f43f5e',
+            upColor: '#00a69c',
+            downColor: '#ff444f',
             borderVisible: false,
-            wickUpColor: '#10b981',
-            wickDownColor: '#f43f5e',
+            wickUpColor: '#00a69c',
+            wickDownColor: '#ff444f',
             priceFormat: {
                 type: 'price',
                 precision: decimalPlaces,
-                minMove: 1 / Math.pow(10, decimalPlaces),
             },
             visible: chartType === 'candles',
         });
@@ -227,7 +225,6 @@ export function DerivChart({
         candleSeriesRef.current = candlestickSeries;
 
         window.addEventListener('resize', handleResize);
-
         return () => {
             window.removeEventListener('resize', handleResize);
             chart.remove();
@@ -242,121 +239,71 @@ export function DerivChart({
     React.useEffect(() => {
         if (!lineSeriesRef.current || !candleSeriesRef.current) return;
 
-        if (selectedInterval === '1t') {
-            const lineData = priceHistory.map((p, index) => ({
-                time: (Math.floor(Number(tickTimestamps[index]) / 1000)) as UTCTimestamp,
-                value: Number(p)
-            })).reverse();
+        if (candleData && candleData.length > 0) {
+            const sanitized = candleData.map(c => ({
+                time: Number(c.time) as UTCTimestamp,
+                open: Number(c.open),
+                high: Number(c.high),
+                low: Number(c.low),
+                close: Number(c.close)
+            })).sort((a, b) => (a.time as number) - (b.time as number));
             
-            // Deduplicate timestamps for lightweight-charts
-            const uniqueLineData = lineData.filter((v, i, a) => a.findIndex(t => t.time === v.time) === i);
-            lineSeriesRef.current.setData(uniqueLineData);
-
-            // Generate fake candles from tick data for preview when on 1t
-            const tempCandles = [];
-            const windowSize = 5;
-            const reversedPrices = [...priceHistory].reverse();
-            const reversedTimes = [...tickTimestamps].reverse();
-            for (let i = 0; i < reversedPrices.length; i += windowSize) {
-                const window = reversedPrices.slice(i, i + windowSize);
-                if (window.length === 0) continue;
-                
-                const open = Number(window[0]);
-                const close = Number(window[window.length - 1]);
-                const high = Number(Math.max(...window));
-                const low = Number(Math.min(...window));
-                const time = (Math.floor(Number(reversedTimes[i]) / 1000)) as UTCTimestamp;
-
-                tempCandles.push({ time, open, high, low, close });
-            }
-            const uniqueCandles = tempCandles.filter((v, i, a) => a.findIndex(t => t.time === v.time) === i);
-            candleSeriesRef.current.setData(uniqueCandles);
-        } else {
-            if (candleData && candleData.length > 0) {
-                const sanitizedCandleData = candleData.map(c => ({
-                    time: Number(c.time) as UTCTimestamp,
-                    open: Number(c.open),
-                    high: Number(c.high),
-                    low: Number(c.low),
-                    close: Number(c.close)
-                })).sort((a, b) => (a.time as number) - (b.time as number));
-                
-                // Final unique filter to prevent lightweight-charts errors
-                const uniqueSanitized = sanitizedCandleData.filter((v, i, a) => a.findIndex(t => t.time === v.time) === i);
-                candleSeriesRef.current.setData(uniqueSanitized);
-                
-                const candleLine = uniqueSanitized.map(c => ({ time: c.time, value: c.close }));
-                lineSeriesRef.current.setData(candleLine);
-            }
+            const unique = sanitized.filter((v, i, a) => a.findIndex(t => t.time === v.time) === i);
+            candleSeriesRef.current.setData(unique);
+            
+            const areaLine = unique.map(c => ({ time: c.time, value: c.close }));
+            lineSeriesRef.current.setData(areaLine);
         }
-    }, [priceHistory, tickTimestamps, candleData, selectedInterval]);
+    }, [candleData]);
 
     return (
-        <div className="w-full h-full relative group bg-card border border-border rounded-2xl overflow-hidden shadow-2xl">
-            <div className="absolute top-4 left-4 z-[50] flex flex-col gap-3 pointer-events-none">
-                <div className="bg-slate-900/90 backdrop-blur-xl px-4 py-2 rounded-xl border border-white/5 shadow-2xl pointer-events-auto flex items-center gap-4">
+        <div className="w-full h-full relative flex flex-col bg-white border border-border rounded-xl overflow-hidden shadow-2xl">
+            {/* Top Toolbar - Exactly like Deriv.com */}
+            <div className="flex h-12 items-center border-b bg-white px-4 justify-between z-50">
+                <div className="flex items-center gap-1.5 h-full">
+                    {/* Market Selector */}
                     <Popover>
                         <PopoverTrigger asChild>
-                            <button className="flex items-center gap-3 bg-white/5 hover:bg-white/10 px-4 py-1.5 rounded-lg border border-white/10 transition-all active:scale-95 group">
-                                <Activity className="h-4 w-4 text-emerald-400" />
-                                <div className="text-left">
-                                    <p className="text-[10px] font-black text-white/60 uppercase leading-none tracking-widest">{currentMarket?.name}</p>
-                                    <p className="text-sm font-black text-white tabular-nums mt-0.5">
-                                        {priceHistory.length > 0 ? (Number(priceHistory[0]) || 0).toFixed(decimalPlaces) : '0.00'}
-                                    </p>
-                                </div>
-                                <ChevronDown className="h-4 w-4 text-white/40 group-hover:text-white transition-colors" />
+                            <button className="flex items-center gap-2 hover:bg-slate-50 px-2 py-1 rounded transition-colors group">
+                                <Search className="h-4 w-4 text-slate-400" />
+                                <span className="text-sm font-bold text-slate-700 tracking-tight">{currentMarket?.name}</span>
+                                <ChevronDown className="h-3 w-3 text-slate-400 group-hover:text-slate-600" />
                             </button>
                         </PopoverTrigger>
-                        <PopoverContent className="w-[320px] md:w-[420px] p-0 bg-card border-border shadow-2xl rounded-2xl overflow-hidden">
-                            <div className="p-4 border-b border-border bg-muted/30">
+                        <PopoverContent className="w-[420px] p-0 shadow-2xl border-border rounded-xl">
+                            <div className="p-3 border-b bg-slate-50/50">
                                 <div className="relative">
-                                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
                                     <Input 
                                         placeholder="Search assets..." 
-                                        className="pl-10 h-10 bg-card border-border rounded-xl font-medium"
+                                        className="pl-9 h-9 border-slate-200"
                                         value={searchQuery}
                                         onChange={(e) => setSearchQuery(e.target.value)}
                                     />
                                 </div>
                             </div>
-                            <div className="max-h-[350px] overflow-y-auto no-scrollbar">
-                                <div className="px-2 py-3 space-y-1">
+                            <div className="max-h-[350px] overflow-y-auto">
+                                <div className="p-2 space-y-0.5">
                                     {filteredIndices.map((market) => {
                                         const res = globalResults[market.id];
-                                        const marketPrice = res?.currentPrice || market.price;
                                         const isSelected = selectedMarket === market.id;
-                                        
                                         return (
                                             <button 
                                                 key={market.id}
                                                 onClick={() => onMarketChange(market.id)}
                                                 className={cn(
-                                                    "w-full flex items-center justify-between p-2.5 rounded-xl transition-all hover:bg-primary/5 group",
-                                                    isSelected ? "bg-primary/10" : "bg-transparent"
+                                                    "w-full flex items-center justify-between p-2 rounded-lg transition-all hover:bg-slate-50",
+                                                    isSelected ? "bg-slate-100" : "bg-transparent"
                                                 )}
                                             >
                                                 <div className="flex items-center gap-3">
-                                                    <div className={cn(
-                                                        "w-8 h-8 rounded-lg flex items-center justify-center",
-                                                        isSelected ? "bg-primary text-white" : "bg-muted text-muted-foreground"
-                                                    )}>
-                                                        <Activity className="h-4 w-4" />
-                                                    </div>
-                                                    <div className="text-left">
-                                                        <p className={cn("text-[11px] font-black uppercase tracking-wider", isSelected ? "text-primary" : "text-foreground")}>{market.name}</p>
-                                                        <p className="text-[9px] font-bold text-muted-foreground uppercase">{market.category}</p>
+                                                    <div className="text-left leading-none">
+                                                        <p className="text-[11px] font-bold text-slate-800">{market.name}</p>
+                                                        <p className="text-[9px] text-slate-400 uppercase mt-0.5">{market.category}</p>
                                                     </div>
                                                 </div>
                                                 <div className="text-right">
-                                                    <p className="text-[11px] font-black tabular-nums text-foreground">{(Number(marketPrice) || 0).toFixed(res?.pip || 2)}</p>
-                                                    <div className={cn(
-                                                        "flex items-center justify-end gap-1 text-[9px] font-black mt-0.5",
-                                                        market.change >= 0 ? "text-emerald-500" : "text-rose-500"
-                                                    )}>
-                                                        {market.change >= 0 ? <TrendingUp className="h-2 w-2" /> : <TrendingDown className="h-2 w-2" />}
-                                                        {Math.abs(market.change).toFixed(2)}%
-                                                    </div>
+                                                    <p className="text-[11px] font-bold">{(res?.currentPrice || market.price).toFixed(res?.pip || 2)}</p>
                                                 </div>
                                             </button>
                                         );
@@ -366,76 +313,95 @@ export function DerivChart({
                         </PopoverContent>
                     </Popover>
 
-                    <div className="w-px h-6 bg-white/10" />
+                    <div className="w-px h-6 bg-slate-200 mx-1" />
 
+                    {/* Interval Selector */}
                     <Popover>
                         <PopoverTrigger asChild>
-                            <Button variant="ghost" size="icon" className="h-8 w-8 text-white/70 hover:text-white hover:bg-white/10 transition-colors pointer-events-auto">
-                                <Settings2 className="h-4 w-4" />
-                            </Button>
+                            <button className="flex items-center gap-1.5 hover:bg-slate-50 px-3 py-1 rounded transition-colors group min-w-[50px]">
+                                <span className="text-xs font-bold text-slate-700">{selectedInterval}</span>
+                                <ChevronDown className="h-3 w-3 text-slate-400" />
+                            </button>
                         </PopoverTrigger>
-                        <PopoverContent className="w-[280px] p-5 bg-card border-border shadow-2xl rounded-2xl">
-                            <div className="space-y-6">
-                                <div className="space-y-3">
-                                    <h4 className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">Chart types</h4>
-                                    <div className="grid grid-cols-2 gap-2">
-                                        <button 
-                                            onClick={() => setChartType('line')}
-                                            className={cn(
-                                                "flex flex-col items-center gap-1.5 p-3 rounded-xl border transition-all",
-                                                chartType === 'line' ? "bg-primary/10 border-primary text-primary" : "border-transparent text-muted-foreground hover:bg-muted"
-                                            )}
-                                        >
-                                            <AreaChart className="h-5 w-5" />
-                                            <span className="text-[10px] font-black uppercase">Area</span>
-                                        </button>
-                                        <button 
-                                            onClick={() => setChartType('candles')}
-                                            className={cn(
-                                                "flex flex-col items-center gap-1.5 p-3 rounded-xl border transition-all",
-                                                chartType === 'candles' ? "bg-primary/10 border-primary text-primary" : "border-transparent text-muted-foreground hover:bg-muted"
-                                            )}
-                                        >
-                                            <CandlestickChart className="h-5 w-5" />
-                                            <span className="text-[10px] font-black uppercase">Candle</span>
-                                        </button>
+                        <PopoverContent className="w-[300px] p-4 border-border shadow-2xl rounded-xl">
+                            <div className="space-y-4">
+                                {['MINUTES', 'HOURS'].map(cat => (
+                                    <div key={cat} className="space-y-2">
+                                        <p className="text-[10px] font-black text-slate-400 tracking-widest">{cat}</p>
+                                        <div className="grid grid-cols-4 gap-2">
+                                            {timeIntervals.filter(i => i.category === cat).map(t => (
+                                                <button 
+                                                    key={t.id}
+                                                    onClick={() => onIntervalChange(t.id)}
+                                                    className={cn(
+                                                        "px-2 py-1.5 rounded text-xs font-bold transition-all border",
+                                                        selectedInterval === t.id ? "bg-slate-900 text-white border-slate-900" : "border-slate-100 text-slate-600 hover:bg-slate-50"
+                                                    )}
+                                                >
+                                                    {t.label}
+                                                </button>
+                                            ))}
+                                        </div>
                                     </div>
-                                </div>
-                                
-                                <div className="space-y-3">
-                                    <h4 className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">Time interval</h4>
-                                    <div className="grid grid-cols-3 gap-2">
-                                        {timeIntervals.map((t) => (
-                                            <button 
-                                                key={t.id}
-                                                onClick={() => onIntervalChange(t.id)}
-                                                className={cn(
-                                                    "px-2 py-2 rounded-lg text-[9px] font-black uppercase border transition-all",
-                                                    selectedInterval === t.id ? "bg-primary text-white border-primary shadow-lg scale-105" : "border-border text-muted-foreground hover:bg-muted"
-                                                )}
-                                            >
-                                                {t.label}
-                                            </button>
-                                        ))}
-                                    </div>
-                                </div>
+                                ))}
                             </div>
                         </PopoverContent>
                     </Popover>
+
+                    {/* Chart Type Toggle */}
+                    <button 
+                        onClick={() => setChartType(chartType === 'line' ? 'candles' : 'line')}
+                        className="p-2 hover:bg-slate-50 rounded transition-colors text-slate-500"
+                    >
+                        {chartType === 'candles' ? <CandlestickChart className="h-4 w-4" /> : <AreaChart className="h-4 w-4" />}
+                    </button>
+
+                    <button className="p-2 hover:bg-slate-50 rounded transition-colors text-slate-500">
+                        <FunctionSquare className="h-4 w-4" />
+                    </button>
+
+                    <div className="w-px h-6 bg-slate-200 mx-1" />
+
+                    <div className="flex items-center gap-1">
+                        <button className="p-2 hover:bg-slate-50 rounded transition-colors text-slate-300">
+                            <Undo2 className="h-4 w-4" />
+                        </button>
+                        <button className="p-2 hover:bg-slate-50 rounded transition-colors text-slate-300">
+                            <Redo2 className="h-4 w-4" />
+                        </button>
+                    </div>
+                </div>
+
+                <div className="flex items-center gap-3">
+                    <button className="flex items-center gap-2 hover:bg-slate-50 px-3 py-1 rounded transition-colors">
+                        <span className="text-xs font-bold text-slate-400">Save</span>
+                    </button>
+                    <div className="w-px h-6 bg-slate-200" />
+                    <Camera className="h-4 w-4 text-slate-400 cursor-pointer hover:text-slate-600" />
+                    <Maximize2 className="h-4 w-4 text-slate-400 cursor-pointer hover:text-slate-600" />
                 </div>
             </div>
 
-            <div className="absolute top-4 right-4 z-[50] pointer-events-none">
-                <div className="bg-black/40 backdrop-blur-md px-4 py-1.5 rounded-full border border-white/5 shadow-lg">
-                    <span className="text-[10px] font-black text-white/60 uppercase tracking-[0.2em]">
-                        {timeIntervals.find(i => i.id === selectedInterval)?.label.toUpperCase()}
+            {/* O-H-L-C Stats Sub-Header */}
+            <div className="flex items-center gap-4 px-4 py-2 border-b bg-white text-[11px] font-medium text-slate-500">
+                <div className="flex items-center gap-1.5">
+                    <div className={cn("w-2 h-2 rounded-full", (ohlcData?.perc || 0) >= 0 ? "bg-emerald-500" : "bg-rose-500")} />
+                    <span className="flex gap-1.5">
+                        <span className="text-rose-500">O</span> {ohlcData?.open?.toFixed(decimalPlaces) || '0.00'}
+                        <span className="text-rose-500 ml-1">H</span> {ohlcData?.high?.toFixed(decimalPlaces) || '0.00'}
+                        <span className="text-rose-500 ml-1">L</span> {ohlcData?.low?.toFixed(decimalPlaces) || '0.00'}
+                        <span className="text-rose-500 ml-1">C</span> {ohlcData?.close?.toFixed(decimalPlaces) || '0.00'}
+                    </span>
+                    <span className={cn("ml-2 font-bold", (ohlcData?.diff || 0) >= 0 ? "text-emerald-500" : "text-rose-500")}>
+                        {(ohlcData?.diff || 0).toFixed(decimalPlaces)} ({(ohlcData?.perc || 0).toFixed(2)}%)
                     </span>
                 </div>
             </div>
 
-            <div ref={chartContainerRef} className="w-full h-full" />
+            <div ref={chartContainerRef} className="flex-1 w-full relative" />
             
             <DigitStatsOverlay ticks={lastDigitTicks} />
         </div>
     );
 }
+
