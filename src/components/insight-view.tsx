@@ -17,7 +17,7 @@ interface InsightViewProps {
     dashboardMarketId: string;
 }
 
-const SIGNAL_LOCK_DURATION = 60000; // 1 minute lock-on before rotation
+const SIGNAL_LOCK_DURATION = 60000; // 1 minute lock-on rotation
 
 export function InsightView({ globalResults, activeScanId, dashboardPrice, dashboardMarketId }: InsightViewProps) {
     const [livePrice, setLivePrice] = React.useState<number>(0);
@@ -30,7 +30,7 @@ export function InsightView({ globalResults, activeScanId, dashboardPrice, dashb
     const [timeRemaining, setTimeRemaining] = React.useState<number>(0);
     const [lastMarketId, setLastMarketId] = React.useState<string | null>(null);
 
-    // Probability Flow Lock-On Logic
+    // Probability Flow Protocol Logic
     React.useEffect(() => {
         const now = Date.now();
         const sortedMatches = Object.values(globalResults)
@@ -38,7 +38,7 @@ export function InsightView({ globalResults, activeScanId, dashboardPrice, dashb
             .sort((a, b) => b.confidence - a.confidence);
 
         if (!lockedSignal) {
-            // Find the best global setup that wasn't the last one we used
+            // Find the best global setup that wasn't the last one used
             const bestGlobal = sortedMatches.find(r => r.marketId !== lastMarketId) || sortedMatches[0];
             if (bestGlobal) {
                 setLockedSignal(bestGlobal);
@@ -48,12 +48,12 @@ export function InsightView({ globalResults, activeScanId, dashboardPrice, dashb
         } else {
             const elapsed = now - lockTimestamp;
             if (elapsed >= SIGNAL_LOCK_DURATION) {
-                // Unlock and prepare for rotation
+                // Unlock and rotate
                 setLockedSignal(null);
                 setLivePrice(0);
                 setLiveDigits([]);
             } else {
-                // Update currently locked signal data if available in global results
+                // Update currently locked signal data
                 const updatedData = globalResults[lockedSignal.marketId];
                 if (updatedData) setLockedSignal(updatedData);
             }
@@ -94,15 +94,16 @@ export function InsightView({ globalResults, activeScanId, dashboardPrice, dashb
         return () => { if (ws.readyState < 2) ws.close(); };
     }, [targetMarketId]);
 
-    // Trigger Logic: Current digit is Trigger [e]
+    // Sequential Trigger Logic: Trigger (e) MUST appear first, then Target (t)
     const triggerDetected = React.useMemo(() => {
         if (!lockedSignal || liveDigits.length < 1) return false;
+        // Last digit in stream is the latest
         return liveDigits[0] === lockedSignal.triggerDigit;
     }, [liveDigits, lockedSignal]);
 
-    // Target Logic: Current digit is Target [t] AND previous digit was Trigger [e]
     const targetHit = React.useMemo(() => {
         if (!lockedSignal || liveDigits.length < 2) return false;
+        // Current is Target AND Previous was Trigger
         return liveDigits[0] === lockedSignal.targetDigit && liveDigits[1] === lockedSignal.triggerDigit;
     }, [liveDigits, lockedSignal]);
 
@@ -131,7 +132,9 @@ export function InsightView({ globalResults, activeScanId, dashboardPrice, dashb
                         <div className="flex items-center gap-3">
                             <div className="flex items-center gap-2 px-5 py-2 bg-emerald-500/10 rounded-full border border-emerald-500/20">
                                 <div className="h-2 w-2 rounded-full bg-emerald-500 animate-ping" />
-                                <span className="text-[10px] font-black text-emerald-400 uppercase tracking-widest">ACTIVE SECTOR: {lockedSignal?.marketName || 'SCANNING...'}</span>
+                                <span className="text-[10px] font-black text-emerald-400 uppercase tracking-widest">
+                                    {lockedSignal ? `ACTIVE SECTOR: ${lockedSignal.marketName}` : 'SURVEILLANCE ACTIVE'}
+                                </span>
                             </div>
                         </div>
                     </div>
@@ -148,27 +151,27 @@ export function InsightView({ globalResults, activeScanId, dashboardPrice, dashb
                                 </div>
                                 <div className="space-y-6 max-w-xl w-full">
                                     <div className="space-y-2">
-                                        <p className="text-[11px] font-black uppercase tracking-[0.6em] text-white/80">SURVEILLANCE IN PROGRESS</p>
+                                        <p className="text-[11px] font-black uppercase tracking-[0.6em] text-white/80">SCANNING GLOBAL MARKETS</p>
                                         <div className="h-[1px] w-full bg-gradient-to-r from-transparent via-white/10 to-transparent" />
                                     </div>
 
                                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                         <div className="bg-black/40 border border-white/5 p-4 rounded-2xl flex flex-col items-center justify-center">
-                                            <p className="text-[8px] font-black text-primary uppercase tracking-widest mb-1">SCANNING MARKET</p>
-                                            <p className="text-sm font-black text-white truncate w-full">
-                                                {currentScanMarket?.name.toUpperCase() || 'INITIALIZING...'}
+                                            <p className="text-[8px] font-black text-primary uppercase tracking-widest mb-1">CURRENT SECTOR</p>
+                                            <p className="text-sm font-black text-white truncate w-full uppercase">
+                                                {currentScanMarket?.name || 'INITIALIZING...'}
                                             </p>
                                         </div>
                                         <div className="bg-black/40 border border-white/5 p-4 rounded-2xl flex flex-col items-center justify-center">
-                                            <p className="text-[8px] font-black text-primary uppercase tracking-widest mb-1">LIVE PRICE</p>
+                                            <p className="text-[8px] font-black text-primary uppercase tracking-widest mb-1">LIVE FEED</p>
                                             <p className="text-sm font-black text-emerald-400 tabular-nums">
-                                                {globalResults[activeScanId || '']?.currentPrice?.toFixed(globalResults[activeScanId || '']?.pip || 2) || '0.00'}
+                                                {globalResults[activeScanId || '']?.currentPrice?.toFixed(globalResults[activeScanId || '']?.pip || 2) || 'SYNCING'}
                                             </p>
                                         </div>
                                     </div>
 
-                                    <p className="text-[9px] font-medium text-muted-foreground leading-relaxed italic border-l-2 border-primary/30 pl-4 mx-auto text-left max-w-sm">
-                                        "Global engine is cycling synthetic sectors. Analyzing probability flow vectors to identify a 100+1 stable opportunity."
+                                    <p className="text-[9px] font-medium text-muted-foreground leading-relaxed italic border-l-2 border-primary/30 pl-4 text-left max-w-sm mx-auto">
+                                        "Engine evaluates Deviation (D) and Local Dominance (LD). Rotating sectors until absolute probability flow is identified."
                                     </p>
                                 </div>
                             </motion.div>
@@ -180,7 +183,7 @@ export function InsightView({ globalResults, activeScanId, dashboardPrice, dashb
                                             <div className="flex items-center gap-3">
                                                 <div className="p-2 bg-amber-500/20 rounded-lg"><Lock className="h-4 w-4 text-amber-500" /></div>
                                                 <div>
-                                                    <p className="text-[10px] font-black text-amber-500 uppercase tracking-widest leading-none">SIGNAL LOCKED</p>
+                                                    <p className="text-[10px] font-black text-amber-500 uppercase tracking-widest leading-none">SIGNAL LOCK</p>
                                                     <p className="text-[8px] font-bold text-muted-foreground uppercase tracking-widest mt-1">ROTATION: {Math.ceil(timeRemaining / 1000)}s</p>
                                                 </div>
                                             </div>
@@ -202,7 +205,7 @@ export function InsightView({ globalResults, activeScanId, dashboardPrice, dashb
                                                         triggerDetected ? "text-emerald-400 scale-110" : "text-white"
                                                     )}>{lockedSignal.triggerDigit}</span>
                                                     <div className="space-y-1">
-                                                        <p className="text-[8px] font-black text-muted-foreground uppercase tracking-widest">IMBALANCE</p>
+                                                        <p className="text-[8px] font-black text-muted-foreground uppercase tracking-widest">DEVIATION</p>
                                                         <p className="text-sm font-black text-white/40">{lockedSignal.flowScore.toFixed(2)}</p>
                                                     </div>
                                                 </div>
@@ -220,7 +223,7 @@ export function InsightView({ globalResults, activeScanId, dashboardPrice, dashb
                                                         targetHit ? "text-emerald-400 scale-125" : "text-white"
                                                     )}>{lockedSignal.targetDigit}</span>
                                                     <div className="space-y-1">
-                                                        <p className="text-[8px] font-black text-muted-foreground uppercase tracking-widest">PRESSURE</p>
+                                                        <p className="text-[8px] font-black text-muted-foreground uppercase tracking-widest">DOMINANCE</p>
                                                         <p className="text-sm font-black text-emerald-500/40">{(lockedSignal.confidence / 10).toFixed(2)}</p>
                                                     </div>
                                                 </div>
@@ -239,13 +242,13 @@ export function InsightView({ globalResults, activeScanId, dashboardPrice, dashb
                                                     <div>
                                                         <p className="text-[11px] font-black text-white uppercase tracking-[0.4em]">EXECUTION GATE</p>
                                                         <h4 className="text-2xl font-black text-white uppercase mt-1">
-                                                            {targetHit ? "TARGET HIT" : triggerDetected ? "TRIGGER ACTIVE" : "AWAITING TRIGGER"}
+                                                            {targetHit ? "SEQUENCE MATCH" : triggerDetected ? "AWAITING TARGET" : "AWAITING TRIGGER"}
                                                         </h4>
                                                     </div>
                                                 </div>
                                                 <div className="text-right">
                                                     <p className="text-[10px] font-black text-white/40 uppercase tracking-[0.2em] mb-1">LIVE PRICE</p>
-                                                    <p className="text-lg font-black text-white tabular-nums tracking-tighter leading-none">
+                                                    <p className="text-xl font-black text-white tabular-nums tracking-tighter leading-none">
                                                         {(livePrice || lockedSignal.currentPrice).toFixed(livePip || lockedSignal.pip)}
                                                     </p>
                                                 </div>
@@ -263,15 +266,16 @@ export function InsightView({ globalResults, activeScanId, dashboardPrice, dashb
                                                     {liveDigits.map((digit, idx) => {
                                                         const isTrigger = digit === lockedSignal.triggerDigit;
                                                         const isTarget = digit === lockedSignal.targetDigit;
-                                                        const isSuccessFlow = isTarget && liveDigits[idx + 1] === lockedSignal.triggerDigit;
+                                                        // Target "Ignites" only if preceded by Trigger
+                                                        const isFlowSuccess = isTarget && liveDigits[idx + 1] === lockedSignal.triggerDigit;
                                                         
                                                         return (
                                                             <div key={`${idx}-${digit}`} className={cn(
                                                                 "w-12 h-12 rounded-xl flex items-center justify-center font-black text-sm border transition-all shrink-0",
                                                                 isTrigger ? "bg-primary/90 border-primary text-white shadow-xl scale-110 z-10" : 
-                                                                isSuccessFlow ? "bg-emerald-500 border-emerald-500 text-white shadow-[0_0_15px_rgba(16,185,129,0.5)] scale-125 z-20" :
-                                                                isTarget ? "bg-white/10 border-emerald-500/30 text-emerald-500/60" :
-                                                                "bg-white/5 border-white/10 text-white/20"
+                                                                isFlowSuccess ? "bg-emerald-500 border-emerald-500 text-white shadow-[0_0_15px_rgba(16,185,129,0.5)] scale-125 z-20" :
+                                                                isTarget ? "bg-white/10 border-white/20 text-white/40" :
+                                                                "bg-white/5 border-white/10 text-white/10"
                                                             )}>
                                                                 {digit}
                                                             </div>
@@ -320,7 +324,7 @@ export function InsightView({ globalResults, activeScanId, dashboardPrice, dashb
                                                     <p className="text-[9px] font-black text-white uppercase tracking-widest">v8.5+ EXECUTION RULE</p>
                                                 </div>
                                                 <p className="text-[10px] font-bold text-white/80 leading-relaxed italic uppercase">
-                                                    "Trigger on <span className="text-primary">{lockedSignal.triggerDigit}</span>, trade toward <span className="text-emerald-500">{lockedSignal.targetDigit}</span> on next tick. Sequential confirmation enforced. Re-entry permitted only after trigger manifestation."
+                                                    "TRIGGER ON <span className="text-primary">{lockedSignal.triggerDigit}</span>, TRADE TOWARD <span className="text-emerald-500">{lockedSignal.targetDigit}</span> ON NEXT TICK. DO NOT RE-ENTER ON SAME TRIGGER UNLESS CONSECUTIVE APPEARANCE DETECTED."
                                                 </p>
                                             </div>
                                         </Card>

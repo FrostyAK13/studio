@@ -25,8 +25,8 @@ export interface GlobalAnalysisResult {
     flowScore: number;
     // Strategy Parameters
     tradeType: 'FLOW' | 'NO TRADE';
-    triggerDigit: number | null; // e
-    targetDigit: number | null;  // t
+    triggerDigit: number | null; // e (Weak/Transition)
+    targetDigit: number | null;  // t (Local Dominant)
     confidence: number;
     // Price data
     currentPrice: number;
@@ -90,7 +90,7 @@ export function Dashboard() {
         currentMarketRef.current = selectedMarket;
     }, [selectedMarket, maxTicks, mounted]);
 
-    // Background Global Sniper Engine - Decoupled Flow Strategy
+    // Background Global Sniper Engine - Probability Flow 8.5+ Strategy
     React.useEffect(() => {
         if (!mounted || isLocked) return;
 
@@ -133,55 +133,56 @@ export function Dashboard() {
                     return parseInt(dec[pip - 1] || '0');
                 }).reverse();
 
-                // Sniper Flow Strategy Logic
+                // 8.5+ Probability Flow Strategy Logic
                 const total = ticks.length || 1;
                 const counts = Array(10).fill(0);
                 ticks.forEach(d => counts[d]++);
                 const P = counts.map(c => (c / total) * 100);
                 const D = P.map(p => p - 10); // Deviation D[i]
 
-                // Step 2: Market Quality
+                // Market Quality Metrics
                 const CI = D.reduce((sum, d) => sum + Math.pow(d, 2), 0);
                 const mean = 10;
                 const variance = P.reduce((sum, p) => sum + Math.pow(p - mean, 2), 0) / 10;
                 const stdDev = Math.sqrt(variance);
                 const SS = Math.max(0, 1 - (stdDev / 10));
 
-                // Step 3: Candidate Selection
-                // Entry (e): -1.0 <= D[e] <= -0.2
+                // Step 2: Entry Digit (Trigger e) -> Transition Zone
+                // -1.0 <= D[e] <= -0.2
                 const entryCandidates = [0,1,2,3,4,5,6,7,8,9].filter(i => D[i] >= -1.0 && D[i] <= -0.2);
                 
-                // Target (t): D[t] > 0.3 and LD[t] > 0
-                const targetCandidates = [0,1,2,3,4,5,6,7,8,9].filter(i => {
-                    if (D[i] <= 0.3) return false;
+                // Step 3: Target Digit (Prediction t) -> Local Dominant Zone
+                // LD[i] = D[i] - (D[i-1] + D[i+1])/2
+                const targetCandidates = [0,1,2,3,4,5,6,7,8,9].map(i => {
                     const prevIdx = (i + 9) % 10;
                     const nextIdx = (i + 1) % 10;
                     const ld = D[i] - (D[prevIdx] + D[nextIdx]) / 2;
-                    return ld > 0;
-                });
+                    return { i, ld, d: D[i] };
+                }).filter(t => t.d > 0.3 && t.ld > 0);
 
                 let bestE: number | null = null;
                 let bestT: number | null = null;
                 let bestFlowScore = -1000;
                 let finalConfidence = 0;
 
-                // Step 4: Flow Alignment
+                // Step 4: Flow Alignment & FlowScore Calculation
                 if (entryCandidates.length > 0 && targetCandidates.length > 0 && CI > 5 && CI < 250) {
                     entryCandidates.forEach(e => {
                         targetCandidates.forEach(t => {
-                            if (e === t) return;
+                            if (e === t.i) return;
                             
-                            // Stability Filter: Neighbor variance of target
-                            const tPrev = (t + 9) % 10;
-                            const tNext = (t + 1) % 10;
+                            // Stability Filter: Avoid unstable spikes near target
+                            const tPrev = (t.i + 9) % 10;
+                            const tNext = (t.i + 1) % 10;
                             const tStability = Math.abs(D[tNext] - D[tPrev]);
 
                             if (tStability < 2.5) {
-                                const score = Math.abs(D[t]) - Math.abs(D[e]);
+                                // FlowScore = |D[t]| - |D[e]|
+                                const score = Math.abs(t.d) - Math.abs(D[e]);
                                 if (score > bestFlowScore) {
                                     bestFlowScore = score;
                                     bestE = e;
-                                    bestT = t;
+                                    bestT = t.i;
                                 }
                             }
                         });
@@ -192,7 +193,7 @@ export function Dashboard() {
                     }
                 }
 
-                // O3/U6 Secondary Scan
+                // O3/U6 Secondary Scan (Retained for Global Monitor Diversity)
                 let S_U6 = 0;
                 for (let i = 0; i <= 5; i++) S_U6 += D[i];
                 let S_O3 = 0;
