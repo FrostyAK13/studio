@@ -186,6 +186,7 @@ export function Dashboard() {
 
         ws.onopen = () => {
             setSurveillanceStatus('active');
+            // Re-subscribe with correct granularity for chart
             ws.send(JSON.stringify({
                 "ticks_history": selectedMarket,
                 "count": 500,
@@ -207,6 +208,11 @@ export function Dashboard() {
                 const activePipSize = data.echo_req.pip_size || 2;
                 pipSizeRef.current = activePipSize;
                 setDecimalPlaces(activePipSize);
+                
+                // History message from tick subscription
+                if (data.echo_req.style === 'ticks') {
+                    setPriceHistory([...prices].reverse());
+                }
             }
 
             if (data.msg_type === 'candles' && data.candles) {
@@ -251,6 +257,7 @@ export function Dashboard() {
                     setTickTimestamps(prev => [epochMs, ...prev].slice(0, 1000));
                     setPrice(newPrice);
                     setLastDigitTicks(prev => [newDigit, ...prev].slice(0, 1000));
+                    setPriceHistory(prev => [newPrice, ...prev].slice(0, 1000));
                 }
             }
         };
@@ -364,4 +371,3 @@ export function Dashboard() {
         </div>
     );
 }
-

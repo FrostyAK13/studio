@@ -3,8 +3,7 @@
 
 import * as React from 'react';
 import { createChart, ColorType, IChartApi, ISeriesApi, UTCTimestamp } from 'lightweight-charts';
-import { Button } from '@/components/ui/button';
-import { AreaChart, CandlestickChart, Activity, Info, Triangle, ChevronDown, Search, TrendingUp, TrendingDown, Undo2, Redo2, Maximize2, Camera, Save, FunctionSquare } from 'lucide-react';
+import { AreaChart, CandlestickChart, Triangle, ChevronDown, Search, Undo2, Redo2, Maximize2, Camera, FunctionSquare } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { motion } from 'framer-motion';
@@ -173,25 +172,18 @@ export function DerivChart({
                 autoScale: true,
                 scaleMargins: {
                     top: 0.1,
-                    bottom: 0.3, 
+                    bottom: 0.35, 
                 },
             },
             timeScale: {
                 borderColor: '#e5e7eb',
                 timeVisible: true,
                 secondsVisible: true,
+                shiftVisibleRangeOnNewBar: true,
             },
             crosshair: {
-                vertLine: {
-                    color: '#94a3b8',
-                    width: 1,
-                    style: 1,
-                },
-                horzLine: {
-                    color: '#94a3b8',
-                    width: 1,
-                    style: 1,
-                },
+                vertLine: { color: '#94a3b8', width: 1, style: 1 },
+                horzLine: { color: '#94a3b8', width: 1, style: 1 },
             },
         });
 
@@ -200,10 +192,7 @@ export function DerivChart({
             topColor: 'rgba(0, 166, 156, 0.2)',
             bottomColor: 'rgba(0, 166, 156, 0)',
             lineWidth: 2,
-            priceFormat: {
-                type: 'price',
-                precision: decimalPlaces,
-            },
+            priceFormat: { type: 'price', precision: decimalPlaces },
             visible: chartType === 'line',
         });
 
@@ -213,10 +202,7 @@ export function DerivChart({
             borderVisible: false,
             wickUpColor: '#00a69c',
             wickDownColor: '#ff444f',
-            priceFormat: {
-                type: 'price',
-                precision: decimalPlaces,
-            },
+            priceFormat: { type: 'price', precision: decimalPlaces },
             visible: chartType === 'candles',
         });
 
@@ -229,39 +215,34 @@ export function DerivChart({
             window.removeEventListener('resize', handleResize);
             chart.remove();
         };
-    }, [decimalPlaces]);
-
-    React.useEffect(() => {
-        if (lineSeriesRef.current) lineSeriesRef.current.applyOptions({ visible: chartType === 'line' });
-        if (candleSeriesRef.current) candleSeriesRef.current.applyOptions({ visible: chartType === 'candles' });
-    }, [chartType]);
+    }, [decimalPlaces, chartType]);
 
     React.useEffect(() => {
         if (!lineSeriesRef.current || !candleSeriesRef.current) return;
 
         if (candleData && candleData.length > 0) {
-            const sanitized = candleData.map(c => ({
-                time: Number(c.time) as UTCTimestamp,
-                open: Number(c.open),
-                high: Number(c.high),
-                low: Number(c.low),
-                close: Number(c.close)
-            })).sort((a, b) => (a.time as number) - (b.time as number));
+            // Deduplicate and sort by time for lightweight-charts
+            const uniqueData = Array.from(new Map(candleData.map(item => [item.time, item])).values())
+                .sort((a, b) => a.time - b.time)
+                .map(c => ({
+                    time: Number(c.time) as UTCTimestamp,
+                    open: Number(c.open),
+                    high: Number(c.high),
+                    low: Number(c.low),
+                    close: Number(c.close)
+                }));
             
-            const unique = sanitized.filter((v, i, a) => a.findIndex(t => t.time === v.time) === i);
-            candleSeriesRef.current.setData(unique);
+            candleSeriesRef.current.setData(uniqueData);
             
-            const areaLine = unique.map(c => ({ time: c.time, value: c.close }));
+            const areaLine = uniqueData.map(c => ({ time: c.time, value: c.close }));
             lineSeriesRef.current.setData(areaLine);
         }
     }, [candleData]);
 
     return (
         <div className="w-full h-full relative flex flex-col bg-white border border-border rounded-xl overflow-hidden shadow-2xl">
-            {/* Top Toolbar - Exactly like Deriv.com */}
             <div className="flex h-12 items-center border-b bg-white px-4 justify-between z-50">
                 <div className="flex items-center gap-1.5 h-full">
-                    {/* Market Selector */}
                     <Popover>
                         <PopoverTrigger asChild>
                             <button className="flex items-center gap-2 hover:bg-slate-50 px-2 py-1 rounded transition-colors group">
@@ -290,7 +271,9 @@ export function DerivChart({
                                         return (
                                             <button 
                                                 key={market.id}
-                                                onClick={() => onMarketChange(market.id)}
+                                                onClick={() => {
+                                                    onMarketChange(market.id);
+                                                }}
                                                 className={cn(
                                                     "w-full flex items-center justify-between p-2 rounded-lg transition-all hover:bg-slate-50",
                                                     isSelected ? "bg-slate-100" : "bg-transparent"
@@ -315,7 +298,6 @@ export function DerivChart({
 
                     <div className="w-px h-6 bg-slate-200 mx-1" />
 
-                    {/* Interval Selector */}
                     <Popover>
                         <PopoverTrigger asChild>
                             <button className="flex items-center gap-1.5 hover:bg-slate-50 px-3 py-1 rounded transition-colors group min-w-[50px]">
@@ -348,10 +330,9 @@ export function DerivChart({
                         </PopoverContent>
                     </Popover>
 
-                    {/* Chart Type Toggle */}
                     <button 
                         onClick={() => setChartType(chartType === 'line' ? 'candles' : 'line')}
-                        className="p-2 hover:bg-slate-50 rounded transition-colors text-slate-500"
+                        className={cn("p-2 rounded transition-colors hover:bg-slate-50", chartType === 'candles' ? "text-primary" : "text-slate-500")}
                     >
                         {chartType === 'candles' ? <CandlestickChart className="h-4 w-4" /> : <AreaChart className="h-4 w-4" />}
                     </button>
@@ -363,36 +344,29 @@ export function DerivChart({
                     <div className="w-px h-6 bg-slate-200 mx-1" />
 
                     <div className="flex items-center gap-1">
-                        <button className="p-2 hover:bg-slate-50 rounded transition-colors text-slate-300">
-                            <Undo2 className="h-4 w-4" />
-                        </button>
-                        <button className="p-2 hover:bg-slate-50 rounded transition-colors text-slate-300">
-                            <Redo2 className="h-4 w-4" />
-                        </button>
+                        <button className="p-2 hover:bg-slate-50 rounded transition-colors text-slate-300"><Undo2 className="h-4 w-4" /></button>
+                        <button className="p-2 hover:bg-slate-50 rounded transition-colors text-slate-300"><Redo2 className="h-4 w-4" /></button>
                     </div>
                 </div>
 
                 <div className="flex items-center gap-3">
-                    <button className="flex items-center gap-2 hover:bg-slate-50 px-3 py-1 rounded transition-colors">
-                        <span className="text-xs font-bold text-slate-400">Save</span>
-                    </button>
+                    <button className="flex items-center gap-2 hover:bg-slate-50 px-3 py-1 rounded transition-colors text-xs font-bold text-slate-400">Save</button>
                     <div className="w-px h-6 bg-slate-200" />
                     <Camera className="h-4 w-4 text-slate-400 cursor-pointer hover:text-slate-600" />
                     <Maximize2 className="h-4 w-4 text-slate-400 cursor-pointer hover:text-slate-600" />
                 </div>
             </div>
 
-            {/* O-H-L-C Stats Sub-Header */}
             <div className="flex items-center gap-4 px-4 py-2 border-b bg-white text-[11px] font-medium text-slate-500">
                 <div className="flex items-center gap-1.5">
                     <div className={cn("w-2 h-2 rounded-full", (ohlcData?.perc || 0) >= 0 ? "bg-emerald-500" : "bg-rose-500")} />
                     <span className="flex gap-1.5">
-                        <span className="text-rose-500">O</span> {ohlcData?.open?.toFixed(decimalPlaces) || '0.00'}
-                        <span className="text-rose-500 ml-1">H</span> {ohlcData?.high?.toFixed(decimalPlaces) || '0.00'}
-                        <span className="text-rose-500 ml-1">L</span> {ohlcData?.low?.toFixed(decimalPlaces) || '0.00'}
-                        <span className="text-rose-500 ml-1">C</span> {ohlcData?.close?.toFixed(decimalPlaces) || '0.00'}
+                        <span className="text-rose-500 font-bold">O</span> {Number(ohlcData?.open || 0).toFixed(decimalPlaces)}
+                        <span className="text-rose-500 font-bold ml-1">H</span> {Number(ohlcData?.high || 0).toFixed(decimalPlaces)}
+                        <span className="text-rose-500 font-bold ml-1">L</span> {Number(ohlcData?.low || 0).toFixed(decimalPlaces)}
+                        <span className="text-rose-500 font-bold ml-1">C</span> {Number(ohlcData?.close || 0).toFixed(decimalPlaces)}
                     </span>
-                    <span className={cn("ml-2 font-bold", (ohlcData?.diff || 0) >= 0 ? "text-emerald-500" : "text-rose-500")}>
+                    <span className={cn("ml-2 font-black", (ohlcData?.diff || 0) >= 0 ? "text-emerald-500" : "text-rose-500")}>
                         {(ohlcData?.diff || 0).toFixed(decimalPlaces)} ({(ohlcData?.perc || 0).toFixed(2)}%)
                     </span>
                 </div>
@@ -404,4 +378,3 @@ export function DerivChart({
         </div>
     );
 }
-
