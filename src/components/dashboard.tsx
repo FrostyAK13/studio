@@ -1,3 +1,4 @@
+
 'use client';
 
 import * as React from 'react';
@@ -12,6 +13,7 @@ import { Button } from '@/components/ui/button';
 import { RefreshCw, Radio, Activity, Moon, Sun, ExternalLink } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { LockScreen } from './lock-screen';
+import { DerivChart } from './deriv-chart';
 
 type EngineStatus = 'offline' | 'active';
 
@@ -188,7 +190,6 @@ export function Dashboard() {
 
         ws.onopen = () => {
             setSurveillanceStatus('active');
-            // Request history first to fix percentage distribution
             ws.send(JSON.stringify({ 
                 "ticks_history": selectedMarket, 
                 "count": 1000, 
@@ -207,6 +208,7 @@ export function Dashboard() {
 
             if (data.msg_type === 'history' && data.history) {
                 const prices = data.history.prices;
+                const times = data.history.times.map((t: number) => t * 1000);
                 const activePipSize = data.echo_req.pip_size || 2;
                 pipSizeRef.current = activePipSize;
                 setDecimalPlaces(activePipSize);
@@ -220,6 +222,7 @@ export function Dashboard() {
                 setPrice(prices[prices.length - 1]);
                 setLastDigitTicks(ticks);
                 setPriceHistory([...prices].reverse());
+                setTickTimestamps([...times].reverse());
             }
 
             if (data.msg_type === 'tick') {
@@ -234,7 +237,7 @@ export function Dashboard() {
                     const decimalsStr = fullPriceStr.split('.')[1] || '00000000';
                     const newDigit = parseInt(decimalsStr[activePipSize - 1] || '0');
 
-                    setTickTimestamps(prev => [Date.now(), ...prev].slice(0, 2000));
+                    setTickTimestamps(prev => [Date.now(), ...prev].slice(0, 1000));
                     setPrice(newPrice);
                     setLastDigitTicks(prev => [newDigit, ...prev].slice(0, 1000));
                     setPriceHistory(prev => [newPrice, ...prev].slice(0, 1000));
@@ -300,7 +303,7 @@ export function Dashboard() {
                 <main className="flex-1 flex flex-col max-w-[1600px] mx-auto w-full relative p-2 sm:p-4">
                     <Tabs defaultValue="analyzer" className="w-full">
                         <TabsList className="flex items-center justify-start md:justify-center gap-1.5 md:gap-2 bg-transparent h-auto p-0 mb-4 md:mb-6 overflow-x-auto no-scrollbar w-full pb-2">
-                            {['analyzer', 'last-digit-analysis', 'frequency', 'global-scan', 'insight'].map((tab) => (
+                            {['analyzer', 'last-digit-analysis', 'frequency', 'global-scan', 'chart', 'insight'].map((tab) => (
                                 <TabsTrigger key={tab} value={tab} className="flex-shrink-0 px-3 md:px-5 py-2 md:py-2.5 rounded-full border border-transparent data-[state=active]:bg-primary/10 data-[state=active]:text-primary text-muted-foreground font-black text-[8px] md:text-[10px] uppercase tracking-[0.1em] md:tracking-[0.2em] transition-all shadow-sm hover:bg-muted/50">
                                     {tab.toUpperCase().replace(/-/g, ' ')}
                                 </TabsTrigger>
@@ -317,6 +320,9 @@ export function Dashboard() {
                         </TabsContent>
                         <TabsContent value="global-scan" className="mt-0 outline-none animate-in fade-in duration-500">
                             <ScannerView price={price} lastDigitTicks={analyzedDigits} priceHistory={analyzedPrices} maxTicks={maxTicks} handleMaxTicksChange={handleMaxTicksChange} handleMaxTicksBlur={handleMaxTicksBlur} selectedMarket={selectedMarket} onMarketChange={setSelectedMarket} decimalPlaces={decimalPlaces} />
+                        </TabsContent>
+                        <TabsContent value="chart" className="mt-0 outline-none animate-in fade-in duration-500 h-[60vh]">
+                            <DerivChart priceHistory={priceHistory} tickTimestamps={tickTimestamps} decimalPlaces={decimalPlaces} />
                         </TabsContent>
                         <TabsContent value="insight" className="mt-0 outline-none animate-in fade-in duration-500">
                             <InsightView globalResults={globalResults} activeScanId={activeScanId} dashboardPrice={price} dashboardMarketId={selectedMarket} />

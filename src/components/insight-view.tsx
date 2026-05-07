@@ -1,3 +1,4 @@
+
 'use client';
 
 import * as React from 'react';
@@ -141,11 +142,11 @@ export function InsightView({ globalResults, activeScanId, dashboardPrice, dashb
                                     </div>
                                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                         <div className="bg-black/40 border border-white/5 p-4 rounded-2xl flex flex-col items-center justify-center">
-                                            <p className="text-[8px] font-black text-primary uppercase tracking-widest mb-1">SECTOR</p>
+                                            <p className="text-[8px] font-black text-primary uppercase tracking-widest mb-1">MARKET</p>
                                             <p className="text-sm font-black text-white truncate w-full uppercase">{currentScanMarket?.name || 'INITIALIZING...'}</p>
                                         </div>
                                         <div className="bg-black/40 border border-white/5 p-4 rounded-2xl flex flex-col items-center justify-center">
-                                            <p className="text-[8px] font-black text-primary uppercase tracking-widest mb-1">FEED</p>
+                                            <p className="text-[8px] font-black text-primary uppercase tracking-widest mb-1">PRICE</p>
                                             <p className="text-sm font-black text-emerald-400 tabular-nums">{globalResults[activeScanId || '']?.currentPrice?.toFixed(globalResults[activeScanId || '']?.pip || 2) || 'SYNCING'}</p>
                                         </div>
                                     </div>
