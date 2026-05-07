@@ -1,9 +1,10 @@
+
 'use client';
 
 import * as React from 'react';
 import { createChart, ColorType, IChartApi, ISeriesApi, UTCTimestamp } from 'lightweight-charts';
 import { Button } from '@/components/ui/button';
-import { AreaChart, BarChart3, Settings2, X, TrendingUp, CandlestickChart, Activity } from 'lucide-react';
+import { AreaChart, BarChart3, Settings2, X, TrendingUp, CandlestickChart, Activity, Info, Triangle } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 
@@ -11,6 +12,7 @@ interface DerivChartProps {
     priceHistory: number[];
     tickTimestamps: number[];
     decimalPlaces: number;
+    lastDigitTicks: number[];
 }
 
 type ChartType = 'line' | 'candles' | 'hollow' | 'ohlc';
@@ -31,7 +33,84 @@ const timeIntervals = [
     { label: '1 day', id: '1d', disabled: true },
 ];
 
-export function DerivChart({ priceHistory, tickTimestamps, decimalPlaces }: DerivChartProps) {
+const DigitStatsOverlay = ({ ticks }: { ticks: number[] }) => {
+    const stats = React.useMemo(() => {
+        const counts = Array(10).fill(0);
+        ticks.forEach(d => { if (d >= 0 && d <= 9) counts[d]++; });
+        const total = ticks.length || 1;
+        const mapped = counts.map((count, index) => ({ 
+            digit: index, 
+            percentage: (count / total) * 100 
+        }));
+        const sorted = [...mapped].sort((a, b) => b.percentage - a.percentage);
+        const max = sorted[0].percentage;
+        const min = sorted[sorted.length - 1].percentage;
+        
+        return mapped.map(item => ({
+            ...item,
+            isMax: item.percentage === max && total > 20,
+            isMin: item.percentage === min && total > 20,
+            isLast: ticks.length > 0 && ticks[0] === item.digit
+        }));
+    }, [ticks]);
+
+    return (
+        <div className="absolute bottom-12 left-0 w-full flex justify-center pointer-events-none z-[60]">
+            <div className="flex gap-1.5 sm:gap-4 p-2 sm:p-4 bg-background/20 backdrop-blur-md rounded-2xl border border-white/5 pointer-events-auto items-end">
+                {stats.map((s) => {
+                    const radius = 18;
+                    const circumference = 2 * Math.PI * radius;
+                    const offset = circumference - (s.percentage / 20) * circumference; // Normalized to 20% max for arc visual
+                    
+                    return (
+                        <div key={s.digit} className="flex flex-col items-center relative group">
+                            <div className="relative w-10 h-10 sm:w-14 sm:h-14 flex items-center justify-center">
+                                <svg className="absolute inset-0 w-full h-full -rotate-90">
+                                    <circle 
+                                        cx="50%" cy="50%" r={radius} 
+                                        stroke="currentColor" strokeWidth="3" 
+                                        fill="transparent" className="text-muted/10" 
+                                    />
+                                    <circle 
+                                        cx="50%" cy="50%" r={radius} 
+                                        stroke={s.isMax ? "#2dd4bf" : s.isMin ? "#f43f5e" : "#94a3b8"} 
+                                        strokeWidth="3" fill="transparent" 
+                                        strokeDasharray={circumference}
+                                        strokeDashoffset={offset}
+                                        strokeLinecap="round"
+                                        className="transition-all duration-1000"
+                                    />
+                                </svg>
+                                <div className="flex flex-col items-center justify-center z-10 leading-none">
+                                    <span className="text-xs sm:text-base font-black">{s.digit}</span>
+                                    <span className="text-[6px] sm:text-[8px] font-bold text-muted-foreground">{s.percentage.toFixed(1)}%</span>
+                                </div>
+                            </div>
+                            <div className="h-4 flex items-center justify-center">
+                                {s.isLast && (
+                                    <motion.div 
+                                        initial={{ scale: 0 }} 
+                                        animate={{ scale: 1 }} 
+                                        className="text-orange-500"
+                                    >
+                                        <Triangle className="w-2 h-2 sm:w-3 sm:h-3 fill-current rotate-180" />
+                                    </motion.div>
+                                )}
+                            </div>
+                        </div>
+                    );
+                })}
+                <button className="h-8 w-8 rounded-full bg-white/5 flex items-center justify-center hover:bg-white/10 transition-colors ml-2 mb-4">
+                    <Info className="h-3 w-3 text-white/40" />
+                </button>
+            </div>
+        </div>
+    );
+};
+
+import { motion } from 'framer-motion';
+
+export function DerivChart({ priceHistory, tickTimestamps, decimalPlaces, lastDigitTicks }: DerivChartProps) {
     const chartContainerRef = React.useRef<HTMLDivElement>(null);
     const chartRef = React.useRef<IChartApi | null>(null);
     const lineSeriesRef = React.useRef<ISeriesApi<"Area"> | null>(null);
@@ -257,6 +336,8 @@ export function DerivChart({ priceHistory, tickTimestamps, decimalPlaces }: Deri
             </div>
 
             <div ref={chartContainerRef} className="w-full h-full" />
+            
+            <DigitStatsOverlay ticks={lastDigitTicks} />
         </div>
     );
 }

@@ -1,3 +1,4 @@
+
 'use client';
 
 import * as React from 'react';
@@ -7,50 +8,194 @@ import { AnalyzerView } from './analyzer-view';
 import { syntheticIndices } from '@/lib/mock-data';
 import { DigitFrequencyView } from './digit-frequency-view';
 import { InsightView } from './insight-view';
-import { CorrelationView } from './correlation-view';
-import { GlobalMarketScanner } from './global-market-scanner';
 import { cn } from '@/lib/utils';
+import { Button } from '@/components/ui/button';
+import { RefreshCw, Radio, Activity, Moon, Sun, ExternalLink, ChevronDown, Search, TrendingUp, TrendingDown } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { LockScreen } from './lock-screen';
+import { DerivChart } from './deriv-chart';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { Input } from '@/components/ui/input';
 
-type ConnectionStatusType = 'connecting' | 'streaming' | 'disconnected';
+type EngineStatus = 'offline' | 'active';
+
+export interface GlobalAnalysisResult {
+    marketId: string;
+    marketName: string;
+    ci: number;
+    ss: number;
+    flowScore: number;
+    tradeType: 'FLOW' | 'NO TRADE';
+    triggerDigit: number | null; 
+    targetDigit: number | null; 
+    confidence: number;
+    currentPrice: number;
+    pip: number;
+    scannerStrategy: 'OVER 3' | 'UNDER 6' | 'NONE';
+    scannerEntry: number | null;
+    scannerConfidence: number;
+}
 
 export function Dashboard() {
+    const [mounted, setMounted] = React.useState(false);
+    const [isLocked, setIsLocked] = React.useState(true);
+    const [theme, setTheme] = React.useState<'light' | 'dark'>('light');
     const [price, setPrice] = React.useState(0);
     const [lastDigitTicks, setLastDigitTicks] = React.useState<number[]>([]);
     const [priceHistory, setPriceHistory] = React.useState<number[]>([]);
     const [maxTicks, setMaxTicks] = React.useState(1000); 
-    const [selectedMarket, setSelectedMarket] = React.useState(syntheticIndices[0].id);
+    const [selectedMarket, setSelectedMarket] = React.useState('1HZ10V');
     const [decimalPlaces, setDecimalPlaces] = React.useState(2);
-    const [connectionStatus, setConnectionStatus] = React.useState<ConnectionStatusType>('connecting');
     const [tickTimestamps, setTickTimestamps] = React.useState<number[]>([]);
+    
+    const [surveillanceStatus, setSurveillanceStatus] = React.useState<EngineStatus>('offline');
+    const [globalResults, setGlobalResults] = React.useState<Record<string, GlobalAnalysisResult>>({});
+    const [activeScanId, setActiveScanId] = React.useState<string | null>(null);
+    const [searchQuery, setSearchQuery] = React.useState('');
+
+    const currentMarketRef = React.useRef(selectedMarket);
+    const pipSizeRef = React.useRef<number | null>(null);
 
     React.useEffect(() => {
-        setPrice(0);
-        setLastDigitTicks([]);
-        setPriceHistory([]);
-        setTickTimestamps([]);
-        setConnectionStatus('connecting');
+        setMounted(true);
+        const authState = localStorage.getItem('frosty_auth');
+        if (authState === 'true') setIsLocked(false);
+        
+        const savedTheme = localStorage.getItem('theme') as 'light' | 'dark';
+        if (savedTheme) setTheme(savedTheme);
+    }, []);
 
-        const ws = new WebSocket('wss://ws.binaryws.com/websockets/v3?app_id=1089');
+    const handleUnlock = () => {
+        setIsLocked(false);
+        localStorage.setItem('frosty_auth', 'true');
+    };
 
-        let pipSize: number | null = null;
-        let historyBuffer: {time: number, price: number}[] | null = null;
+    React.useEffect(() => {
+        if (!mounted) return;
+        document.documentElement.classList.toggle('dark', theme === 'dark');
+        localStorage.setItem('theme', theme);
+    }, [theme, mounted]);
 
-        const prependTickToState = (tick: { quote: number, time?: number }) => {
-            const newPrice = tick.quote;
-            const currentPipSize = pipSize !== null ? pipSize : 2;
-            const priceString = newPrice.toFixed(currentPipSize);
-            const newDigit = parseInt(priceString.slice(-1));
+    // Global Surveillance Engine
+    React.useEffect(() => {
+        if (!mounted || isLocked) return;
 
-            setTickTimestamps(prev => [Date.now(), ...prev].slice(0, 2000));
-            setPrice(newPrice);
-            setLastDigitTicks(prevTicks => [newDigit, ...prevTicks].slice(0, 2000));
-            setPriceHistory(prevPrices => [newPrice, ...prevPrices].slice(0, 2000));
+        const scanWs = new WebSocket('wss://ws.derivws.com/websockets/v3?app_id=84799');
+        let currentIndex = 0;
+
+        const runGlobalScan = () => {
+            if (currentIndex >= syntheticIndices.length) {
+                currentIndex = 0;
+                setTimeout(runGlobalScan, 2000); 
+                return;
+            }
+
+            const market = syntheticIndices[currentIndex];
+            setActiveScanId(market.id);
+            if (scanWs.readyState === WebSocket.OPEN) {
+                scanWs.send(JSON.stringify({
+                    "ticks_history": market.id,
+                    "count": 1000, 
+                    "end": "latest",
+                    "style": "ticks"
+                }));
+            }
         };
 
+        scanWs.onopen = () => runGlobalScan();
+
+        scanWs.onmessage = (event) => {
+            const data = JSON.parse(event.data);
+            if (data.msg_type === 'history' && data.history) {
+                const prices = data.history.prices;
+                const latestPrice = prices[prices.length - 1];
+                const marketId = data.echo_req.ticks_history;
+                const marketName = syntheticIndices.find(m => m.id === marketId)?.name || marketId;
+                const pip = data.echo_req.pip_size || 2;
+
+                const ticks = prices.map((p: number) => {
+                    const pStr = p.toFixed(8);
+                    const dec = pStr.split('.')[1] || '00';
+                    return parseInt(dec[pip - 1] || '0');
+                }).reverse();
+
+                const total = ticks.length || 1;
+                const counts = Array(10).fill(0);
+                ticks.forEach(d => counts[d]++);
+                const P = counts.map(c => (c / total) * 100);
+                const D = P.map(p => p - 10); 
+
+                const variance = P.reduce((sum, p) => sum + Math.pow(p - 10, 2), 0) / 10;
+                const stdDev = Math.sqrt(variance);
+                const SS = Math.max(0, 1 - (stdDev / 10));
+                const CI = D.reduce((sum, d) => sum + Math.pow(d, 2), 0);
+
+                const entryCandidates = [0,1,2,3,4,5,6,7,8,9].filter(i => D[i] >= -1.0 && D[i] <= -0.2);
+                const targetCandidates = [0,1,2,3,4,5,6,7,8,9].map(i => {
+                    const prevIdx = (i + 9) % 10;
+                    const nextIdx = (i + 1) % 10;
+                    const ld = D[i] - (D[prevIdx] + D[nextIdx]) / 2;
+                    return { i, ld, d: D[i] };
+                }).filter(t => t.d > 0.3 && t.ld > 0);
+
+                let bestE: number | null = null;
+                let bestT: number | null = null;
+                let bestFlowScore = -1000;
+                let finalConfidence = 0;
+
+                if (entryCandidates.length > 0 && targetCandidates.length > 0) {
+                    entryCandidates.forEach(e => {
+                        targetCandidates.forEach(t => {
+                            if (e === t.i) return;
+                            const score = Math.abs(t.d) - Math.abs(D[e]);
+                            if (score > bestFlowScore) {
+                                bestFlowScore = score;
+                                bestE = e;
+                                bestT = t.i;
+                            }
+                        });
+                    });
+                    if (bestE !== null && bestT !== null) {
+                        finalConfidence = Math.min(99.9, 65 + (bestFlowScore * 12) + (SS * 15));
+                    }
+                }
+
+                let S_U6 = 0; for (let i = 0; i <= 5; i++) S_U6 += D[i];
+                let S_O3 = 0; for (let i = 4; i <= 9; i++) S_O3 += D[i];
+                const scannerDirection = S_U6 > S_O3 ? 'UNDER 6' : 'OVER 3';
+                const bestScanner = P.map((p, i) => ({ i, p })).sort((a, b) => b.p - a.p)[0];
+
+                setGlobalResults(prev => ({
+                    ...prev,
+                    [marketId]: {
+                        marketId, marketName, ci: CI, ss: SS, flowScore: bestFlowScore,
+                        tradeType: bestE !== null ? 'FLOW' : 'NO TRADE',
+                        triggerDigit: bestE, targetDigit: bestT, confidence: finalConfidence,
+                        currentPrice: latestPrice, pip: pip, scannerStrategy: scannerDirection,
+                        scannerEntry: bestScanner?.i ?? null, scannerConfidence: 60 + Math.max(S_U6, S_O3)
+                    }
+                }));
+
+                currentIndex++;
+                setTimeout(runGlobalScan, 200);
+            }
+        };
+
+        return () => scanWs.close();
+    }, [mounted, isLocked]);
+
+    // Active Market Feed
+    React.useEffect(() => {
+        if (!mounted || isLocked) return;
+
+        currentMarketRef.current = selectedMarket;
+        const ws = new WebSocket('wss://ws.derivws.com/websockets/v3?app_id=84799');
+
         ws.onopen = () => {
+            setSurveillanceStatus('active');
             ws.send(JSON.stringify({ 
                 "ticks_history": selectedMarket, 
-                "count": 500, 
+                "count": 1000, 
                 "end": "latest", 
                 "style": "ticks", 
                 "subscribe": 1 
@@ -59,221 +204,213 @@ export function Dashboard() {
 
         ws.onmessage = (event) => {
             const data = JSON.parse(event.data);
+            const msgMarket = data.echo_req?.ticks_history || data.tick?.symbol;
+            if (msgMarket && msgMarket !== currentMarketRef.current) return;
 
-            if (data.error) {
-                setConnectionStatus('disconnected');
-                return;
-            }
+            if (data.error) return;
 
-            if (data.msg_type === 'history') {
-                if (data.history && data.history.times && data.history.prices) {
-                    historyBuffer = data.history.prices.map((price: number, index: number) => ({
-                        price: price,
-                        time: data.history.times[index] * 1000 
-                    })).reverse();
-                    
-                    if (pipSize !== null && historyBuffer) {
-                        const digits = historyBuffer.map(h => parseInt(h.price.toFixed(pipSize!).slice(-1)));
-                        const prices = historyBuffer.map(h => h.price);
-                        const times = historyBuffer.map(h => h.time);
-                        setLastDigitTicks(digits);
-                        setPriceHistory(prices);
-                        setTickTimestamps(times);
-                        setPrice(prices[0]);
-                        historyBuffer = null;
-                    }
-                }
+            if (data.msg_type === 'history' && data.history) {
+                const prices = data.history.prices;
+                const times = data.history.times.map((t: number) => t * 1000);
+                const activePipSize = data.echo_req.pip_size || 2;
+                pipSizeRef.current = activePipSize;
+                setDecimalPlaces(activePipSize);
+
+                const ticks = prices.map((p: number) => {
+                    const pStr = p.toFixed(8);
+                    const dec = pStr.split('.')[1] || '00';
+                    return parseInt(dec[activePipSize - 1] || '0');
+                }).reverse();
+
+                setPrice(prices[prices.length - 1]);
+                setLastDigitTicks(ticks);
+                setPriceHistory([...prices].reverse());
+                setTickTimestamps([...times].reverse());
             }
 
             if (data.msg_type === 'tick') {
-                setConnectionStatus('streaming');
                 if (data.tick && typeof data.tick.quote === 'number') {
-                    if (pipSize === null) {
-                        pipSize = data.tick.pip_size ?? 2;
-                        setDecimalPlaces(pipSize);
-                        
-                        if (historyBuffer) {
-                            const digits = historyBuffer.map(h => parseInt(h.price.toFixed(pipSize!).slice(-1)));
-                            const prices = historyBuffer.map(h => h.price);
-                            const times = historyBuffer.map(h => h.time);
-                            
-                            setLastDigitTicks(digits);
-                            setPriceHistory(prices);
-                            setTickTimestamps(times);
-                            setPrice(prices[0]);
-                            
-                            historyBuffer = null;
-                        }
+                    if (data.tick.pip_size !== undefined) {
+                        pipSizeRef.current = data.tick.pip_size;
+                        setDecimalPlaces(data.tick.pip_size);
                     }
-                    prependTickToState(data.tick);
+                    const activePipSize = pipSizeRef.current ?? 2;
+                    const newPrice = data.tick.quote;
+                    const fullPriceStr = newPrice.toFixed(8);
+                    const decimalsStr = fullPriceStr.split('.')[1] || '00000000';
+                    const newDigit = parseInt(decimalsStr[activePipSize - 1] || '0');
+
+                    setTickTimestamps(prev => [Date.now(), ...prev].slice(0, 1000));
+                    setPrice(newPrice);
+                    setLastDigitTicks(prev => [newDigit, ...prev].slice(0, 1000));
+                    setPriceHistory(prev => [newPrice, ...prev].slice(0, 1000));
                 }
             }
         };
 
-        ws.onclose = () => setConnectionStatus('disconnected');
-        ws.onerror = () => setConnectionStatus('disconnected');
-
-        return () => {
-           if(ws.readyState === WebSocket.OPEN || ws.readyState === WebSocket.CONNECTING) {
-             ws.close();
-           }
-        };
-    }, [selectedMarket]);
+        ws.onclose = () => setSurveillanceStatus('offline');
+        return () => { if(ws && ws.readyState === WebSocket.OPEN) ws.close(); };
+    }, [mounted, isLocked, selectedMarket]);
 
     const handleMaxTicksChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-        const value = e.target.value;
-        if (value === '') {
-            setMaxTicks(0);
-            return;
-        }
-        let numValue = parseInt(value, 10);
-        if (!isNaN(numValue)) {
-            if (numValue > 2000) numValue = 2000;
-            setMaxTicks(numValue);
-        }
+        const val = e.target.value === '' ? 0 : parseInt(e.target.value, 10);
+        if (!isNaN(val)) setMaxTicks(val > 1000 ? 1000 : val);
     };
 
-    const handleMaxTicksBlur = () => {
-        if (maxTicks < 1) setMaxTicks(1);
-    };
+    const handleMaxTicksBlur = () => { if (maxTicks < 1) setMaxTicks(1); };
+
+    const currentMarket = syntheticIndices.find(m => m.id === selectedMarket);
+    const filteredIndices = syntheticIndices.filter(m => m.name.toLowerCase().includes(searchQuery.toLowerCase()));
+
+    if (!mounted) return <div className="flex min-h-screen items-center justify-center bg-background"><Activity className="h-4 w-4 animate-spin text-primary" /></div>;
 
     const analyzedDigits = lastDigitTicks.slice(0, maxTicks);
     const analyzedPrices = priceHistory.slice(0, maxTicks);
 
-    const statusColors = {
-        streaming: 'text-emerald-400',
-        connecting: 'text-amber-400',
-        disconnected: 'text-rose-500'
-    };
+    return (
+        <div className="flex min-h-screen w-full flex-col bg-background font-sans overflow-x-hidden transition-colors duration-500">
+            <AnimatePresence>
+                {isLocked && <LockScreen onUnlock={handleUnlock} />}
+            </AnimatePresence>
 
-    const statusBg = {
-        streaming: 'bg-emerald-400',
-        connecting: 'bg-amber-400',
-        disconnected: 'bg-rose-500'
-    };
+            <div className={cn("flex flex-col flex-1 transition-all duration-700", isLocked ? "blur-xl scale-95 opacity-50 pointer-events-none" : "blur-0 scale-100 opacity-100")}>
+                <header className="sticky top-0 z-[100] flex h-16 md:h-[4.5rem] items-center border-b bg-background/95 backdrop-blur-xl px-4 shadow-sm">
+                    <div className="flex w-full items-center justify-between max-w-[1600px] mx-auto gap-4">
+                        <div className="flex items-center gap-2 md:gap-4 shrink-0">
+                            <Popover>
+                                <PopoverTrigger asChild>
+                                    <button className="flex items-center gap-3 bg-card border border-border px-3 md:px-5 py-2 md:py-2.5 rounded-2xl hover:bg-muted transition-all shadow-lg active:scale-95 group">
+                                        <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center group-hover:bg-primary/20 transition-colors">
+                                            <Activity className="h-4 w-4 text-primary" />
+                                        </div>
+                                        <div className="text-left hidden sm:block">
+                                            <p className="text-[10px] font-black text-muted-foreground uppercase leading-none tracking-widest">{currentMarket?.name}</p>
+                                            <p className="text-sm font-black text-foreground tabular-nums mt-1">{price.toFixed(decimalPlaces)}</p>
+                                        </div>
+                                        <ChevronDown className="h-4 w-4 text-muted-foreground group-hover:text-primary transition-colors" />
+                                    </button>
+                                </PopoverTrigger>
+                                <PopoverContent className="w-[320px] md:w-[480px] p-0 bg-card border-border shadow-2xl rounded-[1.5rem] overflow-hidden">
+                                    <div className="p-4 border-b border-border bg-muted/30">
+                                        <div className="relative">
+                                            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                                            <Input 
+                                                placeholder="Search assets..." 
+                                                className="pl-10 h-11 bg-card border-border rounded-xl font-medium focus:ring-primary/20"
+                                                value={searchQuery}
+                                                onChange={(e) => setSearchQuery(e.target.value)}
+                                            />
+                                        </div>
+                                    </div>
+                                    <div className="max-h-[400px] overflow-y-auto no-scrollbar">
+                                        <div className="px-2 py-3 space-y-1">
+                                            {filteredIndices.map((market) => {
+                                                const res = globalResults[market.id];
+                                                const marketPrice = res?.currentPrice || market.price;
+                                                const marketChange = market.change;
+                                                const isSelected = selectedMarket === market.id;
+                                                
+                                                return (
+                                                    <button 
+                                                        key={market.id}
+                                                        onClick={() => setSelectedMarket(market.id)}
+                                                        className={cn(
+                                                            "w-full flex items-center justify-between p-3 rounded-xl transition-all hover:bg-primary/5 group",
+                                                            isSelected ? "bg-primary/10" : "bg-transparent"
+                                                        )}
+                                                    >
+                                                        <div className="flex items-center gap-3">
+                                                            <div className={cn(
+                                                                "w-10 h-10 rounded-xl flex items-center justify-center transition-colors",
+                                                                isSelected ? "bg-primary text-white" : "bg-muted text-muted-foreground group-hover:bg-primary/10 group-hover:text-primary"
+                                                            )}>
+                                                                <Activity className="h-5 w-5" />
+                                                            </div>
+                                                            <div className="text-left">
+                                                                <p className={cn("text-[11px] font-black uppercase tracking-wider", isSelected ? "text-primary" : "text-foreground")}>{market.name}</p>
+                                                                <p className="text-[10px] font-bold text-muted-foreground uppercase">{market.category}</p>
+                                                            </div>
+                                                        </div>
+                                                        <div className="text-right">
+                                                            <p className="text-[11px] font-black tabular-nums text-foreground">{marketPrice.toFixed(res?.pip || 2)}</p>
+                                                            <div className={cn(
+                                                                "flex items-center justify-end gap-1 text-[9px] font-black mt-0.5",
+                                                                marketChange >= 0 ? "text-emerald-500" : "text-rose-500"
+                                                            )}>
+                                                                {marketChange >= 0 ? <TrendingUp className="h-2 w-2" /> : <TrendingDown className="h-2 w-2" />}
+                                                                {Math.abs(marketChange).toFixed(2)}%
+                                                            </div>
+                                                        </div>
+                                                    </button>
+                                                );
+                                            })}
+                                        </div>
+                                    </div>
+                                </PopoverContent>
+                            </Popover>
+                        </div>
+                        
+                        <div className="flex-1 flex justify-center hidden lg:flex">
+                             <div className="relative group transition-all duration-300 hover:scale-105 active:scale-95">
+                                <motion.div 
+                                    className="absolute -inset-1 bg-gradient-to-r from-primary via-cyan-500 to-primary rounded-full blur opacity-25 group-hover:opacity-75 transition duration-1000"
+                                    animate={{ opacity: [0.25, 0.5, 0.25] }}
+                                    transition={{ duration: 4, repeat: Infinity }}
+                                />
+                                <a href="https://frostytraders.com" target="_blank" rel="noopener noreferrer" className="relative flex items-center gap-3 px-8 py-2.5 bg-card border border-white/5 rounded-full shadow-2xl">
+                                    <span className="text-[11px] font-black text-foreground uppercase tracking-[0.4em] whitespace-nowrap">FROSTY TRADERS</span>
+                                    <ExternalLink className="h-3 w-3 text-primary" />
+                                </a>
+                            </div>
+                        </div>
 
-  return (
-    <div className="flex min-h-screen w-full flex-col bg-background font-sans overflow-x-hidden">
-      <header className="sticky top-0 z-[60] flex h-auto min-h-[4rem] flex-col md:flex-row items-center border-b bg-background/80 px-4 py-2 md:py-0 md:px-6 backdrop-blur-xl transition-all duration-300">
-        <div className="flex w-full items-center justify-between max-w-[1600px] mx-auto gap-2 md:gap-4">
-          <div className="flex-1 hidden md:block" />
-          <div className="flex flex-1 justify-center w-full md:w-auto mt-0">
-            <div className="relative group transition-all duration-300 hover:scale-105 active:scale-95">
-                <div className={cn(
-                    "absolute -inset-1 rounded-full blur opacity-25 group-hover:opacity-75 transition duration-1000",
-                    statusBg[connectionStatus]
-                )}></div>
-                <div className="relative flex items-center gap-3 px-4 md:px-8 py-2 md:py-3 bg-card border border-white/5 rounded-full shadow-2xl">
-                    <div className="relative flex items-center justify-center">
-                        <div className={cn("h-2 w-2 md:h-2.5 md:w-2.5 rounded-full transition-all duration-500", statusBg[connectionStatus])} />
-                        {connectionStatus === 'streaming' && (
-                            <div className={cn("absolute h-2 w-2 md:h-2.5 md:w-2.5 rounded-full animate-ping opacity-75", statusBg[connectionStatus])} />
-                        )}
+                        <div className="flex items-center gap-2 md:gap-4 shrink-0">
+                            <div className="flex items-center bg-card border border-border rounded-full shadow-2xl h-10 px-1 overflow-hidden">
+                                <div className="flex items-center gap-3 px-5 py-2 border-r border-border">
+                                    <div className={cn("h-2.5 w-2.5 rounded-full animate-pulse", surveillanceStatus === 'active' ? "bg-emerald-500 shadow-[0_0_12px_rgba(16,185,129,0.9)]" : "bg-rose-500 shadow-[0_0_12px_rgba(244,63,94,0.9)]")} />
+                                    <span className="text-[10px] font-black text-foreground uppercase tracking-[0.3em] hidden sm:inline">LIVE</span>
+                                </div>
+                                <div className="flex items-center gap-2 px-5 py-2 bg-muted/30">
+                                    <Radio className={cn("h-3.5 w-3.5 transition-all", surveillanceStatus === 'active' ? 'text-emerald-500 animate-pulse' : 'text-rose-500')} />
+                                    <span className="text-[10px] font-black uppercase text-foreground tracking-[0.2em]">{surveillanceStatus === 'active' ? 'LIVE' : 'OFFLINE'}</span>
+                                </div>
+                            </div>
+                            <Button variant="ghost" size="icon" onClick={() => setTheme(theme === 'light' ? 'dark' : 'light')} className="h-10 w-10 rounded-full border border-border bg-card shadow-xl hover:bg-muted text-foreground transition-all">
+                                {theme === 'light' ? <Moon className="h-5 w-5" /> : <Sun className="h-5 w-5" />}
+                            </Button>
+                        </div>
                     </div>
-                    <span className={cn(
-                        "text-[9px] sm:text-[11px] md:text-sm font-black uppercase tracking-[0.2em] md:tracking-[0.4em] whitespace-nowrap transition-colors duration-500",
-                        statusColors[connectionStatus]
-                    )}>
-                        FROSTY HOLDINGS
-                    </span>
-                </div>
+                </header>
+                <main className="flex-1 flex flex-col max-w-[1600px] mx-auto w-full relative p-2 sm:p-4">
+                    <Tabs defaultValue="analyzer" className="w-full">
+                        <TabsList className="flex items-center justify-start md:justify-center gap-1.5 md:gap-2 bg-transparent h-auto p-0 mb-4 md:mb-6 overflow-x-auto no-scrollbar w-full pb-2">
+                            {['analyzer', 'last-digit-analysis', 'frequency', 'global-scan', 'chart', 'insight'].map((tab) => (
+                                <TabsTrigger key={tab} value={tab} className="flex-shrink-0 px-3 md:px-5 py-2 md:py-2.5 rounded-full border border-transparent data-[state=active]:bg-primary/10 data-[state=active]:text-primary text-muted-foreground font-black text-[8px] md:text-[10px] uppercase tracking-[0.1em] md:tracking-[0.2em] transition-all shadow-sm hover:bg-muted/50">
+                                    {tab.toUpperCase().replace(/-/g, ' ')}
+                                </TabsTrigger>
+                            ))}
+                        </TabsList>
+                        <TabsContent value="analyzer" className="mt-0 outline-none animate-in fade-in duration-500">
+                            <AnalyzerView price={price} lastDigitTicks={analyzedDigits} priceHistory={analyzedPrices} maxTicks={maxTicks} handleMaxTicksChange={handleMaxTicksChange} handleMaxTicksBlur={handleMaxTicksBlur} selectedMarket={selectedMarket} onMarketChange={setSelectedMarket} decimalPlaces={decimalPlaces} tickTimestamps={tickTimestamps} />
+                        </TabsContent>
+                        <TabsContent value="last-digit-analysis" className="mt-0 outline-none animate-in fade-in duration-500">
+                            <ScannerView price={price} lastDigitTicks={analyzedDigits} priceHistory={analyzedPrices} maxTicks={maxTicks} handleMaxTicksChange={handleMaxTicksChange} handleMaxTicksBlur={handleMaxTicksBlur} selectedMarket={selectedMarket} onMarketChange={setSelectedMarket} decimalPlaces={decimalPlaces} />
+                        </TabsContent>
+                        <TabsContent value="frequency" className="mt-0 outline-none animate-in fade-in duration-500">
+                            <DigitFrequencyView price={price} lastDigitTicks={analyzedDigits} priceHistory={analyzedPrices} maxTicks={maxTicks} handleMaxTicksChange={handleMaxTicksChange} handleMaxTicksBlur={handleMaxTicksBlur} selectedMarket={selectedMarket} onMarketChange={setSelectedMarket} decimalPlaces={decimalPlaces} />
+                        </TabsContent>
+                        <TabsContent value="global-scan" className="mt-0 outline-none animate-in fade-in duration-500">
+                            <ScannerView price={price} lastDigitTicks={analyzedDigits} priceHistory={analyzedPrices} maxTicks={maxTicks} handleMaxTicksChange={handleMaxTicksChange} handleMaxTicksBlur={handleMaxTicksBlur} selectedMarket={selectedMarket} onMarketChange={setSelectedMarket} decimalPlaces={decimalPlaces} />
+                        </TabsContent>
+                        <TabsContent value="chart" className="mt-0 outline-none animate-in fade-in duration-500 h-[60vh]">
+                            <DerivChart priceHistory={priceHistory} tickTimestamps={tickTimestamps} decimalPlaces={decimalPlaces} lastDigitTicks={analyzedDigits} />
+                        </TabsContent>
+                        <TabsContent value="insight" className="mt-0 outline-none animate-in fade-in duration-500">
+                            <InsightView globalResults={globalResults} activeScanId={activeScanId} dashboardPrice={price} dashboardMarketId={selectedMarket} />
+                        </TabsContent>
+                    </Tabs>
+                </main>
             </div>
-          </div>
-          <div className="flex-1 hidden md:block" />
         </div>
-      </header>
-
-      <main className="flex-1 flex flex-col max-w-[1600px] mx-auto w-full relative">
-        <div className="flex-1 p-2 sm:p-4 md:p-6 lg:p-8">
-            <Tabs defaultValue="global-scan" className="w-full">
-                <TabsList className="flex items-center justify-start md:justify-center gap-1.5 md:gap-2 bg-transparent h-auto p-0 mb-4 md:mb-10 overflow-x-auto no-scrollbar pb-2 w-full">
-                    {['global-scan', 'scanner', 'analyzer', 'frequency', 'insight', 'circles'].map((tab) => (
-                        <TabsTrigger 
-                            key={tab} 
-                            value={tab}
-                            className="flex-shrink-0 px-3.5 py-2 rounded-full border border-transparent data-[state=active]:bg-primary/10 data-[state=active]:text-primary text-muted-foreground font-black text-[8px] uppercase tracking-widest transition-all"
-                        >
-                            {tab.toUpperCase().replace('-', ' ')}
-                        </TabsTrigger>
-                    ))}
-                </TabsList>
-
-                <TabsContent value="global-scan" className="mt-0 animate-in fade-in zoom-in-95 duration-500 outline-none">
-                    <GlobalMarketScanner 
-                        onMarketSelect={setSelectedMarket} 
-                        lastDigitTicks={analyzedDigits} 
-                        price={price}
-                        decimalPlaces={decimalPlaces}
-                    />
-                </TabsContent>
-
-                <TabsContent value="scanner" className="mt-0 animate-in fade-in zoom-in-95 duration-500 outline-none">
-                    <ScannerView 
-                        price={price} 
-                        lastDigitTicks={analyzedDigits}
-                        priceHistory={analyzedPrices}
-                        maxTicks={maxTicks}
-                        handleMaxTicksChange={handleMaxTicksChange}
-                        handleMaxTicksBlur={handleMaxTicksBlur}
-                        selectedMarket={selectedMarket}
-                        onMarketChange={setSelectedMarket}
-                        decimalPlaces={decimalPlaces}
-                    />
-                </TabsContent>
-
-                <TabsContent value="analyzer" className="mt-0 animate-in fade-in zoom-in-95 duration-500 outline-none">
-                    <AnalyzerView
-                        price={price}
-                        lastDigitTicks={analyzedDigits}
-                        priceHistory={analyzedPrices}
-                        maxTicks={maxTicks}
-                        handleMaxTicksChange={handleMaxTicksChange}
-                        handleMaxTicksBlur={handleMaxTicksBlur}
-                        selectedMarket={selectedMarket}
-                        onMarketChange={setSelectedMarket}
-                        decimalPlaces={decimalPlaces}
-                        tickTimestamps={tickTimestamps}
-                    />
-                </TabsContent>
-
-                <TabsContent value="frequency" className="mt-0 animate-in fade-in zoom-in-95 duration-500 outline-none">
-                    <DigitFrequencyView
-                        price={price}
-                        lastDigitTicks={analyzedDigits}
-                        priceHistory={analyzedPrices}
-                        maxTicks={maxTicks}
-                        handleMaxTicksChange={handleMaxTicksChange}
-                        handleMaxTicksBlur={handleMaxTicksBlur}
-                        selectedMarket={selectedMarket}
-                        onMarketChange={setSelectedMarket}
-                        decimalPlaces={decimalPlaces}
-                    />
-                </TabsContent>
-
-                <TabsContent value="insight" className="mt-0 animate-in fade-in zoom-in-95 duration-500 outline-none">
-                    <InsightView
-                        price={price}
-                        decimalPlaces={decimalPlaces}
-                        lastDigitTicks={analyzedDigits}
-                        priceHistory={analyzedPrices}
-                        selectedMarket={selectedMarket}
-                        onMarketChange={setSelectedMarket}
-                        maxTicks={maxTicks}
-                    />
-                </TabsContent>
-                
-                <TabsContent value="circles" className="mt-0 animate-in fade-in zoom-in-95 duration-500 outline-none">
-                    <CorrelationView
-                        selectedMarket={selectedMarket}
-                        onMarketChange={setSelectedMarket}
-                        lastDigitTicks={analyzedDigits}
-                        price={price}
-                        decimalPlaces={decimalPlaces}
-                    />
-                </TabsContent>
-            </Tabs>
-        </div>
-      </main>
-    </div>
-  );
+    );
 }
