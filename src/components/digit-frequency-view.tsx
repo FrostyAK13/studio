@@ -25,11 +25,10 @@ interface DigitFrequencyViewProps {
     decimalPlaces: number;
 }
 
-const DigitHeatCard = ({ digit, ticks, isSelected, isLatest, onSelect }: { 
+const DigitHeatCard = ({ digit, ticks, isSelected, onSelect }: { 
     digit: number, 
     ticks: number[], 
     isSelected: boolean, 
-    isLatest: boolean,
     onSelect: (d: number) => void 
 }) => {
     const stats = React.useMemo(() => {
@@ -79,17 +78,11 @@ const DigitHeatCard = ({ digit, ticks, isSelected, isLatest, onSelect }: {
             )}
         >
             <div className="flex justify-between items-start relative z-10">
-                <span className={cn(
-                    "text-sm sm:text-xl font-black transition-all",
-                    isSelected ? "text-primary" : stats.colorClass
-                )}>
+                <span className={cn("text-sm sm:text-xl font-black transition-all", isSelected ? "text-primary" : stats.colorClass)}>
                     {digit}
                 </span>
                 <div className="text-right">
-                    <Badge variant="outline" className={cn(
-                        "text-[5px] sm:text-[6px] font-black tracking-widest px-1 py-0 border-none uppercase",
-                        stats.colorClass
-                    )}>
+                    <Badge variant="outline" className={cn("text-[5px] sm:text-[6px] font-black tracking-widest px-1 py-0 border-none uppercase", stats.colorClass)}>
                         {stats.rating}
                     </Badge>
                     <p className={cn("text-[8px] sm:text-[11px] font-black tabular-nums mt-0.5", stats.colorClass)}>
@@ -97,21 +90,14 @@ const DigitHeatCard = ({ digit, ticks, isSelected, isLatest, onSelect }: {
                     </p>
                 </div>
             </div>
-
             <div className="relative z-10 flex justify-between items-end">
                 <div>
                     <p className="text-[5px] sm:text-[6px] font-black text-muted-foreground uppercase tracking-widest opacity-60">GAP</p>
-                    <p className="text-[9px] sm:text-sm font-black text-foreground tabular-nums leading-none mt-0.5">
-                        {stats.tsl}
-                    </p>
+                    <p className="text-[9px] sm:text-sm font-black text-foreground tabular-nums leading-none mt-0.5">{stats.tsl}</p>
                 </div>
             </div>
-
             <div className="absolute bottom-0 left-0 w-full h-1 bg-muted">
-                <div 
-                    className={cn("h-full transition-all duration-700", stats.colorClass.replace('text-', 'bg-'))} 
-                    style={{ width: `${Math.min(stats.freq * 6, 100)}%` }} 
-                />
+                <div className={cn("h-full transition-all duration-700", stats.colorClass.replace('text-', 'bg-'))} style={{ width: `${Math.min(stats.freq * 6, 100)}%` }} />
             </div>
         </div>
     );
@@ -154,7 +140,7 @@ export function DigitFrequencyView({
                         <Input
                             type="number"
                             min="1"
-                            max="5000"
+                            max="1000"
                             value={maxTicks === 0 ? '' : maxTicks}
                             onChange={handleMaxTicksChange}
                             onBlur={handleMaxTicksBlur}
@@ -176,31 +162,10 @@ export function DigitFrequencyView({
                         <Flame className="h-3 w-3 text-rose-600" />
                         <h3 className="text-[7px] font-black uppercase tracking-[0.4em] text-foreground">Z-CORE</h3>
                     </div>
-                    <Popover>
-                        <PopoverTrigger asChild>
-                            <Button variant="ghost" size="icon" className="h-4 w-4 text-muted-foreground hover:text-primary">
-                                <Info className="h-3 w-3" />
-                            </Button>
-                        </PopoverTrigger>
-                        <PopoverContent className="w-64 bg-card border-border shadow-2xl rounded-xl p-3">
-                            <h4 className="text-[8px] font-black text-primary uppercase tracking-widest mb-2">Z-CORE GUIDE</h4>
-                            <p className="text-[8px] font-medium leading-relaxed italic text-muted-foreground">
-                                "SATURATED" (Red) indicates high probability of immediate mean-reversion. "DUE" (Cyan) identifies digits that have not appeared in long sequences.
-                            </p>
-                        </PopoverContent>
-                    </Popover>
                 </div>
-
                 <div className="grid grid-cols-5 gap-1.5 px-1">
                     {Array.from({ length: 10 }, (_, i) => (
-                        <DigitHeatCard 
-                            key={i} 
-                            digit={i} 
-                            ticks={lastDigitTicks} 
-                            isSelected={selectedDigit === i} 
-                            isLatest={lastDigitTicks[0] === i}
-                            onSelect={setSelectedDigit} 
-                        />
+                        <DigitHeatCard key={i} digit={i} ticks={lastDigitTicks} isSelected={selectedDigit === i} onSelect={setSelectedDigit} />
                     ))}
                 </div>
             </div>
@@ -211,12 +176,7 @@ export function DigitFrequencyView({
                         <Binary className="h-3 w-3 text-blue-600" />
                         <h3 className="text-[7px] font-black uppercase tracking-[0.4em] text-foreground">PARITY</h3>
                     </div>
-                    <EvenOddAnalysis 
-                        lastDigitTicks={lastDigitTicks}
-                        selectedMarket={selectedMarket}
-                        price={price}
-                        decimalPlaces={decimalPlaces}
-                    />
+                    <EvenOddAnalysis lastDigitTicks={lastDigitTicks} selectedMarket={selectedMarket} price={price} decimalPlaces={decimalPlaces} />
                 </div>
             </div>
         </div>

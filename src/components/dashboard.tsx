@@ -7,7 +7,6 @@ import { AnalyzerView } from './analyzer-view';
 import { syntheticIndices } from '@/lib/mock-data';
 import { DigitFrequencyView } from './digit-frequency-view';
 import { InsightView } from './insight-view';
-import { GlobalMarketScanner } from './global-market-scanner';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { RefreshCw, Radio, Activity, Moon, Sun, ExternalLink } from 'lucide-react';
@@ -19,19 +18,15 @@ type EngineStatus = 'offline' | 'active';
 export interface GlobalAnalysisResult {
     marketId: string;
     marketName: string;
-    // Sniper 8.5+ Flow Metrics
     ci: number;
     ss: number;
     flowScore: number;
-    // Strategy Parameters
     tradeType: 'FLOW' | 'NO TRADE';
-    triggerDigit: number | null; // e (Weak/Transition)
-    targetDigit: number | null;  // t (Local Dominant)
+    triggerDigit: number | null; 
+    targetDigit: number | null; 
     confidence: number;
-    // Price data
     currentPrice: number;
     pip: number;
-    // Secondary Scan Metrics (O3/U6)
     scannerStrategy: 'OVER 3' | 'UNDER 6' | 'NONE';
     scannerEntry: number | null;
     scannerConfidence: number;
@@ -58,18 +53,11 @@ export function Dashboard() {
 
     React.useEffect(() => {
         setMounted(true);
-        const savedTheme = localStorage.getItem('theme') as 'light' | 'dark';
-        if (savedTheme) setTheme(savedTheme);
-        else if (window.matchMedia('(prefers-color-scheme: dark)').matches) setTheme('dark');
-
-        const savedMarket = localStorage.getItem('selectedMarket');
-        if (savedMarket) setSelectedMarket(savedMarket);
-
-        const savedTicks = localStorage.getItem('maxTicks');
-        if (savedTicks) setMaxTicks(parseInt(savedTicks, 10));
-
         const authState = localStorage.getItem('frosty_auth');
         if (authState === 'true') setIsLocked(false);
+        
+        const savedTheme = localStorage.getItem('theme') as 'light' | 'dark';
+        if (savedTheme) setTheme(savedTheme);
     }, []);
 
     const handleUnlock = () => {
@@ -83,14 +71,7 @@ export function Dashboard() {
         localStorage.setItem('theme', theme);
     }, [theme, mounted]);
 
-    React.useEffect(() => {
-        if (!mounted) return;
-        localStorage.setItem('selectedMarket', selectedMarket);
-        localStorage.setItem('maxTicks', maxTicks.toString());
-        currentMarketRef.current = selectedMarket;
-    }, [selectedMarket, maxTicks, mounted]);
-
-    // Background Global Sniper Engine - Probability Flow 8.5+ Strategy
+    // Global Surveillance Engine
     React.useEffect(() => {
         if (!mounted || isLocked) return;
 
@@ -133,26 +114,18 @@ export function Dashboard() {
                     return parseInt(dec[pip - 1] || '0');
                 }).reverse();
 
-                // 8.5+ Probability Flow Strategy Logic
                 const total = ticks.length || 1;
                 const counts = Array(10).fill(0);
                 ticks.forEach(d => counts[d]++);
                 const P = counts.map(c => (c / total) * 100);
-                const D = P.map(p => p - 10); // Deviation D[i]
+                const D = P.map(p => p - 10); 
 
-                // Market Quality Metrics
-                const CI = D.reduce((sum, d) => sum + Math.pow(d, 2), 0);
-                const mean = 10;
-                const variance = P.reduce((sum, p) => sum + Math.pow(p - mean, 2), 0) / 10;
+                const variance = P.reduce((sum, p) => sum + Math.pow(p - 10, 2), 0) / 10;
                 const stdDev = Math.sqrt(variance);
                 const SS = Math.max(0, 1 - (stdDev / 10));
+                const CI = D.reduce((sum, d) => sum + Math.pow(d, 2), 0);
 
-                // Step 2: Entry Digit (Trigger e) -> Transition Zone
-                // -1.0 <= D[e] <= -0.2
                 const entryCandidates = [0,1,2,3,4,5,6,7,8,9].filter(i => D[i] >= -1.0 && D[i] <= -0.2);
-                
-                // Step 3: Target Digit (Prediction t) -> Local Dominant Zone
-                // LD[i] = D[i] - (D[i-1] + D[i+1])/2
                 const targetCandidates = [0,1,2,3,4,5,6,7,8,9].map(i => {
                     const prevIdx = (i + 9) % 10;
                     const nextIdx = (i + 1) % 10;
@@ -165,59 +138,36 @@ export function Dashboard() {
                 let bestFlowScore = -1000;
                 let finalConfidence = 0;
 
-                // Step 4: Flow Alignment & FlowScore Calculation
-                if (entryCandidates.length > 0 && targetCandidates.length > 0 && CI > 5 && CI < 250) {
+                if (entryCandidates.length > 0 && targetCandidates.length > 0) {
                     entryCandidates.forEach(e => {
                         targetCandidates.forEach(t => {
                             if (e === t.i) return;
-                            
-                            // Stability Filter: Avoid unstable spikes near target
-                            const tPrev = (t.i + 9) % 10;
-                            const tNext = (t.i + 1) % 10;
-                            const tStability = Math.abs(D[tNext] - D[tPrev]);
-
-                            if (tStability < 2.5) {
-                                // FlowScore = |D[t]| - |D[e]|
-                                const score = Math.abs(t.d) - Math.abs(D[e]);
-                                if (score > bestFlowScore) {
-                                    bestFlowScore = score;
-                                    bestE = e;
-                                    bestT = t.i;
-                                }
+                            const score = Math.abs(t.d) - Math.abs(D[e]);
+                            if (score > bestFlowScore) {
+                                bestFlowScore = score;
+                                bestE = e;
+                                bestT = t.i;
                             }
                         });
                     });
-
                     if (bestE !== null && bestT !== null) {
                         finalConfidence = Math.min(99.9, 65 + (bestFlowScore * 12) + (SS * 15));
                     }
                 }
 
-                // O3/U6 Secondary Scan (Retained for Global Monitor Diversity)
-                let S_U6 = 0;
-                for (let i = 0; i <= 5; i++) S_U6 += D[i];
-                let S_O3 = 0;
-                for (let i = 4; i <= 9; i++) S_O3 += D[i];
+                let S_U6 = 0; for (let i = 0; i <= 5; i++) S_U6 += D[i];
+                let S_O3 = 0; for (let i = 4; i <= 9; i++) S_O3 += D[i];
                 const scannerDirection = S_U6 > S_O3 ? 'UNDER 6' : 'OVER 3';
                 const bestScanner = P.map((p, i) => ({ i, p })).sort((a, b) => b.p - a.p)[0];
 
                 setGlobalResults(prev => ({
                     ...prev,
                     [marketId]: {
-                        marketId,
-                        marketName,
-                        ci: CI,
-                        ss: SS,
-                        flowScore: bestFlowScore,
+                        marketId, marketName, ci: CI, ss: SS, flowScore: bestFlowScore,
                         tradeType: bestE !== null ? 'FLOW' : 'NO TRADE',
-                        triggerDigit: bestE,
-                        targetDigit: bestT,
-                        confidence: finalConfidence,
-                        currentPrice: latestPrice,
-                        pip: pip,
-                        scannerStrategy: scannerDirection,
-                        scannerEntry: bestScanner?.i ?? null,
-                        scannerConfidence: 60 + Math.max(S_U6, S_O3)
+                        triggerDigit: bestE, targetDigit: bestT, confidence: finalConfidence,
+                        currentPrice: latestPrice, pip: pip, scannerStrategy: scannerDirection,
+                        scannerEntry: bestScanner?.i ?? null, scannerConfidence: 60 + Math.max(S_U6, S_O3)
                     }
                 }));
 
@@ -229,14 +179,16 @@ export function Dashboard() {
         return () => scanWs.close();
     }, [mounted, isLocked]);
 
-    // Primary Market WebSocket
+    // Active Market Feed
     React.useEffect(() => {
         if (!mounted || isLocked) return;
 
+        currentMarketRef.current = selectedMarket;
         const ws = new WebSocket('wss://ws.derivws.com/websockets/v3?app_id=84799');
 
         ws.onopen = () => {
             setSurveillanceStatus('active');
+            // Request history first to fix percentage distribution
             ws.send(JSON.stringify({ 
                 "ticks_history": selectedMarket, 
                 "count": 1000, 
@@ -253,6 +205,23 @@ export function Dashboard() {
 
             if (data.error) return;
 
+            if (data.msg_type === 'history' && data.history) {
+                const prices = data.history.prices;
+                const activePipSize = data.echo_req.pip_size || 2;
+                pipSizeRef.current = activePipSize;
+                setDecimalPlaces(activePipSize);
+
+                const ticks = prices.map((p: number) => {
+                    const pStr = p.toFixed(8);
+                    const dec = pStr.split('.')[1] || '00';
+                    return parseInt(dec[activePipSize - 1] || '0');
+                }).reverse();
+
+                setPrice(prices[prices.length - 1]);
+                setLastDigitTicks(ticks);
+                setPriceHistory([...prices].reverse());
+            }
+
             if (data.msg_type === 'tick') {
                 if (data.tick && typeof data.tick.quote === 'number') {
                     if (data.tick.pip_size !== undefined) {
@@ -267,8 +236,8 @@ export function Dashboard() {
 
                     setTickTimestamps(prev => [Date.now(), ...prev].slice(0, 2000));
                     setPrice(newPrice);
-                    setLastDigitTicks(prev => [newDigit, ...prev].slice(0, 2000));
-                    setPriceHistory(prev => [newPrice, ...prev].slice(0, 2000));
+                    setLastDigitTicks(prev => [newDigit, ...prev].slice(0, 1000));
+                    setPriceHistory(prev => [newPrice, ...prev].slice(0, 1000));
                 }
             }
         };
@@ -279,7 +248,7 @@ export function Dashboard() {
 
     const handleMaxTicksChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const val = e.target.value === '' ? 0 : parseInt(e.target.value, 10);
-        if (!isNaN(val)) setMaxTicks(val > 2000 ? 2000 : val);
+        if (!isNaN(val)) setMaxTicks(val > 1000 ? 1000 : val);
     };
 
     const handleMaxTicksBlur = () => { if (maxTicks < 1) setMaxTicks(1); };
@@ -299,10 +268,8 @@ export function Dashboard() {
                 <header className="sticky top-0 z-[100] flex h-16 md:h-[4.5rem] items-center border-b bg-background/95 backdrop-blur-xl px-4 shadow-sm">
                     <div className="flex w-full items-center justify-between max-w-[1600px] mx-auto">
                         <div className="flex items-center gap-2 md:gap-3 shrink-0">
-                            <Button variant="outline" onClick={() => window.location.reload()} className="h-8 w-8 md:h-10 md:w-10 rounded-full border-border bg-card hover:bg-muted flex items-center justify-center shadow-lg group active:scale-90 transition-all duration-300 overflow-hidden">
-                                <motion.div whileTap={{ rotate: 360 }} transition={{ type: "spring", stiffness: 260, damping: 20 }}>
-                                    <RefreshCw className="h-4 w-4 md:h-5 md:w-5 text-foreground" />
-                                </motion.div>
+                            <Button variant="outline" onClick={() => window.location.reload()} className="h-8 w-8 md:h-10 md:w-10 rounded-full border-border bg-card hover:bg-muted flex items-center justify-center shadow-lg active:scale-90 transition-all">
+                                <RefreshCw className="h-4 w-4 md:h-5 md:w-5 text-foreground" />
                             </Button>
                             <div className="relative group">
                                 <motion.div className="absolute -inset-1 bg-gradient-to-r from-primary via-cyan-500 to-primary rounded-full blur opacity-40 group-hover:opacity-100 transition duration-1000" animate={{ opacity: [0.4, 0.8, 0.4] }} transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }} />
@@ -316,18 +283,16 @@ export function Dashboard() {
                         <div className="flex items-center gap-2 md:gap-4 shrink-0">
                             <div className="flex items-center bg-card border border-border rounded-full shadow-2xl h-8 md:h-10 px-0.5 md:px-1 overflow-hidden">
                                 <div className="flex items-center gap-1.5 md:gap-3 px-2 md:px-5 py-1 md:py-2 border-r border-border">
-                                    <div className={cn("h-2 w-2 md:h-2.5 md:w-2.5 rounded-full animate-pulse transition-all duration-500", surveillanceStatus === 'active' ? "bg-emerald-500 shadow-[0_0_12px_rgba(16,185,129,0.9)]" : "bg-rose-500 shadow-[0_0_12px_rgba(244,63,94,0.9)]")} />
+                                    <div className={cn("h-2 w-2 md:h-2.5 md:w-2.5 rounded-full animate-pulse", surveillanceStatus === 'active' ? "bg-emerald-500 shadow-[0_0_12px_rgba(16,185,129,0.9)]" : "bg-rose-500 shadow-[0_0_12px_rgba(244,63,94,0.9)]")} />
                                     <span className="text-[7px] md:text-[10px] font-black text-foreground uppercase tracking-[0.2em] md:tracking-[0.3em] hidden sm:inline">LIVE</span>
                                 </div>
                                 <div className="flex items-center gap-1 md:gap-2 px-2 md:px-5 py-1 md:py-2 bg-muted/30">
-                                    <Radio className={cn("h-3 w-3 md:h-3.5 md:w-3.5 transition-all duration-500", surveillanceStatus === 'active' ? 'text-emerald-500 animate-pulse' : 'text-rose-500')} />
+                                    <Radio className={cn("h-3 w-3 md:h-3.5 md:w-3.5 transition-all", surveillanceStatus === 'active' ? 'text-emerald-500 animate-pulse' : 'text-rose-500')} />
                                     <span className="text-[7px] md:text-[10px] font-black uppercase text-foreground tracking-[0.1em] md:tracking-[0.2em]">{surveillanceStatus === 'active' ? 'LIVE' : 'OFFLINE'}</span>
                                 </div>
                             </div>
-                            <Button variant="ghost" size="icon" onClick={() => setTheme(theme === 'light' ? 'dark' : 'light')} className="h-8 w-8 md:h-10 md:w-10 rounded-full border border-border bg-card shadow-xl hover:bg-muted text-foreground transition-all active:scale-95">
-                                <motion.div initial={false} animate={{ rotate: theme === 'light' ? 0 : 180 }} transition={{ type: "spring", stiffness: 200, damping: 10 }}>
-                                    {theme === 'light' ? <Moon className="h-4 w-4 md:h-5 md:w-5" /> : <Sun className="h-4 w-4 md:h-5 md:w-5" />}
-                                </motion.div>
+                            <Button variant="ghost" size="icon" onClick={() => setTheme(theme === 'light' ? 'dark' : 'light')} className="h-8 w-8 md:h-10 md:w-10 rounded-full border border-border bg-card shadow-xl hover:bg-muted text-foreground transition-all">
+                                {theme === 'light' ? <Moon className="h-4 w-4 md:h-5 md:w-5" /> : <Sun className="h-4 w-4 md:h-5 md:w-5" />}
                             </Button>
                         </div>
                     </div>
@@ -351,7 +316,7 @@ export function Dashboard() {
                             <DigitFrequencyView price={price} lastDigitTicks={analyzedDigits} priceHistory={analyzedPrices} maxTicks={maxTicks} handleMaxTicksChange={handleMaxTicksChange} handleMaxTicksBlur={handleMaxTicksBlur} selectedMarket={selectedMarket} onMarketChange={setSelectedMarket} decimalPlaces={decimalPlaces} />
                         </TabsContent>
                         <TabsContent value="global-scan" className="mt-0 outline-none animate-in fade-in duration-500">
-                            <GlobalMarketScanner onMarketSelect={setSelectedMarket} selectedMarket={selectedMarket} lastDigitTicks={analyzedDigits} price={price} decimalPlaces={decimalPlaces} globalResults={globalResults} activeScanId={activeScanId} />
+                            <ScannerView price={price} lastDigitTicks={analyzedDigits} priceHistory={analyzedPrices} maxTicks={maxTicks} handleMaxTicksChange={handleMaxTicksChange} handleMaxTicksBlur={handleMaxTicksBlur} selectedMarket={selectedMarket} onMarketChange={setSelectedMarket} decimalPlaces={decimalPlaces} />
                         </TabsContent>
                         <TabsContent value="insight" className="mt-0 outline-none animate-in fade-in duration-500">
                             <InsightView globalResults={globalResults} activeScanId={activeScanId} dashboardPrice={price} dashboardMarketId={selectedMarket} />
