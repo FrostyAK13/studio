@@ -1,4 +1,3 @@
-
 'use client';
 
 import * as React from 'react';
@@ -154,6 +153,10 @@ export function DerivChart({
                 borderColor: 'rgba(148, 163, 184, 0.1)',
                 autoScale: true,
                 alignLabels: true,
+                scaleMargins: {
+                    top: 0.1,
+                    bottom: 0.3, // Leave 30% space at the bottom for the digits
+                },
             },
             timeScale: {
                 borderColor: 'rgba(148, 163, 184, 0.1)',
