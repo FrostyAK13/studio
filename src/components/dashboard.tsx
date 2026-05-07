@@ -1,4 +1,3 @@
-
 'use client';
 
 import * as React from 'react';
@@ -12,7 +11,6 @@ import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { Radio, Activity, Moon, Sun, ExternalLink } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { LockScreen } from './lock-screen';
 import { DerivChart } from './deriv-chart';
 
 type EngineStatus = 'offline' | 'active';
@@ -36,7 +34,6 @@ export interface GlobalAnalysisResult {
 
 export function Dashboard() {
     const [mounted, setMounted] = React.useState(false);
-    const [isLocked, setIsLocked] = React.useState(true);
     const [theme, setTheme] = React.useState<'light' | 'dark'>('light');
     const [price, setPrice] = React.useState<number>(0);
     const [lastDigitTicks, setLastDigitTicks] = React.useState<number[]>([]);
@@ -58,16 +55,9 @@ export function Dashboard() {
 
     React.useEffect(() => {
         setMounted(true);
-        const authState = localStorage.getItem('frosty_auth');
-        if (authState === 'true') setIsLocked(false);
         const savedTheme = localStorage.getItem('theme') as 'light' | 'dark';
         if (savedTheme) setTheme(savedTheme);
     }, []);
-
-    const handleUnlock = () => {
-        setIsLocked(false);
-        localStorage.setItem('frosty_auth', 'true');
-    };
 
     React.useEffect(() => {
         if (!mounted) return;
@@ -77,7 +67,7 @@ export function Dashboard() {
 
     // Global Surveillance Engine
     React.useEffect(() => {
-        if (!mounted || isLocked) return;
+        if (!mounted) return;
         const scanWs = new WebSocket('wss://ws.derivws.com/websockets/v3?app_id=84799');
         let currentIndex = 0;
         const runGlobalScan = () => {
@@ -166,11 +156,11 @@ export function Dashboard() {
             }
         };
         return () => scanWs.close();
-    }, [mounted, isLocked]);
+    }, [mounted]);
 
     // Active Market Feed
     React.useEffect(() => {
-        if (!mounted || isLocked) return;
+        if (!mounted) return;
 
         setCandleData([]);
         setLastCandleUpdate(null);
@@ -271,7 +261,7 @@ export function Dashboard() {
 
         ws.onclose = () => setSurveillanceStatus('offline');
         return () => { if(ws && ws.readyState === WebSocket.OPEN) ws.close(); };
-    }, [mounted, isLocked, selectedMarket, chartInterval]);
+    }, [mounted, selectedMarket, chartInterval]);
 
     const handleMaxTicksChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const val = e.target.value === '' ? 0 : parseInt(e.target.value, 10);
@@ -287,11 +277,7 @@ export function Dashboard() {
 
     return (
         <div className="flex min-h-screen w-full flex-col bg-background font-sans overflow-x-hidden transition-colors duration-500">
-            <AnimatePresence>
-                {isLocked && <LockScreen onUnlock={handleUnlock} />}
-            </AnimatePresence>
-
-            <div className={cn("flex flex-col flex-1 transition-all duration-700", isLocked ? "blur-xl scale-95 opacity-50 pointer-events-none" : "blur-0 scale-100 opacity-100")}>
+            <div className="flex flex-col flex-1">
                 <header className="sticky top-0 z-[100] flex h-16 md:h-[4.5rem] items-center border-b bg-background/95 backdrop-blur-xl px-4 shadow-sm">
                     <div className="flex w-full items-center justify-between max-w-[1600px] mx-auto gap-4">
                         <div className="flex items-center gap-4 shrink-0">
