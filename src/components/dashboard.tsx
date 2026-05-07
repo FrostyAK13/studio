@@ -1,3 +1,4 @@
+
 'use client';
 
 import * as React from 'react';
@@ -39,7 +40,7 @@ export function Dashboard() {
     const [mounted, setMounted] = React.useState(false);
     const [isLocked, setIsLocked] = React.useState(true);
     const [theme, setTheme] = React.useState<'light' | 'dark'>('light');
-    const [price, setPrice] = React.useState(0);
+    const [price, setPrice] = React.useState<number>(0);
     const [lastDigitTicks, setLastDigitTicks] = React.useState<number[]>([]);
     const [priceHistory, setPriceHistory] = React.useState<number[]>([]);
     const [maxTicks, setMaxTicks] = React.useState(1000); 
@@ -102,8 +103,8 @@ export function Dashboard() {
         scanWs.onmessage = (event) => {
             const data = JSON.parse(event.data);
             if (data.msg_type === 'history' && data.history) {
-                const prices = data.history.prices;
-                const latestPrice = prices[prices.length - 1];
+                const prices = data.history.prices || [];
+                const latestPrice = prices.length > 0 ? prices[prices.length - 1] : 0;
                 const marketId = data.echo_req.ticks_history;
                 const marketName = syntheticIndices.find(m => m.id === marketId)?.name || marketId;
                 const pip = data.echo_req.pip_size || 2;
@@ -215,8 +216,8 @@ export function Dashboard() {
             if (data.error) return;
 
             if (data.msg_type === 'history' && data.history) {
-                const prices = data.history.prices;
-                const times = data.history.times.map((t: number) => t * 1000);
+                const prices = data.history.prices || [];
+                const times = (data.history.times || []).map((t: number) => t * 1000);
                 const activePipSize = data.echo_req.pip_size || 2;
                 pipSizeRef.current = activePipSize;
                 setDecimalPlaces(activePipSize);
@@ -225,7 +226,9 @@ export function Dashboard() {
                     const dec = pStr.split('.')[1] || '00';
                     return parseInt(dec[activePipSize - 1] || '0');
                 }).reverse();
-                setPrice(prices[prices.length - 1]);
+                
+                const latestPrice = prices.length > 0 ? prices[prices.length - 1] : 0;
+                setPrice(latestPrice);
                 setLastDigitTicks(ticks);
                 setPriceHistory([...prices].reverse());
                 setTickTimestamps([...times].reverse());
@@ -254,7 +257,7 @@ export function Dashboard() {
                     const filtered = prev.filter(c => c.time !== newCandle.time);
                     return [...filtered, newCandle].sort((a, b) => a.time - b.time).slice(-500);
                 });
-                setPrice(data.ohlc.close);
+                setPrice(Number(data.ohlc.close) || 0);
             }
 
             if (data.msg_type === 'tick') {
@@ -316,7 +319,7 @@ export function Dashboard() {
                                         </div>
                                         <div className="text-left hidden sm:block">
                                             <p className="text-[10px] font-black text-muted-foreground uppercase leading-none tracking-widest">{currentMarket?.name}</p>
-                                            <p className="text-sm font-black text-foreground tabular-nums mt-1">{price.toFixed(decimalPlaces)}</p>
+                                            <p className="text-sm font-black text-foreground tabular-nums mt-1">{(Number(price) || 0).toFixed(decimalPlaces)}</p>
                                         </div>
                                         <ChevronDown className="h-4 w-4 text-muted-foreground group-hover:text-primary transition-colors" />
                                     </button>
@@ -363,7 +366,7 @@ export function Dashboard() {
                                                             </div>
                                                         </div>
                                                         <div className="text-right">
-                                                            <p className="text-[11px] font-black tabular-nums text-foreground">{marketPrice.toFixed(res?.pip || 2)}</p>
+                                                            <p className="text-[11px] font-black tabular-nums text-foreground">{(Number(marketPrice) || 0).toFixed(res?.pip || 2)}</p>
                                                             <div className={cn(
                                                                 "flex items-center justify-end gap-1 text-[9px] font-black mt-0.5",
                                                                 marketChange >= 0 ? "text-emerald-500" : "text-rose-500"
@@ -422,16 +425,16 @@ export function Dashboard() {
                             ))}
                         </TabsList>
                         <TabsContent value="analyzer" className="mt-0 outline-none animate-in fade-in duration-500">
-                            <AnalyzerView price={price} lastDigitTicks={analyzedDigits} priceHistory={analyzedPrices} maxTicks={maxTicks} handleMaxTicksChange={handleMaxTicksChange} handleMaxTicksBlur={handleMaxTicksBlur} selectedMarket={selectedMarket} onMarketChange={setSelectedMarket} decimalPlaces={decimalPlaces} tickTimestamps={tickTimestamps} />
+                            <AnalyzerView price={Number(price) || 0} lastDigitTicks={analyzedDigits} priceHistory={analyzedPrices} maxTicks={maxTicks} handleMaxTicksChange={handleMaxTicksChange} handleMaxTicksBlur={handleMaxTicksBlur} selectedMarket={selectedMarket} onMarketChange={setSelectedMarket} decimalPlaces={decimalPlaces} tickTimestamps={tickTimestamps} />
                         </TabsContent>
                         <TabsContent value="last-digit-analysis" className="mt-0 outline-none animate-in fade-in duration-500">
-                            <ScannerView price={price} lastDigitTicks={analyzedDigits} priceHistory={analyzedPrices} maxTicks={maxTicks} handleMaxTicksChange={handleMaxTicksChange} handleMaxTicksBlur={handleMaxTicksBlur} selectedMarket={selectedMarket} onMarketChange={setSelectedMarket} decimalPlaces={decimalPlaces} />
+                            <ScannerView price={Number(price) || 0} lastDigitTicks={analyzedDigits} priceHistory={analyzedPrices} maxTicks={maxTicks} handleMaxTicksChange={handleMaxTicksChange} handleMaxTicksBlur={handleMaxTicksBlur} selectedMarket={selectedMarket} onMarketChange={setSelectedMarket} decimalPlaces={decimalPlaces} />
                         </TabsContent>
                         <TabsContent value="frequency" className="mt-0 outline-none animate-in fade-in duration-500">
-                            <DigitFrequencyView price={price} lastDigitTicks={analyzedDigits} priceHistory={analyzedPrices} maxTicks={maxTicks} handleMaxTicksChange={handleMaxTicksChange} handleMaxTicksBlur={handleMaxTicksBlur} selectedMarket={selectedMarket} onMarketChange={setSelectedMarket} decimalPlaces={decimalPlaces} />
+                            <DigitFrequencyView price={Number(price) || 0} lastDigitTicks={analyzedDigits} priceHistory={analyzedPrices} maxTicks={maxTicks} handleMaxTicksChange={handleMaxTicksChange} handleMaxTicksBlur={handleMaxTicksBlur} selectedMarket={selectedMarket} onMarketChange={setSelectedMarket} decimalPlaces={decimalPlaces} />
                         </TabsContent>
                         <TabsContent value="global-scan" className="mt-0 outline-none animate-in fade-in duration-500">
-                            <ScannerView price={price} lastDigitTicks={analyzedDigits} priceHistory={analyzedPrices} maxTicks={maxTicks} handleMaxTicksChange={handleMaxTicksChange} handleMaxTicksBlur={handleMaxTicksBlur} selectedMarket={selectedMarket} onMarketChange={setSelectedMarket} decimalPlaces={decimalPlaces} />
+                            <ScannerView price={Number(price) || 0} lastDigitTicks={analyzedDigits} priceHistory={analyzedPrices} maxTicks={maxTicks} handleMaxTicksChange={handleMaxTicksChange} handleMaxTicksBlur={handleMaxTicksBlur} selectedMarket={selectedMarket} onMarketChange={setSelectedMarket} decimalPlaces={decimalPlaces} />
                         </TabsContent>
                         <TabsContent value="chart" className="mt-0 outline-none animate-in fade-in duration-500 h-[65vh]">
                             <DerivChart 
@@ -445,7 +448,7 @@ export function Dashboard() {
                             />
                         </TabsContent>
                         <TabsContent value="insight" className="mt-0 outline-none animate-in fade-in duration-500">
-                            <InsightView globalResults={globalResults} activeScanId={activeScanId} dashboardPrice={price} dashboardMarketId={selectedMarket} />
+                            <InsightView globalResults={globalResults} activeScanId={activeScanId} dashboardPrice={Number(price) || 0} dashboardMarketId={selectedMarket} />
                         </TabsContent>
                     </Tabs>
                 </main>
