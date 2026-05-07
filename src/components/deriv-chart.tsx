@@ -56,7 +56,7 @@ const calculateEMA = (data: any[], period: number) => {
     const results = [];
     for (let i = 0; i < data.length; i++) {
         ema = data[i].close * k + ema * (1 - k);
-        results.push({ time: data[i].time, value: ema });
+        results.push({ time: data[i].time as UTCTimestamp, value: Number(ema) });
     }
     return results;
 };
@@ -67,13 +67,13 @@ const calculateBollingerBands = (data: any[], period: number, stdDev: number) =>
     
     for (let i = period - 1; i < data.length; i++) {
         const slice = data.slice(i - period + 1, i + 1);
-        const avg = slice.reduce((sum, item) => sum + item.close, 0) / period;
-        const variance = slice.reduce((sum, item) => sum + Math.pow(item.close - avg, 2), 0) / period;
+        const avg = slice.reduce((sum, item) => sum + Number(item.close), 0) / period;
+        const variance = slice.reduce((sum, item) => sum + Math.pow(Number(item.close) - avg, 2), 0) / period;
         const dev = Math.sqrt(variance);
         
-        results.middle.push({ time: data[i].time, value: avg });
-        results.upper.push({ time: data[i].time, value: avg + (stdDev * dev) });
-        results.lower.push({ time: data[i].time, value: avg - (stdDev * dev) });
+        results.middle.push({ time: data[i].time as UTCTimestamp, value: Number(avg) });
+        results.upper.push({ time: data[i].time as UTCTimestamp, value: Number(avg + (stdDev * dev)) });
+        results.lower.push({ time: data[i].time as UTCTimestamp, value: Number(avg - (stdDev * dev)) });
     }
     return results;
 };
@@ -100,7 +100,7 @@ const DigitStatsOverlay = ({ ticks }: { ticks: number[] }) => {
     }, [ticks]);
 
     return (
-        <div className="absolute bottom-8 left-0 w-full flex justify-center pointer-events-none z-[60]">
+        <div className="absolute bottom-10 left-0 w-full flex justify-center pointer-events-none z-[60]">
             <div className="flex gap-2 sm:gap-4 p-3 bg-white/90 dark:bg-slate-900/90 backdrop-blur-md rounded-2xl border border-border shadow-2xl pointer-events-auto items-end">
                 {stats.map((s) => {
                     const radius = 16;
@@ -186,8 +186,10 @@ export function DerivChart({
         const last = lastCandleUpdate || (candleData.length > 0 ? candleData[candleData.length - 1] : null);
         if (!last) return null;
         const prev = candleData.length > 1 ? candleData[candleData.length - 2] : last;
-        const diff = Number(last.close) - Number(prev.close);
-        const perc = (diff / (Number(prev.close) || 1)) * 100;
+        const currentClose = Number(last.close);
+        const prevClose = Number(prev.close);
+        const diff = currentClose - prevClose;
+        const perc = (diff / (prevClose || 1)) * 100;
         return { ...last, diff, perc };
     }, [candleData, lastCandleUpdate]);
 
@@ -234,6 +236,7 @@ export function DerivChart({
                 borderColor: '#e5e7eb',
                 timeVisible: true,
                 secondsVisible: true,
+                shiftVisibleRangeOnNewBar: true,
             },
             crosshair: {
                 vertLine: { color: '#00a69c', width: 1, style: 1 },
@@ -305,37 +308,46 @@ export function DerivChart({
         };
     }, [decimalPlaces, chartType, activeIndicators]);
 
-    // Update historical data and calculate indicators
+    // Handle initial historical load
     React.useEffect(() => {
-        if (!lineSeriesRef.current || !candleSeriesRef.current) return;
+        if (!lineSeriesRef.current || !candleSeriesRef.current || !chartRef.current) return;
 
         if (candleData && candleData.length > 0) {
-            const formatted = candleData.map(c => ({
-                time: Number(c.time) as UTCTimestamp,
-                open: Number(c.open),
-                high: Number(c.high),
-                low: Number(c.low),
-                close: Number(c.close)
-            })).sort((a, b) => a.time - b.time);
+            // Strictly sort and deduplicate by timestamp to prevent library assertions
+            const uniqueData = Array.from(new Map(candleData.map(c => [c.time, c])).values())
+                .sort((a, b) => a.time - b.time)
+                .map(c => ({
+                    time: Number(c.time) as UTCTimestamp,
+                    open: Number(c.open),
+                    high: Number(c.high),
+                    low: Number(c.low),
+                    close: Number(c.close)
+                }));
             
-            candleSeriesRef.current.setData(formatted);
-            lineSeriesRef.current.setData(formatted.map(c => ({ time: c.time, value: c.close })));
+            candleSeriesRef.current.setData(uniqueData);
+            lineSeriesRef.current.setData(uniqueData.map(c => ({ time: c.time, value: c.close })));
 
-            // Calculate indicators based on full historical set
+            // Calculate indicators based on clean historical sequence
             if (activeIndicators.includes("Moving Average Exponential") && emaSeriesRef.current) {
-                emaSeriesRef.current.setData(calculateEMA(formatted, 20));
+                emaSeriesRef.current.setData(calculateEMA(uniqueData, 20));
             }
 
             if (activeIndicators.includes("Bollinger Bands") && bbUpperSeriesRef.current && bbLowerSeriesRef.current && bbMiddleSeriesRef.current) {
-                const bbData = calculateBollingerBands(formatted, 20, 2);
+                const bbData = calculateBollingerBands(uniqueData, 20, 2);
                 bbUpperSeriesRef.current.setData(bbData.upper);
                 bbLowerSeriesRef.current.setData(bbData.lower);
                 bbMiddleSeriesRef.current.setData(bbData.middle);
             }
+            
+            chartRef.current.timeScale().fitContent();
+        } else {
+            // Clear chart if no data
+            candleSeriesRef.current.setData([]);
+            lineSeriesRef.current.setData([]);
         }
     }, [candleData, activeIndicators]);
 
-    // Handle real-time OHLC updates (The "Moving Candle" logic)
+    // Handle real-time OHLC morphing within the active candle
     React.useEffect(() => {
         if (!lastCandleUpdate || !candleSeriesRef.current || !lineSeriesRef.current) return;
 
@@ -347,28 +359,28 @@ export function DerivChart({
             close: Number(lastCandleUpdate.close)
         };
 
-        // lightweight-charts update() handles OHLC morphing if timestamp is same, 
-        // or creates new candle if timestamp is greater.
+        // lightweight-charts update() morphs the candle if timestamp matches, 
+        // or creates a new one if timestamp is greater.
         candleSeriesRef.current.update(updateData);
         lineSeriesRef.current.update({ time: updateData.time, value: updateData.close });
         
-        // Dynamically update indicators with the active candle's movement
-        if (activeIndicators.length > 0) {
-            const currentFullData = [...candleData];
-            const lastIdx = currentFullData.findIndex(c => Number(c.time) === updateData.time);
-            if (lastIdx !== -1) {
-                currentFullData[lastIdx] = updateData;
+        // Instant re-calculation for indicator precision
+        if (activeIndicators.length > 0 && candleData.length > 0) {
+            const combinedData = [...candleData];
+            const existingIdx = combinedData.findIndex(c => Number(c.time) === Number(updateData.time));
+            if (existingIdx !== -1) {
+                combinedData[existingIdx] = updateData;
             } else {
-                currentFullData.push(updateData);
+                combinedData.push(updateData);
             }
 
             if (emaSeriesRef.current && activeIndicators.includes("Moving Average Exponential")) {
-                const emaVal = calculateEMA(currentFullData.slice(-21), 20).pop();
+                const emaVal = calculateEMA(combinedData.slice(-30), 20).pop();
                 if (emaVal) emaSeriesRef.current.update(emaVal);
             }
 
             if (activeIndicators.includes("Bollinger Bands") && bbUpperSeriesRef.current && bbLowerSeriesRef.current && bbMiddleSeriesRef.current) {
-                const bbData = calculateBollingerBands(currentFullData.slice(-21), 20, 2);
+                const bbData = calculateBollingerBands(combinedData.slice(-30), 20, 2);
                 const u = bbData.upper.pop();
                 const l = bbData.lower.pop();
                 const m = bbData.middle.pop();
@@ -403,7 +415,7 @@ export function DerivChart({
                                     />
                                 </div>
                             </div>
-                            <div className="max-h-[350px] overflow-y-auto">
+                            <div className="max-h-[350px] overflow-y-auto no-scrollbar">
                                 <div className="p-2 space-y-0.5">
                                     {filteredIndices.map((market) => {
                                         const res = globalResults[market.id];
@@ -535,15 +547,15 @@ export function DerivChart({
 
             <div className="flex items-center gap-4 px-4 py-2 border-b bg-white text-[11px] font-medium text-slate-500">
                 <div className="flex items-center gap-1.5">
-                    <div className={cn("w-2 h-2 rounded-full", (Number(ohlcDisplay?.perc) || 0) >= 0 ? "bg-emerald-500" : "bg-rose-500")} />
+                    <div className={cn("w-2 h-2 rounded-full", (ohlcDisplay?.diff || 0) >= 0 ? "bg-emerald-500" : "bg-rose-500")} />
                     <span className="flex gap-2">
                         <span className="flex gap-0.5"><span className="text-muted-foreground/60 font-bold">O:</span> {Number(ohlcDisplay?.open || 0).toFixed(decimalPlaces)}</span>
                         <span className="flex gap-0.5"><span className="text-muted-foreground/60 font-bold">H:</span> {Number(ohlcDisplay?.high || 0).toFixed(decimalPlaces)}</span>
                         <span className="flex gap-0.5"><span className="text-muted-foreground/60 font-bold">L:</span> {Number(ohlcDisplay?.low || 0).toFixed(decimalPlaces)}</span>
                         <span className="flex gap-0.5"><span className="text-muted-foreground/60 font-bold">C:</span> {Number(ohlcDisplay?.close || 0).toFixed(decimalPlaces)}</span>
                     </span>
-                    <span className={cn("ml-2 font-black tabular-nums", (Number(ohlcDisplay?.diff) || 0) >= 0 ? "text-emerald-500" : "text-rose-500")}>
-                        {(Number(ohlcDisplay?.diff) || 0).toFixed(decimalPlaces)} ({(Number(ohlcDisplay?.perc) || 0).toFixed(2)}%)
+                    <span className={cn("ml-2 font-black tabular-nums", (ohlcDisplay?.diff || 0) >= 0 ? "text-emerald-500" : "text-rose-500")}>
+                        {(ohlcDisplay?.diff || 0).toFixed(decimalPlaces)} ({(ohlcDisplay?.perc || 0).toFixed(2)}%)
                     </span>
                 </div>
             </div>
@@ -554,3 +566,4 @@ export function DerivChart({
         </div>
     );
 }
+

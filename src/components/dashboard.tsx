@@ -171,6 +171,11 @@ export function Dashboard() {
     // Active Market Feed
     React.useEffect(() => {
         if (!mounted || isLocked) return;
+
+        // Reset tactical buffers on horizon shift
+        setCandleData([]);
+        setLastCandleUpdate(null);
+        
         currentMarketRef.current = selectedMarket;
         const ws = new WebSocket('wss://ws.derivws.com/websockets/v3?app_id=84799');
         
@@ -187,6 +192,7 @@ export function Dashboard() {
 
         ws.onopen = () => {
             setSurveillanceStatus('active');
+            // Request full OHLC historical sequence with live subscription
             ws.send(JSON.stringify({
                 "ticks_history": selectedMarket,
                 "count": 500,
@@ -195,6 +201,8 @@ export function Dashboard() {
                 "granularity": granularity,
                 "subscribe": 1
             }));
+            
+            // Secondary tick stream for digit frequency and pacing
             ws.send(JSON.stringify({ "ticks": selectedMarket, "subscribe": 1 }));
         };
 
@@ -202,15 +210,11 @@ export function Dashboard() {
             const data = JSON.parse(event.data);
             if (data.error) return;
 
+            // Handle historical candlestick batch
             if (data.msg_type === 'history' && data.history) {
-                const prices = (data.history.prices || []).map((p: any) => Number(p));
                 const activePipSize = data.echo_req.pip_size || 2;
                 pipSizeRef.current = activePipSize;
                 setDecimalPlaces(activePipSize);
-                
-                if (data.echo_req.style === 'ticks') {
-                    setPriceHistory([...prices].reverse());
-                }
             }
 
             if (data.msg_type === 'candles' && data.candles) {
@@ -224,7 +228,10 @@ export function Dashboard() {
                 setCandleData(formatted);
             }
 
+            // Handle live OHLC candle morphing
             if (data.msg_type === 'ohlc' && data.ohlc) {
+                if (data.ohlc.symbol !== currentMarketRef.current) return;
+                
                 const newUpdate = {
                     time: Number(data.ohlc.epoch),
                     open: Number(data.ohlc.open),
@@ -236,8 +243,9 @@ export function Dashboard() {
                 setPrice(Number(data.ohlc.close) || 0);
             }
 
+            // Handle live tick stream for digit analysis
             if (data.msg_type === 'tick') {
-                if (data.tick && typeof data.tick.quote === 'number') {
+                if (data.tick && data.tick.symbol === currentMarketRef.current) {
                     if (data.tick.pip_size !== undefined) {
                         pipSizeRef.current = data.tick.pip_size;
                         setDecimalPlaces(data.tick.pip_size);
@@ -250,9 +258,13 @@ export function Dashboard() {
                     const epochMs = Number(data.tick.epoch) * 1000;
 
                     setTickTimestamps(prev => [epochMs, ...prev].slice(0, 1000));
-                    setPrice(newPrice);
                     setLastDigitTicks(prev => [newDigit, ...prev].slice(0, 1000));
                     setPriceHistory(prev => [newPrice, ...prev].slice(0, 1000));
+                    
+                    // If no candle update yet, use tick price to show activity
+                    if (!lastCandleUpdate) {
+                        setPrice(newPrice);
+                    }
                 }
             }
         };
@@ -287,7 +299,7 @@ export function Dashboard() {
                                 <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center">
                                     <Activity className="h-4 w-4 text-primary" />
                                 </div>
-                                <span className="text-sm font-black text-foreground uppercase tracking-widest hidden sm:block">FROSTY TRADERS</span>
+                                <span className="text-sm font-black text-foreground uppercase tracking-widest hidden sm:block underline decoration-primary/30 underline-offset-4">FROSTY TRADERS</span>
                             </a>
                         </div>
                         
@@ -367,3 +379,4 @@ export function Dashboard() {
         </div>
     );
 }
+
