@@ -9,7 +9,7 @@ import { DigitFrequencyView } from './digit-frequency-view';
 import { InsightView } from './insight-view';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
-import { RefreshCw, Radio, Activity, Moon, Sun, ExternalLink, ChevronDown, Search, TrendingUp, TrendingDown } from 'lucide-react';
+import { Radio, Activity, Moon, Sun, ExternalLink, ChevronDown, Search, TrendingUp, TrendingDown } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { LockScreen } from './lock-screen';
 import { DerivChart } from './deriv-chart';
@@ -46,6 +46,8 @@ export function Dashboard() {
     const [selectedMarket, setSelectedMarket] = React.useState('1HZ10V');
     const [decimalPlaces, setDecimalPlaces] = React.useState(2);
     const [tickTimestamps, setTickTimestamps] = React.useState<number[]>([]);
+    const [chartInterval, setChartInterval] = React.useState('1t');
+    const [candleData, setCandleData] = React.useState<any[]>([]);
     
     const [surveillanceStatus, setSurveillanceStatus] = React.useState<EngineStatus>('offline');
     const [globalResults, setGlobalResults] = React.useState<Record<string, GlobalAnalysisResult>>({});
@@ -59,7 +61,6 @@ export function Dashboard() {
         setMounted(true);
         const authState = localStorage.getItem('frosty_auth');
         if (authState === 'true') setIsLocked(false);
-        
         const savedTheme = localStorage.getItem('theme') as 'light' | 'dark';
         if (savedTheme) setTheme(savedTheme);
     }, []);
@@ -78,17 +79,14 @@ export function Dashboard() {
     // Global Surveillance Engine
     React.useEffect(() => {
         if (!mounted || isLocked) return;
-
         const scanWs = new WebSocket('wss://ws.derivws.com/websockets/v3?app_id=84799');
         let currentIndex = 0;
-
         const runGlobalScan = () => {
             if (currentIndex >= syntheticIndices.length) {
                 currentIndex = 0;
                 setTimeout(runGlobalScan, 2000); 
                 return;
             }
-
             const market = syntheticIndices[currentIndex];
             setActiveScanId(market.id);
             if (scanWs.readyState === WebSocket.OPEN) {
@@ -100,9 +98,7 @@ export function Dashboard() {
                 }));
             }
         };
-
         scanWs.onopen = () => runGlobalScan();
-
         scanWs.onmessage = (event) => {
             const data = JSON.parse(event.data);
             if (data.msg_type === 'history' && data.history) {
@@ -111,24 +107,20 @@ export function Dashboard() {
                 const marketId = data.echo_req.ticks_history;
                 const marketName = syntheticIndices.find(m => m.id === marketId)?.name || marketId;
                 const pip = data.echo_req.pip_size || 2;
-
                 const ticks = prices.map((p: number) => {
                     const pStr = p.toFixed(8);
                     const dec = pStr.split('.')[1] || '00';
                     return parseInt(dec[pip - 1] || '0');
                 }).reverse();
-
                 const total = ticks.length || 1;
                 const counts = Array(10).fill(0);
                 ticks.forEach(d => counts[d]++);
                 const P = counts.map(c => (c / total) * 100);
                 const D = P.map(p => p - 10); 
-
                 const variance = P.reduce((sum, p) => sum + Math.pow(p - 10, 2), 0) / 10;
                 const stdDev = Math.sqrt(variance);
                 const SS = Math.max(0, 1 - (stdDev / 10));
                 const CI = D.reduce((sum, d) => sum + Math.pow(d, 2), 0);
-
                 const entryCandidates = [0,1,2,3,4,5,6,7,8,9].filter(i => D[i] >= -1.0 && D[i] <= -0.2);
                 const targetCandidates = [0,1,2,3,4,5,6,7,8,9].map(i => {
                     const prevIdx = (i + 9) % 10;
@@ -136,12 +128,10 @@ export function Dashboard() {
                     const ld = D[i] - (D[prevIdx] + D[nextIdx]) / 2;
                     return { i, ld, d: D[i] };
                 }).filter(t => t.d > 0.3 && t.ld > 0);
-
                 let bestE: number | null = null;
                 let bestT: number | null = null;
                 let bestFlowScore = -1000;
                 let finalConfidence = 0;
-
                 if (entryCandidates.length > 0 && targetCandidates.length > 0) {
                     entryCandidates.forEach(e => {
                         targetCandidates.forEach(t => {
@@ -158,12 +148,10 @@ export function Dashboard() {
                         finalConfidence = Math.min(99.9, 65 + (bestFlowScore * 12) + (SS * 15));
                     }
                 }
-
                 let S_U6 = 0; for (let i = 0; i <= 5; i++) S_U6 += D[i];
                 let S_O3 = 0; for (let i = 4; i <= 9; i++) S_O3 += D[i];
                 const scannerDirection = S_U6 > S_O3 ? 'UNDER 6' : 'OVER 3';
                 const bestScanner = P.map((p, i) => ({ i, p })).sort((a, b) => b.p - a.p)[0];
-
                 setGlobalResults(prev => ({
                     ...prev,
                     [marketId]: {
@@ -174,38 +162,56 @@ export function Dashboard() {
                         scannerEntry: bestScanner?.i ?? null, scannerConfidence: 60 + Math.max(S_U6, S_O3)
                     }
                 }));
-
                 currentIndex++;
                 setTimeout(runGlobalScan, 200);
             }
         };
-
         return () => scanWs.close();
     }, [mounted, isLocked]);
 
     // Active Market Feed
     React.useEffect(() => {
         if (!mounted || isLocked) return;
-
         currentMarketRef.current = selectedMarket;
         const ws = new WebSocket('wss://ws.derivws.com/websockets/v3?app_id=84799');
+        
+        const intervalToGranularity = (int: string) => {
+            const map: Record<string, number> = {
+                '1t': 0, '1m': 60, '2m': 120, '3m': 180, '5m': 300, 
+                '10m': 600, '15m': 900, '30m': 1800, '1h': 3600,
+                '2h': 7200, '4h': 14400, '8h': 28800, '1d': 86400
+            };
+            return map[int] || 0;
+        };
+
+        const granularity = intervalToGranularity(chartInterval);
 
         ws.onopen = () => {
             setSurveillanceStatus('active');
-            ws.send(JSON.stringify({ 
-                "ticks_history": selectedMarket, 
-                "count": 1000, 
-                "end": "latest", 
-                "style": "ticks", 
-                "subscribe": 1 
-            }));
+            if (granularity === 0) {
+                ws.send(JSON.stringify({ 
+                    "ticks_history": selectedMarket, 
+                    "count": 1000, 
+                    "end": "latest", 
+                    "style": "ticks", 
+                    "subscribe": 1 
+                }));
+            } else {
+                ws.send(JSON.stringify({
+                    "ticks_history": selectedMarket,
+                    "count": 500,
+                    "end": "latest",
+                    "style": "candles",
+                    "granularity": granularity,
+                    "subscribe": 1
+                }));
+                // Also need ticks for frequency analysis in background
+                ws.send(JSON.stringify({ "ticks": selectedMarket, "subscribe": 1 }));
+            }
         };
 
         ws.onmessage = (event) => {
             const data = JSON.parse(event.data);
-            const msgMarket = data.echo_req?.ticks_history || data.tick?.symbol;
-            if (msgMarket && msgMarket !== currentMarketRef.current) return;
-
             if (data.error) return;
 
             if (data.msg_type === 'history' && data.history) {
@@ -214,17 +220,41 @@ export function Dashboard() {
                 const activePipSize = data.echo_req.pip_size || 2;
                 pipSizeRef.current = activePipSize;
                 setDecimalPlaces(activePipSize);
-
                 const ticks = prices.map((p: number) => {
                     const pStr = p.toFixed(8);
                     const dec = pStr.split('.')[1] || '00';
                     return parseInt(dec[activePipSize - 1] || '0');
                 }).reverse();
-
                 setPrice(prices[prices.length - 1]);
                 setLastDigitTicks(ticks);
                 setPriceHistory([...prices].reverse());
                 setTickTimestamps([...times].reverse());
+            }
+
+            if (data.msg_type === 'candles' && data.candles) {
+                const formatted = data.candles.map((c: any) => ({
+                    time: c.epoch,
+                    open: c.open,
+                    high: c.high,
+                    low: c.low,
+                    close: c.close
+                }));
+                setCandleData(formatted);
+            }
+
+            if (data.msg_type === 'ohlc' && data.ohlc) {
+                const newCandle = {
+                    time: data.ohlc.epoch,
+                    open: data.ohlc.open,
+                    high: data.ohlc.high,
+                    low: data.ohlc.low,
+                    close: data.ohlc.close
+                };
+                setCandleData(prev => {
+                    const filtered = prev.filter(c => c.time !== newCandle.time);
+                    return [...filtered, newCandle].sort((a, b) => a.time - b.time).slice(-500);
+                });
+                setPrice(data.ohlc.close);
             }
 
             if (data.msg_type === 'tick') {
@@ -242,14 +272,16 @@ export function Dashboard() {
                     setTickTimestamps(prev => [Date.now(), ...prev].slice(0, 1000));
                     setPrice(newPrice);
                     setLastDigitTicks(prev => [newDigit, ...prev].slice(0, 1000));
-                    setPriceHistory(prev => [newPrice, ...prev].slice(0, 1000));
+                    if (granularity === 0) {
+                        setPriceHistory(prev => [newPrice, ...prev].slice(0, 1000));
+                    }
                 }
             }
         };
 
         ws.onclose = () => setSurveillanceStatus('offline');
         return () => { if(ws && ws.readyState === WebSocket.OPEN) ws.close(); };
-    }, [mounted, isLocked, selectedMarket]);
+    }, [mounted, isLocked, selectedMarket, chartInterval]);
 
     const handleMaxTicksChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const val = e.target.value === '' ? 0 : parseInt(e.target.value, 10);
@@ -401,8 +433,16 @@ export function Dashboard() {
                         <TabsContent value="global-scan" className="mt-0 outline-none animate-in fade-in duration-500">
                             <ScannerView price={price} lastDigitTicks={analyzedDigits} priceHistory={analyzedPrices} maxTicks={maxTicks} handleMaxTicksChange={handleMaxTicksChange} handleMaxTicksBlur={handleMaxTicksBlur} selectedMarket={selectedMarket} onMarketChange={setSelectedMarket} decimalPlaces={decimalPlaces} />
                         </TabsContent>
-                        <TabsContent value="chart" className="mt-0 outline-none animate-in fade-in duration-500 h-[60vh]">
-                            <DerivChart priceHistory={priceHistory} tickTimestamps={tickTimestamps} decimalPlaces={decimalPlaces} />
+                        <TabsContent value="chart" className="mt-0 outline-none animate-in fade-in duration-500 h-[65vh]">
+                            <DerivChart 
+                                priceHistory={priceHistory} 
+                                tickTimestamps={tickTimestamps} 
+                                decimalPlaces={decimalPlaces} 
+                                lastDigitTicks={analyzedDigits}
+                                selectedInterval={chartInterval}
+                                onIntervalChange={setChartInterval}
+                                candleData={candleData}
+                            />
                         </TabsContent>
                         <TabsContent value="insight" className="mt-0 outline-none animate-in fade-in duration-500">
                             <InsightView globalResults={globalResults} activeScanId={activeScanId} dashboardPrice={price} dashboardMarketId={selectedMarket} />
