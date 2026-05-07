@@ -186,8 +186,8 @@ export function DerivChart({
         const last = lastCandleUpdate || (candleData.length > 0 ? candleData[candleData.length - 1] : null);
         if (!last) return null;
         const prev = candleData.length > 1 ? candleData[candleData.length - 2] : last;
-        const diff = last.close - prev.close;
-        const perc = (diff / (prev.close || 1)) * 100;
+        const diff = Number(last.close) - Number(prev.close);
+        const perc = (diff / (Number(prev.close) || 1)) * 100;
         return { ...last, diff, perc };
     }, [candleData, lastCandleUpdate]);
 
@@ -305,7 +305,7 @@ export function DerivChart({
         };
     }, [decimalPlaces, chartType, activeIndicators]);
 
-    // History Loader
+    // Update historical data and calculate indicators
     React.useEffect(() => {
         if (!lineSeriesRef.current || !candleSeriesRef.current) return;
 
@@ -321,6 +321,7 @@ export function DerivChart({
             candleSeriesRef.current.setData(formatted);
             lineSeriesRef.current.setData(formatted.map(c => ({ time: c.time, value: c.close })));
 
+            // Calculate indicators based on full historical set
             if (activeIndicators.includes("Moving Average Exponential") && emaSeriesRef.current) {
                 emaSeriesRef.current.setData(calculateEMA(formatted, 20));
             }
@@ -334,7 +335,7 @@ export function DerivChart({
         }
     }, [candleData, activeIndicators]);
 
-    // Real-Time Mover
+    // Handle real-time OHLC updates (The "Moving Candle" logic)
     React.useEffect(() => {
         if (!lastCandleUpdate || !candleSeriesRef.current || !lineSeriesRef.current) return;
 
@@ -346,16 +347,37 @@ export function DerivChart({
             close: Number(lastCandleUpdate.close)
         };
 
+        // lightweight-charts update() handles OHLC morphing if timestamp is same, 
+        // or creates new candle if timestamp is greater.
         candleSeriesRef.current.update(updateData);
         lineSeriesRef.current.update({ time: updateData.time, value: updateData.close });
         
-        // Dynamic Indicator Update
-        if (emaSeriesRef.current && activeIndicators.includes("Moving Average Exponential")) {
-            const allData = candleData.concat(lastCandleUpdate);
-            const emaVal = calculateEMA(allData.slice(-21), 20).pop();
-            if (emaVal) emaSeriesRef.current.update(emaVal);
+        // Dynamically update indicators with the active candle's movement
+        if (activeIndicators.length > 0) {
+            const currentFullData = [...candleData];
+            const lastIdx = currentFullData.findIndex(c => Number(c.time) === updateData.time);
+            if (lastIdx !== -1) {
+                currentFullData[lastIdx] = updateData;
+            } else {
+                currentFullData.push(updateData);
+            }
+
+            if (emaSeriesRef.current && activeIndicators.includes("Moving Average Exponential")) {
+                const emaVal = calculateEMA(currentFullData.slice(-21), 20).pop();
+                if (emaVal) emaSeriesRef.current.update(emaVal);
+            }
+
+            if (activeIndicators.includes("Bollinger Bands") && bbUpperSeriesRef.current && bbLowerSeriesRef.current && bbMiddleSeriesRef.current) {
+                const bbData = calculateBollingerBands(currentFullData.slice(-21), 20, 2);
+                const u = bbData.upper.pop();
+                const l = bbData.lower.pop();
+                const m = bbData.middle.pop();
+                if (u) bbUpperSeriesRef.current.update(u);
+                if (l) bbLowerSeriesRef.current.update(l);
+                if (m) bbMiddleSeriesRef.current.update(m);
+            }
         }
-    }, [lastCandleUpdate, activeIndicators]);
+    }, [lastCandleUpdate, activeIndicators, candleData]);
 
     return (
         <div className="w-full h-full relative flex flex-col bg-white border border-border rounded-2xl overflow-hidden shadow-2xl">
@@ -513,15 +535,15 @@ export function DerivChart({
 
             <div className="flex items-center gap-4 px-4 py-2 border-b bg-white text-[11px] font-medium text-slate-500">
                 <div className="flex items-center gap-1.5">
-                    <div className={cn("w-2 h-2 rounded-full", (ohlcDisplay?.perc || 0) >= 0 ? "bg-emerald-500" : "bg-rose-500")} />
+                    <div className={cn("w-2 h-2 rounded-full", (Number(ohlcDisplay?.perc) || 0) >= 0 ? "bg-emerald-500" : "bg-rose-500")} />
                     <span className="flex gap-2">
                         <span className="flex gap-0.5"><span className="text-muted-foreground/60 font-bold">O:</span> {Number(ohlcDisplay?.open || 0).toFixed(decimalPlaces)}</span>
                         <span className="flex gap-0.5"><span className="text-muted-foreground/60 font-bold">H:</span> {Number(ohlcDisplay?.high || 0).toFixed(decimalPlaces)}</span>
                         <span className="flex gap-0.5"><span className="text-muted-foreground/60 font-bold">L:</span> {Number(ohlcDisplay?.low || 0).toFixed(decimalPlaces)}</span>
                         <span className="flex gap-0.5"><span className="text-muted-foreground/60 font-bold">C:</span> {Number(ohlcDisplay?.close || 0).toFixed(decimalPlaces)}</span>
                     </span>
-                    <span className={cn("ml-2 font-black tabular-nums", (ohlcDisplay?.diff || 0) >= 0 ? "text-emerald-500" : "text-rose-500")}>
-                        {(ohlcDisplay?.diff || 0).toFixed(decimalPlaces)} ({(ohlcDisplay?.perc || 0).toFixed(2)}%)
+                    <span className={cn("ml-2 font-black tabular-nums", (Number(ohlcDisplay?.diff) || 0) >= 0 ? "text-emerald-500" : "text-rose-500")}>
+                        {(Number(ohlcDisplay?.diff) || 0).toFixed(decimalPlaces)} ({(Number(ohlcDisplay?.perc) || 0).toFixed(2)}%)
                     </span>
                 </div>
             </div>
