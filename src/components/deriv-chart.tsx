@@ -375,7 +375,13 @@ export function DerivChart({
                 bbMiddleSeriesRef.current.setData(bbData.middle);
             }
             
-            chartRef.current.timeScale().fitContent();
+            // Only fit content if it's the first load or small dataset
+            if (uniqueData.length < 500) {
+                chartRef.current.timeScale().fitContent();
+            } else {
+                // For large history, scroll to end (real-time)
+                chartRef.current.timeScale().scrollToRealTime();
+            }
         } else {
             candleSeriesRef.current.setData([]);
             lineSeriesRef.current.setData([]);

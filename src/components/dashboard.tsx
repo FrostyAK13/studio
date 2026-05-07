@@ -187,13 +187,21 @@ export function Dashboard() {
             return map[int] || 60;
         };
 
+        const calculateCountForOneMonth = (granularity: number) => {
+            const oneMonthSeconds = 30 * 24 * 60 * 60;
+            const countNeeded = Math.ceil(oneMonthSeconds / granularity);
+            // API limit is usually around 5000 for count in style:candles
+            return Math.min(5000, Math.max(500, countNeeded)); 
+        };
+
         const granularity = intervalToGranularity(chartInterval);
+        const historyCount = calculateCountForOneMonth(granularity);
 
         ws.onopen = () => {
             setSurveillanceStatus('active');
             ws.send(JSON.stringify({
                 "ticks_history": selectedMarket,
-                "count": 500,
+                "count": historyCount,
                 "end": "latest",
                 "style": "candles",
                 "granularity": granularity,
@@ -224,9 +232,6 @@ export function Dashboard() {
                 setCandleData(formatted);
             }
 
-            // Handle live OHLC candle morphing
-            // CRITICAL FIX: Use open_time as the unique key for the candle.
-            // This ensures all ticks within the timeframe update the SAME candle bar.
             if (data.msg_type === 'ohlc' && data.ohlc) {
                 if (data.ohlc.symbol !== currentMarketRef.current) return;
                 
@@ -375,3 +380,4 @@ export function Dashboard() {
         </div>
     );
 }
+
