@@ -1,3 +1,4 @@
+
 'use client';
 
 import * as React from 'react';
@@ -227,7 +228,7 @@ export function DerivChart({
         if (selectedInterval === '1t') {
             const lineData = priceHistory.map((price, index) => ({
                 time: (Math.floor(tickTimestamps[index] / 1000)) as UTCTimestamp,
-                value: price
+                value: Number(price)
             })).reverse();
             const uniqueLineData = lineData.filter((v, i, a) => a.findIndex(t => t.time === v.time) === i);
             lineSeriesRef.current.setData(uniqueLineData);
@@ -242,19 +243,26 @@ export function DerivChart({
                 if (window.length === 0) continue;
                 tempCandles.push({
                     time: (Math.floor(reversedTimes[i] / 1000)) as UTCTimestamp,
-                    open: window[0],
-                    high: Math.max(...window),
-                    low: Math.min(...window),
-                    close: window[window.length - 1],
+                    open: Number(window[0]),
+                    high: Number(Math.max(...window)),
+                    low: Number(Math.min(...window)),
+                    close: Number(window[window.length - 1]),
                 });
             }
             candleSeriesRef.current.setData(tempCandles.filter((v, i, a) => a.findIndex(t => t.time === v.time) === i));
         } else {
             // Use real candle data for non-tick intervals
-            if (candleData.length > 0) {
-                candleSeriesRef.current.setData(candleData);
+            if (candleData && candleData.length > 0) {
+                const sanitizedCandleData = candleData.map(c => ({
+                    time: Number(c.time) as UTCTimestamp,
+                    open: Number(c.open),
+                    high: Number(c.high),
+                    low: Number(c.low),
+                    close: Number(c.close)
+                }));
+                candleSeriesRef.current.setData(sanitizedCandleData);
                 // Also show a line for candles if needed
-                const candleLine = candleData.map(c => ({ time: c.time, value: c.close }));
+                const candleLine = sanitizedCandleData.map(c => ({ time: c.time, value: c.close }));
                 lineSeriesRef.current.setData(candleLine);
             }
         }
@@ -324,7 +332,7 @@ export function DerivChart({
                     <div>
                         <p className="text-[9px] font-black text-emerald-400 uppercase tracking-widest leading-none">LIVE FEED</p>
                         <p className="text-lg font-black text-white tabular-nums mt-1">
-                            {priceHistory.length > 0 ? priceHistory[0].toFixed(decimalPlaces) : '0.00'}
+                            {priceHistory.length > 0 ? (Number(priceHistory[0]) || 0).toFixed(decimalPlaces) : '0.00'}
                         </p>
                     </div>
                 </div>

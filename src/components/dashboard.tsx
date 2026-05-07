@@ -103,7 +103,7 @@ export function Dashboard() {
         scanWs.onmessage = (event) => {
             const data = JSON.parse(event.data);
             if (data.msg_type === 'history' && data.history) {
-                const prices = data.history.prices || [];
+                const prices = (data.history.prices || []).map((p: any) => Number(p));
                 const latestPrice = prices.length > 0 ? prices[prices.length - 1] : 0;
                 const marketId = data.echo_req.ticks_history;
                 const marketName = syntheticIndices.find(m => m.id === marketId)?.name || marketId;
@@ -216,7 +216,7 @@ export function Dashboard() {
             if (data.error) return;
 
             if (data.msg_type === 'history' && data.history) {
-                const prices = data.history.prices || [];
+                const prices = (data.history.prices || []).map((p: any) => Number(p));
                 const times = (data.history.times || []).map((t: number) => t * 1000);
                 const activePipSize = data.echo_req.pip_size || 2;
                 pipSizeRef.current = activePipSize;
@@ -236,22 +236,22 @@ export function Dashboard() {
 
             if (data.msg_type === 'candles' && data.candles) {
                 const formatted = data.candles.map((c: any) => ({
-                    time: c.epoch,
-                    open: c.open,
-                    high: c.high,
-                    low: c.low,
-                    close: c.close
+                    time: Number(c.epoch),
+                    open: Number(c.open),
+                    high: Number(c.high),
+                    low: Number(c.low),
+                    close: Number(c.close)
                 }));
                 setCandleData(formatted);
             }
 
             if (data.msg_type === 'ohlc' && data.ohlc) {
                 const newCandle = {
-                    time: data.ohlc.epoch,
-                    open: data.ohlc.open,
-                    high: data.ohlc.high,
-                    low: data.ohlc.low,
-                    close: data.ohlc.close
+                    time: Number(data.ohlc.epoch),
+                    open: Number(data.ohlc.open),
+                    high: Number(data.ohlc.high),
+                    low: Number(data.ohlc.low),
+                    close: Number(data.ohlc.close)
                 };
                 setCandleData(prev => {
                     const filtered = prev.filter(c => c.time !== newCandle.time);
@@ -267,7 +267,7 @@ export function Dashboard() {
                         setDecimalPlaces(data.tick.pip_size);
                     }
                     const activePipSize = pipSizeRef.current ?? 2;
-                    const newPrice = data.tick.quote;
+                    const newPrice = Number(data.tick.quote);
                     const fullPriceStr = newPrice.toFixed(8);
                     const decimalsStr = fullPriceStr.split('.')[1] || '00000000';
                     const newDigit = parseInt(decimalsStr[activePipSize - 1] || '0');
