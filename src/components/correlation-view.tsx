@@ -6,6 +6,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { syntheticIndices } from '@/lib/mock-data';
 import { cn } from '@/lib/utils';
 import { Triangle } from 'lucide-react';
+import { motion } from 'framer-motion';
 
 interface CorrelationViewProps {
     selectedMarket: string;
@@ -67,7 +68,7 @@ export const DigitFrequencyCircles = ({
             <div 
                 onClick={() => onDigitSelect(digit)}
                 className={cn(
-                    "relative flex flex-col items-center justify-center p-3 sm:p-5 rounded-[1.2rem] border transition-all cursor-pointer group shadow-sm",
+                    "relative flex flex-col items-center justify-center p-3 sm:p-5 rounded-[1.2rem] border transition-all cursor-pointer group shadow-sm min-h-[100px]",
                     isSelected 
                         ? "bg-slate-950 border-slate-900 text-white scale-105 z-10 shadow-xl" 
                         : "bg-white dark:bg-slate-900/50 border-slate-100 dark:border-white/5 hover:border-primary/20 hover:bg-slate-50 dark:hover:bg-slate-900"
@@ -80,16 +81,20 @@ export const DigitFrequencyCircles = ({
                     {digit}
                 </span>
                 <span className={cn(
-                    "text-[9px] sm:text-[11px] font-black tabular-nums",
+                    "text-[10px] sm:text-[12px] font-black tabular-nums",
                     isSelected ? "text-slate-400" : colorClass
                 )}>
                     {percentage.toFixed(1)}%
                 </span>
                 
                 {isLast && (
-                    <div className="absolute -bottom-1 left-1/2 -translate-x-1/2">
-                        <Triangle className={cn("w-2.5 h-2.5 fill-primary text-primary")} />
-                    </div>
+                    <motion.div 
+                        initial={{ scale: 0 }}
+                        animate={{ scale: 1 }}
+                        className="absolute -top-1 right-2"
+                    >
+                         <div className="w-1.5 h-1.5 rounded-full bg-primary animate-pulse" />
+                    </motion.div>
                 )}
                 
                 {isSelected && (
@@ -105,12 +110,12 @@ export const DigitFrequencyCircles = ({
     return (
         <Card className="overflow-hidden border-none shadow-sm bg-muted/20 dark:bg-card/20 rounded-[2rem] border border-border">
             <div className="px-8 pt-8 flex flex-col sm:flex-row items-center justify-between gap-4">
+                <h2 className="text-[11px] font-black uppercase tracking-[0.4em] text-foreground">LAST DIGIT PREDICTION</h2>
                 <div className="flex items-center gap-3 bg-white dark:bg-slate-900 px-5 py-2 rounded-full text-[10px] text-muted-foreground font-black uppercase tracking-widest border border-slate-100 dark:border-white/5 shadow-sm">
                     <span>SAMPLE: {ticks.length}</span>
                     <span className="w-1 h-1 rounded-full bg-border" />
                     <span>{marketName.toUpperCase()}</span>
                 </div>
-                <h2 className="text-[10px] font-black uppercase tracking-[0.4em] text-foreground">LAST DIGIT PREDICTION</h2>
             </div>
             <CardContent className="p-6 sm:p-10">
                 <div className="grid grid-cols-5 gap-3 sm:gap-4">

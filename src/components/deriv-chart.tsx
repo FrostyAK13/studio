@@ -58,44 +58,6 @@ const formatCountdown = (seconds: number) => {
     return `${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
 };
 
-const indicatorScripts = [
-  "Bollinger Bands",
-  "Moving Average Exponential",
-  "Double EMA",
-  "MACD",
-  "Relative Strength Index",
-  "Stochastic RSI"
-];
-
-const calculateEMA = (data: any[], period: number) => {
-    if (data.length < period) return [];
-    const k = 2 / (period + 1);
-    let ema = data[0].close;
-    const results = [];
-    for (let i = 0; i < data.length; i++) {
-        ema = data[i].close * k + ema * (1 - k);
-        results.push({ time: data[i].time as UTCTimestamp, value: Number(ema) });
-    }
-    return results;
-};
-
-const calculateBollingerBands = (data: any[], period: number, stdDev: number) => {
-    if (data.length < period) return { upper: [], lower: [], middle: [] };
-    const results = { upper: [] as any[], lower: [] as any[], middle: [] as any[] };
-    
-    for (let i = period - 1; i < data.length; i++) {
-        const slice = data.slice(i - period + 1, i + 1);
-        const avg = slice.reduce((sum, item) => sum + Number(item.close), 0) / period;
-        const variance = slice.reduce((sum, item) => sum + Math.pow(Number(item.close) - avg, 2), 0) / period;
-        const dev = Math.sqrt(variance);
-        
-        results.middle.push({ time: data[i].time as UTCTimestamp, value: Number(avg) });
-        results.upper.push({ time: data[i].time as UTCTimestamp, value: Number(avg + (stdDev * dev)) });
-        results.lower.push({ time: data[i].time as UTCTimestamp, value: Number(avg - (stdDev * dev)) });
-    }
-    return results;
-};
-
 const DigitStatsOverlay = ({ ticks }: { ticks: number[] }) => {
     const stats = React.useMemo(() => {
         const counts = Array(10).fill(0);
@@ -119,7 +81,7 @@ const DigitStatsOverlay = ({ ticks }: { ticks: number[] }) => {
 
     return (
         <div className="absolute bottom-10 left-0 w-full flex justify-center pointer-events-none z-[60]">
-            <div className="flex gap-2 sm:gap-4 p-3 bg-white/90 dark:bg-slate-900/90 backdrop-blur-md rounded-2xl border border-border shadow-2xl pointer-events-auto items-end">
+            <div className="flex gap-2 sm:gap-4 p-3 bg-white/90 dark:bg-slate-950/90 backdrop-blur-md rounded-2xl border border-border shadow-2xl pointer-events-auto items-end">
                 {stats.map((s) => {
                     const radius = 16;
                     const circumference = 2 * Math.PI * radius;
@@ -199,7 +161,6 @@ export function DerivChart({
 
     const currentMarket = syntheticIndices.find(m => m.id === selectedMarket);
     const filteredIndices = syntheticIndices.filter(m => m.name.toLowerCase().includes(searchQuery.toLowerCase()));
-    const filteredIndicators = indicatorScripts.filter(s => s.toLowerCase().includes(indicatorSearch.toLowerCase()));
 
     const ohlcDisplay = React.useMemo(() => {
         const last = lastCandleUpdate || (candleData.length > 0 ? candleData[candleData.length - 1] : null);
@@ -212,13 +173,6 @@ export function DerivChart({
         return { ...last, diff, perc };
     }, [candleData, lastCandleUpdate]);
 
-    const toggleIndicator = (name: string) => {
-        setActiveIndicators(prev => 
-            prev.includes(name) ? prev.filter(i => i !== name) : [...prev, name]
-        );
-    };
-
-    // Countdown Timer logic
     React.useEffect(() => {
         if (!ohlcDisplay || !selectedInterval) return;
         
@@ -301,52 +255,17 @@ export function DerivChart({
             visible: chartType === 'candles',
         });
 
-        const emaSeries = chart.addLineSeries({
-            color: '#3b82f6',
-            lineWidth: 1.5,
-            priceFormat: { type: 'price', precision: decimalPlaces },
-            visible: activeIndicators.includes("Moving Average Exponential"),
-        });
-
-        const bbUpper = chart.addLineSeries({
-            color: 'rgba(0, 166, 156, 0.5)',
-            lineWidth: 1,
-            lineStyle: 2,
-            priceFormat: { type: 'price', precision: decimalPlaces },
-            visible: activeIndicators.includes("Bollinger Bands"),
-        });
-
-        const bbLower = chart.addLineSeries({
-            color: 'rgba(0, 166, 156, 0.5)',
-            lineWidth: 1,
-            lineStyle: 2,
-            priceFormat: { type: 'price', precision: decimalPlaces },
-            visible: activeIndicators.includes("Bollinger Bands"),
-        });
-
-        const bbMiddle = chart.addLineSeries({
-            color: 'rgba(0, 166, 156, 0.3)',
-            lineWidth: 1,
-            priceFormat: { type: 'price', precision: decimalPlaces },
-            visible: activeIndicators.includes("Bollinger Bands"),
-        });
-
         chartRef.current = chart;
         lineSeriesRef.current = areaSeries;
         candleSeriesRef.current = candlestickSeries;
-        emaSeriesRef.current = emaSeries;
-        bbUpperSeriesRef.current = bbUpper;
-        bbLowerSeriesRef.current = bbLower;
-        bbMiddleSeriesRef.current = bbMiddle;
 
         window.addEventListener('resize', handleResize);
         return () => {
             window.removeEventListener('resize', handleResize);
             chart.remove();
         };
-    }, [decimalPlaces, chartType, activeIndicators]);
+    }, [decimalPlaces, chartType]);
 
-    // Handle initial historical load
     React.useEffect(() => {
         if (!lineSeriesRef.current || !candleSeriesRef.current || !chartRef.current) return;
 
@@ -363,32 +282,15 @@ export function DerivChart({
             
             candleSeriesRef.current.setData(uniqueData);
             lineSeriesRef.current.setData(uniqueData.map(c => ({ time: c.time, value: c.close })));
-
-            if (activeIndicators.includes("Moving Average Exponential") && emaSeriesRef.current) {
-                emaSeriesRef.current.setData(calculateEMA(uniqueData, 20));
-            }
-
-            if (activeIndicators.includes("Bollinger Bands") && bbUpperSeriesRef.current && bbLowerSeriesRef.current && bbMiddleSeriesRef.current) {
-                const bbData = calculateBollingerBands(uniqueData, 20, 2);
-                bbUpperSeriesRef.current.setData(bbData.upper);
-                bbLowerSeriesRef.current.setData(bbData.lower);
-                bbMiddleSeriesRef.current.setData(bbData.middle);
-            }
             
-            // Only fit content if it's the first load or small dataset
             if (uniqueData.length < 500) {
                 chartRef.current.timeScale().fitContent();
             } else {
-                // For large history, scroll to end (real-time)
                 chartRef.current.timeScale().scrollToRealTime();
             }
-        } else {
-            candleSeriesRef.current.setData([]);
-            lineSeriesRef.current.setData([]);
         }
-    }, [candleData, activeIndicators]);
+    }, [candleData]);
 
-    // Handle real-time OHLC morphing within the active candle
     React.useEffect(() => {
         if (!lastCandleUpdate || !candleSeriesRef.current || !lineSeriesRef.current) return;
 
@@ -402,32 +304,7 @@ export function DerivChart({
 
         candleSeriesRef.current.update(updateData);
         lineSeriesRef.current.update({ time: updateData.time, value: updateData.close });
-        
-        if (activeIndicators.length > 0 && candleData.length > 0) {
-            const combinedData = [...candleData];
-            const existingIdx = combinedData.findIndex(c => Number(c.time) === Number(updateData.time));
-            if (existingIdx !== -1) {
-                combinedData[existingIdx] = updateData;
-            } else {
-                combinedData.push(updateData);
-            }
-
-            if (emaSeriesRef.current && activeIndicators.includes("Moving Average Exponential")) {
-                const emaVal = calculateEMA(combinedData.slice(-30), 20).pop();
-                if (emaVal) emaSeriesRef.current.update(emaVal);
-            }
-
-            if (activeIndicators.includes("Bollinger Bands") && bbUpperSeriesRef.current && bbLowerSeriesRef.current && bbMiddleSeriesRef.current) {
-                const bbData = calculateBollingerBands(combinedData.slice(-30), 20, 2);
-                const u = bbData.upper.pop();
-                const l = bbData.lower.pop();
-                const m = bbData.middle.pop();
-                if (u) bbUpperSeriesRef.current.update(u);
-                if (l) bbLowerSeriesRef.current.update(l);
-                if (m) bbMiddleSeriesRef.current.update(m);
-            }
-        }
-    }, [lastCandleUpdate, activeIndicators, candleData]);
+    }, [lastCandleUpdate]);
 
     return (
         <div className="w-full h-full relative flex flex-col bg-white border border-border rounded-2xl overflow-hidden shadow-2xl">
@@ -524,55 +401,6 @@ export function DerivChart({
                     >
                         {chartType === 'candles' ? <CandlestickChart className="h-4 w-4" /> : <AreaChart className="h-4 w-4" />}
                     </button>
-
-                    <Popover>
-                        <PopoverTrigger asChild>
-                            <button className="p-2 hover:bg-slate-50 rounded-lg transition-colors text-slate-500">
-                                <FunctionSquare className="h-4 w-4" />
-                            </button>
-                        </PopoverTrigger>
-                        <PopoverContent className="w-[320px] p-0 shadow-2xl border-border rounded-xl overflow-hidden">
-                            <div className="p-3 border-b bg-slate-50/50">
-                                <p className="text-[10px] font-black text-slate-400 tracking-[0.2em] mb-2 uppercase">Indicators</p>
-                                <div className="relative">
-                                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
-                                    <Input 
-                                        placeholder="Search scripts..." 
-                                        className="pl-9 h-9 border-slate-200"
-                                        value={indicatorSearch}
-                                        onChange={(e) => setIndicatorSearch(e.target.value)}
-                                    />
-                                </div>
-                            </div>
-                            <div className="max-h-[300px] overflow-y-auto no-scrollbar">
-                                <div className="p-1">
-                                    {filteredIndicators.map((script) => {
-                                        const isActive = activeIndicators.includes(script);
-                                        return (
-                                            <button 
-                                                key={script}
-                                                onClick={() => toggleIndicator(script)}
-                                                className={cn(
-                                                    "w-full flex items-center gap-3 px-3 py-2.5 hover:bg-slate-50 transition-colors group text-left",
-                                                    isActive ? "bg-primary/5" : ""
-                                                )}
-                                            >
-                                                <Star className={cn("h-3.5 w-3.5", isActive ? "text-amber-400 fill-amber-400" : "text-slate-300")} />
-                                                <span className={cn("text-[11px] font-bold", isActive ? "text-primary" : "text-slate-700 group-hover:text-primary")}>{script}</span>
-                                            </button>
-                                        );
-                                    })}
-                                </div>
-                            </div>
-                        </PopoverContent>
-                    </Popover>
-
-                    <div className="w-px h-6 bg-slate-200 mx-1" />
-
-                    <div className="flex items-center gap-1">
-                        <button className="p-2 hover:bg-slate-50 rounded transition-colors text-slate-300"><Undo2 className="h-4 w-4" /></button>
-                        <button className="p-2 hover:bg-slate-50 rounded transition-colors text-slate-300"><Redo2 className="h-4 w-4" /></button>
-                    </div>
                 </div>
 
                 <div className="flex items-center gap-3">

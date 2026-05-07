@@ -107,7 +107,7 @@ export function Dashboard() {
                 const pip = data.echo_req.pip_size || 2;
                 const ticks = prices.map((p: number) => {
                     const pStr = p.toFixed(8);
-                    const dec = pStr.split('.')[1] || '00';
+                    const dec = pStr.split('.')[1] || '00000000';
                     return parseInt(dec[pip - 1] || '0');
                 }).reverse();
                 const total = ticks.length || 1;
@@ -190,7 +190,6 @@ export function Dashboard() {
         const calculateCountForOneMonth = (granularity: number) => {
             const oneMonthSeconds = 30 * 24 * 60 * 60;
             const countNeeded = Math.ceil(oneMonthSeconds / granularity);
-            // API limit is usually around 5000 for count in style:candles
             return Math.min(5000, Math.max(500, countNeeded)); 
         };
 
@@ -380,4 +379,3 @@ export function Dashboard() {
         </div>
     );
 }
-
