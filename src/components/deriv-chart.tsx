@@ -40,6 +40,24 @@ const timeIntervals = [
     { label: '24h', id: '1d', category: 'HOURS' },
 ];
 
+const granularityMap: Record<string, number> = {
+    '1m': 60, '2m': 120, '3m': 180, '5m': 300, 
+    '10m': 600, '15m': 900, '30m': 1800, '1h': 3600,
+    '2h': 7200, '4h': 14400, '8h': 28800, '1d': 86400
+};
+
+const formatCountdown = (seconds: number) => {
+    if (seconds <= 0) return "00:00";
+    const h = Math.floor(seconds / 3600);
+    const m = Math.floor((seconds % 3600) / 60);
+    const s = seconds % 60;
+    
+    if (h > 0) {
+        return `${h}:${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
+    }
+    return `${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
+};
+
 const indicatorScripts = [
   "Bollinger Bands",
   "Moving Average Exponential",
@@ -177,6 +195,7 @@ export function DerivChart({
     const [searchQuery, setSearchQuery] = React.useState('');
     const [indicatorSearch, setIndicatorSearch] = React.useState('');
     const [activeIndicators, setActiveIndicators] = React.useState<string[]>([]);
+    const [countdown, setCountdown] = React.useState<string>("");
 
     const currentMarket = syntheticIndices.find(m => m.id === selectedMarket);
     const filteredIndices = syntheticIndices.filter(m => m.name.toLowerCase().includes(searchQuery.toLowerCase()));
@@ -198,6 +217,25 @@ export function DerivChart({
             prev.includes(name) ? prev.filter(i => i !== name) : [...prev, name]
         );
     };
+
+    // Countdown Timer logic
+    React.useEffect(() => {
+        if (!ohlcDisplay || !selectedInterval) return;
+        
+        const granularity = granularityMap[selectedInterval] || 60;
+        const openTime = Number(ohlcDisplay.time);
+        const endTime = openTime + granularity;
+
+        const updateTimer = () => {
+            const now = Math.floor(Date.now() / 1000);
+            const remaining = endTime - now;
+            setCountdown(formatCountdown(remaining));
+        };
+
+        updateTimer();
+        const timer = setInterval(updateTimer, 1000);
+        return () => clearInterval(timer);
+    }, [ohlcDisplay?.time, selectedInterval]);
 
     React.useEffect(() => {
         if (!chartContainerRef.current) return;
@@ -313,7 +351,6 @@ export function DerivChart({
         if (!lineSeriesRef.current || !candleSeriesRef.current || !chartRef.current) return;
 
         if (candleData && candleData.length > 0) {
-            // Strictly sort and deduplicate by timestamp to prevent library assertions
             const uniqueData = Array.from(new Map(candleData.map(c => [c.time, c])).values())
                 .sort((a, b) => a.time - b.time)
                 .map(c => ({
@@ -327,7 +364,6 @@ export function DerivChart({
             candleSeriesRef.current.setData(uniqueData);
             lineSeriesRef.current.setData(uniqueData.map(c => ({ time: c.time, value: c.close })));
 
-            // Calculate indicators based on clean historical sequence
             if (activeIndicators.includes("Moving Average Exponential") && emaSeriesRef.current) {
                 emaSeriesRef.current.setData(calculateEMA(uniqueData, 20));
             }
@@ -341,7 +377,6 @@ export function DerivChart({
             
             chartRef.current.timeScale().fitContent();
         } else {
-            // Clear chart if no data
             candleSeriesRef.current.setData([]);
             lineSeriesRef.current.setData([]);
         }
@@ -359,12 +394,9 @@ export function DerivChart({
             close: Number(lastCandleUpdate.close)
         };
 
-        // lightweight-charts update() morphs the candle if timestamp matches, 
-        // or creates a new one if timestamp is greater.
         candleSeriesRef.current.update(updateData);
         lineSeriesRef.current.update({ time: updateData.time, value: updateData.close });
         
-        // Instant re-calculation for indicator precision
         if (activeIndicators.length > 0 && candleData.length > 0) {
             const combinedData = [...candleData];
             const existingIdx = combinedData.findIndex(c => Number(c.time) === Number(updateData.time));
@@ -561,9 +593,14 @@ export function DerivChart({
             </div>
 
             <div ref={chartContainerRef} className="flex-1 w-full relative" />
+
+            {countdown && (
+                <div className="absolute top-24 right-4 z-[70] bg-[#00a69c] text-white px-2.5 py-1 rounded-md text-[10px] font-black shadow-2xl border border-white/20 tabular-nums">
+                    {countdown}
+                </div>
+            )}
             
             <DigitStatsOverlay ticks={lastDigitTicks} />
         </div>
     );
 }
-
