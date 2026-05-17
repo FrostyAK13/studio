@@ -10,7 +10,7 @@ import { InsightView } from './insight-view';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { Radio, Activity, Moon, Sun, ExternalLink } from 'lucide-react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion } from 'framer-motion';
 import { DerivChart } from './deriv-chart';
 
 type EngineStatus = 'offline' | 'active';
@@ -34,7 +34,7 @@ export interface GlobalAnalysisResult {
 
 export function Dashboard() {
     const [mounted, setMounted] = React.useState(false);
-    const [theme, setTheme] = React.useState<'light' | 'dark'>('light');
+    const [theme, setTheme] = React.useState<'light' | 'dark'>('dark');
     const [price, setPrice] = React.useState<number>(0);
     const [lastDigitTicks, setLastDigitTicks] = React.useState<number[]>([]);
     const [priceHistory, setPriceHistory] = React.useState<number[]>([]);
@@ -57,6 +57,7 @@ export function Dashboard() {
         setMounted(true);
         const savedTheme = localStorage.getItem('theme') as 'light' | 'dark';
         if (savedTheme) setTheme(savedTheme);
+        else setTheme('dark');
     }, []);
 
     React.useEffect(() => {
@@ -278,7 +279,7 @@ export function Dashboard() {
     return (
         <div className="flex min-h-screen w-full flex-col bg-background font-sans overflow-x-hidden transition-colors duration-500">
             <div className="flex flex-col flex-1">
-                <header className="sticky top-0 z-[100] flex h-16 md:h-[4.5rem] items-center border-b bg-background/95 backdrop-blur-xl px-4 shadow-sm">
+                <header className="sticky top-0 z-[100] flex h-16 md:h-[4.5rem] items-center border-b border-white/5 bg-background/95 backdrop-blur-xl px-4 shadow-sm">
                     <div className="flex w-full items-center justify-between max-w-[1600px] mx-auto gap-4">
                         <div className="flex items-center gap-4 shrink-0">
                             <a href="https://frostytraders.com" target="_blank" rel="noopener noreferrer" className="flex items-center gap-3 hover:opacity-80 transition-opacity group">
@@ -296,25 +297,25 @@ export function Dashboard() {
                                     animate={{ opacity: [0.25, 0.5, 0.25] }}
                                     transition={{ duration: 4, repeat: Infinity }}
                                 />
-                                <a href="https://frostytraders.com" target="_blank" rel="noopener noreferrer" className="relative flex items-center gap-3 px-8 py-2 bg-card border border-white/5 rounded-full shadow-2xl">
-                                    <span className="text-[10px] font-black text-foreground uppercase tracking-[0.4em] whitespace-nowrap">FROSTY TRADERS</span>
+                                <a href="https://frostytraders.com" target="_blank" rel="noopener noreferrer" className="relative flex items-center gap-3 px-8 py-2 bg-slate-900/80 border border-white/5 rounded-full shadow-2xl">
+                                    <span className="text-[10px] font-black text-slate-100 uppercase tracking-[0.4em] whitespace-nowrap">FROSTY TRADERS</span>
                                     <ExternalLink className="h-3 w-3 text-primary" />
                                 </a>
                             </div>
                         </div>
 
                         <div className="flex items-center gap-2 md:gap-4 shrink-0">
-                            <div className="flex items-center bg-card border border-border rounded-full shadow-2xl h-10 px-1 overflow-hidden">
-                                <div className="flex items-center gap-3 px-5 py-2 border-r border-border">
+                            <div className="flex items-center bg-slate-900 border border-white/5 rounded-full shadow-2xl h-10 px-1 overflow-hidden">
+                                <div className="flex items-center gap-3 px-5 py-2 border-r border-white/5">
                                     <div className={cn("h-2.5 w-2.5 rounded-full animate-pulse", surveillanceStatus === 'active' ? "bg-emerald-500 shadow-[0_0_12px_rgba(16,185,129,0.9)]" : "bg-rose-500 shadow-[0_0_12px_rgba(244,63,94,0.9)]")} />
-                                    <span className="text-[10px] font-black text-foreground uppercase tracking-[0.3em] hidden sm:inline">LIVE</span>
+                                    <span className="text-[10px] font-black text-slate-100 uppercase tracking-[0.3em] hidden sm:inline">LIVE</span>
                                 </div>
-                                <div className="flex items-center gap-2 px-5 py-2 bg-muted/30">
+                                <div className="flex items-center gap-2 px-5 py-2 bg-white/5">
                                     <Radio className={cn("h-3.5 w-3.5 transition-all", surveillanceStatus === 'active' ? 'text-emerald-500 animate-pulse' : 'text-rose-500')} />
-                                    <span className="text-[10px] font-black uppercase text-foreground tracking-[0.2em]">{surveillanceStatus === 'active' ? 'LIVE' : 'OFFLINE'}</span>
+                                    <span className="text-[10px] font-black uppercase text-slate-100 tracking-[0.2em]">{surveillanceStatus === 'active' ? 'LIVE' : 'OFFLINE'}</span>
                                 </div>
                             </div>
-                            <Button variant="ghost" size="icon" onClick={() => setTheme(theme === 'light' ? 'dark' : 'light')} className="h-10 w-10 rounded-full border border-border bg-card shadow-xl hover:bg-muted text-foreground transition-all">
+                            <Button variant="ghost" size="icon" onClick={() => setTheme(theme === 'light' ? 'dark' : 'light')} className="h-10 w-10 rounded-full border border-white/5 bg-slate-900 shadow-xl hover:bg-white/5 text-slate-100 transition-all">
                                 {theme === 'light' ? <Moon className="h-5 w-5" /> : <Sun className="h-5 w-5" />}
                             </Button>
                         </div>
@@ -324,7 +325,7 @@ export function Dashboard() {
                     <Tabs defaultValue="analyzer" className="w-full">
                         <TabsList className="flex items-center justify-start md:justify-center gap-1.5 md:gap-2 bg-transparent h-auto p-0 mb-4 md:mb-6 overflow-x-auto no-scrollbar w-full pb-2">
                             {['analyzer', 'last-digit-analysis', 'frequency', 'global-scan', 'chart', 'insight'].map((tab) => (
-                                <TabsTrigger key={tab} value={tab} className="flex-shrink-0 px-3 md:px-5 py-2 md:py-2.5 rounded-full border border-transparent data-[state=active]:bg-primary/10 data-[state=active]:text-primary text-muted-foreground font-black text-[8px] md:text-[10px] uppercase tracking-[0.1em] md:tracking-[0.2em] transition-all shadow-sm hover:bg-muted/50">
+                                <TabsTrigger key={tab} value={tab} className="flex-shrink-0 px-3 md:px-5 py-2 md:py-2.5 rounded-full border border-transparent data-[state=active]:bg-primary/10 data-[state=active]:text-primary text-muted-foreground font-black text-[8px] md:text-[10px] uppercase tracking-[0.1em] md:tracking-[0.2em] transition-all shadow-sm hover:bg-white/5">
                                     {tab.toUpperCase().replace(/-/g, ' ')}
                                 </TabsTrigger>
                             ))}
