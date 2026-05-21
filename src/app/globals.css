@@ -4,49 +4,49 @@
 
 @layer base {
   :root {
-    --background: 40 43% 94%; /* Rich Golden Champagne */
-    --foreground: 40 25% 15%; /* Deep Bronze */
-    --card: 40 43% 96%;
-    --card-foreground: 40 25% 15%;
-    --popover: 40 43% 96%;
-    --popover-foreground: 40 25% 15%;
-    --primary: 40 43% 56%; /* Metallic Gold */
-    --primary-foreground: 0 0% 100%;
-    --secondary: 40 43% 90%;
-    --secondary-foreground: 40 43% 56%;
-    --muted: 40 43% 88%;
-    --muted-foreground: 40 15% 45%;
-    --accent: 40 43% 56%; /* Gold */
-    --accent-foreground: 0 0% 100%;
+    --background: 45 100% 50%; /* Pure Gold */
+    --foreground: 45 25% 10%; /* Deep Bronze */
+    --card: 45 100% 55%; /* Slightly Lighter Gold */
+    --card-foreground: 45 25% 10%;
+    --popover: 45 100% 55%;
+    --popover-foreground: 45 25% 10%;
+    --primary: 45 100% 30%; /* Deep Metallic Gold */
+    --primary-foreground: 45 100% 95%;
+    --secondary: 45 100% 40%;
+    --secondary-foreground: 45 100% 95%;
+    --muted: 45 80% 45%;
+    --muted-foreground: 45 20% 25%;
+    --accent: 45 100% 30%; 
+    --accent-foreground: 45 100% 95%;
     --destructive: 0 84% 60%;
-    --destructive-foreground: 40 43% 98%;
-    --border: 40 30% 85%;
-    --input: 40 30% 85%;
-    --ring: 40 43% 56%;
+    --destructive-foreground: 0 0% 100%;
+    --border: 45 100% 35%;
+    --input: 45 100% 35%;
+    --ring: 45 100% 30%;
     --radius: 1.25rem;
   }
 
-  /* Force dark variables to be same as root to lock the theme */
+  /* Force dark variables to stay golden to lock the theme */
   .dark {
-    --background: 40 43% 94%;
-    --foreground: 40 25% 15%;
-    --card: 40 43% 96%;
-    --card-foreground: 40 25% 15%;
-    --popover: 40 43% 96%;
-    --popover-foreground: 40 25% 15%;
-    --primary: 40 43% 56%;
-    --primary-foreground: 0 0% 100%;
-    --secondary: 40 43% 90%;
-    --secondary-foreground: 40 43% 56%;
-    --muted: 40 43% 88%;
-    --muted-foreground: 40 15% 45%;
-    --accent: 40 43% 56%;
-    --accent-foreground: 0 0% 100%;
+    --background: 45 100% 50%;
+    --foreground: 45 25% 10%;
+    --card: 45 100% 55%;
+    --card-foreground: 45 25% 10%;
+    --popover: 45 100% 55%;
+    --popover-foreground: 45 25% 10%;
+    --primary: 45 100% 30%;
+    --primary-foreground: 45 100% 95%;
+    --secondary: 45 100% 40%;
+    --secondary-foreground: 45 100% 95%;
+    --muted: 45 80% 45%;
+    --muted-foreground: 45 20% 25%;
+    --accent: 45 100% 30%;
+    --accent-foreground: 45 100% 95%;
     --destructive: 0 62% 30%;
-    --destructive-foreground: 40 43% 98%;
-    --border: 40 25% 18%;
-    --input: 40 25% 18%;
-    --ring: 40 43% 56%;
+    --destructive-foreground: 0 0% 100%;
+    --border: 45 100% 35%;
+    --input: 45 100% 35%;
+    --ring: 45 100% 30%;
   }
 }
 
