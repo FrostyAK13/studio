@@ -4,41 +4,41 @@
 
 @layer base {
   :root {
-    --background: 40 43% 98%; /* Champagne Gold White */
+    --background: 40 43% 94%; /* Rich Golden Champagne */
     --foreground: 40 25% 15%; /* Deep Bronze */
-    --card: 0 0% 100%;
+    --card: 40 43% 96%;
     --card-foreground: 40 25% 15%;
-    --popover: 0 0% 100%;
+    --popover: 40 43% 96%;
     --popover-foreground: 40 25% 15%;
     --primary: 40 43% 56%; /* Metallic Gold */
     --primary-foreground: 0 0% 100%;
-    --secondary: 40 43% 96%;
+    --secondary: 40 43% 90%;
     --secondary-foreground: 40 43% 56%;
-    --muted: 40 43% 94%;
+    --muted: 40 43% 88%;
     --muted-foreground: 40 15% 45%;
     --accent: 40 43% 56%; /* Gold */
     --accent-foreground: 0 0% 100%;
     --destructive: 0 84% 60%;
     --destructive-foreground: 40 43% 98%;
-    --border: 40 30% 90%;
-    --input: 40 30% 90%;
+    --border: 40 30% 85%;
+    --input: 40 30% 85%;
     --ring: 40 43% 56%;
     --radius: 1.25rem;
   }
 
   /* Force dark variables to be same as root to lock the theme */
   .dark {
-    --background: 40 43% 98%;
+    --background: 40 43% 94%;
     --foreground: 40 25% 15%;
-    --card: 0 0% 100%;
+    --card: 40 43% 96%;
     --card-foreground: 40 25% 15%;
-    --popover: 0 0% 100%;
+    --popover: 40 43% 96%;
     --popover-foreground: 40 25% 15%;
     --primary: 40 43% 56%;
     --primary-foreground: 0 0% 100%;
-    --secondary: 40 43% 96%;
+    --secondary: 40 43% 90%;
     --secondary-foreground: 40 43% 56%;
-    --muted: 40 43% 94%;
+    --muted: 40 43% 88%;
     --muted-foreground: 40 15% 45%;
     --accent: 40 43% 56%;
     --accent-foreground: 0 0% 100%;

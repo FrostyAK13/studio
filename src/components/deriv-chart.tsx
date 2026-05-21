@@ -197,7 +197,7 @@ export function DerivChart({
 
         const chart = createChart(chartContainerRef.current, {
             layout: {
-                background: { type: ColorType.Solid, color: '#FDFCF0' }, 
+                background: { type: ColorType.Solid, color: '#FBF7E3' }, /* Deep Golden Champagne */
                 textColor: '#C5A059',
                 fontSize: 11,
                 fontFamily: 'Poppins',
