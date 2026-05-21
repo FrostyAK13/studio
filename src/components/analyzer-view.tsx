@@ -1,3 +1,4 @@
+
 'use client';
 
 import * as React from 'react';
@@ -7,7 +8,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Button } from '@/components/ui/button';
 import { syntheticIndices } from '@/lib/mock-data';
 import { cn } from '@/lib/utils';
-import { Crosshair, Activity, Info, ShieldCheck, Zap, Cpu, Terminal } from 'lucide-react';
+import { Activity, Info, ShieldCheck, Zap, Cpu, Terminal } from 'lucide-react';
 import { Progress } from '@/components/ui/progress';
 import { motion } from 'framer-motion';
 import { DigitFrequencyCircles } from './correlation-view';
@@ -159,17 +160,11 @@ export function AnalyzerView({
         const safetyIndex = Math.min(100, (delta * 1.5) + (confidence * 0.5));
         const isStable = safetyIndex > 85;
 
-        // Neural Prompt Logic
-        const marketName = syntheticIndices.find(m => m.id === selectedMarket)?.name || selectedMarket;
-        const bestDirection = val1 >= val2 ? label1 : label2;
-        const trigger = lastDigitTicks[0];
-        const exactPrompt = `PROMPT EXECUTION: LOAD 100+1 ACCURACY VECTOR FOR ${marketName.toUpperCase()}. TRIGGER ON DIGIT ${trigger}. INITIALIZE ${bestDirection} ENTRY WITH ${confidence.toFixed(1)}% CONFIDENCE. STATUS: ${isStable ? 'STABLE FLOW' : 'RECOVERY MODE'}.`;
-
         return {
-            val1, val2, label1, label2, delta, confidence, safetyIndex, isStable, exactPrompt,
+            val1, val2, label1, label2, delta, confidence, safetyIndex, isStable,
             summary: `${label1} [${val1.toFixed(1)}%] VS ${label2} [${val2.toFixed(1)}%]`
         };
-    }, [lastDigitTicks, priceHistory, selectedDigit, tradeType, selectedMarket]);
+    }, [lastDigitTicks, priceHistory, selectedDigit, tradeType]);
 
     return (
         <div className="space-y-6 animate-in fade-in slide-in-from-bottom-8 duration-1000 pb-24 max-w-7xl mx-auto">
@@ -221,63 +216,6 @@ export function AnalyzerView({
 
             <DigitFrequencyCircles ticks={lastDigitTicks} selectedDigit={selectedDigit} onDigitSelect={setSelectedDigit} selectedMarket={selectedMarket} />
 
-            <Card className="border-none bg-card rounded-2xl border border-white/40 shadow-2xl overflow-hidden relative">
-                <div className="absolute top-0 left-0 w-full h-[2px] bg-white opacity-40" />
-                <CardContent className="p-6 space-y-8">
-                    <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
-                        <div className="lg:col-span-8 space-y-6">
-                            <div className="flex items-center gap-4">
-                                <div className="p-3 bg-black/20 rounded-xl border border-white/10">
-                                    <Terminal className="h-6 w-6 text-white" />
-                                </div>
-                                <div>
-                                    <h3 className="text-[10px] font-black white-header-text tracking-[0.4em] uppercase leading-none">NEURAL TACTICAL PROMPT</h3>
-                                    <p className="text-[7px] font-bold icy-gold-text uppercase tracking-widest mt-2">100+1 ACCURACY PROTOCOL</p>
-                                </div>
-                            </div>
-                            
-                            <div className="p-6 bg-black/20 rounded-2xl border border-white/10 font-mono shadow-inner">
-                                <p className="text-[11px] sm:text-[13px] text-white leading-relaxed italic">
-                                    "{analysis.exactPrompt}"
-                                </p>
-                            </div>
-
-                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-                                <div className="space-y-2">
-                                    <div className="flex justify-between items-end px-1">
-                                        <p className="text-[9px] font-black uppercase white-header-text tracking-widest">{analysis.label1}</p>
-                                        <p className="text-sm font-black icy-gold-text tabular-nums">{analysis.val1.toFixed(1)}%</p>
-                                    </div>
-                                    <Progress value={analysis.val1} className="h-2.5 bg-black/20 [&>div]:bg-emerald-400 rounded-full" />
-                                </div>
-                                <div className="space-y-2">
-                                    <div className="flex justify-between items-end px-1">
-                                        <p className="text-[9px] font-black uppercase white-header-text tracking-widest">{analysis.label2}</p>
-                                        <p className="text-sm font-black icy-gold-text tabular-nums">{analysis.val2.toFixed(1)}%</p>
-                                    </div>
-                                    <Progress value={analysis.val2} className="h-2.5 bg-black/20 [&>div]:bg-rose-400 rounded-full" />
-                                </div>
-                            </div>
-                        </div>
-
-                        <div className="lg:col-span-4 space-y-4">
-                            <div className="bg-black/20 p-6 rounded-[2rem] border border-white/10 flex flex-col items-center justify-center text-center">
-                                <p className="text-[8px] font-black white-header-text uppercase tracking-[0.5em] mb-2 opacity-60">STABILITY INDEX</p>
-                                <span className="text-4xl font-black icy-gold-text tabular-nums tracking-tighter">{analysis.confidence.toFixed(1)}%</span>
-                                <div className="mt-4 flex items-center gap-2">
-                                    <div className={cn("w-2 h-2 rounded-full", analysis.isStable ? "bg-emerald-400 shadow-[0_0_10px_#10b981]" : "bg-rose-400")} />
-                                    <span className="text-[8px] font-black text-white uppercase tracking-widest">{analysis.isStable ? 'LOCKED' : 'DRIFTING'}</span>
-                                </div>
-                            </div>
-                            <div className="bg-black/20 p-6 rounded-[2rem] border border-white/10 flex flex-col items-center justify-center text-center">
-                                <p className="text-[8px] font-black white-header-text uppercase tracking-[0.5em] mb-2 opacity-60">PRICE DELTA</p>
-                                <span className="text-2xl font-black icy-gold-text tabular-nums tracking-tighter">±{analysis.delta.toFixed(2)}%</span>
-                            </div>
-                        </div>
-                    </div>
-                </CardContent>
-            </Card>
-
             <Card className="border-none shadow-sm bg-black/20 border border-white/20 p-8 rounded-2xl overflow-hidden relative">
                 <div className="flex flex-col sm:flex-row items-center justify-between gap-4 mb-8">
                     <div className="flex items-center gap-3">
@@ -286,12 +224,12 @@ export function AnalyzerView({
                     </div>
                     <div className="flex items-center gap-2 px-5 py-2 bg-black/30 rounded-full border border-white/20">
                          <Cpu className="h-3.5 w-3.5 text-white animate-spin" />
-                         <span className="text-[10px] font-black uppercase text-white tracking-widest">NEURAL SYNC ON</span>
+                         <span className="text-[10px] font-black uppercase text-white tracking-widest">TACTICAL SYNC ON</span>
                     </div>
                 </div>
                 <div className="flex flex-wrap justify-center gap-3">
                     {[...lastDigitTicks.slice(0, 15)].reverse().map((digit, i) => {
-                        const isTrigger = i === 14; // Last digit
+                        const isTrigger = i === 14; 
                         return (
                             <motion.div 
                                 key={i} 
