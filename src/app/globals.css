@@ -11,13 +11,13 @@
     --popover: 45 100% 55%;
     --popover-foreground: 45 25% 10%;
     --primary: 45 100% 30%; /* Deep Metallic Gold */
-    --primary-foreground: 45 100% 95%;
+    --primary-foreground: 45 100% 95%; /* Icy Gold */
     --secondary: 45 100% 40%;
     --secondary-foreground: 45 100% 95%;
     --muted: 45 80% 45%;
     --muted-foreground: 45 20% 25%;
-    --accent: 45 100% 30%; 
-    --accent-foreground: 45 100% 95%;
+    --accent: 45 100% 96%; /* Pure Icy Gold */
+    --accent-foreground: 45 100% 10%;
     --destructive: 0 84% 60%;
     --destructive-foreground: 0 0% 100%;
     --border: 45 100% 35%;
@@ -26,7 +26,7 @@
     --radius: 1.25rem;
   }
 
-  /* Force dark variables to stay golden to lock the theme */
+  /* Force theme persistence */
   .dark {
     --background: 45 100% 50%;
     --foreground: 45 25% 10%;
@@ -40,8 +40,8 @@
     --secondary-foreground: 45 100% 95%;
     --muted: 45 80% 45%;
     --muted-foreground: 45 20% 25%;
-    --accent: 45 100% 30%;
-    --accent-foreground: 45 100% 95%;
+    --accent: 45 100% 96%;
+    --accent-foreground: 45 100% 10%;
     --destructive: 0 62% 30%;
     --destructive-foreground: 0 0% 100%;
     --border: 45 100% 35%;
@@ -55,8 +55,13 @@
     @apply border-border;
   }
   body {
-    @apply bg-background text-foreground transition-colors duration-500;
+    @apply bg-background text-foreground transition-colors duration-500 font-body antialiased;
   }
+}
+
+.icy-gold-text {
+  @apply text-accent;
+  text-shadow: 0 2px 4px rgba(69, 37, 10, 0.4);
 }
 
 .no-scrollbar::-webkit-scrollbar {

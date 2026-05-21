@@ -80,7 +80,7 @@ const DigitStatsOverlay = ({ ticks }: { ticks: number[] }) => {
 
     return (
         <div className="absolute bottom-10 left-0 w-full flex justify-center pointer-events-none z-[60]">
-            <div className="flex gap-2 sm:gap-4 p-3 bg-card/90 backdrop-blur-md rounded-2xl border border-primary/20 shadow-2xl pointer-events-auto items-end">
+            <div className="flex gap-2 sm:gap-4 p-3 bg-card/90 backdrop-blur-md rounded-2xl border border-primary/30 shadow-2xl pointer-events-auto items-end">
                 {stats.map((s) => {
                     const radius = 16;
                     const circumference = 2 * Math.PI * radius;
@@ -93,11 +93,11 @@ const DigitStatsOverlay = ({ ticks }: { ticks: number[] }) => {
                                     <circle 
                                         cx="50%" cy="50%" r={radius} 
                                         stroke="currentColor" strokeWidth="2" 
-                                        fill="transparent" className="text-muted/30" 
+                                        fill="transparent" className="text-primary/10" 
                                     />
                                     <circle 
                                         cx="50%" cy="50%" r={radius} 
-                                        stroke={s.isMax ? "#00a69c" : s.isMin ? "#ff444f" : "hsl(var(--primary))"} 
+                                        stroke={s.isMax ? "#006d66" : s.isMin ? "#b91c1c" : "hsl(var(--primary))"} 
                                         strokeWidth="3" fill="transparent" 
                                         strokeDasharray={circumference}
                                         strokeDashoffset={Math.max(0, offset)}
@@ -106,8 +106,8 @@ const DigitStatsOverlay = ({ ticks }: { ticks: number[] }) => {
                                     />
                                 </svg>
                                 <div className="flex flex-col items-center justify-center z-10 leading-none">
-                                    <span className="text-xs sm:text-base font-black text-foreground">{s.digit}</span>
-                                    <span className="text-[6px] sm:text-[8px] font-bold text-muted-foreground">{s.percentage.toFixed(1)}%</span>
+                                    <span className="text-xs sm:text-base font-black icy-gold-text">{s.digit}</span>
+                                    <span className="text-[6px] sm:text-[8px] font-bold text-primary/60">{s.percentage.toFixed(1)}%</span>
                                 </div>
                             </div>
                             <div className="h-4 flex items-center justify-center relative">
@@ -197,8 +197,8 @@ export function DerivChart({
 
         const chart = createChart(chartContainerRef.current, {
             layout: {
-                background: { type: ColorType.Solid, color: '#FFD700' }, /* Pure Gold Background */
-                textColor: '#45250A', /* Deep Bronze Text */
+                background: { type: ColorType.Solid, color: '#FFD700' },
+                textColor: '#45250A',
                 fontSize: 11,
                 fontFamily: 'Poppins',
             },
@@ -238,11 +238,11 @@ export function DerivChart({
         });
 
         const candlestickSeries = chart.addCandlestickSeries({
-            upColor: '#00a69c',
-            downColor: '#ff444f',
+            upColor: '#006d66',
+            downColor: '#b91c1c',
             borderVisible: false,
-            wickUpColor: '#00a69c',
-            wickDownColor: '#ff444f',
+            wickUpColor: '#006d66',
+            wickDownColor: '#b91c1c',
             priceFormat: { type: 'price', precision: decimalPlaces },
             visible: chartType === 'candles',
         });
@@ -304,14 +304,14 @@ export function DerivChart({
                 <div className="flex items-center gap-1.5 h-full">
                     <Popover>
                         <PopoverTrigger asChild>
-                            <button className="flex items-center gap-2 hover:bg-muted px-3 py-1.5 rounded-lg transition-colors group">
+                            <button className="flex items-center gap-2 hover:bg-primary/20 px-3 py-1.5 rounded-lg transition-colors group">
                                 <Search className="h-4 w-4 text-primary/60 group-hover:text-primary" />
-                                <span className="text-sm font-black text-foreground tracking-tight uppercase">{currentMarket?.name}</span>
+                                <span className="text-sm font-black icy-gold-text tracking-tight uppercase">{currentMarket?.name}</span>
                                 <ChevronDown className="h-3 w-3 text-primary/60" />
                             </button>
                         </PopoverTrigger>
-                        <PopoverContent className="w-[420px] p-0 shadow-2xl border-primary/10 rounded-xl bg-card">
-                            <div className="p-3 border-b border-primary/5 bg-muted/30">
+                        <PopoverContent className="w-[420px] p-0 shadow-2xl border-primary/20 rounded-xl bg-card">
+                            <div className="p-3 border-b border-primary/10 bg-primary/5">
                                 <div className="relative">
                                     <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                                     <Input 
@@ -332,18 +332,18 @@ export function DerivChart({
                                                 key={market.id}
                                                 onClick={() => onMarketChange(market.id)}
                                                 className={cn(
-                                                    "w-full flex items-center justify-between p-2 rounded-lg transition-all hover:bg-primary/5",
-                                                    isSelected ? "bg-primary/10" : "bg-transparent"
+                                                    "w-full flex items-center justify-between p-2 rounded-lg transition-all hover:bg-primary/10",
+                                                    isSelected ? "bg-primary/20" : "bg-transparent"
                                                 )}
                                             >
                                                 <div className="flex items-center gap-3">
                                                     <div className="text-left leading-none">
-                                                        <p className="text-[11px] font-bold text-foreground">{market.name}</p>
-                                                        <p className="text-[9px] text-muted-foreground uppercase mt-0.5">{market.category}</p>
+                                                        <p className="text-[11px] font-bold icy-gold-text">{market.name}</p>
+                                                        <p className="text-[9px] text-primary/60 uppercase mt-0.5">{market.category}</p>
                                                     </div>
                                                 </div>
                                                 <div className="text-right">
-                                                    <p className="text-[11px] font-bold text-foreground">{(res?.currentPrice || market.price).toFixed(res?.pip || 2)}</p>
+                                                    <p className="text-[11px] font-bold icy-gold-text">{(res?.currentPrice || market.price).toFixed(res?.pip || 2)}</p>
                                                 </div>
                                             </button>
                                         );
@@ -353,20 +353,20 @@ export function DerivChart({
                         </PopoverContent>
                     </Popover>
 
-                    <div className="w-px h-6 bg-primary/10 mx-1" />
+                    <div className="w-px h-6 bg-primary/20 mx-1" />
 
                     <Popover>
                         <PopoverTrigger asChild>
-                            <button className="flex items-center gap-1.5 hover:bg-muted px-3 py-1.5 rounded-lg transition-colors group">
-                                <span className="text-xs font-black text-foreground">{selectedInterval}</span>
+                            <button className="flex items-center gap-1.5 hover:bg-primary/20 px-3 py-1.5 rounded-lg transition-colors group">
+                                <span className="text-xs font-black icy-gold-text">{selectedInterval}</span>
                                 <ChevronDown className="h-3 w-3 text-primary/60" />
                             </button>
                         </PopoverTrigger>
-                        <PopoverContent className="w-[300px] p-4 border-primary/10 shadow-2xl rounded-xl bg-card">
+                        <PopoverContent className="w-[300px] p-4 border-primary/20 shadow-2xl rounded-xl bg-card">
                             <div className="space-y-4">
                                 {['MINUTES', 'HOURS'].map(cat => (
                                     <div key={cat} className="space-y-2">
-                                        <p className="text-[10px] font-black text-muted-foreground tracking-widest">{cat}</p>
+                                        <p className="text-[10px] font-black icy-gold-text tracking-widest opacity-60">{cat}</p>
                                         <div className="grid grid-cols-4 gap-2">
                                             {timeIntervals.filter(i => i.category === cat).map(t => (
                                                 <button 
@@ -374,7 +374,7 @@ export function DerivChart({
                                                     onClick={() => onIntervalChange(t.id)}
                                                     className={cn(
                                                         "px-2 py-1.5 rounded text-xs font-bold transition-all border",
-                                                        selectedInterval === t.id ? "bg-primary text-primary-foreground border-primary" : "border-primary/10 text-muted-foreground hover:bg-muted"
+                                                        selectedInterval === t.id ? "bg-primary text-accent border-primary" : "border-primary/20 icy-gold-text hover:bg-primary/10"
                                                     )}
                                                 >
                                                     {t.label}
@@ -389,30 +389,30 @@ export function DerivChart({
 
                     <button 
                         onClick={() => setChartType(chartType === 'line' ? 'candles' : 'line')}
-                        className={cn("p-2 rounded-lg transition-colors hover:bg-muted", chartType === 'candles' ? "text-primary" : "text-muted-foreground")}
+                        className={cn("p-2 rounded-lg transition-colors hover:bg-primary/20", chartType === 'candles' ? "text-primary" : "text-primary/40")}
                     >
                         {chartType === 'candles' ? <CandlestickChart className="h-4 w-4" /> : <AreaChart className="h-4 w-4" />}
                     </button>
                 </div>
 
                 <div className="flex items-center gap-3">
-                    <button className="flex items-center gap-2 hover:bg-muted px-3 py-1 rounded transition-colors text-[10px] font-black text-foreground uppercase tracking-widest">Save</button>
-                    <div className="w-px h-6 bg-primary/10" />
+                    <button className="flex items-center gap-2 hover:bg-primary/20 px-3 py-1 rounded transition-colors text-[10px] font-black icy-gold-text uppercase tracking-widest">Save</button>
+                    <div className="w-px h-6 bg-primary/20" />
                     <Camera className="h-4 w-4 text-primary/60 cursor-pointer hover:text-primary" />
                     <Maximize2 className="h-4 w-4 text-primary/60 cursor-pointer hover:text-primary" />
                 </div>
             </div>
 
-            <div className="flex items-center gap-4 px-4 py-2 border-b border-primary/5 bg-card text-[10px] font-black text-muted-foreground">
+            <div className="flex items-center gap-4 px-4 py-2 border-b border-primary/10 bg-card text-[10px] font-black text-primary/60">
                 <div className="flex items-center gap-1.5">
-                    <div className={cn("w-2 h-2 rounded-full", (ohlcDisplay?.diff || 0) >= 0 ? "bg-emerald-500" : "bg-rose-500")} />
+                    <div className={cn("w-2 h-2 rounded-full", (ohlcDisplay?.diff || 0) >= 0 ? "bg-emerald-600" : "bg-rose-600")} />
                     <span className="flex gap-2 uppercase tracking-widest">
-                        <span className="flex gap-0.5"><span className="text-muted-foreground/60">O:</span> {Number(ohlcDisplay?.open || 0).toFixed(decimalPlaces)}</span>
-                        <span className="flex gap-0.5"><span className="text-muted-foreground/60">H:</span> {Number(ohlcDisplay?.high || 0).toFixed(decimalPlaces)}</span>
-                        <span className="flex gap-0.5"><span className="text-muted-foreground/60">L:</span> {Number(ohlcDisplay?.low || 0).toFixed(decimalPlaces)}</span>
-                        <span className="flex gap-0.5"><span className="text-muted-foreground/60">C:</span> {Number(ohlcDisplay?.close || 0).toFixed(decimalPlaces)}</span>
+                        <span className="flex gap-0.5"><span className="opacity-60">O:</span> <span className="icy-gold-text">{Number(ohlcDisplay?.open || 0).toFixed(decimalPlaces)}</span></span>
+                        <span className="flex gap-0.5"><span className="opacity-60">H:</span> <span className="icy-gold-text">{Number(ohlcDisplay?.high || 0).toFixed(decimalPlaces)}</span></span>
+                        <span className="flex gap-0.5"><span className="opacity-60">L:</span> <span className="icy-gold-text">{Number(ohlcDisplay?.low || 0).toFixed(decimalPlaces)}</span></span>
+                        <span className="flex gap-0.5"><span className="opacity-60">C:</span> <span className="icy-gold-text">{Number(ohlcDisplay?.close || 0).toFixed(decimalPlaces)}</span></span>
                     </span>
-                    <span className={cn("ml-2 tabular-nums", (ohlcDisplay?.diff || 0) >= 0 ? "text-emerald-500" : "text-rose-500")}>
+                    <span className={cn("ml-2 tabular-nums font-black", (ohlcDisplay?.diff || 0) >= 0 ? "text-emerald-700" : "text-rose-700")}>
                         {(ohlcDisplay?.diff || 0).toFixed(decimalPlaces)} ({(ohlcDisplay?.perc || 0).toFixed(2)}%)
                     </span>
                 </div>
@@ -421,7 +421,7 @@ export function DerivChart({
             <div ref={chartContainerRef} className="flex-1 w-full relative" />
 
             {countdown && (
-                <div className="absolute top-24 right-4 z-[70] bg-primary text-white px-2.5 py-1 rounded-md text-[10px] font-black shadow-2xl border border-white/20 tabular-nums">
+                <div className="absolute top-24 right-4 z-[70] bg-primary text-accent px-2.5 py-1 rounded-md text-[10px] font-black shadow-2xl border border-accent/20 tabular-nums">
                     {countdown}
                 </div>
             )}
@@ -430,3 +430,4 @@ export function DerivChart({
         </div>
     );
 }
+
