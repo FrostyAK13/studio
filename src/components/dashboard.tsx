@@ -9,7 +9,7 @@ import { DigitFrequencyView } from './digit-frequency-view';
 import { InsightView } from './insight-view';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
-import { Radio, Activity, Moon, Sun, ExternalLink, ChevronDown, Search, TrendingUp, TrendingDown } from 'lucide-react';
+import { Radio, Activity, ExternalLink, ChevronDown, Search, TrendingUp, TrendingDown } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { DerivChart } from './deriv-chart';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
@@ -36,7 +36,6 @@ export interface GlobalAnalysisResult {
 
 export function Dashboard() {
     const [mounted, setMounted] = React.useState(false);
-    const [theme, setTheme] = React.useState<'light' | 'dark'>('light');
     const [price, setPrice] = React.useState<number>(0);
     const [lastDigitTicks, setLastDigitTicks] = React.useState<number[]>([]);
     const [priceHistory, setPriceHistory] = React.useState<number[]>([]);
@@ -58,16 +57,7 @@ export function Dashboard() {
 
     React.useEffect(() => {
         setMounted(true);
-        const savedTheme = localStorage.getItem('theme') as 'light' | 'dark';
-        if (savedTheme) setTheme(savedTheme);
-        else setTheme('light');
     }, []);
-
-    React.useEffect(() => {
-        if (!mounted) return;
-        document.documentElement.classList.toggle('dark', theme === 'dark');
-        localStorage.setItem('theme', theme);
-    }, [theme, mounted]);
 
     // Global Surveillance Engine
     React.useEffect(() => {
@@ -305,7 +295,7 @@ export function Dashboard() {
     const filteredIndices = syntheticIndices.filter(m => m.name.toLowerCase().includes(searchQuery.toLowerCase()));
 
     return (
-        <div className="flex min-h-screen w-full flex-col bg-background font-sans overflow-x-hidden transition-colors duration-500">
+        <div className="flex min-h-screen w-full flex-col bg-background font-sans overflow-x-hidden">
             <div className="flex flex-col flex-1">
                 <header className="sticky top-0 z-[100] flex h-16 md:h-[4.5rem] items-center border-b border-primary/10 bg-background/95 backdrop-blur-xl px-4 shadow-sm">
                     <div className="flex w-full items-center justify-between max-w-[1600px] mx-auto gap-4">
@@ -408,9 +398,6 @@ export function Dashboard() {
                                     <span className="text-[10px] font-black uppercase text-foreground tracking-[0.2em]">{surveillanceStatus === 'active' ? 'LIVE' : 'OFFLINE'}</span>
                                 </div>
                             </div>
-                            <Button variant="ghost" size="icon" onClick={() => setTheme(theme === 'light' ? 'dark' : 'light')} className="h-10 w-10 rounded-full border border-primary/20 bg-card shadow-xl hover:bg-muted text-foreground transition-all">
-                                {theme === 'light' ? <Moon className="h-5 w-5" /> : <Sun className="h-5 w-5" />}
-                            </Button>
                         </div>
                     </div>
                 </header>
