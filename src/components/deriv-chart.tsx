@@ -61,7 +61,6 @@ const formatCountdown = (seconds: number) => {
 const DigitStatsOverlay = ({ ticks }: { ticks: number[] }) => {
     const stats = React.useMemo(() => {
         const counts = Array(10).fill(0);
-        // Correctly filter and count based on provided ticks
         ticks.forEach(d => { if (d >= 0 && d <= 9) counts[d]++; });
         const total = ticks.length || 1;
         const mapped = counts.map((count, index) => ({ 
@@ -82,11 +81,10 @@ const DigitStatsOverlay = ({ ticks }: { ticks: number[] }) => {
 
     return (
         <div className="absolute bottom-10 left-0 w-full flex justify-center pointer-events-none z-[60]">
-            <div className="flex gap-2 sm:gap-4 p-3 bg-slate-900/90 backdrop-blur-md rounded-2xl border border-white/10 shadow-2xl pointer-events-auto items-end">
+            <div className="flex gap-2 sm:gap-4 p-3 bg-card/90 backdrop-blur-md rounded-2xl border border-primary/20 shadow-2xl pointer-events-auto items-end">
                 {stats.map((s) => {
                     const radius = 16;
                     const circumference = 2 * Math.PI * radius;
-                    // Use a 40% scale for higher visual resolution of digit distribution
                     const offset = circumference - (s.percentage / 40) * circumference; 
                     
                     return (
@@ -96,11 +94,11 @@ const DigitStatsOverlay = ({ ticks }: { ticks: number[] }) => {
                                     <circle 
                                         cx="50%" cy="50%" r={radius} 
                                         stroke="currentColor" strokeWidth="2" 
-                                        fill="transparent" className="text-white/5" 
+                                        fill="transparent" className="text-muted/30" 
                                     />
                                     <circle 
                                         cx="50%" cy="50%" r={radius} 
-                                        stroke={s.isMax ? "#00a69c" : s.isMin ? "#ff444f" : "#475569"} 
+                                        stroke={s.isMax ? "#00a69c" : s.isMin ? "#ff444f" : "hsl(var(--primary))"} 
                                         strokeWidth="3" fill="transparent" 
                                         strokeDasharray={circumference}
                                         strokeDashoffset={Math.max(0, offset)}
@@ -109,8 +107,8 @@ const DigitStatsOverlay = ({ ticks }: { ticks: number[] }) => {
                                     />
                                 </svg>
                                 <div className="flex flex-col items-center justify-center z-10 leading-none">
-                                    <span className="text-xs sm:text-base font-black text-white">{s.digit}</span>
-                                    <span className="text-[6px] sm:text-[8px] font-bold text-slate-400">{s.percentage.toFixed(1)}%</span>
+                                    <span className="text-xs sm:text-base font-black text-foreground">{s.digit}</span>
+                                    <span className="text-[6px] sm:text-[8px] font-bold text-muted-foreground">{s.percentage.toFixed(1)}%</span>
                                 </div>
                             </div>
                             <div className="h-4 flex items-center justify-center relative">
@@ -118,7 +116,7 @@ const DigitStatsOverlay = ({ ticks }: { ticks: number[] }) => {
                                     <motion.div 
                                         initial={{ scale: 0 }} 
                                         animate={{ scale: 1 }} 
-                                        className="text-[#ff9100]"
+                                        className="text-[#C5A059]"
                                     >
                                         <Triangle className="w-2.5 h-2.5 fill-current rotate-180" />
                                     </motion.div>
@@ -200,19 +198,19 @@ export function DerivChart({
 
         const chart = createChart(chartContainerRef.current, {
             layout: {
-                background: { type: ColorType.Solid, color: '#020617' },
-                textColor: '#94a3b8',
+                background: { type: ColorType.Solid, color: '#FDFCF0' },
+                textColor: '#C5A059',
                 fontSize: 11,
                 fontFamily: 'Poppins',
             },
             grid: {
-                vertLines: { color: 'rgba(71, 85, 105, 0.1)' },
-                horzLines: { color: 'rgba(71, 85, 105, 0.1)' },
+                vertLines: { color: 'rgba(197, 160, 89, 0.05)' },
+                horzLines: { color: 'rgba(197, 160, 89, 0.05)' },
             },
             width: chartContainerRef.current.clientWidth,
             height: chartContainerRef.current.clientHeight,
             rightPriceScale: {
-                borderColor: 'rgba(71, 85, 105, 0.2)',
+                borderColor: 'rgba(197, 160, 89, 0.1)',
                 autoScale: true,
                 scaleMargins: {
                     top: 0.1,
@@ -220,21 +218,21 @@ export function DerivChart({
                 },
             },
             timeScale: {
-                borderColor: 'rgba(71, 85, 105, 0.2)',
+                borderColor: 'rgba(197, 160, 89, 0.1)',
                 timeVisible: true,
                 secondsVisible: true,
                 shiftVisibleRangeOnNewBar: true,
             },
             crosshair: {
-                vertLine: { color: '#00a69c', width: 1, style: 1 },
-                horzLine: { color: '#00a69c', width: 1, style: 1 },
+                vertLine: { color: '#C5A059', width: 1, style: 1 },
+                horzLine: { color: '#C5A059', width: 1, style: 1 },
             },
         });
 
         const areaSeries = chart.addAreaSeries({
-            lineColor: '#00a69c',
-            topColor: 'rgba(0, 166, 156, 0.2)',
-            bottomColor: 'rgba(0, 166, 156, 0)',
+            lineColor: '#C5A059',
+            topColor: 'rgba(197, 160, 89, 0.2)',
+            bottomColor: 'rgba(197, 160, 89, 0)',
             lineWidth: 2,
             priceFormat: { type: 'price', precision: decimalPlaces },
             visible: chartType === 'line',
@@ -302,24 +300,24 @@ export function DerivChart({
     }, [lastCandleUpdate]);
 
     return (
-        <div className="w-full h-full relative flex flex-col bg-[#020617] border border-white/5 rounded-2xl overflow-hidden shadow-2xl">
-            <div className="flex h-12 items-center border-b border-white/5 bg-slate-950 px-4 justify-between z-50">
+        <div className="w-full h-full relative flex flex-col bg-background border border-primary/20 rounded-2xl overflow-hidden shadow-2xl">
+            <div className="flex h-12 items-center border-b border-primary/10 bg-card px-4 justify-between z-50">
                 <div className="flex items-center gap-1.5 h-full">
                     <Popover>
                         <PopoverTrigger asChild>
-                            <button className="flex items-center gap-2 hover:bg-white/5 px-3 py-1.5 rounded-lg transition-colors group">
-                                <Search className="h-4 w-4 text-slate-500 group-hover:text-primary" />
-                                <span className="text-sm font-bold text-slate-200 tracking-tight">{currentMarket?.name}</span>
-                                <ChevronDown className="h-3 w-3 text-slate-500" />
+                            <button className="flex items-center gap-2 hover:bg-muted px-3 py-1.5 rounded-lg transition-colors group">
+                                <Search className="h-4 w-4 text-muted-foreground group-hover:text-primary" />
+                                <span className="text-sm font-bold text-foreground tracking-tight">{currentMarket?.name}</span>
+                                <ChevronDown className="h-3 w-3 text-muted-foreground" />
                             </button>
                         </PopoverTrigger>
-                        <PopoverContent className="w-[420px] p-0 shadow-2xl border-white/10 rounded-xl bg-slate-900">
-                            <div className="p-3 border-b border-white/5 bg-slate-950/50">
+                        <PopoverContent className="w-[420px] p-0 shadow-2xl border-primary/10 rounded-xl bg-card">
+                            <div className="p-3 border-b border-primary/5 bg-muted/30">
                                 <div className="relative">
-                                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-500" />
+                                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                                     <Input 
                                         placeholder="Search assets..." 
-                                        className="pl-9 h-9 border-white/10 bg-slate-950 text-white"
+                                        className="pl-9 h-9 border-primary/10 bg-card"
                                         value={searchQuery}
                                         onChange={(e) => setSearchQuery(e.target.value)}
                                     />
@@ -335,18 +333,18 @@ export function DerivChart({
                                                 key={market.id}
                                                 onClick={() => onMarketChange(market.id)}
                                                 className={cn(
-                                                    "w-full flex items-center justify-between p-2 rounded-lg transition-all hover:bg-white/5",
-                                                    isSelected ? "bg-white/10" : "bg-transparent"
+                                                    "w-full flex items-center justify-between p-2 rounded-lg transition-all hover:bg-primary/5",
+                                                    isSelected ? "bg-primary/10" : "bg-transparent"
                                                 )}
                                             >
                                                 <div className="flex items-center gap-3">
                                                     <div className="text-left leading-none">
-                                                        <p className="text-[11px] font-bold text-slate-200">{market.name}</p>
-                                                        <p className="text-[9px] text-slate-500 uppercase mt-0.5">{market.category}</p>
+                                                        <p className="text-[11px] font-bold text-foreground">{market.name}</p>
+                                                        <p className="text-[9px] text-muted-foreground uppercase mt-0.5">{market.category}</p>
                                                     </div>
                                                 </div>
                                                 <div className="text-right">
-                                                    <p className="text-[11px] font-bold text-slate-200">{(res?.currentPrice || market.price).toFixed(res?.pip || 2)}</p>
+                                                    <p className="text-[11px] font-bold text-foreground">{(res?.currentPrice || market.price).toFixed(res?.pip || 2)}</p>
                                                 </div>
                                             </button>
                                         );
@@ -356,20 +354,20 @@ export function DerivChart({
                         </PopoverContent>
                     </Popover>
 
-                    <div className="w-px h-6 bg-white/5 mx-1" />
+                    <div className="w-px h-6 bg-primary/10 mx-1" />
 
                     <Popover>
                         <PopoverTrigger asChild>
-                            <button className="flex items-center gap-1.5 hover:bg-white/5 px-3 py-1.5 rounded-lg transition-colors group">
-                                <span className="text-xs font-bold text-slate-200">{selectedInterval}</span>
-                                <ChevronDown className="h-3 w-3 text-slate-500" />
+                            <button className="flex items-center gap-1.5 hover:bg-muted px-3 py-1.5 rounded-lg transition-colors group">
+                                <span className="text-xs font-bold text-foreground">{selectedInterval}</span>
+                                <ChevronDown className="h-3 w-3 text-muted-foreground" />
                             </button>
                         </PopoverTrigger>
-                        <PopoverContent className="w-[300px] p-4 border-white/10 shadow-2xl rounded-xl bg-slate-900">
+                        <PopoverContent className="w-[300px] p-4 border-primary/10 shadow-2xl rounded-xl bg-card">
                             <div className="space-y-4">
                                 {['MINUTES', 'HOURS'].map(cat => (
                                     <div key={cat} className="space-y-2">
-                                        <p className="text-[10px] font-black text-slate-500 tracking-widest">{cat}</p>
+                                        <p className="text-[10px] font-black text-muted-foreground tracking-widest">{cat}</p>
                                         <div className="grid grid-cols-4 gap-2">
                                             {timeIntervals.filter(i => i.category === cat).map(t => (
                                                 <button 
@@ -377,7 +375,7 @@ export function DerivChart({
                                                     onClick={() => onIntervalChange(t.id)}
                                                     className={cn(
                                                         "px-2 py-1.5 rounded text-xs font-bold transition-all border",
-                                                        selectedInterval === t.id ? "bg-primary text-white border-primary" : "border-white/5 text-slate-400 hover:bg-white/5"
+                                                        selectedInterval === t.id ? "bg-primary text-white border-primary" : "border-primary/10 text-muted-foreground hover:bg-muted"
                                                     )}
                                                 >
                                                     {t.label}
@@ -392,28 +390,28 @@ export function DerivChart({
 
                     <button 
                         onClick={() => setChartType(chartType === 'line' ? 'candles' : 'line')}
-                        className={cn("p-2 rounded-lg transition-colors hover:bg-white/5", chartType === 'candles' ? "text-primary" : "text-slate-500")}
+                        className={cn("p-2 rounded-lg transition-colors hover:bg-muted", chartType === 'candles' ? "text-primary" : "text-muted-foreground")}
                     >
                         {chartType === 'candles' ? <CandlestickChart className="h-4 w-4" /> : <AreaChart className="h-4 w-4" />}
                     </button>
                 </div>
 
                 <div className="flex items-center gap-3">
-                    <button className="flex items-center gap-2 hover:bg-white/5 px-3 py-1 rounded transition-colors text-xs font-bold text-slate-500">Save</button>
-                    <div className="w-px h-6 bg-white/5" />
-                    <Camera className="h-4 w-4 text-slate-500 cursor-pointer hover:text-slate-300" />
-                    <Maximize2 className="h-4 w-4 text-slate-500 cursor-pointer hover:text-slate-300" />
+                    <button className="flex items-center gap-2 hover:bg-muted px-3 py-1 rounded transition-colors text-xs font-bold text-muted-foreground">Save</button>
+                    <div className="w-px h-6 bg-primary/10" />
+                    <Camera className="h-4 w-4 text-muted-foreground cursor-pointer hover:text-primary" />
+                    <Maximize2 className="h-4 w-4 text-muted-foreground cursor-pointer hover:text-primary" />
                 </div>
             </div>
 
-            <div className="flex items-center gap-4 px-4 py-2 border-b border-white/5 bg-slate-950 text-[11px] font-medium text-slate-400">
+            <div className="flex items-center gap-4 px-4 py-2 border-b border-primary/5 bg-card text-[11px] font-medium text-muted-foreground">
                 <div className="flex items-center gap-1.5">
                     <div className={cn("w-2 h-2 rounded-full", (ohlcDisplay?.diff || 0) >= 0 ? "bg-emerald-500" : "bg-rose-500")} />
                     <span className="flex gap-2">
-                        <span className="flex gap-0.5"><span className="text-slate-600 font-bold">O:</span> {Number(ohlcDisplay?.open || 0).toFixed(decimalPlaces)}</span>
-                        <span className="flex gap-0.5"><span className="text-slate-600 font-bold">H:</span> {Number(ohlcDisplay?.high || 0).toFixed(decimalPlaces)}</span>
-                        <span className="flex gap-0.5"><span className="text-slate-600 font-bold">L:</span> {Number(ohlcDisplay?.low || 0).toFixed(decimalPlaces)}</span>
-                        <span className="flex gap-0.5"><span className="text-slate-600 font-bold">C:</span> {Number(ohlcDisplay?.close || 0).toFixed(decimalPlaces)}</span>
+                        <span className="flex gap-0.5"><span className="text-muted-foreground/60 font-bold">O:</span> {Number(ohlcDisplay?.open || 0).toFixed(decimalPlaces)}</span>
+                        <span className="flex gap-0.5"><span className="text-muted-foreground/60 font-bold">H:</span> {Number(ohlcDisplay?.high || 0).toFixed(decimalPlaces)}</span>
+                        <span className="flex gap-0.5"><span className="text-muted-foreground/60 font-bold">L:</span> {Number(ohlcDisplay?.low || 0).toFixed(decimalPlaces)}</span>
+                        <span className="flex gap-0.5"><span className="text-muted-foreground/60 font-bold">C:</span> {Number(ohlcDisplay?.close || 0).toFixed(decimalPlaces)}</span>
                     </span>
                     <span className={cn("ml-2 font-black tabular-nums", (ohlcDisplay?.diff || 0) >= 0 ? "text-emerald-500" : "text-rose-500")}>
                         {(ohlcDisplay?.diff || 0).toFixed(decimalPlaces)} ({(ohlcDisplay?.perc || 0).toFixed(2)}%)
@@ -424,7 +422,7 @@ export function DerivChart({
             <div ref={chartContainerRef} className="flex-1 w-full relative" />
 
             {countdown && (
-                <div className="absolute top-24 right-4 z-[70] bg-[#00a69c] text-white px-2.5 py-1 rounded-md text-[10px] font-black shadow-2xl border border-white/20 tabular-nums">
+                <div className="absolute top-24 right-4 z-[70] bg-primary text-white px-2.5 py-1 rounded-md text-[10px] font-black shadow-2xl border border-white/20 tabular-nums">
                     {countdown}
                 </div>
             )}

@@ -33,7 +33,6 @@ export const DigitFrequencyCircles = ({
 
     const { digitData, lastDigit } = React.useMemo(() => {
         const counts = Array(10).fill(0);
-        // Correctly calculate based on exactly the ticks provided
         ticks.forEach(d => { if (d >= 0 && d <= 9) counts[d]++; });
         const total = ticks.length || 1;
         
@@ -50,10 +49,10 @@ export const DigitFrequencyCircles = ({
         
         return {
             digitData: mapped.map(item => {
-                let colorClass = "text-slate-400"; 
+                let colorClass = "text-muted-foreground"; 
                 if (total > 20) {
-                    if (item.count === sorted[0].count) colorClass = "text-emerald-500";
-                    else if (item.count === sorted[sorted.length - 1].count) colorClass = "text-rose-500";
+                    if (item.count === sorted[0].count) colorClass = "text-emerald-600";
+                    else if (item.count === sorted[sorted.length - 1].count) colorClass = "text-rose-600";
                 }
                 return { ...item, colorClass };
             }),
@@ -70,19 +69,19 @@ export const DigitFrequencyCircles = ({
                 className={cn(
                     "relative flex flex-col items-center justify-center p-3 sm:p-5 rounded-[1.2rem] border transition-all cursor-pointer group shadow-sm min-h-[100px]",
                     isSelected 
-                        ? "bg-slate-950 border-slate-800 text-white scale-105 z-10 shadow-xl" 
-                        : "bg-slate-900 border-white/5 hover:border-primary/20 hover:bg-slate-800"
+                        ? "bg-foreground text-background border-foreground scale-105 z-10 shadow-xl" 
+                        : "bg-card border-primary/20 hover:border-primary/50 hover:bg-muted/30"
                 )}
             >
                 <span className={cn(
                     "text-xl sm:text-3xl font-black mb-1",
-                    isSelected ? "text-white" : "text-slate-100"
+                    isSelected ? "text-background" : "text-foreground"
                 )}>
                     {digit}
                 </span>
                 <span className={cn(
                     "text-[10px] sm:text-[12px] font-black tabular-nums",
-                    isSelected ? "text-slate-400" : colorClass
+                    isSelected ? "text-background/60" : colorClass
                 )}>
                     {percentage.toFixed(1)}%
                 </span>
@@ -93,14 +92,14 @@ export const DigitFrequencyCircles = ({
                         animate={{ scale: 1 }}
                         className="absolute -top-1 right-2"
                     >
-                         <div className="w-1.5 h-1.5 rounded-full bg-primary animate-pulse" />
+                         <div className="w-1.5 h-1.5 rounded-full bg-primary animate-pulse shadow-[0_0_8px_rgba(197,160,89,0.8)]" />
                     </motion.div>
                 )}
                 
                 {isSelected && (
                     <div className="absolute top-2 right-2 flex flex-col items-end opacity-40">
-                        <span className="text-[6px] font-black uppercase tracking-widest text-white/50">GAP</span>
-                        <span className="text-[8px] font-black text-white leading-none">{gap}</span>
+                        <span className="text-[6px] font-black uppercase tracking-widest text-background/50">GAP</span>
+                        <span className="text-[8px] font-black text-background leading-none">{gap}</span>
                     </div>
                 )}
             </div>
@@ -108,12 +107,12 @@ export const DigitFrequencyCircles = ({
     };
 
     return (
-        <Card className="overflow-hidden border-none shadow-sm bg-slate-900/40 rounded-[2rem] border border-white/5">
+        <Card className="overflow-hidden border-none shadow-sm bg-card rounded-[2rem] border border-primary/10">
             <div className="px-8 pt-8 flex flex-col sm:flex-row items-center justify-between gap-4">
-                <h2 className="text-[11px] font-black uppercase tracking-[0.4em] text-slate-100">LAST DIGIT PREDICTION</h2>
-                <div className="flex items-center gap-3 bg-slate-900 px-5 py-2 rounded-full text-[10px] text-slate-400 font-black uppercase tracking-widest border border-white/5 shadow-sm">
+                <h2 className="text-[11px] font-black uppercase tracking-[0.4em] text-foreground">LAST DIGIT PREDICTION</h2>
+                <div className="flex items-center gap-3 bg-muted px-5 py-2 rounded-full text-[10px] text-muted-foreground font-black uppercase tracking-widest border border-primary/10 shadow-sm">
                     <span>SAMPLE: {ticks.length}</span>
-                    <span className="w-1 h-1 rounded-full bg-white/10" />
+                    <span className="w-1 h-1 rounded-full bg-primary/20" />
                     <span>{marketName.toUpperCase()}</span>
                 </div>
             </div>

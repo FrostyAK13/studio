@@ -1,3 +1,4 @@
+
 'use client';
 
 import * as React from 'react';
@@ -9,8 +10,8 @@ import { DigitFrequencyView } from './digit-frequency-view';
 import { InsightView } from './insight-view';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
-import { RefreshCw, Radio, Activity, Moon, Sun, ExternalLink, ChevronDown, Search, TrendingUp, TrendingDown } from 'lucide-react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { Radio, Activity, Moon, Sun, ExternalLink, ChevronDown, Search, TrendingUp, TrendingDown } from 'lucide-react';
+import { motion } from 'framer-motion';
 import { DerivChart } from './deriv-chart';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Input } from '@/components/ui/input';
@@ -37,18 +38,21 @@ export interface GlobalAnalysisResult {
 export function Dashboard() {
     const [mounted, setMounted] = React.useState(false);
     const [theme, setTheme] = React.useState<'light' | 'dark'>('light');
-    const [price, setPrice] = React.useState(0);
+    const [price, setPrice] = React.useState<number>(0);
     const [lastDigitTicks, setLastDigitTicks] = React.useState<number[]>([]);
     const [priceHistory, setPriceHistory] = React.useState<number[]>([]);
     const [maxTicks, setMaxTicks] = React.useState(1000); 
     const [selectedMarket, setSelectedMarket] = React.useState('1HZ10V');
     const [decimalPlaces, setDecimalPlaces] = React.useState(2);
     const [tickTimestamps, setTickTimestamps] = React.useState<number[]>([]);
+    const [chartInterval, setChartInterval] = React.useState('1m');
+    const [candleData, setCandleData] = React.useState<any[]>([]);
+    const [lastCandleUpdate, setLastCandleUpdate] = React.useState<any>(null);
+    const [searchQuery, setSearchQuery] = setSearchQuery('');
     
     const [surveillanceStatus, setSurveillanceStatus] = React.useState<EngineStatus>('offline');
     const [globalResults, setGlobalResults] = React.useState<Record<string, GlobalAnalysisResult>>({});
     const [activeScanId, setActiveScanId] = React.useState<string | null>(null);
-    const [searchQuery, setSearchQuery] = React.useState('');
 
     const currentMarketRef = React.useRef(selectedMarket);
     const pipSizeRef = React.useRef<number | null>(null);
@@ -57,6 +61,7 @@ export function Dashboard() {
         setMounted(true);
         const savedTheme = localStorage.getItem('theme') as 'light' | 'dark';
         if (savedTheme) setTheme(savedTheme);
+        else setTheme('light');
     }, []);
 
     React.useEffect(() => {
@@ -68,17 +73,14 @@ export function Dashboard() {
     // Global Surveillance Engine
     React.useEffect(() => {
         if (!mounted) return;
-
         const scanWs = new WebSocket('wss://ws.derivws.com/websockets/v3?app_id=84799');
         let currentIndex = 0;
-
         const runGlobalScan = () => {
             if (currentIndex >= syntheticIndices.length) {
                 currentIndex = 0;
                 setTimeout(runGlobalScan, 2000); 
                 return;
             }
-
             const market = syntheticIndices[currentIndex];
             setActiveScanId(market.id);
             if (scanWs.readyState === WebSocket.OPEN) {
@@ -90,35 +92,28 @@ export function Dashboard() {
                 }));
             }
         };
-
         scanWs.onopen = () => runGlobalScan();
-
         scanWs.onmessage = (event) => {
             const data = JSON.parse(event.data);
             if (data.msg_type === 'history' && data.history) {
-                const prices = data.history.prices;
-                const latestPrice = prices[prices.length - 1];
+                const prices = (data.history.prices || []).map((p: any) => Number(p));
+                const latestPrice = prices.length > 0 ? prices[prices.length - 1] : 0;
                 const marketId = data.echo_req.ticks_history;
-                const marketName = syntheticIndices.find(m => m.id === marketId)?.name || marketId;
                 const pip = data.echo_req.pip_size || 2;
-
                 const ticks = prices.map((p: number) => {
                     const pStr = p.toFixed(8);
-                    const dec = pStr.split('.')[1] || '00';
+                    const dec = pStr.split('.')[1] || '00000000';
                     return parseInt(dec[pip - 1] || '0');
                 }).reverse();
-
                 const total = ticks.length || 1;
                 const counts = Array(10).fill(0);
                 ticks.forEach(d => counts[d]++);
                 const P = counts.map(c => (c / total) * 100);
                 const D = P.map(p => p - 10); 
-
                 const variance = P.reduce((sum, p) => sum + Math.pow(p - 10, 2), 0) / 10;
                 const stdDev = Math.sqrt(variance);
                 const SS = Math.max(0, 1 - (stdDev / 10));
                 const CI = D.reduce((sum, d) => sum + Math.pow(d, 2), 0);
-
                 const entryCandidates = [0,1,2,3,4,5,6,7,8,9].filter(i => D[i] >= -1.0 && D[i] <= -0.2);
                 const targetCandidates = [0,1,2,3,4,5,6,7,8,9].map(i => {
                     const prevIdx = (i + 9) % 10;
@@ -126,12 +121,10 @@ export function Dashboard() {
                     const ld = D[i] - (D[prevIdx] + D[nextIdx]) / 2;
                     return { i, ld, d: D[i] };
                 }).filter(t => t.d > 0.3 && t.ld > 0);
-
                 let bestE: number | null = null;
                 let bestT: number | null = null;
                 let bestFlowScore = -1000;
                 let finalConfidence = 0;
-
                 if (entryCandidates.length > 0 && targetCandidates.length > 0) {
                     entryCandidates.forEach(e => {
                         targetCandidates.forEach(t => {
@@ -148,28 +141,25 @@ export function Dashboard() {
                         finalConfidence = Math.min(99.9, 65 + (bestFlowScore * 12) + (SS * 15));
                     }
                 }
-
                 let S_U6 = 0; for (let i = 0; i <= 5; i++) S_U6 += D[i];
                 let S_O3 = 0; for (let i = 4; i <= 9; i++) S_O3 += D[i];
                 const scannerDirection = S_U6 > S_O3 ? 'UNDER 6' : 'OVER 3';
                 const bestScanner = P.map((p, i) => ({ i, p })).sort((a, b) => b.p - a.p)[0];
-
                 setGlobalResults(prev => ({
                     ...prev,
                     [marketId]: {
-                        marketId, marketName, ci: CI, ss: SS, flowScore: bestFlowScore,
+                        marketId, marketName: syntheticIndices.find(m => m.id === marketId)?.name || marketId, 
+                        ci: CI, ss: SS, flowScore: bestFlowScore,
                         tradeType: bestE !== null ? 'FLOW' : 'NO TRADE',
                         triggerDigit: bestE, targetDigit: bestT, confidence: finalConfidence,
                         currentPrice: latestPrice, pip: pip, scannerStrategy: scannerDirection,
                         scannerEntry: bestScanner?.i ?? null, scannerConfidence: 60 + Math.max(S_U6, S_O3)
                     }
                 }));
-
                 currentIndex++;
                 setTimeout(runGlobalScan, 200);
             }
         };
-
         return () => scanWs.close();
     }, [mounted]);
 
@@ -177,69 +167,130 @@ export function Dashboard() {
     React.useEffect(() => {
         if (!mounted) return;
 
+        setCandleData([]);
+        setLastCandleUpdate(null);
+        setLastDigitTicks([]);
+        setPriceHistory([]);
+        
         currentMarketRef.current = selectedMarket;
         const ws = new WebSocket('wss://ws.derivws.com/websockets/v3?app_id=84799');
+        
+        const intervalToGranularity = (int: string) => {
+            const map: Record<string, number> = {
+                '1m': 60, '2m': 120, '3m': 180, '5m': 300, 
+                '10m': 600, '15m': 900, '30m': 1800, '1h': 3600,
+                '2h': 7200, '4h': 14400, '8h': 28800, '1d': 86400
+            };
+            return map[int] || 60;
+        };
+
+        const calculateCountForOneMonth = (granularity: number) => {
+            const oneMonthSeconds = 30 * 24 * 60 * 60;
+            const countNeeded = Math.ceil(oneMonthSeconds / granularity);
+            return Math.min(5000, Math.max(500, countNeeded)); 
+        };
+
+        const granularity = intervalToGranularity(chartInterval);
+        const historyCount = calculateCountForOneMonth(granularity);
 
         ws.onopen = () => {
             setSurveillanceStatus('active');
-            ws.send(JSON.stringify({ 
-                "ticks_history": selectedMarket, 
-                "count": 1000, 
-                "end": "latest", 
-                "style": "ticks", 
-                "subscribe": 1 
+            
+            ws.send(JSON.stringify({
+                "ticks_history": selectedMarket,
+                "count": 1000,
+                "end": "latest",
+                "style": "ticks",
+                "subscribe": 1
             }));
+
+            ws.send(JSON.stringify({
+                "ticks_history": selectedMarket,
+                "count": historyCount,
+                "end": "latest",
+                "style": "candles",
+                "granularity": granularity,
+                "subscribe": 1
+            }));
+            
+            ws.send(JSON.stringify({ "ticks": selectedMarket, "subscribe": 1 }));
         };
 
         ws.onmessage = (event) => {
             const data = JSON.parse(event.data);
-            const msgMarket = data.echo_req?.ticks_history || data.tick?.symbol;
-            if (msgMarket && msgMarket !== currentMarketRef.current) return;
-
             if (data.error) return;
 
             if (data.msg_type === 'history' && data.history) {
-                const prices = data.history.prices;
-                const times = data.history.times.map((t: number) => t * 1000);
-                const activePipSize = data.echo_req.pip_size || 2;
-                pipSizeRef.current = activePipSize;
-                setDecimalPlaces(activePipSize);
+                if (data.history.prices) {
+                    const activePipSize = data.echo_req.pip_size || 2;
+                    pipSizeRef.current = activePipSize;
+                    setDecimalPlaces(activePipSize);
+                    
+                    const prices = (data.history.prices || []).map((p: any) => Number(p));
+                    const ticks = prices.map((p: number) => {
+                        const pStr = p.toFixed(8);
+                        const dec = pStr.split('.')[1] || '00000000';
+                        return parseInt(dec[activePipSize - 1] || '0');
+                    }).reverse();
+                    
+                    setLastDigitTicks(ticks.slice(0, 1000));
+                    setPriceHistory(prices.reverse().slice(0, 1000));
+                    if (prices.length > 0) setPrice(prices[0]);
+                }
+            }
 
-                const ticks = prices.map((p: number) => {
-                    const pStr = p.toFixed(8);
-                    const dec = pStr.split('.')[1] || '00';
-                    return parseInt(dec[activePipSize - 1] || '0');
-                }).reverse();
+            if (data.msg_type === 'candles' && data.candles) {
+                const formatted = data.candles.map((c: any) => ({
+                    time: Number(c.epoch),
+                    open: Number(c.open),
+                    high: Number(c.high),
+                    low: Number(c.low),
+                    close: Number(c.close)
+                }));
+                setCandleData(formatted);
+            }
 
-                setPrice(prices[prices.length - 1]);
-                setLastDigitTicks(ticks);
-                setPriceHistory([...prices].reverse());
-                setTickTimestamps([...times].reverse());
+            if (data.msg_type === 'ohlc' && data.ohlc) {
+                if (data.ohlc.symbol !== currentMarketRef.current) return;
+                
+                const newUpdate = {
+                    time: Number(data.ohlc.open_time), 
+                    open: Number(data.ohlc.open),
+                    high: Number(data.ohlc.high),
+                    low: Number(data.ohlc.low),
+                    close: Number(data.ohlc.close)
+                };
+                setLastCandleUpdate(newUpdate);
+                setPrice(Number(data.ohlc.close) || 0);
             }
 
             if (data.msg_type === 'tick') {
-                if (data.tick && typeof data.tick.quote === 'number') {
+                if (data.tick && data.tick.symbol === currentMarketRef.current) {
                     if (data.tick.pip_size !== undefined) {
                         pipSizeRef.current = data.tick.pip_size;
                         setDecimalPlaces(data.tick.pip_size);
                     }
                     const activePipSize = pipSizeRef.current ?? 2;
-                    const newPrice = data.tick.quote;
+                    const newPrice = Number(data.tick.quote);
                     const fullPriceStr = newPrice.toFixed(8);
                     const decimalsStr = fullPriceStr.split('.')[1] || '00000000';
                     const newDigit = parseInt(decimalsStr[activePipSize - 1] || '0');
+                    const epochMs = Number(data.tick.epoch) * 1000;
 
-                    setTickTimestamps(prev => [Date.now(), ...prev].slice(0, 1000));
-                    setPrice(newPrice);
+                    setTickTimestamps(prev => [epochMs, ...prev].slice(0, 1000));
                     setLastDigitTicks(prev => [newDigit, ...prev].slice(0, 1000));
                     setPriceHistory(prev => [newPrice, ...prev].slice(0, 1000));
+                    
+                    if (!lastCandleUpdate) {
+                        setPrice(newPrice);
+                    }
                 }
             }
         };
 
         ws.onclose = () => setSurveillanceStatus('offline');
         return () => { if(ws && ws.readyState === WebSocket.OPEN) ws.close(); };
-    }, [mounted, selectedMarket]);
+    }, [mounted, selectedMarket, chartInterval]);
 
     const handleMaxTicksChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const val = e.target.value === '' ? 0 : parseInt(e.target.value, 10);
@@ -248,40 +299,38 @@ export function Dashboard() {
 
     const handleMaxTicksBlur = () => { if (maxTicks < 1) setMaxTicks(1); };
 
-    const currentMarket = syntheticIndices.find(m => m.id === selectedMarket);
-    const filteredIndices = syntheticIndices.filter(m => m.name.toLowerCase().includes(searchQuery.toLowerCase()));
-
     if (!mounted) return <div className="flex min-h-screen items-center justify-center bg-background"><Activity className="h-4 w-4 animate-spin text-primary" /></div>;
 
     const analyzedDigits = lastDigitTicks.slice(0, maxTicks);
     const analyzedPrices = priceHistory.slice(0, maxTicks);
+    const filteredIndices = syntheticIndices.filter(m => m.name.toLowerCase().includes(searchQuery.toLowerCase()));
 
     return (
         <div className="flex min-h-screen w-full flex-col bg-background font-sans overflow-x-hidden transition-colors duration-500">
             <div className="flex flex-col flex-1">
-                <header className="sticky top-0 z-[100] flex h-16 md:h-[4.5rem] items-center border-b bg-background/95 backdrop-blur-xl px-4 shadow-sm">
+                <header className="sticky top-0 z-[100] flex h-16 md:h-[4.5rem] items-center border-b border-primary/10 bg-background/95 backdrop-blur-xl px-4 shadow-sm">
                     <div className="flex w-full items-center justify-between max-w-[1600px] mx-auto gap-4">
-                        <div className="flex items-center gap-2 md:gap-4 shrink-0">
+                        <div className="flex items-center gap-4 shrink-0">
                             <Popover>
                                 <PopoverTrigger asChild>
-                                    <button className="flex items-center gap-3 bg-card border border-border px-3 md:px-5 py-2 md:py-2.5 rounded-2xl hover:bg-muted transition-all shadow-lg active:scale-95 group">
+                                    <button className="flex items-center gap-3 bg-card border border-primary/20 px-3 md:px-5 py-2 md:py-2.5 rounded-2xl hover:bg-muted transition-all shadow-lg active:scale-95 group">
                                         <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center group-hover:bg-primary/20 transition-colors">
                                             <Activity className="h-4 w-4 text-primary" />
                                         </div>
                                         <div className="text-left hidden sm:block">
-                                            <p className="text-[10px] font-black text-muted-foreground uppercase leading-none tracking-widest">{currentMarket?.name}</p>
+                                            <p className="text-[10px] font-black text-muted-foreground uppercase leading-none tracking-widest">{syntheticIndices.find(m => m.id === selectedMarket)?.name}</p>
                                             <p className="text-sm font-black text-foreground tabular-nums mt-1">{price.toFixed(decimalPlaces)}</p>
                                         </div>
                                         <ChevronDown className="h-4 w-4 text-muted-foreground group-hover:text-primary transition-colors" />
                                     </button>
                                 </PopoverTrigger>
-                                <PopoverContent className="w-[320px] md:w-[480px] p-0 bg-card border-border shadow-2xl rounded-[1.5rem] overflow-hidden">
-                                    <div className="p-4 border-b border-border bg-muted/30">
+                                <PopoverContent className="w-[320px] md:w-[480px] p-0 bg-card border-primary/10 shadow-2xl rounded-[1.5rem] overflow-hidden">
+                                    <div className="p-4 border-b border-primary/5 bg-muted/30">
                                         <div className="relative">
                                             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                                             <Input 
                                                 placeholder="Search assets..." 
-                                                className="pl-10 h-11 bg-card border-border rounded-xl font-medium focus:ring-primary/20"
+                                                className="pl-10 h-11 bg-card border-primary/20 rounded-xl font-medium focus:ring-primary/20"
                                                 value={searchQuery}
                                                 onChange={(e) => setSearchQuery(e.target.value)}
                                             />
@@ -317,7 +366,7 @@ export function Dashboard() {
                                                             </div>
                                                         </div>
                                                         <div className="text-right">
-                                                            <p className="text-[11px] font-black tabular-nums text-foreground">{marketPrice.toFixed(res?.pip || 2)}</p>
+                                                            <p className="text-[11px] font-black tabular-nums text-foreground">{(marketPrice).toFixed(res?.pip || 2)}</p>
                                                             <div className={cn(
                                                                 "flex items-center justify-end gap-1 text-[9px] font-black mt-0.5",
                                                                 marketChange >= 0 ? "text-emerald-500" : "text-rose-500"
@@ -338,29 +387,29 @@ export function Dashboard() {
                         <div className="flex-1 flex justify-center hidden lg:flex">
                              <div className="relative group transition-all duration-300 hover:scale-105 active:scale-95">
                                 <motion.div 
-                                    className="absolute -inset-1 bg-gradient-to-r from-primary via-cyan-500 to-primary rounded-full blur opacity-25 group-hover:opacity-75 transition duration-1000"
+                                    className="absolute -inset-1 bg-gradient-to-r from-primary via-accent to-primary rounded-full blur opacity-25 group-hover:opacity-75 transition duration-1000"
                                     animate={{ opacity: [0.25, 0.5, 0.25] }}
                                     transition={{ duration: 4, repeat: Infinity }}
                                 />
-                                <a href="https://frostytraders.com" target="_blank" rel="noopener noreferrer" className="relative flex items-center gap-3 px-8 py-2.5 bg-card border border-white/5 rounded-full shadow-2xl">
-                                    <span className="text-[11px] font-black text-foreground uppercase tracking-[0.4em] whitespace-nowrap">FROSTY TRADERS</span>
+                                <a href="https://frostytraders.com" target="_blank" rel="noopener noreferrer" className="relative flex items-center gap-3 px-8 py-2.5 bg-card border border-primary/20 rounded-full shadow-2xl">
+                                    <span className="text-[11px] font-black text-primary uppercase tracking-[0.4em] whitespace-nowrap">FROSTY TRADERS</span>
                                     <ExternalLink className="h-3 w-3 text-primary" />
                                 </a>
                             </div>
                         </div>
 
                         <div className="flex items-center gap-2 md:gap-4 shrink-0">
-                            <div className="flex items-center bg-card border border-border rounded-full shadow-2xl h-10 px-1 overflow-hidden">
-                                <div className="flex items-center gap-3 px-5 py-2 border-r border-border">
+                            <div className="flex items-center bg-card border border-primary/20 rounded-full shadow-2xl h-10 px-1 overflow-hidden">
+                                <div className="flex items-center gap-3 px-5 py-2 border-r border-primary/10">
                                     <div className={cn("h-2.5 w-2.5 rounded-full animate-pulse", surveillanceStatus === 'active' ? "bg-emerald-500 shadow-[0_0_12px_rgba(16,185,129,0.9)]" : "bg-rose-500 shadow-[0_0_12px_rgba(244,63,94,0.9)]")} />
                                     <span className="text-[10px] font-black text-foreground uppercase tracking-[0.3em] hidden sm:inline">LIVE</span>
                                 </div>
-                                <div className="flex items-center gap-2 px-5 py-2 bg-muted/30">
+                                <div className="flex items-center gap-2 px-5 py-2 bg-muted/50">
                                     <Radio className={cn("h-3.5 w-3.5 transition-all", surveillanceStatus === 'active' ? 'text-emerald-500 animate-pulse' : 'text-rose-500')} />
                                     <span className="text-[10px] font-black uppercase text-foreground tracking-[0.2em]">{surveillanceStatus === 'active' ? 'LIVE' : 'OFFLINE'}</span>
                                 </div>
                             </div>
-                            <Button variant="ghost" size="icon" onClick={() => setTheme(theme === 'light' ? 'dark' : 'light')} className="h-10 w-10 rounded-full border border-border bg-card shadow-xl hover:bg-muted text-foreground transition-all">
+                            <Button variant="ghost" size="icon" onClick={() => setTheme(theme === 'light' ? 'dark' : 'light')} className="h-10 w-10 rounded-full border border-primary/20 bg-card shadow-xl hover:bg-muted text-foreground transition-all">
                                 {theme === 'light' ? <Moon className="h-5 w-5" /> : <Sun className="h-5 w-5" />}
                             </Button>
                         </div>
@@ -376,22 +425,34 @@ export function Dashboard() {
                             ))}
                         </TabsList>
                         <TabsContent value="analyzer" className="mt-0 outline-none animate-in fade-in duration-500">
-                            <AnalyzerView price={price} lastDigitTicks={analyzedDigits} priceHistory={analyzedPrices} maxTicks={maxTicks} handleMaxTicksChange={handleMaxTicksChange} handleMaxTicksBlur={handleMaxTicksBlur} selectedMarket={selectedMarket} onMarketChange={setSelectedMarket} decimalPlaces={decimalPlaces} tickTimestamps={tickTimestamps} />
+                            <AnalyzerView price={Number(price) || 0} lastDigitTicks={analyzedDigits} priceHistory={analyzedPrices} maxTicks={maxTicks} handleMaxTicksChange={handleMaxTicksChange} handleMaxTicksBlur={handleMaxTicksBlur} selectedMarket={selectedMarket} onMarketChange={setSelectedMarket} decimalPlaces={decimalPlaces} tickTimestamps={tickTimestamps} />
                         </TabsContent>
                         <TabsContent value="last-digit-analysis" className="mt-0 outline-none animate-in fade-in duration-500">
-                            <ScannerView price={price} lastDigitTicks={analyzedDigits} priceHistory={analyzedPrices} maxTicks={maxTicks} handleMaxTicksChange={handleMaxTicksChange} handleMaxTicksBlur={handleMaxTicksBlur} selectedMarket={selectedMarket} onMarketChange={setSelectedMarket} decimalPlaces={decimalPlaces} />
+                            <ScannerView price={Number(price) || 0} lastDigitTicks={analyzedDigits} priceHistory={analyzedPrices} maxTicks={maxTicks} handleMaxTicksChange={handleMaxTicksChange} handleMaxTicksBlur={handleMaxTicksBlur} selectedMarket={selectedMarket} onMarketChange={setSelectedMarket} decimalPlaces={decimalPlaces} />
                         </TabsContent>
                         <TabsContent value="frequency" className="mt-0 outline-none animate-in fade-in duration-500">
-                            <DigitFrequencyView price={price} lastDigitTicks={analyzedDigits} priceHistory={analyzedPrices} maxTicks={maxTicks} handleMaxTicksChange={handleMaxTicksChange} handleMaxTicksBlur={handleMaxTicksBlur} selectedMarket={selectedMarket} onMarketChange={setSelectedMarket} decimalPlaces={decimalPlaces} />
+                            <DigitFrequencyView price={Number(price) || 0} lastDigitTicks={analyzedDigits} priceHistory={analyzedPrices} maxTicks={maxTicks} handleMaxTicksChange={handleMaxTicksChange} handleMaxTicksBlur={handleMaxTicksBlur} selectedMarket={selectedMarket} onMarketChange={setSelectedMarket} decimalPlaces={decimalPlaces} />
                         </TabsContent>
                         <TabsContent value="global-scan" className="mt-0 outline-none animate-in fade-in duration-500">
-                            <ScannerView price={price} lastDigitTicks={analyzedDigits} priceHistory={analyzedPrices} maxTicks={maxTicks} handleMaxTicksChange={handleMaxTicksChange} handleMaxTicksBlur={handleMaxTicksBlur} selectedMarket={selectedMarket} onMarketChange={setSelectedMarket} decimalPlaces={decimalPlaces} />
+                            <ScannerView price={Number(price) || 0} lastDigitTicks={analyzedDigits} priceHistory={analyzedPrices} maxTicks={maxTicks} handleMaxTicksChange={handleMaxTicksChange} handleMaxTicksBlur={handleMaxTicksBlur} selectedMarket={selectedMarket} onMarketChange={setSelectedMarket} decimalPlaces={decimalPlaces} />
                         </TabsContent>
-                        <TabsContent value="chart" className="mt-0 outline-none animate-in fade-in duration-500 h-[60vh]">
-                            <DerivChart priceHistory={priceHistory} tickTimestamps={tickTimestamps} decimalPlaces={decimalPlaces} lastDigitTicks={analyzedDigits} />
+                        <TabsContent value="chart" className="mt-0 outline-none animate-in fade-in duration-500 h-[88vh]">
+                            <DerivChart 
+                                priceHistory={priceHistory} 
+                                tickTimestamps={tickTimestamps} 
+                                decimalPlaces={decimalPlaces} 
+                                lastDigitTicks={analyzedDigits}
+                                selectedInterval={chartInterval}
+                                onIntervalChange={setChartInterval}
+                                candleData={candleData}
+                                lastCandleUpdate={lastCandleUpdate}
+                                selectedMarket={selectedMarket}
+                                onMarketChange={setSelectedMarket}
+                                globalResults={globalResults}
+                            />
                         </TabsContent>
                         <TabsContent value="insight" className="mt-0 outline-none animate-in fade-in duration-500">
-                            <InsightView globalResults={globalResults} activeScanId={activeScanId} dashboardPrice={price} dashboardMarketId={selectedMarket} />
+                            <InsightView globalResults={globalResults} activeScanId={activeScanId} dashboardPrice={Number(price) || 0} dashboardMarketId={selectedMarket} />
                         </TabsContent>
                     </Tabs>
                 </main>
