@@ -6,46 +6,24 @@
   :root {
     --background: 45 100% 50%; /* Pure Gold */
     --foreground: 45 25% 10%; /* Deep Bronze */
-    --card: 45 100% 55%; /* Slightly Lighter Gold */
+    --card: 45 100% 45%; /* Saturated Gold */
     --card-foreground: 45 25% 10%;
-    --popover: 45 100% 55%;
+    --popover: 45 100% 45%;
     --popover-foreground: 45 25% 10%;
     --primary: 45 100% 30%; /* Deep Metallic Gold */
     --primary-foreground: 45 100% 95%; /* Icy Gold */
     --secondary: 45 100% 40%;
     --secondary-foreground: 45 100% 95%;
-    --muted: 45 80% 45%;
+    --muted: 45 80% 40%;
     --muted-foreground: 45 20% 25%;
     --accent: 45 100% 96%; /* Pure Icy Gold */
     --accent-foreground: 45 100% 10%;
     --destructive: 0 84% 60%;
     --destructive-foreground: 0 0% 100%;
-    --border: 45 100% 35%;
-    --input: 45 100% 35%;
+    --border: 45 100% 30%;
+    --input: 45 100% 30%;
     --ring: 45 100% 30%;
     --radius: 1.25rem;
-  }
-
-  .dark {
-    --background: 45 100% 50%;
-    --foreground: 45 25% 10%;
-    --card: 45 100% 55%;
-    --card-foreground: 45 25% 10%;
-    --popover: 45 100% 55%;
-    --popover-foreground: 45 25% 10%;
-    --primary: 45 100% 30%;
-    --primary-foreground: 45 100% 95%;
-    --secondary: 45 100% 40%;
-    --secondary-foreground: 45 100% 95%;
-    --muted: 45 80% 45%;
-    --muted-foreground: 45 20% 25%;
-    --accent: 45 100% 96%;
-    --accent-foreground: 45 100% 10%;
-    --destructive: 0 62% 30%;
-    --destructive-foreground: 0 0% 100%;
-    --border: 45 100% 35%;
-    --input: 45 100% 35%;
-    --ring: 45 100% 30%;
   }
 }
 
@@ -59,13 +37,13 @@
 }
 
 .icy-gold-text {
-  @apply text-accent;
+  color: hsl(45 100% 96%);
   text-shadow: 0 2px 4px rgba(69, 37, 10, 0.4);
 }
 
 .white-header-text {
   @apply text-white;
-  text-shadow: 0 2px 4px rgba(69, 37, 10, 0.5);
+  text-shadow: 0 2px 4px rgba(69, 37, 10, 0.6);
 }
 
 .no-scrollbar::-webkit-scrollbar {
