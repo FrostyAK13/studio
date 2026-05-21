@@ -197,19 +197,19 @@ export function DerivChart({
 
         const chart = createChart(chartContainerRef.current, {
             layout: {
-                background: { type: ColorType.Solid, color: '#f8fafc' }, // Icy white
+                background: { type: ColorType.Solid, color: '#FDFCF0' }, 
                 textColor: '#C5A059',
                 fontSize: 11,
                 fontFamily: 'Poppins',
             },
             grid: {
-                vertLines: { color: 'rgba(197, 160, 89, 0.05)' },
-                horzLines: { color: 'rgba(197, 160, 89, 0.05)' },
+                vertLines: { color: 'rgba(197, 160, 89, 0.1)' },
+                horzLines: { color: 'rgba(197, 160, 89, 0.1)' },
             },
             width: chartContainerRef.current.clientWidth,
             height: chartContainerRef.current.clientHeight,
             rightPriceScale: {
-                borderColor: 'rgba(197, 160, 89, 0.1)',
+                borderColor: 'rgba(197, 160, 89, 0.2)',
                 autoScale: true,
                 scaleMargins: {
                     top: 0.1,
@@ -217,7 +217,7 @@ export function DerivChart({
                 },
             },
             timeScale: {
-                borderColor: 'rgba(197, 160, 89, 0.1)',
+                borderColor: 'rgba(197, 160, 89, 0.2)',
                 timeVisible: true,
                 secondsVisible: true,
                 shiftVisibleRangeOnNewBar: true,
