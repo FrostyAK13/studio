@@ -1,3 +1,4 @@
+
 'use client';
 
 import * as React from 'react';
@@ -60,6 +61,7 @@ const formatCountdown = (seconds: number) => {
 const DigitStatsOverlay = ({ ticks }: { ticks: number[] }) => {
     const stats = React.useMemo(() => {
         const counts = Array(10).fill(0);
+        // Correctly filter and count based on provided ticks
         ticks.forEach(d => { if (d >= 0 && d <= 9) counts[d]++; });
         const total = ticks.length || 1;
         const mapped = counts.map((count, index) => ({ 
@@ -80,11 +82,12 @@ const DigitStatsOverlay = ({ ticks }: { ticks: number[] }) => {
 
     return (
         <div className="absolute bottom-10 left-0 w-full flex justify-center pointer-events-none z-[60]">
-            <div className="flex gap-2 sm:gap-4 p-3 bg-slate-900/90 dark:bg-slate-950/90 backdrop-blur-md rounded-2xl border border-white/10 shadow-2xl pointer-events-auto items-end">
+            <div className="flex gap-2 sm:gap-4 p-3 bg-slate-900/90 backdrop-blur-md rounded-2xl border border-white/10 shadow-2xl pointer-events-auto items-end">
                 {stats.map((s) => {
                     const radius = 16;
                     const circumference = 2 * Math.PI * radius;
-                    const offset = circumference - (s.percentage / 20) * circumference; 
+                    // Use a 40% scale for higher visual resolution of digit distribution
+                    const offset = circumference - (s.percentage / 40) * circumference; 
                     
                     return (
                         <div key={s.digit} className="flex flex-col items-center relative group">
@@ -100,7 +103,7 @@ const DigitStatsOverlay = ({ ticks }: { ticks: number[] }) => {
                                         stroke={s.isMax ? "#00a69c" : s.isMin ? "#ff444f" : "#475569"} 
                                         strokeWidth="3" fill="transparent" 
                                         strokeDasharray={circumference}
-                                        strokeDashoffset={offset}
+                                        strokeDashoffset={Math.max(0, offset)}
                                         strokeLinecap="round"
                                         className="transition-all duration-1000"
                                     />
@@ -110,7 +113,7 @@ const DigitStatsOverlay = ({ ticks }: { ticks: number[] }) => {
                                     <span className="text-[6px] sm:text-[8px] font-bold text-slate-400">{s.percentage.toFixed(1)}%</span>
                                 </div>
                             </div>
-                            <div className="h-4 flex items-center justify-center">
+                            <div className="h-4 flex items-center justify-center relative">
                                 {s.isLast && (
                                     <motion.div 
                                         initial={{ scale: 0 }} 
@@ -299,7 +302,7 @@ export function DerivChart({
     }, [lastCandleUpdate]);
 
     return (
-        <div className="w-full h-full relative flex flex-col bg-slate-950 border border-white/5 rounded-2xl overflow-hidden shadow-2xl">
+        <div className="w-full h-full relative flex flex-col bg-[#020617] border border-white/5 rounded-2xl overflow-hidden shadow-2xl">
             <div className="flex h-12 items-center border-b border-white/5 bg-slate-950 px-4 justify-between z-50">
                 <div className="flex items-center gap-1.5 h-full">
                     <Popover>

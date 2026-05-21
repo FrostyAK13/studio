@@ -1,3 +1,4 @@
+
 'use client';
 
 import * as React from 'react';
@@ -9,9 +10,11 @@ import { DigitFrequencyView } from './digit-frequency-view';
 import { InsightView } from './insight-view';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
-import { Radio, Activity, Moon, Sun, ExternalLink } from 'lucide-react';
+import { Radio, Activity, Moon, Sun, ExternalLink, ChevronDown, Search, TrendingUp, TrendingDown } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { DerivChart } from './deriv-chart';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { Input } from '@/components/ui/input';
 
 type EngineStatus = 'offline' | 'active';
 
@@ -45,6 +48,7 @@ export function Dashboard() {
     const [chartInterval, setChartInterval] = React.useState('1m');
     const [candleData, setCandleData] = React.useState<any[]>([]);
     const [lastCandleUpdate, setLastCandleUpdate] = React.useState<any>(null);
+    const [searchQuery, setSearchQuery] = React.useState('');
     
     const [surveillanceStatus, setSurveillanceStatus] = React.useState<EngineStatus>('offline');
     const [globalResults, setGlobalResults] = React.useState<Record<string, GlobalAnalysisResult>>({});
@@ -209,6 +213,14 @@ export function Dashboard() {
                 const activePipSize = data.echo_req.pip_size || 2;
                 pipSizeRef.current = activePipSize;
                 setDecimalPlaces(activePipSize);
+                
+                const prices = (data.history.prices || []).map((p: any) => Number(p));
+                const ticks = prices.map((p: number) => {
+                    const pStr = p.toFixed(8);
+                    const dec = pStr.split('.')[1] || '00000000';
+                    return parseInt(dec[activePipSize - 1] || '0');
+                }).reverse();
+                setLastDigitTicks(ticks);
             }
 
             if (data.msg_type === 'candles' && data.candles) {
@@ -271,34 +283,100 @@ export function Dashboard() {
 
     const handleMaxTicksBlur = () => { if (maxTicks < 1) setMaxTicks(1); };
 
-    if (!mounted) return <div className="flex min-h-screen items-center justify-center bg-background"><Activity className="h-4 w-4 animate-spin text-primary" /></div>;
+    if (!mounted) return <div className="flex min-h-screen items-center justify-center bg-[#020617]"><Activity className="h-4 w-4 animate-spin text-primary" /></div>;
 
     const analyzedDigits = lastDigitTicks.slice(0, maxTicks);
     const analyzedPrices = priceHistory.slice(0, maxTicks);
+    const filteredIndices = syntheticIndices.filter(m => m.name.toLowerCase().includes(searchQuery.toLowerCase()));
 
     return (
-        <div className="flex min-h-screen w-full flex-col bg-background font-sans overflow-x-hidden transition-colors duration-500">
+        <div className="flex min-h-screen w-full flex-col bg-[#020617] font-sans overflow-x-hidden transition-colors duration-500">
             <div className="flex flex-col flex-1">
-                <header className="sticky top-0 z-[100] flex h-16 md:h-[4.5rem] items-center border-b border-white/5 bg-background/95 backdrop-blur-xl px-4 shadow-sm">
+                <header className="sticky top-0 z-[100] flex h-16 md:h-[4.5rem] items-center border-b border-white/5 bg-[#020617]/95 backdrop-blur-xl px-4 shadow-sm">
                     <div className="flex w-full items-center justify-between max-w-[1600px] mx-auto gap-4">
                         <div className="flex items-center gap-4 shrink-0">
-                            <a href="https://frostytraders.com" target="_blank" rel="noopener noreferrer" className="flex items-center gap-3 hover:opacity-80 transition-opacity group">
-                                <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center group-hover:bg-primary/20 transition-colors">
-                                    <Activity className="h-4 w-4 text-primary" />
-                                </div>
-                                <span className="text-sm font-black text-foreground uppercase tracking-widest hidden sm:block underline decoration-primary/30 underline-offset-4">FROSTY TRADERS</span>
-                            </a>
+                            <Popover>
+                                <PopoverTrigger asChild>
+                                    <button className="flex items-center gap-3 bg-slate-900 border border-white/5 px-3 md:px-5 py-2 md:py-2.5 rounded-2xl hover:bg-white/5 transition-all shadow-lg active:scale-95 group">
+                                        <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center group-hover:bg-primary/20 transition-colors">
+                                            <Activity className="h-4 w-4 text-primary" />
+                                        </div>
+                                        <div className="text-left hidden sm:block">
+                                            <p className="text-[10px] font-black text-slate-400 uppercase leading-none tracking-widest">{syntheticIndices.find(m => m.id === selectedMarket)?.name}</p>
+                                            <p className="text-sm font-black text-slate-100 tabular-nums mt-1">{price.toFixed(decimalPlaces)}</p>
+                                        </div>
+                                        <ChevronDown className="h-4 w-4 text-slate-500 group-hover:text-primary transition-colors" />
+                                    </button>
+                                </PopoverTrigger>
+                                <PopoverContent className="w-[320px] md:w-[480px] p-0 bg-slate-900 border-white/10 shadow-2xl rounded-[1.5rem] overflow-hidden">
+                                    <div className="p-4 border-b border-white/5 bg-slate-950/50">
+                                        <div className="relative">
+                                            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-500" />
+                                            <Input 
+                                                placeholder="Search assets..." 
+                                                className="pl-10 h-11 bg-slate-900 border-white/10 rounded-xl font-medium focus:ring-primary/20 text-white"
+                                                value={searchQuery}
+                                                onChange={(e) => setSearchQuery(e.target.value)}
+                                            />
+                                        </div>
+                                    </div>
+                                    <div className="max-h-[400px] overflow-y-auto no-scrollbar">
+                                        <div className="px-2 py-3 space-y-1">
+                                            {filteredIndices.map((market) => {
+                                                const res = globalResults[market.id];
+                                                const marketPrice = res?.currentPrice || market.price;
+                                                const marketChange = market.change;
+                                                const isSelected = selectedMarket === market.id;
+                                                
+                                                return (
+                                                    <button 
+                                                        key={market.id}
+                                                        onClick={() => setSelectedMarket(market.id)}
+                                                        className={cn(
+                                                            "w-full flex items-center justify-between p-3 rounded-xl transition-all hover:bg-primary/5 group",
+                                                            isSelected ? "bg-primary/10" : "bg-transparent"
+                                                        )}
+                                                    >
+                                                        <div className="flex items-center gap-3">
+                                                            <div className={cn(
+                                                                "w-10 h-10 rounded-xl flex items-center justify-center transition-colors",
+                                                                isSelected ? "bg-primary text-white" : "bg-slate-800 text-slate-500 group-hover:bg-primary/10 group-hover:text-primary"
+                                                            )}>
+                                                                <Activity className="h-5 w-5" />
+                                                            </div>
+                                                            <div className="text-left">
+                                                                <p className={cn("text-[11px] font-black uppercase tracking-wider", isSelected ? "text-primary" : "text-slate-100")}>{market.name}</p>
+                                                                <p className="text-[10px] font-bold text-slate-500 uppercase">{market.category}</p>
+                                                            </div>
+                                                        </div>
+                                                        <div className="text-right">
+                                                            <p className="text-[11px] font-black tabular-nums text-slate-100">{marketPrice.toFixed(res?.pip || 2)}</p>
+                                                            <div className={cn(
+                                                                "flex items-center justify-end gap-1 text-[9px] font-black mt-0.5",
+                                                                marketChange >= 0 ? "text-emerald-500" : "text-rose-500"
+                                                            )}>
+                                                                {marketChange >= 0 ? <TrendingUp className="h-2 w-2" /> : <TrendingDown className="h-2 w-2" />}
+                                                                {Math.abs(marketChange).toFixed(2)}%
+                                                            </div>
+                                                        </div>
+                                                    </button>
+                                                );
+                                            })}
+                                        </div>
+                                    </div>
+                                </PopoverContent>
+                            </Popover>
                         </div>
                         
-                        <div className="flex-1 flex justify-center">
+                        <div className="flex-1 flex justify-center hidden lg:flex">
                              <div className="relative group transition-all duration-300 hover:scale-105 active:scale-95">
                                 <motion.div 
                                     className="absolute -inset-1 bg-gradient-to-r from-primary via-cyan-500 to-primary rounded-full blur opacity-25 group-hover:opacity-75 transition duration-1000"
                                     animate={{ opacity: [0.25, 0.5, 0.25] }}
                                     transition={{ duration: 4, repeat: Infinity }}
                                 />
-                                <a href="https://frostytraders.com" target="_blank" rel="noopener noreferrer" className="relative flex items-center gap-3 px-8 py-2 bg-slate-900/80 border border-white/5 rounded-full shadow-2xl">
-                                    <span className="text-[10px] font-black text-slate-100 uppercase tracking-[0.4em] whitespace-nowrap">FROSTY TRADERS</span>
+                                <a href="https://frostytraders.com" target="_blank" rel="noopener noreferrer" className="relative flex items-center gap-3 px-8 py-2.5 bg-slate-900 border border-white/5 rounded-full shadow-2xl">
+                                    <span className="text-[11px] font-black text-slate-100 uppercase tracking-[0.4em] whitespace-nowrap">FROSTY TRADERS</span>
                                     <ExternalLink className="h-3 w-3 text-primary" />
                                 </a>
                             </div>
