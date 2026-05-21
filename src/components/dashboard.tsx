@@ -1,4 +1,3 @@
-
 'use client';
 
 import * as React from 'react';
@@ -169,6 +168,8 @@ export function Dashboard() {
 
         setCandleData([]);
         setLastCandleUpdate(null);
+        setLastDigitTicks([]);
+        setPriceHistory([]);
         
         currentMarketRef.current = selectedMarket;
         const ws = new WebSocket('wss://ws.derivws.com/websockets/v3?app_id=84799');
@@ -193,6 +194,16 @@ export function Dashboard() {
 
         ws.onopen = () => {
             setSurveillanceStatus('active');
+            
+            // Initial request for 1000 history ticks to populate frequency analysis
+            ws.send(JSON.stringify({
+                "ticks_history": selectedMarket,
+                "count": 1000,
+                "end": "latest",
+                "style": "ticks",
+                "subscribe": 1
+            }));
+
             ws.send(JSON.stringify({
                 "ticks_history": selectedMarket,
                 "count": historyCount,
@@ -210,17 +221,23 @@ export function Dashboard() {
             if (data.error) return;
 
             if (data.msg_type === 'history' && data.history) {
-                const activePipSize = data.echo_req.pip_size || 2;
-                pipSizeRef.current = activePipSize;
-                setDecimalPlaces(activePipSize);
-                
-                const prices = (data.history.prices || []).map((p: any) => Number(p));
-                const ticks = prices.map((p: number) => {
-                    const pStr = p.toFixed(8);
-                    const dec = pStr.split('.')[1] || '00000000';
-                    return parseInt(dec[activePipSize - 1] || '0');
-                }).reverse();
-                setLastDigitTicks(ticks);
+                // Determine if this is a tick history or candle history based on data.history contents
+                if (data.history.prices) {
+                    const activePipSize = data.echo_req.pip_size || 2;
+                    pipSizeRef.current = activePipSize;
+                    setDecimalPlaces(activePipSize);
+                    
+                    const prices = (data.history.prices || []).map((p: any) => Number(p));
+                    const ticks = prices.map((p: number) => {
+                        const pStr = p.toFixed(8);
+                        const dec = pStr.split('.')[1] || '00000000';
+                        return parseInt(dec[activePipSize - 1] || '0');
+                    }).reverse();
+                    
+                    setLastDigitTicks(ticks.slice(0, 1000));
+                    setPriceHistory(prices.reverse().slice(0, 1000));
+                    if (prices.length > 0) setPrice(prices[0]);
+                }
             }
 
             if (data.msg_type === 'candles' && data.candles) {
