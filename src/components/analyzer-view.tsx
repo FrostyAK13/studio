@@ -35,11 +35,11 @@ const HeroPrice = ({ price, decimalPlaces }: { price: number; decimalPlaces: num
         <div className="flex flex-col items-center justify-center py-12 bg-transparent select-none">
             <div className="flex items-baseline font-black tracking-tighter transition-all duration-300">
                 <span className="text-6xl sm:text-8xl icy-gold-text">{mainPart}</span>
-                <span className="text-7xl sm:text-9xl text-primary drop-shadow-[0_0_20px_rgba(255,255,255,0.4)] ml-1">{lastDigit}</span>
+                <span className="text-7xl sm:text-9xl text-white drop-shadow-[0_0_20px_rgba(255,255,255,0.6)] ml-1">{lastDigit}</span>
             </div>
-            <div className="mt-4 flex items-center gap-2 bg-primary/10 px-4 py-1 rounded-full border border-primary/20">
-                <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-                <span className="text-[10px] font-black uppercase tracking-[0.2em] icy-gold-text opacity-80">LIVE TICK FEED</span>
+            <div className="mt-4 flex items-center gap-2 bg-primary/20 px-4 py-1 rounded-full border border-white/20">
+                <div className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+                <span className="text-[10px] font-black uppercase tracking-[0.2em] text-white opacity-90">LIVE TICK FEED</span>
             </div>
         </div>
     );
@@ -73,17 +73,17 @@ const CheatSheet = ({ type }: { type: string }) => {
 
     return (
         <div className="space-y-3">
-            <h4 className="text-[10px] font-black icy-gold-text uppercase tracking-widest flex items-center gap-2">
+            <h4 className="text-[10px] font-black text-white uppercase tracking-widest flex items-center gap-2">
                 <ShieldCheck className="h-3 w-3" /> {guide.title}
             </h4>
-            <p className="text-[9px] font-medium text-foreground leading-relaxed italic border-l-2 border-primary/30 pl-3">
+            <p className="text-[9px] font-medium text-white leading-relaxed italic border-l-2 border-white/30 pl-3">
                 "{guide.logic}"
             </p>
-            <div className="bg-primary/20 p-2 rounded-lg border border-primary/20">
-                <p className="text-[8px] font-black text-emerald-600 uppercase tracking-widest mb-1 flex items-center gap-1">
+            <div className="bg-primary/40 p-2 rounded-lg border border-white/20">
+                <p className="text-[8px] font-black text-emerald-300 uppercase tracking-widest mb-1 flex items-center gap-1">
                     <Zap className="h-2.5 w-2.5" /> PRO TIP
                 </p>
-                <p className="text-[9px] font-bold text-foreground/80">{guide.tip}</p>
+                <p className="text-[9px] font-bold text-white/90">{guide.tip}</p>
             </div>
         </div>
     );
@@ -172,28 +172,28 @@ export function AnalyzerView({
         return slice.map((digit, i) => {
             const isPivot = i === pivotIndex;
             const isMatch = digit === selectedDigit;
-            let colorClass = "bg-primary/20 icy-gold-text"; 
+            let colorClass = "bg-primary/30 text-white"; 
             if (isMatch && (tradeType === 'matches-differs')) {
-                colorClass = "bg-primary border-primary text-accent shadow-lg z-20";
+                colorClass = "bg-white border-white text-primary shadow-lg z-20";
             } else {
                 switch (tradeType) {
                     case 'even-odd':
-                        colorClass = digit % 2 === 0 ? "bg-emerald-500/20 text-emerald-700" : "bg-rose-500/20 text-rose-700";
+                        colorClass = digit % 2 === 0 ? "bg-emerald-400/40 text-white" : "bg-rose-400/40 text-white";
                         break;
                     case 'over-under':
-                        colorClass = digit > selectedDigit ? "bg-emerald-500/20 text-emerald-700" : "bg-rose-500/20 text-rose-700";
+                        colorClass = digit > selectedDigit ? "bg-emerald-400/40 text-white" : "bg-rose-400/40 text-white";
                         break;
                     case 'rise-fall':
-                        colorClass = digit % 2 === 0 ? "bg-emerald-500/20 text-emerald-700" : "bg-rose-500/20 text-rose-700";
+                        colorClass = digit % 2 === 0 ? "bg-emerald-400/40 text-white" : "bg-rose-400/40 text-white";
                         break;
                     case 'matches-differs':
-                        colorClass = isMatch ? "bg-primary text-accent" : "bg-primary/10 text-accent/60";
+                        colorClass = isMatch ? "bg-white text-primary" : "bg-primary/20 text-white/60";
                         break;
                 }
             }
             
             return (
-                <motion.div key={i} initial={{ scale: 0, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} className={cn("w-8 h-8 sm:w-10 sm:h-10 rounded-xl flex items-center justify-center font-black text-[10px] sm:text-base border border-primary/20 transition-all", isPivot ? "ring-2 ring-primary ring-offset-2 bg-primary text-accent" : colorClass)}>
+                <motion.div key={i} initial={{ scale: 0, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} className={cn("w-8 h-8 sm:w-10 sm:h-10 rounded-xl flex items-center justify-center font-black text-[10px] sm:text-base border border-white/10 transition-all", isPivot ? "ring-2 ring-white ring-offset-2 bg-white text-primary" : colorClass)}>
                     {digit}
                 </motion.div>
             );
@@ -204,15 +204,15 @@ export function AnalyzerView({
         <div className="space-y-6 animate-in fade-in slide-in-from-bottom-8 duration-1000 pb-24 max-w-7xl mx-auto">
             <HeroPrice price={price} decimalPlaces={decimalPlaces} />
             
-            <Card className="border-none shadow-sm bg-card rounded-xl border border-primary/20">
+            <Card className="border-none shadow-sm bg-card rounded-xl border border-white/20">
                 <CardContent className="p-4 grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div className="space-y-1.5">
-                        <Label className="text-[9px] font-black uppercase tracking-[0.4em] icy-gold-text ml-2">MARKET</Label>
+                        <Label className="text-[9px] font-black uppercase tracking-[0.4em] white-header-text ml-2">MARKET</Label>
                         <Select value={selectedMarket} onValueChange={onMarketChange}>
-                            <SelectTrigger className="h-10 bg-primary/20 border-primary/10 rounded-xl font-black text-xs px-5 icy-gold-text">
+                            <SelectTrigger className="h-10 bg-primary/20 border-white/10 rounded-xl font-black text-xs px-5 text-white">
                                 <SelectValue placeholder="Select Market" />
                             </SelectTrigger>
-                            <SelectContent className="bg-card border-primary/20 text-foreground rounded-xl">
+                            <SelectContent className="bg-card border-white/20 text-foreground rounded-xl">
                                 {syntheticIndices.map(m => (
                                     <SelectItem key={m.id} value={m.id} className="font-bold text-xs py-2">{m.name}</SelectItem>
                                 ))}
@@ -221,23 +221,23 @@ export function AnalyzerView({
                     </div>
                     <div className="space-y-1.5">
                         <div className="flex items-center justify-between px-2">
-                            <Label className="text-[9px] font-black uppercase tracking-[0.4em] icy-gold-text">TACTICAL</Label>
+                            <Label className="text-[9px] font-black uppercase tracking-[0.4em] white-header-text">TACTICAL</Label>
                             <Popover>
                                 <PopoverTrigger asChild>
-                                    <Button variant="ghost" size="icon" className="h-5 w-5 hover:bg-primary/20 text-primary">
+                                    <Button variant="ghost" size="icon" className="h-5 w-5 hover:bg-primary/30 text-white">
                                         <Info className="h-3 w-3" />
                                     </Button>
                                 </PopoverTrigger>
-                                <PopoverContent className="w-80 bg-card border-primary/20 shadow-2xl rounded-2xl p-4">
+                                <PopoverContent className="w-80 bg-primary border-white/20 shadow-2xl rounded-2xl p-4">
                                     <CheatSheet type={tradeType} />
                                 </PopoverContent>
                             </Popover>
                         </div>
                         <Select value={tradeType} onValueChange={setTradeType}>
-                            <SelectTrigger className="h-10 bg-primary/20 border-primary/10 rounded-xl font-black text-xs px-5 icy-gold-text">
+                            <SelectTrigger className="h-10 bg-primary/20 border-white/10 rounded-xl font-black text-xs px-5 text-white">
                                 <SelectValue placeholder="Select Type" />
                             </SelectTrigger>
-                            <SelectContent className="bg-card border-primary/20 text-foreground rounded-xl">
+                            <SelectContent className="bg-card border-white/20 text-foreground rounded-xl">
                                 <SelectItem value="over-under" className="font-bold text-xs py-2">OVER/UNDER</SelectItem>
                                 <SelectItem value="even-odd" className="font-bold text-xs py-2">EVEN/ODD</SelectItem>
                                 <SelectItem value="matches-differs" className="font-bold text-xs py-2">MATCHES/DIFFERS</SelectItem>
@@ -250,59 +250,59 @@ export function AnalyzerView({
 
             <DigitFrequencyCircles ticks={lastDigitTicks} selectedDigit={selectedDigit} onDigitSelect={setSelectedDigit} selectedMarket={selectedMarket} />
 
-            <Card className="border-none bg-card rounded-2xl border border-primary/30 shadow-2xl overflow-hidden relative">
-                <div className="absolute top-0 left-0 w-full h-[2px] bg-accent" />
+            <Card className="border-none bg-card rounded-2xl border border-white/30 shadow-2xl overflow-hidden relative">
+                <div className="absolute top-0 left-0 w-full h-[2px] bg-white opacity-40" />
                 <CardContent className="p-4 sm:p-6 space-y-6">
                     <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-center">
                         <div className="lg:col-span-4 space-y-3">
                             <div className="flex items-center gap-3">
-                                <div className="p-2 bg-primary/20 rounded-lg"><Crosshair className="h-4 w-4 text-primary" /></div>
+                                <div className="p-2 bg-primary/30 rounded-lg"><Crosshair className="h-4 w-4 text-white" /></div>
                                 <div>
-                                    <h3 className="text-[9px] font-black icy-gold-text tracking-[0.3em] uppercase leading-none">ANALYSIS</h3>
-                                    <p className="text-[7px] font-bold text-foreground/60 uppercase tracking-widest mt-1.5">{analysis.summary}</p>
+                                    <h3 className="text-[9px] font-black white-header-text tracking-[0.3em] uppercase leading-none">ANALYSIS</h3>
+                                    <p className="text-[7px] font-bold text-white/60 uppercase tracking-widest mt-1.5">{analysis.summary}</p>
                                 </div>
                             </div>
                         </div>
                         <div className="lg:col-span-5 grid grid-cols-1 gap-4">
                             <div className="space-y-1.5">
                                 <div className="flex justify-between items-end">
-                                    <p className="text-[8px] font-black uppercase text-emerald-800 tracking-[0.2em]">{analysis.label1}</p>
-                                    <p className="text-xs font-black text-emerald-800 tabular-nums">{analysis.val1.toFixed(1)}%</p>
+                                    <p className="text-[8px] font-black uppercase text-emerald-100 tracking-[0.2em]">{analysis.label1}</p>
+                                    <p className="text-xs font-black text-white tabular-nums">{analysis.val1.toFixed(1)}%</p>
                                 </div>
-                                <Progress value={analysis.val1} className="h-2 bg-primary/10 [&>div]:bg-emerald-600 rounded-full" />
+                                <Progress value={analysis.val1} className="h-2 bg-black/20 [&>div]:bg-emerald-400 rounded-full" />
                             </div>
                             <div className="space-y-1.5">
                                 <div className="flex justify-between items-end">
-                                    <p className="text-[8px] font-black uppercase text-rose-800 tracking-[0.2em]">{analysis.label2}</p>
-                                    <p className="text-xs font-black text-rose-800 tabular-nums">{analysis.val2.toFixed(1)}%</p>
+                                    <p className="text-[8px] font-black uppercase text-rose-100 tracking-[0.2em]">{analysis.label2}</p>
+                                    <p className="text-xs font-black text-white tabular-nums">{analysis.val2.toFixed(1)}%</p>
                                 </div>
-                                <Progress value={analysis.val2} className="h-2 bg-primary/10 [&>div]:bg-rose-600 rounded-full" />
+                                <Progress value={analysis.val2} className="h-2 bg-black/20 [&>div]:bg-rose-400 rounded-full" />
                             </div>
                         </div>
-                        <div className="lg:col-span-3 flex gap-6 items-center justify-center lg:justify-end bg-primary/10 p-3 rounded-2xl border border-primary/10">
+                        <div className="lg:col-span-3 flex gap-6 items-center justify-center lg:justify-end bg-primary/20 p-3 rounded-2xl border border-white/10">
                             <div className="text-center">
-                                <p className="text-[7px] font-black icy-gold-text uppercase tracking-[0.3em] mb-1">PRICE</p>
+                                <p className="text-[7px] font-black white-header-text uppercase tracking-[0.3em] mb-1">PRICE</p>
                                 <p className="text-sm font-black icy-gold-text tabular-nums tracking-tighter leading-none">{price.toFixed(decimalPlaces)}</p>
                             </div>
-                            <div className="w-px h-6 bg-primary/20" />
+                            <div className="w-px h-6 bg-white/20" />
                             <div className="text-center">
-                                <p className="text-[7px] font-black icy-gold-text uppercase tracking-[0.3em] mb-1">DELTA</p>
-                                <p className="text-sm font-black text-emerald-700 tabular-nums tracking-tighter leading-none">{analysis.delta.toFixed(1)}%</p>
+                                <p className="text-[7px] font-black white-header-text uppercase tracking-[0.3em] mb-1">DELTA</p>
+                                <p className="text-sm font-black text-white tabular-nums tracking-tighter leading-none">{analysis.delta.toFixed(1)}%</p>
                             </div>
                         </div>
                     </div>
                 </CardContent>
             </Card>
 
-            <Card className="border-none shadow-sm bg-primary/5 border border-primary/20 p-6 rounded-2xl overflow-hidden relative">
+            <Card className="border-none shadow-sm bg-primary/20 border border-white/20 p-6 rounded-2xl overflow-hidden relative">
                 <div className="flex flex-col sm:flex-row items-center justify-between gap-4 mb-6">
                     <div className="flex items-center gap-3">
-                        <div className="w-1.5 h-1.5 rounded-full bg-accent animate-pulse shadow-[0_0_8px_hsl(var(--accent))]" />
-                        <h3 className="text-[10px] font-black uppercase tracking-[0.4em] icy-gold-text">SEQUENCE</h3>
+                        <div className="w-1.5 h-1.5 rounded-full bg-white animate-pulse shadow-[0_0_8px_white]" />
+                        <h3 className="text-[10px] font-black uppercase tracking-[0.4em] white-header-text">SEQUENCE</h3>
                     </div>
-                    <div className="flex items-center gap-2 px-4 py-1.5 bg-primary/20 rounded-full border border-primary/20">
-                         <div className="h-2 w-2 rounded-full bg-blue-500 animate-pulse" />
-                         <span className="text-[9px] font-black uppercase text-blue-700 tracking-widest">ACTIVE SYNC</span>
+                    <div className="flex items-center gap-2 px-4 py-1.5 bg-primary/30 rounded-full border border-white/20">
+                         <div className="h-2 w-2 rounded-full bg-cyan-400 animate-pulse" />
+                         <span className="text-[9px] font-black uppercase text-white tracking-widest">ACTIVE SYNC</span>
                     </div>
                 </div>
                 <div className="flex flex-wrap justify-center gap-2.5 sm:gap-3">
@@ -312,4 +312,3 @@ export function AnalyzerView({
         </div>
     );
 }
-
