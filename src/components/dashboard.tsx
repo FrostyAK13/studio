@@ -36,7 +36,7 @@ export interface GlobalAnalysisResult {
 
 export function Dashboard() {
     const [mounted, setMounted] = React.useState(false);
-    const [theme, setTheme] = React.useState<'light' | 'dark'>('dark');
+    const [theme, setTheme] = React.useState<'light' | 'dark'>('light');
     const [price, setPrice] = React.useState<number>(0);
     const [lastDigitTicks, setLastDigitTicks] = React.useState<number[]>([]);
     const [priceHistory, setPriceHistory] = React.useState<number[]>([]);
@@ -60,7 +60,7 @@ export function Dashboard() {
         setMounted(true);
         const savedTheme = localStorage.getItem('theme') as 'light' | 'dark';
         if (savedTheme) setTheme(savedTheme);
-        else setTheme('dark');
+        else setTheme('light');
     }, []);
 
     React.useEffect(() => {
@@ -195,7 +195,6 @@ export function Dashboard() {
         ws.onopen = () => {
             setSurveillanceStatus('active');
             
-            // Initial request for 1000 history ticks to populate frequency analysis
             ws.send(JSON.stringify({
                 "ticks_history": selectedMarket,
                 "count": 1000,
@@ -221,7 +220,6 @@ export function Dashboard() {
             if (data.error) return;
 
             if (data.msg_type === 'history' && data.history) {
-                // Determine if this is a tick history or candle history based on data.history contents
                 if (data.history.prices) {
                     const activePipSize = data.echo_req.pip_size || 2;
                     pipSizeRef.current = activePipSize;
@@ -300,38 +298,38 @@ export function Dashboard() {
 
     const handleMaxTicksBlur = () => { if (maxTicks < 1) setMaxTicks(1); };
 
-    if (!mounted) return <div className="flex min-h-screen items-center justify-center bg-[#020617]"><Activity className="h-4 w-4 animate-spin text-primary" /></div>;
+    if (!mounted) return <div className="flex min-h-screen items-center justify-center bg-background"><Activity className="h-4 w-4 animate-spin text-primary" /></div>;
 
     const analyzedDigits = lastDigitTicks.slice(0, maxTicks);
     const analyzedPrices = priceHistory.slice(0, maxTicks);
     const filteredIndices = syntheticIndices.filter(m => m.name.toLowerCase().includes(searchQuery.toLowerCase()));
 
     return (
-        <div className="flex min-h-screen w-full flex-col bg-[#020617] font-sans overflow-x-hidden transition-colors duration-500">
+        <div className="flex min-h-screen w-full flex-col bg-background font-sans overflow-x-hidden transition-colors duration-500">
             <div className="flex flex-col flex-1">
-                <header className="sticky top-0 z-[100] flex h-16 md:h-[4.5rem] items-center border-b border-white/5 bg-[#020617]/95 backdrop-blur-xl px-4 shadow-sm">
+                <header className="sticky top-0 z-[100] flex h-16 md:h-[4.5rem] items-center border-b border-primary/10 bg-background/95 backdrop-blur-xl px-4 shadow-sm">
                     <div className="flex w-full items-center justify-between max-w-[1600px] mx-auto gap-4">
                         <div className="flex items-center gap-4 shrink-0">
                             <Popover>
                                 <PopoverTrigger asChild>
-                                    <button className="flex items-center gap-3 bg-slate-900 border border-white/5 px-3 md:px-5 py-2 md:py-2.5 rounded-2xl hover:bg-white/5 transition-all shadow-lg active:scale-95 group">
+                                    <button className="flex items-center gap-3 bg-card border border-primary/20 px-3 md:px-5 py-2 md:py-2.5 rounded-2xl hover:bg-muted transition-all shadow-lg active:scale-95 group">
                                         <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center group-hover:bg-primary/20 transition-colors">
                                             <Activity className="h-4 w-4 text-primary" />
                                         </div>
                                         <div className="text-left hidden sm:block">
-                                            <p className="text-[10px] font-black text-slate-400 uppercase leading-none tracking-widest">{syntheticIndices.find(m => m.id === selectedMarket)?.name}</p>
-                                            <p className="text-sm font-black text-slate-100 tabular-nums mt-1">{price.toFixed(decimalPlaces)}</p>
+                                            <p className="text-[10px] font-black text-muted-foreground uppercase leading-none tracking-widest">{syntheticIndices.find(m => m.id === selectedMarket)?.name}</p>
+                                            <p className="text-sm font-black text-foreground tabular-nums mt-1">{price.toFixed(decimalPlaces)}</p>
                                         </div>
-                                        <ChevronDown className="h-4 w-4 text-slate-500 group-hover:text-primary transition-colors" />
+                                        <ChevronDown className="h-4 w-4 text-muted-foreground group-hover:text-primary transition-colors" />
                                     </button>
                                 </PopoverTrigger>
-                                <PopoverContent className="w-[320px] md:w-[480px] p-0 bg-slate-900 border-white/10 shadow-2xl rounded-[1.5rem] overflow-hidden">
-                                    <div className="p-4 border-b border-white/5 bg-slate-950/50">
+                                <PopoverContent className="w-[320px] md:w-[480px] p-0 bg-card border-primary/10 shadow-2xl rounded-[1.5rem] overflow-hidden">
+                                    <div className="p-4 border-b border-primary/5 bg-muted/30">
                                         <div className="relative">
-                                            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-500" />
+                                            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                                             <Input 
                                                 placeholder="Search assets..." 
-                                                className="pl-10 h-11 bg-slate-900 border-white/10 rounded-xl font-medium focus:ring-primary/20 text-white"
+                                                className="pl-10 h-11 bg-card border-primary/20 rounded-xl font-medium focus:ring-primary/20"
                                                 value={searchQuery}
                                                 onChange={(e) => setSearchQuery(e.target.value)}
                                             />
@@ -357,17 +355,17 @@ export function Dashboard() {
                                                         <div className="flex items-center gap-3">
                                                             <div className={cn(
                                                                 "w-10 h-10 rounded-xl flex items-center justify-center transition-colors",
-                                                                isSelected ? "bg-primary text-white" : "bg-slate-800 text-slate-500 group-hover:bg-primary/10 group-hover:text-primary"
+                                                                isSelected ? "bg-primary text-white" : "bg-muted text-muted-foreground group-hover:bg-primary/10 group-hover:text-primary"
                                                             )}>
                                                                 <Activity className="h-5 w-5" />
                                                             </div>
                                                             <div className="text-left">
-                                                                <p className={cn("text-[11px] font-black uppercase tracking-wider", isSelected ? "text-primary" : "text-slate-100")}>{market.name}</p>
-                                                                <p className="text-[10px] font-bold text-slate-500 uppercase">{market.category}</p>
+                                                                <p className={cn("text-[11px] font-black uppercase tracking-wider", isSelected ? "text-primary" : "text-foreground")}>{market.name}</p>
+                                                                <p className="text-[10px] font-bold text-muted-foreground uppercase">{market.category}</p>
                                                             </div>
                                                         </div>
                                                         <div className="text-right">
-                                                            <p className="text-[11px] font-black tabular-nums text-slate-100">{marketPrice.toFixed(res?.pip || 2)}</p>
+                                                            <p className="text-[11px] font-black tabular-nums text-foreground">{(marketPrice).toFixed(res?.pip || 2)}</p>
                                                             <div className={cn(
                                                                 "flex items-center justify-end gap-1 text-[9px] font-black mt-0.5",
                                                                 marketChange >= 0 ? "text-emerald-500" : "text-rose-500"
@@ -388,29 +386,29 @@ export function Dashboard() {
                         <div className="flex-1 flex justify-center hidden lg:flex">
                              <div className="relative group transition-all duration-300 hover:scale-105 active:scale-95">
                                 <motion.div 
-                                    className="absolute -inset-1 bg-gradient-to-r from-primary via-cyan-500 to-primary rounded-full blur opacity-25 group-hover:opacity-75 transition duration-1000"
+                                    className="absolute -inset-1 bg-gradient-to-r from-primary via-accent to-primary rounded-full blur opacity-25 group-hover:opacity-75 transition duration-1000"
                                     animate={{ opacity: [0.25, 0.5, 0.25] }}
                                     transition={{ duration: 4, repeat: Infinity }}
                                 />
-                                <a href="https://frostytraders.com" target="_blank" rel="noopener noreferrer" className="relative flex items-center gap-3 px-8 py-2.5 bg-slate-900 border border-white/5 rounded-full shadow-2xl">
-                                    <span className="text-[11px] font-black text-slate-100 uppercase tracking-[0.4em] whitespace-nowrap">FROSTY TRADERS</span>
+                                <a href="https://frostytraders.com" target="_blank" rel="noopener noreferrer" className="relative flex items-center gap-3 px-8 py-2.5 bg-card border border-primary/20 rounded-full shadow-2xl">
+                                    <span className="text-[11px] font-black text-primary uppercase tracking-[0.4em] whitespace-nowrap">FROSTY TRADERS</span>
                                     <ExternalLink className="h-3 w-3 text-primary" />
                                 </a>
                             </div>
                         </div>
 
                         <div className="flex items-center gap-2 md:gap-4 shrink-0">
-                            <div className="flex items-center bg-slate-900 border border-white/5 rounded-full shadow-2xl h-10 px-1 overflow-hidden">
-                                <div className="flex items-center gap-3 px-5 py-2 border-r border-white/5">
+                            <div className="flex items-center bg-card border border-primary/20 rounded-full shadow-2xl h-10 px-1 overflow-hidden">
+                                <div className="flex items-center gap-3 px-5 py-2 border-r border-primary/10">
                                     <div className={cn("h-2.5 w-2.5 rounded-full animate-pulse", surveillanceStatus === 'active' ? "bg-emerald-500 shadow-[0_0_12px_rgba(16,185,129,0.9)]" : "bg-rose-500 shadow-[0_0_12px_rgba(244,63,94,0.9)]")} />
-                                    <span className="text-[10px] font-black text-slate-100 uppercase tracking-[0.3em] hidden sm:inline">LIVE</span>
+                                    <span className="text-[10px] font-black text-foreground uppercase tracking-[0.3em] hidden sm:inline">LIVE</span>
                                 </div>
-                                <div className="flex items-center gap-2 px-5 py-2 bg-white/5">
+                                <div className="flex items-center gap-2 px-5 py-2 bg-muted/50">
                                     <Radio className={cn("h-3.5 w-3.5 transition-all", surveillanceStatus === 'active' ? 'text-emerald-500 animate-pulse' : 'text-rose-500')} />
-                                    <span className="text-[10px] font-black uppercase text-slate-100 tracking-[0.2em]">{surveillanceStatus === 'active' ? 'LIVE' : 'OFFLINE'}</span>
+                                    <span className="text-[10px] font-black uppercase text-foreground tracking-[0.2em]">{surveillanceStatus === 'active' ? 'LIVE' : 'OFFLINE'}</span>
                                 </div>
                             </div>
-                            <Button variant="ghost" size="icon" onClick={() => setTheme(theme === 'light' ? 'dark' : 'light')} className="h-10 w-10 rounded-full border border-white/5 bg-slate-900 shadow-xl hover:bg-white/5 text-slate-100 transition-all">
+                            <Button variant="ghost" size="icon" onClick={() => setTheme(theme === 'light' ? 'dark' : 'light')} className="h-10 w-10 rounded-full border border-primary/20 bg-card shadow-xl hover:bg-muted text-foreground transition-all">
                                 {theme === 'light' ? <Moon className="h-5 w-5" /> : <Sun className="h-5 w-5" />}
                             </Button>
                         </div>
@@ -420,7 +418,7 @@ export function Dashboard() {
                     <Tabs defaultValue="analyzer" className="w-full">
                         <TabsList className="flex items-center justify-start md:justify-center gap-1.5 md:gap-2 bg-transparent h-auto p-0 mb-4 md:mb-6 overflow-x-auto no-scrollbar w-full pb-2">
                             {['analyzer', 'last-digit-analysis', 'frequency', 'global-scan', 'chart', 'insight'].map((tab) => (
-                                <TabsTrigger key={tab} value={tab} className="flex-shrink-0 px-3 md:px-5 py-2 md:py-2.5 rounded-full border border-transparent data-[state=active]:bg-primary/10 data-[state=active]:text-primary text-muted-foreground font-black text-[8px] md:text-[10px] uppercase tracking-[0.1em] md:tracking-[0.2em] transition-all shadow-sm hover:bg-white/5">
+                                <TabsTrigger key={tab} value={tab} className="flex-shrink-0 px-3 md:px-5 py-2 md:py-2.5 rounded-full border border-transparent data-[state=active]:bg-primary/10 data-[state=active]:text-primary text-muted-foreground font-black text-[8px] md:text-[10px] uppercase tracking-[0.1em] md:tracking-[0.2em] transition-all shadow-sm hover:bg-muted/50">
                                     {tab.toUpperCase().replace(/-/g, ' ')}
                                 </TabsTrigger>
                             ))}

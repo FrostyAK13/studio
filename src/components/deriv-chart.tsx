@@ -1,4 +1,3 @@
-
 'use client';
 
 import * as React from 'react';
@@ -198,7 +197,7 @@ export function DerivChart({
 
         const chart = createChart(chartContainerRef.current, {
             layout: {
-                background: { type: ColorType.Solid, color: '#FDFCF0' },
+                background: { type: ColorType.Solid, color: '#f8fafc' }, // Icy white
                 textColor: '#C5A059',
                 fontSize: 11,
                 fontFamily: 'Poppins',
