@@ -292,23 +292,14 @@ export function Dashboard() {
 
     const analyzedDigits = lastDigitTicks.slice(0, maxTicks);
     const analyzedPrices = priceHistory.slice(0, maxTicks);
-    const filteredIndices = syntheticIndices.filter(m => m.name.toLowerCase().includes(searchQuery.toLowerCase()));
 
     return (
         <div className="flex min-h-screen w-full flex-col bg-background font-sans overflow-x-hidden">
             <div className="flex flex-col flex-1">
                 <header className="sticky top-0 z-[100] flex h-16 md:h-[4.5rem] items-center border-b bg-background/95 backdrop-blur-xl px-4 shadow-sm">
                     <div className="flex w-full items-center justify-between max-w-[1600px] mx-auto gap-4">
-                        <div className="flex-1 flex justify-center hidden lg:flex">
-                             <div className="relative group transition-all duration-300 hover:scale-105 active:scale-95">
-                                <a href="https://frostytraders.com" target="_blank" rel="noopener noreferrer" className="relative flex items-center gap-3 px-8 py-2.5 bg-card border rounded-full shadow-sm hover:border-primary/50 transition-colors">
-                                    <span className="text-[11px] font-black text-foreground uppercase tracking-[0.4em] whitespace-nowrap">FROSTY TRADERS</span>
-                                    <ExternalLink className="h-3 w-3 text-muted-foreground" />
-                                </a>
-                            </div>
-                        </div>
-
-                        <div className="flex items-center gap-2 md:gap-4 shrink-0">
+                        {/* Left Side: Live Status Indicators */}
+                        <div className="flex-1 flex items-center justify-start">
                             <div className="flex items-center bg-card border rounded-full shadow-sm h-10 px-1 overflow-hidden">
                                 <div className="flex items-center gap-3 px-5 py-2 border-r">
                                     <div className={cn("h-2.5 w-2.5 rounded-full animate-pulse", surveillanceStatus === 'active' ? "bg-emerald-500 shadow-[0_0_12px_rgba(16,185,129,0.5)]" : "bg-rose-500")} />
@@ -318,6 +309,23 @@ export function Dashboard() {
                                     <Radio className={cn("h-3.5 w-3.5 transition-all", surveillanceStatus === 'active' ? 'text-emerald-500 animate-pulse' : 'text-rose-500')} />
                                     <span className="text-[10px] font-black uppercase text-foreground tracking-[0.2em]">{surveillanceStatus === 'active' ? 'LIVE' : 'OFFLINE'}</span>
                                 </div>
+                            </div>
+                        </div>
+
+                        {/* Central Branding */}
+                        <div className="flex-1 flex justify-center">
+                            <h1 className="text-xl md:text-2xl font-black text-primary uppercase tracking-[0.3em] whitespace-nowrap drop-shadow-sm">
+                                FROSTYDBOT
+                            </h1>
+                        </div>
+
+                        {/* Right Side: External Link (Balanced) */}
+                        <div className="flex-1 flex justify-end">
+                            <div className="relative group transition-all duration-300 hover:scale-105 active:scale-95 hidden lg:flex">
+                                <a href="https://frostytraders.com" target="_blank" rel="noopener noreferrer" className="relative flex items-center gap-3 px-6 py-2 bg-card border rounded-full shadow-sm hover:border-primary/50 transition-colors">
+                                    <span className="text-[10px] font-black text-foreground uppercase tracking-[0.3em] whitespace-nowrap">FROSTY TRADERS</span>
+                                    <ExternalLink className="h-3 w-3 text-muted-foreground" />
+                                </a>
                             </div>
                         </div>
                     </div>
@@ -338,7 +346,7 @@ export function Dashboard() {
                             <ScannerView price={Number(price) || 0} lastDigitTicks={analyzedDigits} priceHistory={analyzedPrices} maxTicks={maxTicks} handleMaxTicksChange={handleMaxTicksChange} handleMaxTicksBlur={handleMaxTicksBlur} selectedMarket={selectedMarket} onMarketChange={setSelectedMarket} decimalPlaces={decimalPlaces} />
                         </TabsContent>
                         <TabsContent value="frequency" className="mt-0 outline-none animate-in fade-in duration-500">
-                            <DigitFrequencyView price={Number(price) || 0} lastDigitTicks={analyzedDigits} priceHistory={analyzedPrices} maxTicks={handleMaxTicksChange} handleMaxTicksBlur={handleMaxTicksBlur} selectedMarket={selectedMarket} onMarketChange={setSelectedMarket} decimalPlaces={decimalPlaces} />
+                            <DigitFrequencyView price={Number(price) || 0} lastDigitTicks={analyzedDigits} priceHistory={analyzedPrices} maxTicks={maxTicks} handleMaxTicksChange={handleMaxTicksChange} handleMaxTicksBlur={handleMaxTicksBlur} selectedMarket={selectedMarket} onMarketChange={setSelectedMarket} decimalPlaces={decimalPlaces} />
                         </TabsContent>
                         <TabsContent value="global-scan" className="mt-0 outline-none animate-in fade-in duration-500">
                             <ScannerView price={Number(price) || 0} lastDigitTicks={analyzedDigits} priceHistory={analyzedPrices} maxTicks={maxTicks} handleMaxTicksChange={handleMaxTicksChange} handleMaxTicksBlur={handleMaxTicksBlur} selectedMarket={selectedMarket} onMarketChange={setSelectedMarket} decimalPlaces={decimalPlaces} />
