@@ -1,4 +1,3 @@
-
 'use client';
 
 import * as React from 'react';
@@ -10,7 +9,7 @@ import { DigitFrequencyView } from './digit-frequency-view';
 import { InsightView } from './insight-view';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
-import { Radio, Activity, Moon, Sun, ExternalLink, ChevronDown, Search, TrendingUp, TrendingDown } from 'lucide-react';
+import { Radio, Activity, ExternalLink, ChevronDown, Search, TrendingUp, TrendingDown } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { DerivChart } from './deriv-chart';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
@@ -37,7 +36,6 @@ export interface GlobalAnalysisResult {
 
 export function Dashboard() {
     const [mounted, setMounted] = React.useState(false);
-    const [theme, setTheme] = React.useState<'light' | 'dark'>('light');
     const [price, setPrice] = React.useState<number>(0);
     const [lastDigitTicks, setLastDigitTicks] = React.useState<number[]>([]);
     const [priceHistory, setPriceHistory] = React.useState<number[]>([]);
@@ -48,7 +46,7 @@ export function Dashboard() {
     const [chartInterval, setChartInterval] = React.useState('1m');
     const [candleData, setCandleData] = React.useState<any[]>([]);
     const [lastCandleUpdate, setLastCandleUpdate] = React.useState<any>(null);
-    const [searchQuery, setSearchQuery] = setSearchQuery('');
+    const [searchQuery, setSearchQuery] = React.useState('');
     
     const [surveillanceStatus, setSurveillanceStatus] = React.useState<EngineStatus>('offline');
     const [globalResults, setGlobalResults] = React.useState<Record<string, GlobalAnalysisResult>>({});
@@ -59,16 +57,7 @@ export function Dashboard() {
 
     React.useEffect(() => {
         setMounted(true);
-        const savedTheme = localStorage.getItem('theme') as 'light' | 'dark';
-        if (savedTheme) setTheme(savedTheme);
-        else setTheme('light');
     }, []);
-
-    React.useEffect(() => {
-        if (!mounted) return;
-        document.documentElement.classList.toggle('dark', theme === 'dark');
-        localStorage.setItem('theme', theme);
-    }, [theme, mounted]);
 
     // Global Surveillance Engine
     React.useEffect(() => {
@@ -306,102 +295,23 @@ export function Dashboard() {
     const filteredIndices = syntheticIndices.filter(m => m.name.toLowerCase().includes(searchQuery.toLowerCase()));
 
     return (
-        <div className="flex min-h-screen w-full flex-col bg-background font-sans overflow-x-hidden transition-colors duration-500">
+        <div className="flex min-h-screen w-full flex-col bg-background font-sans overflow-x-hidden">
             <div className="flex flex-col flex-1">
-                <header className="sticky top-0 z-[100] flex h-16 md:h-[4.5rem] items-center border-b border-primary/10 bg-background/95 backdrop-blur-xl px-4 shadow-sm">
+                <header className="sticky top-0 z-[100] flex h-16 md:h-[4.5rem] items-center border-b bg-background/95 backdrop-blur-xl px-4 shadow-sm">
                     <div className="flex w-full items-center justify-between max-w-[1600px] mx-auto gap-4">
-                        <div className="flex items-center gap-4 shrink-0">
-                            <Popover>
-                                <PopoverTrigger asChild>
-                                    <button className="flex items-center gap-3 bg-card border border-primary/20 px-3 md:px-5 py-2 md:py-2.5 rounded-2xl hover:bg-muted transition-all shadow-lg active:scale-95 group">
-                                        <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center group-hover:bg-primary/20 transition-colors">
-                                            <Activity className="h-4 w-4 text-primary" />
-                                        </div>
-                                        <div className="text-left hidden sm:block">
-                                            <p className="text-[10px] font-black text-muted-foreground uppercase leading-none tracking-widest">{syntheticIndices.find(m => m.id === selectedMarket)?.name}</p>
-                                            <p className="text-sm font-black text-foreground tabular-nums mt-1">{price.toFixed(decimalPlaces)}</p>
-                                        </div>
-                                        <ChevronDown className="h-4 w-4 text-muted-foreground group-hover:text-primary transition-colors" />
-                                    </button>
-                                </PopoverTrigger>
-                                <PopoverContent className="w-[320px] md:w-[480px] p-0 bg-card border-primary/10 shadow-2xl rounded-[1.5rem] overflow-hidden">
-                                    <div className="p-4 border-b border-primary/5 bg-muted/30">
-                                        <div className="relative">
-                                            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                                            <Input 
-                                                placeholder="Search assets..." 
-                                                className="pl-10 h-11 bg-card border-primary/20 rounded-xl font-medium focus:ring-primary/20"
-                                                value={searchQuery}
-                                                onChange={(e) => setSearchQuery(e.target.value)}
-                                            />
-                                        </div>
-                                    </div>
-                                    <div className="max-h-[400px] overflow-y-auto no-scrollbar">
-                                        <div className="px-2 py-3 space-y-1">
-                                            {filteredIndices.map((market) => {
-                                                const res = globalResults[market.id];
-                                                const marketPrice = res?.currentPrice || market.price;
-                                                const marketChange = market.change;
-                                                const isSelected = selectedMarket === market.id;
-                                                
-                                                return (
-                                                    <button 
-                                                        key={market.id}
-                                                        onClick={() => setSelectedMarket(market.id)}
-                                                        className={cn(
-                                                            "w-full flex items-center justify-between p-3 rounded-xl transition-all hover:bg-primary/5 group",
-                                                            isSelected ? "bg-primary/10" : "bg-transparent"
-                                                        )}
-                                                    >
-                                                        <div className="flex items-center gap-3">
-                                                            <div className={cn(
-                                                                "w-10 h-10 rounded-xl flex items-center justify-center transition-colors",
-                                                                isSelected ? "bg-primary text-white" : "bg-muted text-muted-foreground group-hover:bg-primary/10 group-hover:text-primary"
-                                                            )}>
-                                                                <Activity className="h-5 w-5" />
-                                                            </div>
-                                                            <div className="text-left">
-                                                                <p className={cn("text-[11px] font-black uppercase tracking-wider", isSelected ? "text-primary" : "text-foreground")}>{market.name}</p>
-                                                                <p className="text-[10px] font-bold text-muted-foreground uppercase">{market.category}</p>
-                                                            </div>
-                                                        </div>
-                                                        <div className="text-right">
-                                                            <p className="text-[11px] font-black tabular-nums text-foreground">{(marketPrice).toFixed(res?.pip || 2)}</p>
-                                                            <div className={cn(
-                                                                "flex items-center justify-end gap-1 text-[9px] font-black mt-0.5",
-                                                                marketChange >= 0 ? "text-emerald-500" : "text-rose-500"
-                                                            )}>
-                                                                {marketChange >= 0 ? <TrendingUp className="h-2 w-2" /> : <TrendingDown className="h-2 w-2" />}
-                                                                {Math.abs(marketChange).toFixed(2)}%
-                                                            </div>
-                                                        </div>
-                                                    </button>
-                                                );
-                                            })}
-                                        </div>
-                                    </div>
-                                </PopoverContent>
-                            </Popover>
-                        </div>
-                        
                         <div className="flex-1 flex justify-center hidden lg:flex">
                              <div className="relative group transition-all duration-300 hover:scale-105 active:scale-95">
-                                <motion.div 
-                                    className="absolute -inset-1 bg-gradient-to-r from-primary via-accent to-primary rounded-full blur opacity-25 group-hover:opacity-75 transition duration-1000"
-                                    animate={{ opacity: [0.25, 0.5, 0.25] }}
-                                    transition={{ duration: 4, repeat: Infinity }}
-                                />
-                                <a href="https://frostytraders.com" target="_blank" rel="noopener noreferrer" className="relative flex items-center gap-3 px-8 py-2.5 bg-card border border-primary/20 rounded-full shadow-2xl">
-                                    <span className="text-[11px] font-black text-primary uppercase tracking-[0.4em] whitespace-nowrap">FROSTY TRADERS</span>
-                                    <ExternalLink className="h-3 w-3 text-primary" />
+                                <a href="https://frostytraders.com" target="_blank" rel="noopener noreferrer" className="relative flex items-center gap-3 px-8 py-2.5 bg-card border rounded-full shadow-sm hover:border-primary/50 transition-colors">
+                                    <span className="text-[11px] font-black text-foreground uppercase tracking-[0.4em] whitespace-nowrap">FROSTY TRADERS</span>
+                                    <ExternalLink className="h-3 w-3 text-muted-foreground" />
                                 </a>
                             </div>
                         </div>
 
                         <div className="flex items-center gap-2 md:gap-4 shrink-0">
-                            <div className="flex items-center bg-card border border-primary/20 rounded-full shadow-2xl h-10 px-1 overflow-hidden">
-                                <div className="flex items-center gap-3 px-5 py-2 border-r border-primary/10">
-                                    <div className={cn("h-2.5 w-2.5 rounded-full animate-pulse", surveillanceStatus === 'active' ? "bg-emerald-500 shadow-[0_0_12px_rgba(16,185,129,0.9)]" : "bg-rose-500 shadow-[0_0_12px_rgba(244,63,94,0.9)]")} />
+                            <div className="flex items-center bg-card border rounded-full shadow-sm h-10 px-1 overflow-hidden">
+                                <div className="flex items-center gap-3 px-5 py-2 border-r">
+                                    <div className={cn("h-2.5 w-2.5 rounded-full animate-pulse", surveillanceStatus === 'active' ? "bg-emerald-500 shadow-[0_0_12px_rgba(16,185,129,0.5)]" : "bg-rose-500")} />
                                     <span className="text-[10px] font-black text-foreground uppercase tracking-[0.3em] hidden sm:inline">LIVE</span>
                                 </div>
                                 <div className="flex items-center gap-2 px-5 py-2 bg-muted/50">
@@ -409,9 +319,6 @@ export function Dashboard() {
                                     <span className="text-[10px] font-black uppercase text-foreground tracking-[0.2em]">{surveillanceStatus === 'active' ? 'LIVE' : 'OFFLINE'}</span>
                                 </div>
                             </div>
-                            <Button variant="ghost" size="icon" onClick={() => setTheme(theme === 'light' ? 'dark' : 'light')} className="h-10 w-10 rounded-full border border-primary/20 bg-card shadow-xl hover:bg-muted text-foreground transition-all">
-                                {theme === 'light' ? <Moon className="h-5 w-5" /> : <Sun className="h-5 w-5" />}
-                            </Button>
                         </div>
                     </div>
                 </header>
@@ -419,7 +326,7 @@ export function Dashboard() {
                     <Tabs defaultValue="analyzer" className="w-full">
                         <TabsList className="flex items-center justify-start md:justify-center gap-1.5 md:gap-2 bg-transparent h-auto p-0 mb-4 md:mb-6 overflow-x-auto no-scrollbar w-full pb-2">
                             {['analyzer', 'last-digit-analysis', 'frequency', 'global-scan', 'chart', 'insight'].map((tab) => (
-                                <TabsTrigger key={tab} value={tab} className="flex-shrink-0 px-3 md:px-5 py-2 md:py-2.5 rounded-full border border-transparent data-[state=active]:bg-primary/10 data-[state=active]:text-primary text-muted-foreground font-black text-[8px] md:text-[10px] uppercase tracking-[0.1em] md:tracking-[0.2em] transition-all shadow-sm hover:bg-muted/50">
+                                <TabsTrigger key={tab} value={tab} className="flex-shrink-0 px-3 md:px-5 py-2 md:py-2.5 rounded-full border data-[state=active]:bg-primary data-[state=active]:text-primary-foreground text-muted-foreground font-black text-[8px] md:text-[10px] uppercase tracking-[0.1em] md:tracking-[0.2em] transition-all shadow-sm">
                                     {tab.toUpperCase().replace(/-/g, ' ')}
                                 </TabsTrigger>
                             ))}

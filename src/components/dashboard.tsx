@@ -299,80 +299,6 @@ export function Dashboard() {
             <div className="flex flex-col flex-1">
                 <header className="sticky top-0 z-[100] flex h-16 md:h-[4.5rem] items-center border-b bg-background/95 backdrop-blur-xl px-4 shadow-sm">
                     <div className="flex w-full items-center justify-between max-w-[1600px] mx-auto gap-4">
-                        <div className="flex items-center gap-4 shrink-0">
-                            <Popover>
-                                <PopoverTrigger asChild>
-                                    <button className="flex items-center gap-3 bg-card border px-3 md:px-5 py-2 md:py-2.5 rounded-2xl hover:bg-muted transition-all shadow-sm active:scale-95 group">
-                                        <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center group-hover:bg-primary/20 transition-colors">
-                                            <Activity className="h-4 w-4 text-primary" />
-                                        </div>
-                                        <div className="text-left hidden sm:block">
-                                            <p className="text-[10px] font-black text-muted-foreground uppercase leading-none tracking-widest">{syntheticIndices.find(m => m.id === selectedMarket)?.name}</p>
-                                            <p className="text-sm font-black text-foreground tabular-nums mt-1">{price.toFixed(decimalPlaces)}</p>
-                                        </div>
-                                        <ChevronDown className="h-4 w-4 text-muted-foreground group-hover:text-primary transition-colors" />
-                                    </button>
-                                </PopoverTrigger>
-                                <PopoverContent className="w-[320px] md:w-[480px] p-0 bg-card shadow-2xl rounded-[1.5rem] overflow-hidden border">
-                                    <div className="p-4 border-b bg-muted/30">
-                                        <div className="relative">
-                                            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                                            <Input 
-                                                placeholder="Search assets..." 
-                                                className="pl-10 h-11 bg-card rounded-xl font-medium focus:ring-primary/20"
-                                                value={searchQuery}
-                                                onChange={(e) => setSearchQuery(e.target.value)}
-                                            />
-                                        </div>
-                                    </div>
-                                    <div className="max-h-[400px] overflow-y-auto no-scrollbar">
-                                        <div className="px-2 py-3 space-y-1">
-                                            {filteredIndices.map((market) => {
-                                                const res = globalResults[market.id];
-                                                const marketPrice = res?.currentPrice || market.price;
-                                                const marketChange = market.change;
-                                                const isSelected = selectedMarket === market.id;
-                                                
-                                                return (
-                                                    <button 
-                                                        key={market.id}
-                                                        onClick={() => setSelectedMarket(market.id)}
-                                                        className={cn(
-                                                            "w-full flex items-center justify-between p-3 rounded-xl transition-all hover:bg-muted group",
-                                                            isSelected ? "bg-muted font-bold" : "bg-transparent"
-                                                        )}
-                                                    >
-                                                        <div className="flex items-center gap-3">
-                                                            <div className={cn(
-                                                                "w-10 h-10 rounded-xl flex items-center justify-center transition-colors",
-                                                                isSelected ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground group-hover:bg-primary/10 group-hover:text-primary"
-                                                            )}>
-                                                                <Activity className="h-5 w-5" />
-                                                            </div>
-                                                            <div className="text-left">
-                                                                <p className={cn("text-[11px] font-black uppercase tracking-wider", isSelected ? "text-foreground" : "text-muted-foreground")}>{market.name}</p>
-                                                                <p className="text-[10px] font-bold text-muted-foreground/60 uppercase">{market.category}</p>
-                                                            </div>
-                                                        </div>
-                                                        <div className="text-right">
-                                                            <p className="text-[11px] font-black tabular-nums text-foreground">{(marketPrice).toFixed(res?.pip || 2)}</p>
-                                                            <div className={cn(
-                                                                "flex items-center justify-end gap-1 text-[9px] font-black mt-0.5",
-                                                                marketChange >= 0 ? "text-emerald-600" : "text-rose-600"
-                                                            )}>
-                                                                {marketChange >= 0 ? <TrendingUp className="h-2 w-2" /> : <TrendingDown className="h-2 w-2" />}
-                                                                {Math.abs(marketChange).toFixed(2)}%
-                                                            </div>
-                                                        </div>
-                                                    </button>
-                                                );
-                                            })}
-                                        </div>
-                                    </div>
-                                </PopoverContent>
-                            </Popover>
-                        </div>
-                        
                         <div className="flex-1 flex justify-center hidden lg:flex">
                              <div className="relative group transition-all duration-300 hover:scale-105 active:scale-95">
                                 <a href="https://frostytraders.com" target="_blank" rel="noopener noreferrer" className="relative flex items-center gap-3 px-8 py-2.5 bg-card border rounded-full shadow-sm hover:border-primary/50 transition-colors">
@@ -412,7 +338,7 @@ export function Dashboard() {
                             <ScannerView price={Number(price) || 0} lastDigitTicks={analyzedDigits} priceHistory={analyzedPrices} maxTicks={maxTicks} handleMaxTicksChange={handleMaxTicksChange} handleMaxTicksBlur={handleMaxTicksBlur} selectedMarket={selectedMarket} onMarketChange={setSelectedMarket} decimalPlaces={decimalPlaces} />
                         </TabsContent>
                         <TabsContent value="frequency" className="mt-0 outline-none animate-in fade-in duration-500">
-                            <DigitFrequencyView price={Number(price) || 0} lastDigitTicks={analyzedDigits} priceHistory={analyzedPrices} maxTicks={maxTicks} handleMaxTicksChange={handleMaxTicksChange} handleMaxTicksBlur={handleMaxTicksBlur} selectedMarket={selectedMarket} onMarketChange={setSelectedMarket} decimalPlaces={decimalPlaces} />
+                            <DigitFrequencyView price={Number(price) || 0} lastDigitTicks={analyzedDigits} priceHistory={analyzedPrices} maxTicks={handleMaxTicksChange} handleMaxTicksBlur={handleMaxTicksBlur} selectedMarket={selectedMarket} onMarketChange={setSelectedMarket} decimalPlaces={decimalPlaces} />
                         </TabsContent>
                         <TabsContent value="global-scan" className="mt-0 outline-none animate-in fade-in duration-500">
                             <ScannerView price={Number(price) || 0} lastDigitTicks={analyzedDigits} priceHistory={analyzedPrices} maxTicks={maxTicks} handleMaxTicksChange={handleMaxTicksChange} handleMaxTicksBlur={handleMaxTicksBlur} selectedMarket={selectedMarket} onMarketChange={setSelectedMarket} decimalPlaces={decimalPlaces} />
