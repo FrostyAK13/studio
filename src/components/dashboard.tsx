@@ -312,14 +312,30 @@ export function Dashboard() {
                             </div>
                         </div>
 
-                        {/* Central Branding */}
+                        {/* Central Branding: Gilded, Bouncy, and Flashy */}
                         <div className="flex-1 flex justify-center">
-                            <h1 className="text-xl md:text-2xl font-black text-primary uppercase tracking-[0.3em] whitespace-nowrap drop-shadow-sm">
+                            <motion.h1 
+                                animate={{ 
+                                    y: [0, -4, 0],
+                                    filter: ["brightness(1)", "brightness(1.4)", "brightness(1)"],
+                                    textShadow: [
+                                        "0 0 10px rgba(197,160,89,0.2)",
+                                        "0 0 25px rgba(197,160,89,0.6)",
+                                        "0 0 10px rgba(197,160,89,0.2)"
+                                    ]
+                                }}
+                                transition={{ 
+                                    duration: 2,
+                                    repeat: Infinity,
+                                    ease: "easeInOut"
+                                }}
+                                className="text-xl md:text-2xl font-black text-[#C5A059] uppercase tracking-[0.4em] whitespace-nowrap drop-shadow-md cursor-default select-none"
+                            >
                                 FROSTYDBOT
-                            </h1>
+                            </motion.h1>
                         </div>
 
-                        {/* Right Side: External Link (Balanced) */}
+                        {/* Right Side: External Link */}
                         <div className="flex-1 flex justify-end">
                             <div className="relative group transition-all duration-300 hover:scale-105 active:scale-95 hidden lg:flex">
                                 <a href="https://frostytraders.com" target="_blank" rel="noopener noreferrer" className="relative flex items-center gap-3 px-6 py-2 bg-card border rounded-full shadow-sm hover:border-primary/50 transition-colors">
