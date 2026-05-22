@@ -1,4 +1,3 @@
-
 'use client';
 
 import * as React from 'react';
@@ -8,8 +7,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Button } from '@/components/ui/button';
 import { syntheticIndices } from '@/lib/mock-data';
 import { cn } from '@/lib/utils';
-import { Activity, Info, ShieldCheck, Zap, Cpu, Terminal } from 'lucide-react';
-import { Progress } from '@/components/ui/progress';
+import { Activity, Info, ShieldCheck, Zap, Cpu } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { DigitFrequencyCircles } from './correlation-view';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
@@ -35,12 +33,12 @@ const HeroPrice = ({ price, decimalPlaces }: { price: number; decimalPlaces: num
     return (
         <div className="flex flex-col items-center justify-center py-12 bg-transparent select-none">
             <div className="flex items-baseline font-black tracking-tighter transition-all duration-300">
-                <span className="text-6xl sm:text-8xl icy-gold-text">{mainPart}</span>
-                <span className="text-7xl sm:text-9xl text-white drop-shadow-[0_0_25px_rgba(255,255,255,0.7)] ml-1">{lastDigit}</span>
+                <span className="text-6xl sm:text-8xl text-foreground">{mainPart}</span>
+                <span className="text-7xl sm:text-9xl icy-gold-text ml-1">{lastDigit}</span>
             </div>
-            <div className="mt-4 flex items-center gap-2 bg-black/20 px-4 py-1.5 rounded-full border border-white/20">
-                <div className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
-                <span className="text-[10px] font-black uppercase tracking-[0.3em] text-white opacity-90">LIVE TICK FEED</span>
+            <div className="mt-4 flex items-center gap-2 bg-muted px-4 py-1.5 rounded-full border">
+                <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+                <span className="text-[10px] font-black uppercase tracking-[0.3em] text-muted-foreground">LIVE TICK FEED</span>
             </div>
         </div>
     );
@@ -74,17 +72,17 @@ const CheatSheet = ({ type }: { type: string }) => {
 
     return (
         <div className="space-y-3">
-            <h4 className="text-[10px] font-black text-white uppercase tracking-widest flex items-center gap-2">
-                <ShieldCheck className="h-3 w-3" /> {guide.title}
+            <h4 className="text-[10px] font-black text-foreground uppercase tracking-widest flex items-center gap-2">
+                <ShieldCheck className="h-3 w-3 text-primary" /> {guide.title}
             </h4>
-            <p className="text-[9px] font-medium text-white leading-relaxed italic border-l-2 border-white/30 pl-3">
+            <p className="text-[9px] font-medium text-muted-foreground leading-relaxed italic border-l-2 border-primary/30 pl-3">
                 "{guide.logic}"
             </p>
-            <div className="bg-primary/40 p-2 rounded-lg border border-white/20">
-                <p className="text-[8px] font-black text-emerald-300 uppercase tracking-widest mb-1 flex items-center gap-1">
+            <div className="bg-primary/5 p-2 rounded-lg border">
+                <p className="text-[8px] font-black text-emerald-600 uppercase tracking-widest mb-1 flex items-center gap-1">
                     <Zap className="h-2.5 w-2.5" /> PRO TIP
                 </p>
-                <p className="text-[9px] font-bold text-white/90">{guide.tip}</p>
+                <p className="text-[9px] font-bold text-foreground/90">{guide.tip}</p>
             </div>
         </div>
     );
@@ -105,80 +103,19 @@ export function AnalyzerView({
     const [tradeType, setTradeType] = React.useState('over-under');
     const [selectedDigit, setSelectedDigit] = React.useState<number>(5);
 
-    const analysis = React.useMemo(() => {
-        const total = lastDigitTicks.length || 1;
-        const overCount = lastDigitTicks.filter(d => d > selectedDigit).length;
-        const underCount = lastDigitTicks.filter(d => d < selectedDigit).length;
-        const evenCount = lastDigitTicks.filter(d => d % 2 === 0).length;
-        const oddCount = total - evenCount;
-        
-        let riseCount = 0;
-        let fallCount = 0;
-        for (let i = 0; i < priceHistory.length - 1; i++) {
-            if (priceHistory[i] > priceHistory[i+1]) riseCount++;
-            else if (priceHistory[i] < priceHistory[i+1]) fallCount++;
-        }
-        const rfTotal = (riseCount + fallCount) || 1;
-
-        const matchCount = lastDigitTicks.filter(d => d === selectedDigit).length;
-        const differCount = total - matchCount;
-
-        let val1 = 0;
-        let val2 = 0;
-        let label1 = "ALPHA";
-        let label2 = "BETA";
-
-        switch (tradeType) {
-            case 'over-under':
-                label1 = `OVER ${selectedDigit}`;
-                label2 = `UNDER ${selectedDigit}`;
-                val1 = (overCount / total) * 100;
-                val2 = (underCount / total) * 100;
-                break;
-            case 'even-odd':
-                label1 = "EVEN";
-                label2 = "ODD";
-                val1 = (evenCount / total) * 100;
-                val2 = (oddCount / total) * 100;
-                break;
-            case 'rise-fall':
-                label1 = "RISE";
-                label2 = "FALL";
-                val1 = (riseCount / rfTotal) * 100;
-                val2 = (fallCount / rfTotal) * 100;
-                break;
-            case 'matches-differs':
-                label1 = "MATCHES";
-                label2 = "DIFFERS";
-                val1 = (matchCount / total) * 100;
-                val2 = (differCount / total) * 100;
-                break;
-        }
-
-        const delta = Math.abs(val1 - val2);
-        const confidence = Math.max(val1, val2);
-        const safetyIndex = Math.min(100, (delta * 1.5) + (confidence * 0.5));
-        const isStable = safetyIndex > 85;
-
-        return {
-            val1, val2, label1, label2, delta, confidence, safetyIndex, isStable,
-            summary: `${label1} [${val1.toFixed(1)}%] VS ${label2} [${val2.toFixed(1)}%]`
-        };
-    }, [lastDigitTicks, priceHistory, selectedDigit, tradeType]);
-
     return (
         <div className="space-y-6 animate-in fade-in slide-in-from-bottom-8 duration-1000 pb-24 max-w-7xl mx-auto">
             <HeroPrice price={price} decimalPlaces={decimalPlaces} />
             
-            <Card className="border-none shadow-sm bg-card rounded-xl border border-white/30">
+            <Card className="shadow-sm bg-card rounded-xl border">
                 <CardContent className="p-4 grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div className="space-y-1.5">
-                        <Label className="text-[10px] font-black uppercase tracking-[0.4em] white-header-text ml-2">MARKET</Label>
+                        <Label className="text-[10px] font-black uppercase tracking-[0.4em] text-muted-foreground ml-2">MARKET</Label>
                         <Select value={selectedMarket} onValueChange={onMarketChange}>
-                            <SelectTrigger className="h-11 bg-black/10 border-white/20 rounded-xl font-black text-xs px-5 text-white">
+                            <SelectTrigger className="h-11 bg-muted/30 border rounded-xl font-black text-xs px-5">
                                 <SelectValue placeholder="Select Market" />
                             </SelectTrigger>
-                            <SelectContent className="bg-card border-white/20 text-foreground rounded-xl">
+                            <SelectContent className="bg-card text-foreground rounded-xl border shadow-xl">
                                 {syntheticIndices.map(m => (
                                     <SelectItem key={m.id} value={m.id} className="font-bold text-xs py-2">{m.name}</SelectItem>
                                 ))}
@@ -187,23 +124,23 @@ export function AnalyzerView({
                     </div>
                     <div className="space-y-1.5">
                         <div className="flex items-center justify-between px-2">
-                            <Label className="text-[10px] font-black uppercase tracking-[0.4em] white-header-text">TACTICAL</Label>
+                            <Label className="text-[10px] font-black uppercase tracking-[0.4em] text-muted-foreground">TACTICAL</Label>
                             <Popover>
                                 <PopoverTrigger asChild>
-                                    <Button variant="ghost" size="icon" className="h-5 w-5 hover:bg-primary/30 text-white">
+                                    <Button variant="ghost" size="icon" className="h-5 w-5 hover:bg-muted">
                                         <Info className="h-3 w-3" />
                                     </Button>
                                 </PopoverTrigger>
-                                <PopoverContent className="w-80 bg-primary border-white/30 shadow-2xl rounded-2xl p-4">
+                                <PopoverContent className="w-80 bg-card border shadow-2xl rounded-2xl p-4">
                                     <CheatSheet type={tradeType} />
                                 </PopoverContent>
                             </Popover>
                         </div>
                         <Select value={tradeType} onValueChange={setTradeType}>
-                            <SelectTrigger className="h-11 bg-black/10 border-white/20 rounded-xl font-black text-xs px-5 text-white">
+                            <SelectTrigger className="h-11 bg-muted/30 border rounded-xl font-black text-xs px-5">
                                 <SelectValue placeholder="Select Type" />
                             </SelectTrigger>
-                            <SelectContent className="bg-card border-white/20 text-foreground rounded-xl">
+                            <SelectContent className="bg-card text-foreground rounded-xl border shadow-xl">
                                 <SelectItem value="over-under" className="font-bold text-xs py-2">OVER/UNDER</SelectItem>
                                 <SelectItem value="even-odd" className="font-bold text-xs py-2">EVEN/ODD</SelectItem>
                                 <SelectItem value="matches-differs" className="font-bold text-xs py-2">MATCHES/DIFFERS</SelectItem>
@@ -216,15 +153,15 @@ export function AnalyzerView({
 
             <DigitFrequencyCircles ticks={lastDigitTicks} selectedDigit={selectedDigit} onDigitSelect={setSelectedDigit} selectedMarket={selectedMarket} />
 
-            <Card className="border-none shadow-sm bg-black/20 border border-white/20 p-8 rounded-2xl overflow-hidden relative">
+            <Card className="shadow-sm bg-muted/10 border p-8 rounded-2xl overflow-hidden relative">
                 <div className="flex flex-col sm:flex-row items-center justify-between gap-4 mb-8">
                     <div className="flex items-center gap-3">
-                        <div className="w-2 h-2 rounded-full bg-white animate-pulse shadow-[0_0_12px_white]" />
-                        <h3 className="text-[11px] font-black uppercase tracking-[0.4em] white-header-text">ACTIVE VECTOR SEQUENCE</h3>
+                        <div className="w-2 h-2 rounded-full bg-primary animate-pulse" />
+                        <h3 className="text-[11px] font-black uppercase tracking-[0.4em] text-foreground">ACTIVE VECTOR SEQUENCE</h3>
                     </div>
-                    <div className="flex items-center gap-2 px-5 py-2 bg-black/30 rounded-full border border-white/20">
-                         <Cpu className="h-3.5 w-3.5 text-white animate-spin" />
-                         <span className="text-[10px] font-black uppercase text-white tracking-widest">TACTICAL SYNC ON</span>
+                    <div className="flex items-center gap-2 px-5 py-2 bg-muted rounded-full border">
+                         <Cpu className="h-3.5 w-3.5 text-primary animate-spin" />
+                         <span className="text-[10px] font-black uppercase text-foreground tracking-widest">TACTICAL SYNC ON</span>
                     </div>
                 </div>
                 <div className="flex flex-wrap justify-center gap-3">
@@ -238,8 +175,8 @@ export function AnalyzerView({
                                 className={cn(
                                     "w-10 h-10 sm:w-14 sm:h-14 rounded-2xl flex items-center justify-center font-black text-sm sm:text-xl border transition-all",
                                     isTrigger 
-                                        ? "bg-white border-white text-primary scale-110 z-10 shadow-[0_0_20px_rgba(255,255,255,0.4)]" 
-                                        : "bg-black/20 border-white/10 text-white opacity-60 hover:opacity-100"
+                                        ? "bg-primary border-primary text-primary-foreground scale-110 z-10 shadow-lg" 
+                                        : "bg-background border-muted text-muted-foreground hover:border-primary/30"
                                 )}
                             >
                                 {digit}

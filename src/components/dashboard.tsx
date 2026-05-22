@@ -288,7 +288,7 @@ export function Dashboard() {
 
     const handleMaxTicksBlur = () => { if (maxTicks < 1) setMaxTicks(1); };
 
-    if (!mounted) return <div className="flex min-h-screen items-center justify-center bg-background"><Activity className="h-4 w-4 animate-spin text-white" /></div>;
+    if (!mounted) return <div className="flex min-h-screen items-center justify-center bg-background"><Activity className="h-4 w-4 animate-spin text-primary" /></div>;
 
     const analyzedDigits = lastDigitTicks.slice(0, maxTicks);
     const analyzedPrices = priceHistory.slice(0, maxTicks);
@@ -297,29 +297,29 @@ export function Dashboard() {
     return (
         <div className="flex min-h-screen w-full flex-col bg-background font-sans overflow-x-hidden">
             <div className="flex flex-col flex-1">
-                <header className="sticky top-0 z-[100] flex h-16 md:h-[4.5rem] items-center border-b border-white/10 bg-background/95 backdrop-blur-xl px-4 shadow-sm">
+                <header className="sticky top-0 z-[100] flex h-16 md:h-[4.5rem] items-center border-b bg-background/95 backdrop-blur-xl px-4 shadow-sm">
                     <div className="flex w-full items-center justify-between max-w-[1600px] mx-auto gap-4">
                         <div className="flex items-center gap-4 shrink-0">
                             <Popover>
                                 <PopoverTrigger asChild>
-                                    <button className="flex items-center gap-3 bg-card border border-white/20 px-3 md:px-5 py-2 md:py-2.5 rounded-2xl hover:bg-white/10 transition-all shadow-lg active:scale-95 group">
-                                        <div className="w-8 h-8 rounded-full bg-white/20 flex items-center justify-center group-hover:bg-white/40 transition-colors">
-                                            <Activity className="h-4 w-4 text-white" />
+                                    <button className="flex items-center gap-3 bg-card border px-3 md:px-5 py-2 md:py-2.5 rounded-2xl hover:bg-muted transition-all shadow-sm active:scale-95 group">
+                                        <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center group-hover:bg-primary/20 transition-colors">
+                                            <Activity className="h-4 w-4 text-primary" />
                                         </div>
                                         <div className="text-left hidden sm:block">
-                                            <p className="text-[10px] font-black text-white uppercase leading-none tracking-widest">{syntheticIndices.find(m => m.id === selectedMarket)?.name}</p>
-                                            <p className="text-sm font-black text-accent tabular-nums mt-1">{price.toFixed(decimalPlaces)}</p>
+                                            <p className="text-[10px] font-black text-muted-foreground uppercase leading-none tracking-widest">{syntheticIndices.find(m => m.id === selectedMarket)?.name}</p>
+                                            <p className="text-sm font-black text-foreground tabular-nums mt-1">{price.toFixed(decimalPlaces)}</p>
                                         </div>
-                                        <ChevronDown className="h-4 w-4 text-white/60 group-hover:text-white transition-colors" />
+                                        <ChevronDown className="h-4 w-4 text-muted-foreground group-hover:text-primary transition-colors" />
                                     </button>
                                 </PopoverTrigger>
-                                <PopoverContent className="w-[320px] md:w-[480px] p-0 bg-card border-white/10 shadow-2xl rounded-[1.5rem] overflow-hidden">
-                                    <div className="p-4 border-b border-white/5 bg-black/10">
+                                <PopoverContent className="w-[320px] md:w-[480px] p-0 bg-card shadow-2xl rounded-[1.5rem] overflow-hidden border">
+                                    <div className="p-4 border-b bg-muted/30">
                                         <div className="relative">
-                                            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-white/40" />
+                                            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                                             <Input 
                                                 placeholder="Search assets..." 
-                                                className="pl-10 h-11 bg-card border-white/10 rounded-xl font-medium focus:ring-white/20 text-white"
+                                                className="pl-10 h-11 bg-card rounded-xl font-medium focus:ring-primary/20"
                                                 value={searchQuery}
                                                 onChange={(e) => setSearchQuery(e.target.value)}
                                             />
@@ -338,27 +338,27 @@ export function Dashboard() {
                                                         key={market.id}
                                                         onClick={() => setSelectedMarket(market.id)}
                                                         className={cn(
-                                                            "w-full flex items-center justify-between p-3 rounded-xl transition-all hover:bg-white/5 group",
-                                                            isSelected ? "bg-white/20" : "bg-transparent"
+                                                            "w-full flex items-center justify-between p-3 rounded-xl transition-all hover:bg-muted group",
+                                                            isSelected ? "bg-muted font-bold" : "bg-transparent"
                                                         )}
                                                     >
                                                         <div className="flex items-center gap-3">
                                                             <div className={cn(
                                                                 "w-10 h-10 rounded-xl flex items-center justify-center transition-colors",
-                                                                isSelected ? "bg-white text-primary" : "bg-white/10 text-white/40 group-hover:bg-white/20 group-hover:text-white"
+                                                                isSelected ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground group-hover:bg-primary/10 group-hover:text-primary"
                                                             )}>
                                                                 <Activity className="h-5 w-5" />
                                                             </div>
                                                             <div className="text-left">
-                                                                <p className={cn("text-[11px] font-black uppercase tracking-wider", isSelected ? "text-white" : "text-white/60")}>{market.name}</p>
-                                                                <p className="text-[10px] font-bold text-white/40 uppercase">{market.category}</p>
+                                                                <p className={cn("text-[11px] font-black uppercase tracking-wider", isSelected ? "text-foreground" : "text-muted-foreground")}>{market.name}</p>
+                                                                <p className="text-[10px] font-bold text-muted-foreground/60 uppercase">{market.category}</p>
                                                             </div>
                                                         </div>
                                                         <div className="text-right">
-                                                            <p className="text-[11px] font-black tabular-nums text-white">{(marketPrice).toFixed(res?.pip || 2)}</p>
+                                                            <p className="text-[11px] font-black tabular-nums text-foreground">{(marketPrice).toFixed(res?.pip || 2)}</p>
                                                             <div className={cn(
                                                                 "flex items-center justify-end gap-1 text-[9px] font-black mt-0.5",
-                                                                marketChange >= 0 ? "text-emerald-400" : "text-rose-400"
+                                                                marketChange >= 0 ? "text-emerald-600" : "text-rose-600"
                                                             )}>
                                                                 {marketChange >= 0 ? <TrendingUp className="h-2 w-2" /> : <TrendingDown className="h-2 w-2" />}
                                                                 {Math.abs(marketChange).toFixed(2)}%
@@ -375,27 +375,22 @@ export function Dashboard() {
                         
                         <div className="flex-1 flex justify-center hidden lg:flex">
                              <div className="relative group transition-all duration-300 hover:scale-105 active:scale-95">
-                                <motion.div 
-                                    className="absolute -inset-1 bg-gradient-to-r from-accent via-white to-accent rounded-full blur opacity-25 group-hover:opacity-75 transition duration-1000"
-                                    animate={{ opacity: [0.25, 0.5, 0.25] }}
-                                    transition={{ duration: 4, repeat: Infinity }}
-                                />
-                                <a href="https://frostytraders.com" target="_blank" rel="noopener noreferrer" className="relative flex items-center gap-3 px-8 py-2.5 bg-card border border-white/20 rounded-full shadow-2xl">
-                                    <span className="text-[11px] font-black text-white uppercase tracking-[0.4em] whitespace-nowrap">FROSTY TRADERS</span>
-                                    <ExternalLink className="h-3 w-3 text-white" />
+                                <a href="https://frostytraders.com" target="_blank" rel="noopener noreferrer" className="relative flex items-center gap-3 px-8 py-2.5 bg-card border rounded-full shadow-sm hover:border-primary/50 transition-colors">
+                                    <span className="text-[11px] font-black text-foreground uppercase tracking-[0.4em] whitespace-nowrap">FROSTY TRADERS</span>
+                                    <ExternalLink className="h-3 w-3 text-muted-foreground" />
                                 </a>
                             </div>
                         </div>
 
                         <div className="flex items-center gap-2 md:gap-4 shrink-0">
-                            <div className="flex items-center bg-card border border-white/20 rounded-full shadow-2xl h-10 px-1 overflow-hidden">
-                                <div className="flex items-center gap-3 px-5 py-2 border-r border-white/10">
-                                    <div className={cn("h-2.5 w-2.5 rounded-full animate-pulse", surveillanceStatus === 'active' ? "bg-emerald-400 shadow-[0_0_12px_white]" : "bg-rose-400 shadow-[0_0_12px_rgba(244,63,94,0.9)]")} />
-                                    <span className="text-[10px] font-black text-white uppercase tracking-[0.3em] hidden sm:inline">LIVE</span>
+                            <div className="flex items-center bg-card border rounded-full shadow-sm h-10 px-1 overflow-hidden">
+                                <div className="flex items-center gap-3 px-5 py-2 border-r">
+                                    <div className={cn("h-2.5 w-2.5 rounded-full animate-pulse", surveillanceStatus === 'active' ? "bg-emerald-500 shadow-[0_0_12px_rgba(16,185,129,0.5)]" : "bg-rose-500")} />
+                                    <span className="text-[10px] font-black text-foreground uppercase tracking-[0.3em] hidden sm:inline">LIVE</span>
                                 </div>
-                                <div className="flex items-center gap-2 px-5 py-2 bg-black/20">
-                                    <Radio className={cn("h-3.5 w-3.5 transition-all", surveillanceStatus === 'active' ? 'text-emerald-400 animate-pulse' : 'text-rose-400')} />
-                                    <span className="text-[10px] font-black uppercase text-white tracking-[0.2em]">{surveillanceStatus === 'active' ? 'LIVE' : 'OFFLINE'}</span>
+                                <div className="flex items-center gap-2 px-5 py-2 bg-muted/50">
+                                    <Radio className={cn("h-3.5 w-3.5 transition-all", surveillanceStatus === 'active' ? 'text-emerald-500 animate-pulse' : 'text-rose-500')} />
+                                    <span className="text-[10px] font-black uppercase text-foreground tracking-[0.2em]">{surveillanceStatus === 'active' ? 'LIVE' : 'OFFLINE'}</span>
                                 </div>
                             </div>
                         </div>
@@ -405,7 +400,7 @@ export function Dashboard() {
                     <Tabs defaultValue="analyzer" className="w-full">
                         <TabsList className="flex items-center justify-start md:justify-center gap-1.5 md:gap-2 bg-transparent h-auto p-0 mb-4 md:mb-6 overflow-x-auto no-scrollbar w-full pb-2">
                             {['analyzer', 'last-digit-analysis', 'frequency', 'global-scan', 'chart', 'insight'].map((tab) => (
-                                <TabsTrigger key={tab} value={tab} className="flex-shrink-0 px-3 md:px-5 py-2 md:py-2.5 rounded-full border border-transparent data-[state=active]:bg-white/20 data-[state=active]:text-white text-white/60 font-black text-[8px] md:text-[10px] uppercase tracking-[0.1em] md:tracking-[0.2em] transition-all shadow-sm hover:bg-white/10">
+                                <TabsTrigger key={tab} value={tab} className="flex-shrink-0 px-3 md:px-5 py-2 md:py-2.5 rounded-full border data-[state=active]:bg-primary data-[state=active]:text-primary-foreground text-muted-foreground font-black text-[8px] md:text-[10px] uppercase tracking-[0.1em] md:tracking-[0.2em] transition-all shadow-sm">
                                     {tab.toUpperCase().replace(/-/g, ' ')}
                                 </TabsTrigger>
                             ))}
