@@ -84,7 +84,7 @@ export function InsightView({ globalResults, activeScanId, dashboardPrice, dashb
                 setLiveDigits(prev => [digit, ...prev].slice(0, 15));
             }
         };
-        return () => { if (ws.readyState < 2) ws.close(); };
+        return () => { if (ws && ws.readyState < 2) ws.close(); };
     }, [targetMarketId]);
 
     const triggerDetected = React.useMemo(() => {

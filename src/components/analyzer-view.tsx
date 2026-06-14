@@ -103,6 +103,34 @@ export function AnalyzerView({
     const [tradeType, setTradeType] = React.useState('over-under');
     const [selectedDigit, setSelectedDigit] = React.useState<number>(5);
 
+    const getDigitColor = (digit: number, prevDigit: number | null) => {
+        switch (tradeType) {
+            case 'over-under':
+                if (digit > selectedDigit) return 'bg-emerald-500 border-emerald-600 text-white';
+                if (digit < selectedDigit) return 'bg-rose-500 border-rose-600 text-white';
+                return 'bg-muted border-muted-foreground text-muted-foreground';
+            case 'even-odd':
+                return digit % 2 === 0 
+                    ? 'bg-emerald-500 border-emerald-600 text-white' 
+                    : 'bg-rose-500 border-rose-600 text-white';
+            case 'matches-differs':
+                return digit === selectedDigit 
+                    ? 'bg-emerald-500 border-emerald-600 text-white' 
+                    : 'bg-rose-500 border-rose-600 text-white';
+            case 'rise-fall':
+                if (prevDigit === null) return 'bg-muted border-muted-foreground text-muted-foreground';
+                return digit > prevDigit 
+                    ? 'bg-emerald-500 border-emerald-600 text-white' 
+                    : digit < prevDigit 
+                        ? 'bg-rose-500 border-rose-600 text-white'
+                        : 'bg-muted border-muted-foreground text-muted-foreground';
+            default:
+                return 'bg-background border-muted text-muted-foreground';
+        }
+    };
+
+    const vectorSequence = [...lastDigitTicks.slice(0, 15)].reverse();
+
     return (
         <div className="space-y-6 animate-in fade-in slide-in-from-bottom-8 duration-1000 pb-24 max-w-7xl mx-auto">
             <HeroPrice price={price} decimalPlaces={decimalPlaces} />
@@ -165,18 +193,20 @@ export function AnalyzerView({
                     </div>
                 </div>
                 <div className="flex flex-wrap justify-center gap-3">
-                    {[...lastDigitTicks.slice(0, 15)].reverse().map((digit, i) => {
-                        const isTrigger = i === 14; 
+                    {vectorSequence.map((digit, i) => {
+                        const isTrigger = i === vectorSequence.length - 1; 
+                        const prevDigit = i > 0 ? vectorSequence[i - 1] : null;
+                        const colorClasses = getDigitColor(digit, prevDigit);
+
                         return (
                             <motion.div 
-                                key={i} 
+                                key={`${i}-${digit}`} 
                                 initial={{ scale: 0.8, opacity: 0 }} 
                                 animate={{ scale: 1, opacity: 1 }} 
                                 className={cn(
                                     "w-10 h-10 sm:w-14 sm:h-14 rounded-2xl flex items-center justify-center font-black text-sm sm:text-xl border transition-all",
-                                    isTrigger 
-                                        ? "bg-primary border-primary text-primary-foreground scale-110 z-10 shadow-lg" 
-                                        : "bg-background border-muted text-muted-foreground hover:border-primary/30"
+                                    colorClasses,
+                                    isTrigger && "ring-2 ring-primary ring-offset-2 scale-110 z-10 shadow-lg"
                                 )}
                             >
                                 {digit}
