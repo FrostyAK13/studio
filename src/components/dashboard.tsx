@@ -8,9 +8,8 @@ import { syntheticIndices } from '@/lib/mock-data';
 import { DigitFrequencyView } from './digit-frequency-view';
 import { InsightView } from './insight-view';
 import { cn } from '@/lib/utils';
-import { Radio, Activity, ExternalLink } from 'lucide-react';
+import { Radio, Activity } from 'lucide-react';
 import { motion } from 'framer-motion';
-import { DerivChart } from './deriv-chart';
 
 type EngineStatus = 'offline' | 'active';
 
@@ -40,9 +39,6 @@ export function Dashboard() {
     const [selectedMarket, setSelectedMarket] = React.useState('1HZ10V');
     const [decimalPlaces, setDecimalPlaces] = React.useState(2);
     const [tickTimestamps, setTickTimestamps] = React.useState<number[]>([]);
-    const [chartInterval, setChartInterval] = React.useState('1m');
-    const [candleData, setCandleData] = React.useState<any[]>([]);
-    const [lastCandleUpdate, setLastCandleUpdate] = React.useState<any>(null);
     
     const [surveillanceStatus, setSurveillanceStatus] = React.useState<EngineStatus>('offline');
     const [globalResults, setGlobalResults] = React.useState<Record<string, GlobalAnalysisResult>>({});
@@ -152,32 +148,12 @@ export function Dashboard() {
     React.useEffect(() => {
         if (!mounted) return;
 
-        setCandleData([]);
-        setLastCandleUpdate(null);
         setLastDigitTicks([]);
         setPriceHistory([]);
         
         currentMarketRef.current = selectedMarket;
         const ws = new WebSocket('wss://ws.derivws.com/websockets/v3?app_id=84799');
         
-        const intervalToGranularity = (int: string) => {
-            const map: Record<string, number> = {
-                '1m': 60, '2m': 120, '3m': 180, '5m': 300, 
-                '10m': 600, '15m': 900, '30m': 1800, '1h': 3600,
-                '2h': 7200, '4h': 14400, '8h': 28800, '1d': 86400
-            };
-            return map[int] || 60;
-        };
-
-        const calculateCountForOneMonth = (granularity: number) => {
-            const oneMonthSeconds = 30 * 24 * 60 * 60;
-            const countNeeded = Math.ceil(oneMonthSeconds / granularity);
-            return Math.min(5000, Math.max(500, countNeeded)); 
-        };
-
-        const granularity = intervalToGranularity(chartInterval);
-        const historyCount = calculateCountForOneMonth(granularity);
-
         ws.onopen = () => {
             setSurveillanceStatus('active');
             
@@ -186,15 +162,6 @@ export function Dashboard() {
                 "count": 1000,
                 "end": "latest",
                 "style": "ticks",
-                "subscribe": 1
-            }));
-
-            ws.send(JSON.stringify({
-                "ticks_history": selectedMarket,
-                "count": historyCount,
-                "end": "latest",
-                "style": "candles",
-                "granularity": granularity,
                 "subscribe": 1
             }));
             
@@ -224,31 +191,6 @@ export function Dashboard() {
                 }
             }
 
-            if (data.msg_type === 'candles' && data.candles) {
-                const formatted = data.candles.map((c: any) => ({
-                    time: Number(c.epoch),
-                    open: Number(c.open),
-                    high: Number(c.high),
-                    low: Number(c.low),
-                    close: Number(c.close)
-                }));
-                setCandleData(formatted);
-            }
-
-            if (data.msg_type === 'ohlc' && data.ohlc) {
-                if (data.ohlc.symbol !== currentMarketRef.current) return;
-                
-                const newUpdate = {
-                    time: Number(data.ohlc.open_time), 
-                    open: Number(data.ohlc.open),
-                    high: Number(data.ohlc.high),
-                    low: Number(data.ohlc.low),
-                    close: Number(data.ohlc.close)
-                };
-                setLastCandleUpdate(newUpdate);
-                setPrice(Number(data.ohlc.close) || 0);
-            }
-
             if (data.msg_type === 'tick') {
                 if (data.tick && data.tick.symbol === currentMarketRef.current) {
                     if (data.tick.pip_size !== undefined) {
@@ -265,17 +207,14 @@ export function Dashboard() {
                     setTickTimestamps(prev => [epochMs, ...prev].slice(0, 1000));
                     setLastDigitTicks(prev => [newDigit, ...prev].slice(0, 1000));
                     setPriceHistory(prev => [newPrice, ...prev].slice(0, 1000));
-                    
-                    if (!lastCandleUpdate) {
-                        setPrice(newPrice);
-                    }
+                    setPrice(newPrice);
                 }
             }
         };
 
         ws.onclose = () => setSurveillanceStatus('offline');
         return () => { if(ws && ws.readyState === WebSocket.OPEN) ws.close(); };
-    }, [mounted, selectedMarket, chartInterval]);
+    }, [mounted, selectedMarket]);
 
     const handleMaxTicksChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const val = e.target.value === '' ? 0 : parseInt(e.target.value, 10);
@@ -294,7 +233,6 @@ export function Dashboard() {
             <div className="flex flex-col flex-1">
                 <header className="sticky top-0 z-[100] flex h-16 md:h-[4.5rem] items-center border-b bg-background/95 backdrop-blur-xl px-4 shadow-sm">
                     <div className="flex w-full items-center justify-between max-w-[1600px] mx-auto gap-4">
-                        {/* Left Side: Live Status Indicators */}
                         <div className="flex-1 flex items-center justify-start">
                             <div className="flex items-center bg-card border rounded-full shadow-sm h-10 px-1 overflow-hidden">
                                 <div className="flex items-center gap-3 px-5 py-2 border-r">
@@ -308,7 +246,6 @@ export function Dashboard() {
                             </div>
                         </div>
 
-                        {/* Central Branding: Gilded, Bouncy, and Flashy */}
                         <div className="flex-1 flex justify-center">
                             <motion.h1 
                                 animate={{ 
@@ -331,14 +268,13 @@ export function Dashboard() {
                             </motion.h1>
                         </div>
 
-                        {/* Right Side: Spacer */}
                         <div className="flex-1" />
                     </div>
                 </header>
                 <main className="flex-1 flex flex-col max-w-[1600px] mx-auto w-full relative p-2 sm:p-4">
                     <Tabs defaultValue="analyzer" className="w-full">
                         <TabsList className="flex items-center justify-start md:justify-center gap-1.5 md:gap-2 bg-transparent h-auto p-0 mb-4 md:mb-6 overflow-x-auto no-scrollbar w-full pb-2">
-                            {['analyzer', 'last-digit-analysis', 'frequency', 'global-scan', 'chart', 'insight'].map((tab) => (
+                            {['analyzer', 'last-digit-analysis', 'frequency', 'global-scan', 'insight'].map((tab) => (
                                 <TabsTrigger key={tab} value={tab} className="flex-shrink-0 px-3 md:px-5 py-2 md:py-2.5 rounded-full border data-[state=active]:bg-primary data-[state=active]:text-primary-foreground text-muted-foreground font-black text-[8px] md:text-[10px] uppercase tracking-[0.1em] md:tracking-[0.2em] transition-all shadow-sm">
                                     {tab.toUpperCase().replace(/-/g, ' ')}
                                 </TabsTrigger>
@@ -355,21 +291,6 @@ export function Dashboard() {
                         </TabsContent>
                         <TabsContent value="global-scan" className="mt-0 outline-none animate-in fade-in duration-500">
                             <ScannerView price={Number(price) || 0} lastDigitTicks={analyzedDigits} priceHistory={analyzedPrices} maxTicks={maxTicks} handleMaxTicksChange={handleMaxTicksChange} handleMaxTicksBlur={handleMaxTicksBlur} selectedMarket={selectedMarket} onMarketChange={setSelectedMarket} decimalPlaces={decimalPlaces} />
-                        </TabsContent>
-                        <TabsContent value="chart" className="mt-0 outline-none animate-in fade-in duration-500 h-[88vh]">
-                            <DerivChart 
-                                priceHistory={priceHistory} 
-                                tickTimestamps={tickTimestamps} 
-                                decimalPlaces={decimalPlaces} 
-                                lastDigitTicks={analyzedDigits}
-                                selectedInterval={chartInterval}
-                                onIntervalChange={setChartInterval}
-                                candleData={candleData}
-                                lastCandleUpdate={lastCandleUpdate}
-                                selectedMarket={selectedMarket}
-                                onMarketChange={setSelectedMarket}
-                                globalResults={globalResults}
-                            />
                         </TabsContent>
                         <TabsContent value="insight" className="mt-0 outline-none animate-in fade-in duration-500">
                             <InsightView globalResults={globalResults} activeScanId={activeScanId} dashboardPrice={Number(price) || 0} dashboardMarketId={selectedMarket} />
