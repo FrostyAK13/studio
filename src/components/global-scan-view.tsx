@@ -70,9 +70,6 @@ export function GlobalScanView({
             lastDigitTicks.forEach(d => counts[d]++);
             const hottestDigit = counts.indexOf(Math.max(...counts));
             
-            // Get a snippet of the recent sequence for "pattern" visualization
-            const recentSeq = lastDigitTicks.slice(0, 3).reverse();
-
             let strategy = "AUTO-V8.1";
             let pattern = "NEURAL FLOW";
             let prediction = "";
@@ -298,12 +295,6 @@ export function GlobalScanView({
                                 </div>
                             </div>
                         </Card>
-
-                        <div className="flex justify-center pb-20">
-                            <Button className="bg-emerald-600 hover:bg-emerald-700 text-white font-black text-[12px] uppercase tracking-widest h-16 px-16 rounded-full shadow-2xl active:scale-95 transition-all">
-                                EXECUTE TRADE VECTOR <ArrowRight className="ml-4 h-6 w-6" />
-                            </Button>
-                        </div>
                     </motion.div>
                 )}
             </AnimatePresence>
