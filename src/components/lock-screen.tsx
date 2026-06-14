@@ -1,4 +1,3 @@
-
 'use client';
 
 import * as React from 'react';
@@ -6,7 +5,7 @@ import { motion } from 'framer-motion';
 import { Card, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
-import { Lock, Unlock, ShieldAlert, Lightbulb } from 'lucide-react';
+import { Lock, Lightbulb } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 interface LockScreenProps {
@@ -82,12 +81,9 @@ export function LockScreen({ onUnlock }: LockScreenProps) {
                         </form>
 
                         <div className="flex flex-col items-center gap-2 pt-4">
-                            <a 
-                                href="#" 
-                                className="flex items-center gap-1.5 text-[9px] sm:text-[10px] font-bold text-slate-400 hover:text-teal-500 transition-colors uppercase tracking-widest"
-                            >
-                                <Lightbulb className="h-3 w-3 text-amber-400" /> Contact Frosty Traders for premium access
-                            </a>
+                            <div className="flex items-center gap-1.5 text-[9px] sm:text-[10px] font-bold text-slate-400 uppercase tracking-widest">
+                                <Lightbulb className="h-3 w-3 text-amber-400" /> Contact Support for premium access
+                            </div>
                         </div>
                     </CardContent>
                 </Card>

@@ -8,12 +8,9 @@ import { syntheticIndices } from '@/lib/mock-data';
 import { DigitFrequencyView } from './digit-frequency-view';
 import { InsightView } from './insight-view';
 import { cn } from '@/lib/utils';
-import { Button } from '@/components/ui/button';
-import { Radio, Activity, ExternalLink, ChevronDown, Search, TrendingUp, TrendingDown } from 'lucide-react';
+import { Radio, Activity } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { DerivChart } from './deriv-chart';
-import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
-import { Input } from '@/components/ui/input';
 
 type EngineStatus = 'offline' | 'active';
 
@@ -46,7 +43,6 @@ export function Dashboard() {
     const [chartInterval, setChartInterval] = React.useState('1m');
     const [candleData, setCandleData] = React.useState<any[]>([]);
     const [lastCandleUpdate, setLastCandleUpdate] = React.useState<any>(null);
-    const [searchQuery, setSearchQuery] = React.useState('');
     
     const [surveillanceStatus, setSurveillanceStatus] = React.useState<EngineStatus>('offline');
     const [globalResults, setGlobalResults] = React.useState<Record<string, GlobalAnalysisResult>>({});
@@ -142,7 +138,7 @@ export function Dashboard() {
                         tradeType: bestE !== null ? 'FLOW' : 'NO TRADE',
                         triggerDigit: bestE, targetDigit: bestT, confidence: finalConfidence,
                         currentPrice: latestPrice, pip: pip, scannerStrategy: scannerDirection,
-                        scannerEntry: bestScanner?.i ?? null, scannerConfidence: 60 + Math.max(S_U6, S_O3)
+                        scannerEntry: number | null; scannerConfidence: 60 + Math.max(S_U6, S_O3)
                     }
                 }));
                 currentIndex++;
@@ -292,23 +288,14 @@ export function Dashboard() {
 
     const analyzedDigits = lastDigitTicks.slice(0, maxTicks);
     const analyzedPrices = priceHistory.slice(0, maxTicks);
-    const filteredIndices = syntheticIndices.filter(m => m.name.toLowerCase().includes(searchQuery.toLowerCase()));
 
     return (
         <div className="flex min-h-screen w-full flex-col bg-background font-sans overflow-x-hidden">
             <div className="flex flex-col flex-1">
                 <header className="sticky top-0 z-[100] flex h-16 md:h-[4.5rem] items-center border-b bg-background/95 backdrop-blur-xl px-4 shadow-sm">
                     <div className="flex w-full items-center justify-between max-w-[1600px] mx-auto gap-4">
-                        <div className="flex-1 flex justify-center hidden lg:flex">
-                             <div className="relative group transition-all duration-300 hover:scale-105 active:scale-95">
-                                <a href="https://frostytraders.com" target="_blank" rel="noopener noreferrer" className="relative flex items-center gap-3 px-8 py-2.5 bg-card border rounded-full shadow-sm hover:border-primary/50 transition-colors">
-                                    <span className="text-[11px] font-black text-foreground uppercase tracking-[0.4em] whitespace-nowrap">FROSTY TRADERS</span>
-                                    <ExternalLink className="h-3 w-3 text-muted-foreground" />
-                                </a>
-                            </div>
-                        </div>
-
-                        <div className="flex items-center gap-2 md:gap-4 shrink-0">
+                        {/* Left Side: Live Status Indicators */}
+                        <div className="flex-1 flex items-center justify-start">
                             <div className="flex items-center bg-card border rounded-full shadow-sm h-10 px-1 overflow-hidden">
                                 <div className="flex items-center gap-3 px-5 py-2 border-r">
                                     <div className={cn("h-2.5 w-2.5 rounded-full animate-pulse", surveillanceStatus === 'active' ? "bg-emerald-500 shadow-[0_0_12px_rgba(16,185,129,0.5)]" : "bg-rose-500")} />
@@ -320,6 +307,32 @@ export function Dashboard() {
                                 </div>
                             </div>
                         </div>
+
+                        {/* Central Branding: Gilded, Bouncy, and Flashy */}
+                        <div className="flex-1 flex justify-center">
+                            <motion.h1 
+                                animate={{ 
+                                    y: [0, -4, 0],
+                                    filter: ["brightness(1)", "brightness(1.4)", "brightness(1)"],
+                                    textShadow: [
+                                        "0 0 10px rgba(197,160,89,0.2)",
+                                        "0 0 25px rgba(197,160,89,0.6)",
+                                        "0 0 10px rgba(197,160,89,0.2)"
+                                    ]
+                                }}
+                                transition={{ 
+                                    duration: 2,
+                                    repeat: Infinity,
+                                    ease: "easeInOut"
+                                }}
+                                className="text-xl md:text-2xl font-black text-[#C5A059] uppercase tracking-[0.4em] whitespace-nowrap drop-shadow-md cursor-default select-none"
+                            >
+                                FROSTYDBOT
+                            </motion.h1>
+                        </div>
+
+                        {/* Right Side: Spacer */}
+                        <div className="flex-1" />
                     </div>
                 </header>
                 <main className="flex-1 flex flex-col max-w-[1600px] mx-auto w-full relative p-2 sm:p-4">

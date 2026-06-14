@@ -3,8 +3,8 @@ import './globals.css';
 import { Toaster } from '@/components/ui/toaster';
 
 export const metadata: Metadata = {
-  title: 'frostytraders.com',
-  description: 'Your trading journey starts here.',
+  title: 'FROSTYDBOT',
+  description: 'Your premium tactical trading interface.',
 };
 
 export default function RootLayout({

@@ -8,12 +8,9 @@ import { syntheticIndices } from '@/lib/mock-data';
 import { DigitFrequencyView } from './digit-frequency-view';
 import { InsightView } from './insight-view';
 import { cn } from '@/lib/utils';
-import { Button } from '@/components/ui/button';
-import { Radio, Activity, ExternalLink, ChevronDown, Search, TrendingUp, TrendingDown } from 'lucide-react';
+import { Radio, Activity, ExternalLink } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { DerivChart } from './deriv-chart';
-import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
-import { Input } from '@/components/ui/input';
 
 type EngineStatus = 'offline' | 'active';
 
@@ -46,7 +43,6 @@ export function Dashboard() {
     const [chartInterval, setChartInterval] = React.useState('1m');
     const [candleData, setCandleData] = React.useState<any[]>([]);
     const [lastCandleUpdate, setLastCandleUpdate] = React.useState<any>(null);
-    const [searchQuery, setSearchQuery] = React.useState('');
     
     const [surveillanceStatus, setSurveillanceStatus] = React.useState<EngineStatus>('offline');
     const [globalResults, setGlobalResults] = React.useState<Record<string, GlobalAnalysisResult>>({});
@@ -335,15 +331,8 @@ export function Dashboard() {
                             </motion.h1>
                         </div>
 
-                        {/* Right Side: External Link */}
-                        <div className="flex-1 flex justify-end">
-                            <div className="relative group transition-all duration-300 hover:scale-105 active:scale-95 hidden lg:flex">
-                                <a href="https://frostytraders.com" target="_blank" rel="noopener noreferrer" className="relative flex items-center gap-3 px-6 py-2 bg-card border rounded-full shadow-sm hover:border-primary/50 transition-colors">
-                                    <span className="text-[10px] font-black text-foreground uppercase tracking-[0.3em] whitespace-nowrap">FROSTY TRADERS</span>
-                                    <ExternalLink className="h-3 w-3 text-muted-foreground" />
-                                </a>
-                            </div>
-                        </div>
+                        {/* Right Side: Spacer */}
+                        <div className="flex-1" />
                     </div>
                 </header>
                 <main className="flex-1 flex flex-col max-w-[1600px] mx-auto w-full relative p-2 sm:p-4">
