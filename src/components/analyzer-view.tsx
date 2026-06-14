@@ -4,13 +4,11 @@ import * as React from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Button } from '@/components/ui/button';
 import { syntheticIndices } from '@/lib/mock-data';
 import { cn } from '@/lib/utils';
-import { Activity, Info, ShieldCheck, Zap, Cpu } from 'lucide-react';
+import { Cpu } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { DigitFrequencyCircles } from './correlation-view';
-import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 
 interface AnalyzerViewProps {
     price: number;
@@ -38,7 +36,7 @@ const HeroPrice = ({ price, decimalPlaces }: { price: number; decimalPlaces: num
             </div>
             <div className="mt-4 flex items-center gap-2 bg-muted/30 px-5 py-1.5 rounded-full border border-primary/10">
                 <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-                <span className="text-[10px] font-black uppercase tracking-[0.3em] text-muted-foreground">LIVE TICK FEED</span>
+                <span className="text-[10px] font-black uppercase tracking-[0.3em] text-muted-foreground">LIVE FEED</span>
             </div>
         </div>
     );
@@ -62,28 +60,28 @@ export function AnalyzerView({
     const getDigitColor = (digit: number, prevDigit: number | null) => {
         switch (tradeType) {
             case 'over-under':
-                if (digit > selectedDigit) return 'bg-emerald-500 border-emerald-600 text-white'; // Over = Green
-                if (digit < selectedDigit) return 'bg-rose-500 border-rose-600 text-white'; // Under = Red
-                return 'bg-gray-400 border-gray-500 text-white'; // Neutral = Gray
+                if (digit > selectedDigit) return 'bg-emerald-500 border-emerald-600 text-white';
+                if (digit < selectedDigit) return 'bg-rose-500 border-rose-600 text-white';
+                return 'bg-gray-400 border-gray-500 text-white';
             case 'even-odd':
                 return digit % 2 === 0 
-                    ? 'bg-emerald-500 border-emerald-600 text-white' // Even = Green
-                    : 'bg-rose-500 border-rose-600 text-white'; // Odd = Red
+                    ? 'bg-emerald-500 border-emerald-600 text-white'
+                    : 'bg-rose-500 border-rose-600 text-white';
             case 'matches-differs':
                 return digit === selectedDigit 
-                    ? 'bg-emerald-500 border-emerald-600 text-white' // Match = Green
-                    : 'bg-rose-500 border-rose-600 text-white'; // Differ = Red
+                    ? 'bg-emerald-500 border-emerald-600 text-white'
+                    : 'bg-rose-500 border-rose-600 text-white';
             case 'rise-fall':
                 if (prevDigit === null) return 'bg-gray-400 border-gray-500 text-white';
-                if (digit > prevDigit) return 'bg-emerald-500 border-emerald-600 text-white'; // Rise = Green
-                if (digit < prevDigit) return 'bg-rose-500 border-rose-600 text-white'; // Fall = Red
-                return 'bg-gray-400 border-gray-500 text-white'; // Same = Gray
+                if (digit > prevDigit) return 'bg-emerald-500 border-emerald-600 text-white';
+                if (digit < prevDigit) return 'bg-rose-500 border-rose-600 text-white';
+                return 'bg-gray-400 border-gray-500 text-white';
             default:
                 return 'bg-muted border-muted text-muted-foreground';
         }
     };
 
-    const vectorSequence = [...lastDigitTicks.slice(0, 15)].reverse();
+    const sequence = [...lastDigitTicks.slice(0, 15)].reverse();
 
     return (
         <div className="space-y-6 animate-in fade-in slide-in-from-bottom-8 duration-1000 pb-24 max-w-7xl mx-auto">
@@ -92,7 +90,7 @@ export function AnalyzerView({
             <Card className="shadow-sm bg-card rounded-3xl border border-primary/5">
                 <CardContent className="p-4 grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div className="space-y-1.5">
-                        <Label className="text-[10px] font-black uppercase tracking-[0.4em] text-primary/60 ml-2">MARKET VECTOR</Label>
+                        <Label className="text-[10px] font-black uppercase tracking-[0.4em] text-primary/60 ml-2">MARKET</Label>
                         <Select value={selectedMarket} onValueChange={onMarketChange}>
                             <SelectTrigger className="h-11 bg-muted/50 border-primary/5 rounded-2xl font-black text-xs px-5">
                                 <SelectValue placeholder="Select Market" />
@@ -106,7 +104,7 @@ export function AnalyzerView({
                     </div>
                     <div className="space-y-1.5">
                         <div className="flex items-center justify-between px-2">
-                            <Label className="text-[10px] font-black uppercase tracking-[0.4em] text-primary/60">TACTICAL PROTOCOL</Label>
+                            <Label className="text-[10px] font-black uppercase tracking-[0.4em] text-primary/60">TYPE</Label>
                         </div>
                         <Select value={tradeType} onValueChange={setTradeType}>
                             <SelectTrigger className="h-11 bg-muted/50 border-primary/5 rounded-2xl font-black text-xs px-5">
@@ -123,13 +121,13 @@ export function AnalyzerView({
                 </CardContent>
             </Card>
 
-            <DigitFrequencyCircles ticks={lastDigitTicks} selectedDigit={selectedDigit} onDigitSelect={setSelectedDigit} selectedMarket={selectedMarket} />
+            <DigitFrequencyCircles ticks={lastDigitTicks} selectedMarket={selectedMarket} selectedDigit={selectedDigit} onDigitSelect={setSelectedDigit} />
 
             <Card className="shadow-sm bg-muted/5 border-primary/5 p-8 rounded-[2.5rem] overflow-hidden relative">
                 <div className="flex flex-col sm:flex-row items-center justify-between gap-4 mb-8">
                     <div className="flex items-center gap-3">
                         <div className="w-2.5 h-2.5 rounded-full bg-primary shadow-[0_0_8px_rgba(197,160,89,0.5)]" />
-                        <h3 className="text-[11px] font-black uppercase tracking-[0.4em] text-foreground">ACTIVE VECTOR SEQUENCE</h3>
+                        <h3 className="text-[11px] font-black uppercase tracking-[0.4em] text-foreground">ACTIVE SEQUENCE</h3>
                     </div>
                     <div className="flex items-center gap-2 px-5 py-2 bg-card rounded-full border border-primary/5 shadow-sm">
                          <Cpu className="h-3.5 w-3.5 text-primary animate-pulse" />
@@ -137,9 +135,9 @@ export function AnalyzerView({
                     </div>
                 </div>
                 <div className="flex flex-wrap justify-center gap-3">
-                    {vectorSequence.map((digit, i) => {
-                        const isTrigger = i === vectorSequence.length - 1; 
-                        const prevDigit = i > 0 ? vectorSequence[i - 1] : null;
+                    {sequence.map((digit, i) => {
+                        const isTrigger = i === sequence.length - 1; 
+                        const prevDigit = i > 0 ? sequence[i - 1] : null;
                         const colorClasses = getDigitColor(digit, prevDigit);
 
                         return (

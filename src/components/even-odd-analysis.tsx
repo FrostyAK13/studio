@@ -27,35 +27,28 @@ export function EvenOddAnalysis({ lastDigitTicks, selectedMarket, price, decimal
   const analysisResult = React.useMemo(() => {
     if (lastDigitTicks.length < 50) return null;
 
-    // Step 1: Normalize distribution
     const counts = Array(10).fill(0);
     lastDigitTicks.forEach(d => counts[d]++);
     const total = lastDigitTicks.length;
     const P = counts.map(c => (c / total) * 100);
     const D = P.map(p => p - 10);
 
-    // Step 2: Compute weighted directional strength
     const sEven = (D[0] + D[2] + D[4] + D[6] + D[8]) - 
                  (Math.abs(D[1]) + Math.abs(D[3]) + Math.abs(D[5]) + Math.abs(D[7]) + Math.abs(D[9]));
     const sOdd = (D[1] + D[3] + D[5] + D[7] + D[9]) - 
                 (Math.abs(D[0]) + Math.abs(D[2]) + Math.abs(D[4]) + Math.abs(D[6]) + Math.abs(D[8]));
 
-    // Step 3: Select direction
     const direction = sEven > sOdd ? 'Even' : 'Odd';
 
-    // Step 4: Stability filter
     const mean = 10;
     const variance = P.reduce((sum, p) => sum + Math.pow(p - mean, 2), 0) / 10;
     const stdDev = Math.sqrt(variance);
     
-    // Proceed only under moderate dispersion
-    if (stdDev < 0.5 || stdDev > 6.5) return { status: 'UNSTABLE', direction, entryDigit: null, confidence: 0, reasoning: 'Market distribution shows extreme spread. Protocol suspended for stability.' };
+    if (stdDev < 0.5 || stdDev > 6.5) return { status: 'UNSTABLE', direction, entryDigit: null, confidence: 0, reasoning: 'Market distribution shows extreme spread. System suspended for stability.' };
 
-    // Step 5: Filter entry candidates
     const chosenSet = direction === 'Even' ? [0, 2, 4, 6, 8] : [1, 3, 5, 7, 9];
     const sortedChosen = [...chosenSet].sort((a, b) => P[b] - P[a]);
     
-    // Exclude top 2 and bottom 2
     const candidates = sortedChosen.filter(d => 
         d !== sortedChosen[0] && 
         d !== sortedChosen[1] && 
@@ -65,7 +58,6 @@ export function EvenOddAnalysis({ lastDigitTicks, selectedMarket, price, decimal
 
     if (candidates.length === 0) return { status: 'NO CANDIDATES', direction, entryDigit: null, confidence: 0, reasoning: 'Outlier filter removed all valid entry points.' };
 
-    // Step 6 & 7 & 8: Structural balance filter & Score candidates
     const scores = candidates.map(i => {
         const nextIdx = (i + 1) % 10;
         const prevIdx = (i + 9) % 10;
@@ -83,7 +75,7 @@ export function EvenOddAnalysis({ lastDigitTicks, selectedMarket, price, decimal
         entryDigit: best.digit,
         confidence,
         stdDev,
-        reasoning: `Market identifies equilibrium deviation in ${direction} territory. Digit ${best.digit} selected via smooth structural zone logic.`
+        reasoning: `System identifies equilibrium deviation in ${direction} territory. Digit ${best.digit} selected via smooth structural logic.`
     };
   }, [lastDigitTicks]);
 
@@ -233,7 +225,7 @@ export function EvenOddAnalysis({ lastDigitTicks, selectedMarket, price, decimal
                                                 <Activity className="h-3 w-3" /> PARITY V8.1
                                             </h4>
                                             <p className="text-[9px] font-medium text-foreground leading-relaxed italic border-l-2 border-primary/30 pl-3">
-                                                "Extracts edge via deviation from equilibrium, structural stability, and neighbor variance filters."
+                                                "Extracts edge via deviation from equilibrium and stability filters."
                                             </p>
                                         </div>
                                     </PopoverContent>

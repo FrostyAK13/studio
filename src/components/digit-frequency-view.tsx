@@ -136,7 +136,7 @@ export function DigitFrequencyView({
                         </Select>
                     </div>
                     <div className="space-y-1">
-                        <Label className="text-[7px] font-black uppercase tracking-[0.3em] text-primary ml-1">HORIZON</Label>
+                        <Label className="text-[7px] font-black uppercase tracking-[0.3em] text-primary ml-1">TICKS</Label>
                         <Input
                             type="number"
                             min="1"
@@ -148,7 +148,7 @@ export function DigitFrequencyView({
                         />
                     </div>
                     <div className="space-y-1">
-                        <Label className="text-[7px] font-black uppercase tracking-[0.3em] text-primary ml-1">LIVE PRICE</Label>
+                        <Label className="text-[7px] font-black uppercase tracking-[0.3em] text-primary ml-1">PRICE</Label>
                         <div className="h-7 bg-primary text-primary-foreground rounded-lg flex items-center justify-center font-black text-[9px] shadow-sm px-3">
                             {price.toFixed(decimalPlaces)}
                         </div>

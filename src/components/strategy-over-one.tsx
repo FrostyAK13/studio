@@ -180,7 +180,7 @@ export function StrategyOverOne({
             <div className="grid grid-cols-1 md:grid-cols-5 gap-3">
                 <Card className="bg-emerald-500/10 border border-emerald-500/20 p-4 rounded-[1.5rem] relative group" >
                     <div className="absolute top-3 right-3"><Crosshair className="h-4 w-4 text-emerald-600" /></div>
-                    <p className="text-[8px] font-black text-emerald-600 uppercase tracking-widest mb-2">VECTOR SELECT</p>
+                    <p className="text-[8px] font-black text-emerald-600 uppercase tracking-widest mb-2">MARKET</p>
                     <Select value={selectedMarket} onValueChange={onMarketChange}>
                         <SelectTrigger className="bg-transparent border-none p-0 h-auto font-black text-foreground text-base leading-tight focus:ring-0 focus:ring-offset-0 gap-1.5">
                             <SelectValue placeholder="Market" />
@@ -201,7 +201,7 @@ export function StrategyOverOne({
                 </Card>
                 <Card className="bg-blue-600/10 border border-blue-500/20 p-4 rounded-[1.5rem] relative">
                     <div className="absolute top-3 right-3"><Wallet className="h-4 w-4 text-blue-600" /></div>
-                    <p className="text-[8px] font-black text-blue-600 uppercase tracking-widest mb-2">LIVE PRICE</p>
+                    <p className="text-[8px] font-black text-blue-600 uppercase tracking-widest mb-2">PRICE</p>
                     <p className="text-xl font-black text-foreground leading-tight tabular-nums">{price === 0 ? <span className="text-amber-600 animate-pulse text-sm">SYNCING...</span> : price.toFixed(decimalPlaces)}</p>
                     <Badge className="bg-blue-500/20 text-blue-600 border-none mt-2 text-[8px] font-black uppercase tracking-widest">STAKE: {currentStake.toFixed(2)}</Badge>
                 </Card>
@@ -242,7 +242,7 @@ export function StrategyOverOne({
                             <h3 className={cn("text-2xl sm:text-4xl font-black uppercase tracking-tighter leading-none", isRunning || isPendingExecution ? "text-foreground" : "text-muted-foreground/40")}>{isPendingExecution ? "EXECUTING..." : isRunning ? "SURVEILLANCE" : "STANDBY"}</h3>
                             <div className="flex items-center gap-2 mt-3">
                                 <div className={cn("h-1.5 w-1.5 rounded-full", entryLogic.canTrade ? "bg-emerald-600 animate-pulse shadow-[0_0_8px_#10b981]" : "bg-muted")} />
-                                <p className="text-[10px] font-black uppercase tracking-[0.4em] text-primary/60">{isPendingExecution ? "EXECUTION ENGAGED" : isRunning ? (entryLogic.canTrade ? "SIGNAL DETECTED" : "MONITORING FLOW") : "AWAITING START"}</p>
+                                <p className="text-[10px] font-black uppercase tracking-[0.4em] text-primary/60">{isPendingExecution ? "EXECUTION ENGAGED" : isRunning ? (entryLogic.canTrade ? "SIGNAL DETECTED" : "MONITORING") : "AWAITING START"}</p>
                             </div>
                         </div>
                     </div>
@@ -261,12 +261,11 @@ export function StrategyOverOne({
                         </Button>
                     </div>
                 </div>
-                {isPendingExecution && ( <div className="mt-8 h-2 w-full bg-muted rounded-full overflow-hidden"><motion.div className="h-full bg-primary" initial={{ width: "0%" }} animate={{ width: "100%" }} transition={{ duration: 2 }} /></div> )}
             </Card>
 
             <div className="p-6 sm:p-8 bg-muted/30 rounded-[2rem] border border-primary/5 space-y-4 shadow-inner">
                 <div className="flex items-center justify-between border-b border-primary/5 pb-4">
-                    <h4 className="text-[10px] sm:text-[12px] font-black uppercase text-primary tracking-widest flex items-center gap-3"><Layers className="h-5 w-5" /> ANALYSIS HUD</h4>
+                    <h4 className="text-[10px] sm:text-[12px] font-black uppercase text-primary tracking-widest flex items-center gap-3"><Layers className="h-5 w-5" /> HUD</h4>
                     <div className="flex items-center gap-2">
                         <span className={cn("text-lg sm:text-2xl font-black tabular-nums", sessionStats.profit >= 0 ? "text-emerald-600" : "text-rose-500")}>{sessionStats.profit.toFixed(2)} USD</span>
                         <p className="text-[8px] text-muted-foreground uppercase tracking-widest font-black">NET PROFIT</p>
@@ -276,7 +275,7 @@ export function StrategyOverOne({
 
             <Card className="border-none shadow-xl bg-card rounded-[1.5rem] overflow-hidden border border-primary/10">
                 <div className="px-6 py-4 border-b border-primary/5 flex items-center justify-between bg-muted/20">
-                    <h4 className="font-black text-[10px] uppercase tracking-[0.2em] text-foreground">TRANSACTION LOG</h4>
+                    <h4 className="font-black text-[10px] uppercase tracking-[0.2em] text-foreground">LOG</h4>
                     <Badge className="bg-primary/20 text-primary border-none text-[8px] font-black uppercase tracking-widest px-3">RUNS: {trades.length}</Badge>
                 </div>
                 <div className="w-full">
@@ -284,7 +283,7 @@ export function StrategyOverOne({
                         <thead className="bg-muted/30 border-b border-primary/5">
                             <tr className="text-[9px] font-black uppercase text-muted-foreground tracking-[0.2em]">
                                 <th className="px-6 py-3">TYPE</th>
-                                <th className="px-6 py-3">SPOT</th>
+                                <th className="px-6 py-3">PRICE</th>
                                 <th className="px-6 py-3 text-right">P/L</th>
                             </tr>
                         </thead>
@@ -292,23 +291,14 @@ export function StrategyOverOne({
                             <AnimatePresence>
                                 {trades.map((t) => (
                                     <motion.tr key={t.id} initial={{ opacity: 0, x: -10 }} animate={{ opacity: 1, x: 0 }} className="hover:bg-muted/30 transition-colors">
-                                        <td className="px-6 py-4"><div className="flex items-center gap-3"><Activity className="h-4 w-4 text-muted-foreground" />{t.result === 'WON' ? <TrendingUp className="h-4 w-4 text-emerald-600" /> : <TrendingDown className="h-4 w-4 text-rose-500" />}<span className="text-[11px] font-black text-foreground">OVER 1</span></div></td>
-                                        <td className="px-6 py-4"><div className="space-y-1"><div className="flex items-center gap-3"><div className="h-2 w-2 bg-rose-500 rounded-sm" /><span className="text-[11px] font-black text-foreground tabular-nums">{t.entrySpot}</span></div><div className="flex items-center gap-3"><div className="h-2 w-2 border border-muted-foreground rounded-sm" /><span className="text-[11px] font-black text-muted-foreground tabular-nums">{t.exitSpot}</span></div></div></td>
+                                        <td className="px-6 py-4"><div className="flex items-center gap-3"><Activity className="h-4 w-4 text-muted-foreground" /><span className="text-[11px] font-black text-foreground">OVER 1</span></div></td>
+                                        <td className="px-6 py-4"><div className="space-y-1"><div className="flex items-center gap-3"><span className="text-[11px] font-black text-foreground tabular-nums">{t.entrySpot}</span></div><div className="flex items-center gap-3"><span className="text-[11px] font-black text-muted-foreground tabular-nums">{t.exitSpot}</span></div></div></td>
                                         <td className="px-6 py-4 text-right"><div className="space-y-1"><p className="text-[11px] font-black text-muted-foreground tabular-nums">{t.stake.toFixed(2)} USD</p><p className={cn("text-[11px] font-black tabular-nums", t.result === 'WON' ? "text-emerald-600" : "text-rose-500")}>{t.result === 'WON' ? `+${t.profit.toFixed(2)}` : t.profit.toFixed(2)} USD</p></div></td>
                                     </motion.tr>
                                 ))}
                             </AnimatePresence>
-                            {trades.length === 0 && ( <tr><td colSpan={3} className="px-6 py-20 text-center opacity-20"><Zap className="h-16 w-16 mx-auto mb-4 text-muted-foreground" /><p className="text-base font-black uppercase tracking-[0.4em] text-foreground">Awaiting Engagement</p></td></tr> )}
                         </tbody>
                     </table>
-                </div>
-                <div className="border-t border-primary/10 bg-muted/10 p-6 grid grid-cols-3 gap-y-6 shadow-inner">
-                    <div className="text-center"><p className="text-[8px] font-black text-muted-foreground uppercase tracking-widest mb-1">TOTAL STAKE</p><p className="text-base sm:text-lg font-black text-foreground tabular-nums">{sessionStats.totalStake.toFixed(2)} <span className="text-[10px] opacity-40">USD</span></p></div>
-                    <div className="text-center"><p className="text-[8px] font-black text-muted-foreground uppercase tracking-widest mb-1">TOTAL PAYOUT</p><p className="text-base sm:text-lg font-black text-foreground tabular-nums">{sessionStats.totalPayout.toFixed(2)} <span className="text-[10px] opacity-40">USD</span></p></div>
-                    <div className="text-center"><p className="text-[8px] font-black text-muted-foreground uppercase tracking-widest mb-1">RUNS</p><p className="text-base sm:text-lg font-black text-foreground tabular-nums">{trades.length}</p></div>
-                    <div className="text-center"><p className="text-[8px] font-black text-muted-foreground uppercase tracking-widest mb-1">LOST</p><p className="text-base sm:text-lg font-black text-rose-500 tabular-nums">{sessionStats.losses}</p></div>
-                    <div className="text-center"><p className="text-[8px] font-black text-muted-foreground uppercase tracking-widest mb-1">WON</p><p className="text-base sm:text-lg font-black text-emerald-600 tabular-nums">{sessionStats.wins}</p></div>
-                    <div className="text-center"><p className="text-[8px] font-black text-muted-foreground uppercase tracking-widest mb-1">PROFIT/LOSS</p><p className={cn("text-lg sm:text-xl font-black tabular-nums", sessionStats.profit >= 0 ? "text-emerald-600" : "text-rose-500")}>{sessionStats.profit >= 0 ? '+' : ''}{sessionStats.profit.toFixed(2)} <span className="text-[10px] opacity-40">USD</span></p></div>
                 </div>
             </Card>
         </div>

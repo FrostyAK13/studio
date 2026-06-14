@@ -101,12 +101,12 @@ const TacticalRecommendation = ({ ticks }: { ticks: number[] }) => {
         const best = P.map((p, i) => ({ i, p })).sort((a, b) => b.p - a.p)[0];
         return {
             status: 'TRADE NOW', type: direction, entry: best.i, confidence: 95,
-            reasoning: `Market identifies stable imbalance zone in ${direction} sector.`
+            reasoning: `Market identifies stable imbalance in ${direction} sector.`
         };
     }, [ticks]);
 
     return (
-        <Card className="border-none shadow-2xl bg-card rounded-xl border border-border overflow-hidden relative">
+        <Card className="border-none shadow-sm bg-card rounded-xl border border-border overflow-hidden relative">
             <CardContent className="p-4 sm:p-6">
                 <div className="flex flex-col lg:flex-row items-center justify-between gap-6">
                     <div className="flex items-center gap-4">
@@ -165,11 +165,11 @@ export function ScannerView({
                             </Select>
                         </div>
                         <div className="space-y-2">
-                            <Label className="text-[8px] font-black uppercase tracking-[0.3em] text-primary ml-1">HORIZON</Label>
+                            <Label className="text-[8px] font-black uppercase tracking-[0.3em] text-primary ml-1">TICKS</Label>
                             <Input type="number" min="1" max="1000" value={maxTicks === 0 ? '' : maxTicks} onChange={handleMaxTicksChange} onBlur={handleMaxTicksBlur} className="h-8 bg-muted/50 border-border rounded-lg font-black text-xs text-primary text-center" />
                         </div>
                         <div className="space-y-2">
-                            <Label className="text-[8px] font-black uppercase tracking-[0.3em] text-primary ml-1">LIVE PRICE</Label>
+                            <Label className="text-[8px] font-black uppercase tracking-[0.3em] text-primary ml-1">PRICE</Label>
                             <div className="h-8 bg-primary text-primary-foreground rounded-lg flex items-center justify-center shadow-md px-4 overflow-hidden">
                                 <span className="text-xs font-black tabular-nums">{price.toFixed(decimalPlaces)}</span>
                             </div>
