@@ -6,29 +6,11 @@ import { ScannerView } from './scanner-view';
 import { AnalyzerView } from './analyzer-view';
 import { syntheticIndices } from '@/lib/mock-data';
 import { DigitFrequencyView } from './digit-frequency-view';
-import { InsightView } from './insight-view';
 import { cn } from '@/lib/utils';
 import { Radio, Activity } from 'lucide-react';
 import { motion } from 'framer-motion';
 
 type EngineStatus = 'offline' | 'active';
-
-export interface GlobalAnalysisResult {
-    marketId: string;
-    marketName: string;
-    ci: number;
-    ss: number;
-    flowScore: number;
-    tradeType: 'FLOW' | 'NO TRADE';
-    triggerDigit: number | null; 
-    targetDigit: number | null; 
-    confidence: number;
-    currentPrice: number;
-    pip: number;
-    scannerStrategy: 'OVER 3' | 'UNDER 6' | 'NONE';
-    scannerEntry: number | null;
-    scannerConfidence: number;
-}
 
 export function Dashboard() {
     const [mounted, setMounted] = React.useState(false);
@@ -41,8 +23,6 @@ export function Dashboard() {
     const [tickTimestamps, setTickTimestamps] = React.useState<number[]>([]);
     
     const [surveillanceStatus, setSurveillanceStatus] = React.useState<EngineStatus>('offline');
-    const [globalResults, setGlobalResults] = React.useState<Record<string, GlobalAnalysisResult>>({});
-    const [activeScanId, setActiveScanId] = React.useState<string | null>(null);
 
     const currentMarketRef = React.useRef(selectedMarket);
     const pipSizeRef = React.useRef<number | null>(null);
@@ -50,99 +30,6 @@ export function Dashboard() {
     React.useEffect(() => {
         setMounted(true);
     }, []);
-
-    // Global Surveillance Engine
-    React.useEffect(() => {
-        if (!mounted) return;
-        const scanWs = new WebSocket('wss://ws.derivws.com/websockets/v3?app_id=84799');
-        let currentIndex = 0;
-        const runGlobalScan = () => {
-            if (currentIndex >= syntheticIndices.length) {
-                currentIndex = 0;
-                setTimeout(runGlobalScan, 2000); 
-                return;
-            }
-            const market = syntheticIndices[currentIndex];
-            setActiveScanId(market.id);
-            if (scanWs.readyState === WebSocket.OPEN) {
-                scanWs.send(JSON.stringify({
-                    "ticks_history": market.id,
-                    "count": 1000, 
-                    "end": "latest",
-                    "style": "ticks"
-                }));
-            }
-        };
-        scanWs.onopen = () => runGlobalScan();
-        scanWs.onmessage = (event) => {
-            const data = JSON.parse(event.data);
-            if (data.msg_type === 'history' && data.history) {
-                const prices = (data.history.prices || []).map((p: any) => Number(p));
-                const latestPrice = prices.length > 0 ? prices[prices.length - 1] : 0;
-                const marketId = data.echo_req.ticks_history;
-                const pip = data.echo_req.pip_size || 2;
-                const ticks = prices.map((p: number) => {
-                    const pStr = p.toFixed(8);
-                    const dec = pStr.split('.')[1] || '00000000';
-                    return parseInt(dec[pip - 1] || '0');
-                }).reverse();
-                const total = ticks.length || 1;
-                const counts = Array(10).fill(0);
-                ticks.forEach(d => counts[d]++);
-                const P = counts.map(c => (c / total) * 100);
-                const D = P.map(p => p - 10); 
-                const variance = P.reduce((sum, p) => sum + Math.pow(p - 10, 2), 0) / 10;
-                const stdDev = Math.sqrt(variance);
-                const SS = Math.max(0, 1 - (stdDev / 10));
-                const CI = D.reduce((sum, d) => sum + Math.pow(d, 2), 0);
-                const entryCandidates = [0,1,2,3,4,5,6,7,8,9].filter(i => D[i] >= -1.0 && D[i] <= -0.2);
-                const targetCandidates = [0,1,2,3,4,5,6,7,8,9].map(i => {
-                    const prevIdx = (i + 9) % 10;
-                    const nextIdx = (i + 1) % 10;
-                    const ld = D[i] - (D[prevIdx] + D[nextIdx]) / 2;
-                    return { i, ld, d: D[i] };
-                }).filter(t => t.d > 0.3 && t.ld > 0);
-                let bestE: number | null = null;
-                let bestT: number | null = null;
-                let bestFlowScore = -1000;
-                let finalConfidence = 0;
-                if (entryCandidates.length > 0 && targetCandidates.length > 0) {
-                    entryCandidates.forEach(e => {
-                        targetCandidates.forEach(t => {
-                            if (e === t.i) return;
-                            const score = Math.abs(t.d) - Math.abs(D[e]);
-                            if (score > bestFlowScore) {
-                                bestFlowScore = score;
-                                bestE = e;
-                                bestT = t.i;
-                            }
-                        });
-                    });
-                    if (bestE !== null && bestT !== null) {
-                        finalConfidence = Math.min(99.9, 65 + (bestFlowScore * 12) + (SS * 15));
-                    }
-                }
-                let S_U6 = 0; for (let i = 0; i <= 5; i++) S_U6 += D[i];
-                let S_O3 = 0; for (let i = 4; i <= 9; i++) S_O3 += D[i];
-                const scannerDirection = S_U6 > S_O3 ? 'UNDER 6' : 'OVER 3';
-                const bestScanner = P.map((p, i) => ({ i, p })).sort((a, b) => b.p - a.p)[0];
-                setGlobalResults(prev => ({
-                    ...prev,
-                    [marketId]: {
-                        marketId, marketName: syntheticIndices.find(m => m.id === marketId)?.name || marketId, 
-                        ci: CI, ss: SS, flowScore: bestFlowScore,
-                        tradeType: bestE !== null ? 'FLOW' : 'NO TRADE',
-                        triggerDigit: bestE, targetDigit: bestT, confidence: finalConfidence,
-                        currentPrice: latestPrice, pip: pip, scannerStrategy: scannerDirection,
-                        scannerEntry: bestScanner?.i ?? null, scannerConfidence: 60 + Math.max(S_U6, S_O3)
-                    }
-                }));
-                currentIndex++;
-                setTimeout(runGlobalScan, 200);
-            }
-        };
-        return () => scanWs.close();
-    }, [mounted]);
 
     // Active Market Feed
     React.useEffect(() => {
@@ -232,16 +119,16 @@ export function Dashboard() {
         <div className="flex min-h-screen w-full flex-col bg-background font-sans overflow-x-hidden">
             <div className="flex flex-col flex-1">
                 <header className="sticky top-0 z-[100] flex h-16 md:h-[4.5rem] items-center border-b bg-background/95 backdrop-blur-xl px-4 shadow-sm">
-                    <div className="flex w-full items-center justify-between max-w-[1600px] mx-auto gap-4">
+                    <div className="flex w-full items-center justify-between max-w-[1600px] mx-auto">
                         <div className="flex-1 flex items-center justify-start">
-                            <div className="flex items-center bg-card border rounded-full shadow-sm h-10 px-1 overflow-hidden">
-                                <div className="flex items-center gap-3 px-5 py-2 border-r">
-                                    <div className={cn("h-2.5 w-2.5 rounded-full animate-pulse", surveillanceStatus === 'active' ? "bg-emerald-500 shadow-[0_0_12px_rgba(16,185,129,0.5)]" : "bg-rose-500")} />
-                                    <span className="text-[10px] font-black text-foreground uppercase tracking-[0.3em] hidden sm:inline">LIVE</span>
+                            <div className="flex items-center bg-card border rounded-full shadow-sm h-10 px-1">
+                                <div className="flex items-center gap-3 px-4 py-2 border-r">
+                                    <div className={cn("h-2 w-2 rounded-full animate-pulse", surveillanceStatus === 'active' ? "bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.5)]" : "bg-rose-500")} />
+                                    <span className="text-[9px] font-black text-foreground uppercase tracking-widest hidden sm:inline">LIVE</span>
                                 </div>
-                                <div className="flex items-center gap-2 px-5 py-2 bg-muted/50">
-                                    <Radio className={cn("h-3.5 w-3.5 transition-all", surveillanceStatus === 'active' ? 'text-emerald-500 animate-pulse' : 'text-rose-500')} />
-                                    <span className="text-[10px] font-black uppercase text-foreground tracking-[0.2em]">{surveillanceStatus === 'active' ? 'LIVE' : 'OFFLINE'}</span>
+                                <div className="flex items-center gap-2 px-4 py-2">
+                                    <Radio className={cn("h-3.5 w-3.5", surveillanceStatus === 'active' ? 'text-emerald-500 animate-pulse' : 'text-rose-500')} />
+                                    <span className="text-[9px] font-black uppercase text-foreground tracking-widest">{surveillanceStatus === 'active' ? 'STREAMING' : 'OFFLINE'}</span>
                                 </div>
                             </div>
                         </div>
@@ -273,9 +160,9 @@ export function Dashboard() {
                 </header>
                 <main className="flex-1 flex flex-col max-w-[1600px] mx-auto w-full relative p-2 sm:p-4">
                     <Tabs defaultValue="analyzer" className="w-full">
-                        <TabsList className="flex items-center justify-start md:justify-center gap-1.5 md:gap-2 bg-transparent h-auto p-0 mb-4 md:mb-6 overflow-x-auto no-scrollbar w-full pb-2">
-                            {['analyzer', 'last-digit-analysis', 'frequency', 'global-scan', 'insight'].map((tab) => (
-                                <TabsTrigger key={tab} value={tab} className="flex-shrink-0 px-3 md:px-5 py-2 md:py-2.5 rounded-full border data-[state=active]:bg-primary data-[state=active]:text-primary-foreground text-muted-foreground font-black text-[8px] md:text-[10px] uppercase tracking-[0.1em] md:tracking-[0.2em] transition-all shadow-sm">
+                        <TabsList className="flex items-center justify-start md:justify-center gap-2 bg-transparent h-auto p-0 mb-6 overflow-x-auto no-scrollbar w-full">
+                            {['analyzer', 'last-digit-analysis', 'frequency', 'global-scan'].map((tab) => (
+                                <TabsTrigger key={tab} value={tab} className="flex-shrink-0 px-4 py-2.5 rounded-full border data-[state=active]:bg-primary data-[state=active]:text-primary-foreground font-black text-[9px] uppercase tracking-widest shadow-sm">
                                     {tab.toUpperCase().replace(/-/g, ' ')}
                                 </TabsTrigger>
                             ))}
@@ -291,9 +178,6 @@ export function Dashboard() {
                         </TabsContent>
                         <TabsContent value="global-scan" className="mt-0 outline-none animate-in fade-in duration-500">
                             <ScannerView price={Number(price) || 0} lastDigitTicks={analyzedDigits} priceHistory={analyzedPrices} maxTicks={maxTicks} handleMaxTicksChange={handleMaxTicksChange} handleMaxTicksBlur={handleMaxTicksBlur} selectedMarket={selectedMarket} onMarketChange={setSelectedMarket} decimalPlaces={decimalPlaces} />
-                        </TabsContent>
-                        <TabsContent value="insight" className="mt-0 outline-none animate-in fade-in duration-500">
-                            <InsightView globalResults={globalResults} activeScanId={activeScanId} dashboardPrice={Number(price) || 0} dashboardMarketId={selectedMarket} />
                         </TabsContent>
                     </Tabs>
                 </main>
