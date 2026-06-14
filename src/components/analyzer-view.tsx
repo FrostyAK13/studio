@@ -36,53 +36,9 @@ const HeroPrice = ({ price, decimalPlaces }: { price: number; decimalPlaces: num
                 <span className="text-6xl sm:text-8xl text-foreground">{mainPart}</span>
                 <span className="text-7xl sm:text-9xl icy-gold-text ml-1">{lastDigit}</span>
             </div>
-            <div className="mt-4 flex items-center gap-2 bg-muted px-4 py-1.5 rounded-full border">
+            <div className="mt-4 flex items-center gap-2 bg-muted/30 px-5 py-1.5 rounded-full border border-primary/10">
                 <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
                 <span className="text-[10px] font-black uppercase tracking-[0.3em] text-muted-foreground">LIVE TICK FEED</span>
-            </div>
-        </div>
-    );
-};
-
-const CheatSheet = ({ type }: { type: string }) => {
-    const guides: Record<string, { title: string, logic: string, tip: string }> = {
-        'over-under': {
-            title: 'OVER/UNDER',
-            logic: 'Monitors barrier saturation. 100+1 logic triggers when a 15%+ frequency skew is detected in specific digit ranges.',
-            tip: 'Target Over 2 when Under 2 digits show extreme exhaustion.'
-        },
-        'even-odd': {
-            title: 'EVEN/ODD',
-            logic: 'Tracks recursive binary patterns. Probability pivots after 4-5 consecutive streaks of a single parity.',
-            tip: 'Wait for 5x Even streak before entering Odd for immediate mean reversion.'
-        },
-        'matches-differs': {
-            title: 'MATCH/DIFF',
-            logic: 'Zero-Error protocol focusing on the 90% probability of Differ. Analyzes cold-digit cycles.',
-            tip: 'Differ the "Hottest" digit for maximum stability.'
-        },
-        'rise-fall': {
-            title: 'MOMENTUM',
-            logic: 'Calculates Rate of Change (ROC) and EMA crossovers in the last 10 ticks.',
-            tip: 'Execution is safest during high-flow intervals.'
-        }
-    };
-
-    const guide = guides[type] || guides['over-under'];
-
-    return (
-        <div className="space-y-3">
-            <h4 className="text-[10px] font-black text-foreground uppercase tracking-widest flex items-center gap-2">
-                <ShieldCheck className="h-3 w-3 text-primary" /> {guide.title}
-            </h4>
-            <p className="text-[9px] font-medium text-muted-foreground leading-relaxed italic border-l-2 border-primary/30 pl-3">
-                "{guide.logic}"
-            </p>
-            <div className="bg-primary/5 p-2 rounded-lg border">
-                <p className="text-[8px] font-black text-emerald-600 uppercase tracking-widest mb-1 flex items-center gap-1">
-                    <Zap className="h-2.5 w-2.5" /> PRO TIP
-                </p>
-                <p className="text-[9px] font-bold text-foreground/90">{guide.tip}</p>
             </div>
         </div>
     );
@@ -106,26 +62,24 @@ export function AnalyzerView({
     const getDigitColor = (digit: number, prevDigit: number | null) => {
         switch (tradeType) {
             case 'over-under':
-                if (digit > selectedDigit) return 'bg-emerald-500 border-emerald-600 text-white';
-                if (digit < selectedDigit) return 'bg-rose-500 border-rose-600 text-white';
-                return 'bg-muted border-muted-foreground text-muted-foreground';
+                if (digit > selectedDigit) return 'bg-emerald-500 border-emerald-600 text-white'; // Over = Green
+                if (digit < selectedDigit) return 'bg-rose-500 border-rose-600 text-white'; // Under = Red
+                return 'bg-gray-400 border-gray-500 text-white'; // Neutral = Gray
             case 'even-odd':
                 return digit % 2 === 0 
-                    ? 'bg-emerald-500 border-emerald-600 text-white' 
-                    : 'bg-rose-500 border-rose-600 text-white';
+                    ? 'bg-emerald-500 border-emerald-600 text-white' // Even = Green
+                    : 'bg-rose-500 border-rose-600 text-white'; // Odd = Red
             case 'matches-differs':
                 return digit === selectedDigit 
-                    ? 'bg-emerald-500 border-emerald-600 text-white' 
-                    : 'bg-rose-500 border-rose-600 text-white';
+                    ? 'bg-emerald-500 border-emerald-600 text-white' // Match = Green
+                    : 'bg-rose-500 border-rose-600 text-white'; // Differ = Red
             case 'rise-fall':
-                if (prevDigit === null) return 'bg-muted border-muted-foreground text-muted-foreground';
-                return digit > prevDigit 
-                    ? 'bg-emerald-500 border-emerald-600 text-white' 
-                    : digit < prevDigit 
-                        ? 'bg-rose-500 border-rose-600 text-white'
-                        : 'bg-muted border-muted-foreground text-muted-foreground';
+                if (prevDigit === null) return 'bg-gray-400 border-gray-500 text-white';
+                if (digit > prevDigit) return 'bg-emerald-500 border-emerald-600 text-white'; // Rise = Green
+                if (digit < prevDigit) return 'bg-rose-500 border-rose-600 text-white'; // Fall = Red
+                return 'bg-gray-400 border-gray-500 text-white'; // Same = Gray
             default:
-                return 'bg-background border-muted text-muted-foreground';
+                return 'bg-muted border-muted text-muted-foreground';
         }
     };
 
@@ -135,15 +89,15 @@ export function AnalyzerView({
         <div className="space-y-6 animate-in fade-in slide-in-from-bottom-8 duration-1000 pb-24 max-w-7xl mx-auto">
             <HeroPrice price={price} decimalPlaces={decimalPlaces} />
             
-            <Card className="shadow-sm bg-card rounded-xl border">
+            <Card className="shadow-sm bg-card rounded-3xl border border-primary/5">
                 <CardContent className="p-4 grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div className="space-y-1.5">
-                        <Label className="text-[10px] font-black uppercase tracking-[0.4em] text-muted-foreground ml-2">MARKET</Label>
+                        <Label className="text-[10px] font-black uppercase tracking-[0.4em] text-primary/60 ml-2">MARKET VECTOR</Label>
                         <Select value={selectedMarket} onValueChange={onMarketChange}>
-                            <SelectTrigger className="h-11 bg-muted/30 border rounded-xl font-black text-xs px-5">
+                            <SelectTrigger className="h-11 bg-muted/50 border-primary/5 rounded-2xl font-black text-xs px-5">
                                 <SelectValue placeholder="Select Market" />
                             </SelectTrigger>
-                            <SelectContent className="bg-card text-foreground rounded-xl border shadow-xl">
+                            <SelectContent className="bg-card text-foreground rounded-2xl border shadow-xl">
                                 {syntheticIndices.map(m => (
                                     <SelectItem key={m.id} value={m.id} className="font-bold text-xs py-2">{m.name}</SelectItem>
                                 ))}
@@ -152,23 +106,13 @@ export function AnalyzerView({
                     </div>
                     <div className="space-y-1.5">
                         <div className="flex items-center justify-between px-2">
-                            <Label className="text-[10px] font-black uppercase tracking-[0.4em] text-muted-foreground">TACTICAL</Label>
-                            <Popover>
-                                <PopoverTrigger asChild>
-                                    <Button variant="ghost" size="icon" className="h-5 w-5 hover:bg-muted">
-                                        <Info className="h-3 w-3" />
-                                    </Button>
-                                </PopoverTrigger>
-                                <PopoverContent className="w-80 bg-card border shadow-2xl rounded-2xl p-4">
-                                    <CheatSheet type={tradeType} />
-                                </PopoverContent>
-                            </Popover>
+                            <Label className="text-[10px] font-black uppercase tracking-[0.4em] text-primary/60">TACTICAL PROTOCOL</Label>
                         </div>
                         <Select value={tradeType} onValueChange={setTradeType}>
-                            <SelectTrigger className="h-11 bg-muted/30 border rounded-xl font-black text-xs px-5">
+                            <SelectTrigger className="h-11 bg-muted/50 border-primary/5 rounded-2xl font-black text-xs px-5">
                                 <SelectValue placeholder="Select Type" />
                             </SelectTrigger>
-                            <SelectContent className="bg-card text-foreground rounded-xl border shadow-xl">
+                            <SelectContent className="bg-card text-foreground rounded-2xl border shadow-xl">
                                 <SelectItem value="over-under" className="font-bold text-xs py-2">OVER/UNDER</SelectItem>
                                 <SelectItem value="even-odd" className="font-bold text-xs py-2">EVEN/ODD</SelectItem>
                                 <SelectItem value="matches-differs" className="font-bold text-xs py-2">MATCHES/DIFFERS</SelectItem>
@@ -181,15 +125,15 @@ export function AnalyzerView({
 
             <DigitFrequencyCircles ticks={lastDigitTicks} selectedDigit={selectedDigit} onDigitSelect={setSelectedDigit} selectedMarket={selectedMarket} />
 
-            <Card className="shadow-sm bg-muted/10 border p-8 rounded-2xl overflow-hidden relative">
+            <Card className="shadow-sm bg-muted/5 border-primary/5 p-8 rounded-[2.5rem] overflow-hidden relative">
                 <div className="flex flex-col sm:flex-row items-center justify-between gap-4 mb-8">
                     <div className="flex items-center gap-3">
-                        <div className="w-2 h-2 rounded-full bg-primary animate-pulse" />
+                        <div className="w-2.5 h-2.5 rounded-full bg-primary shadow-[0_0_8px_rgba(197,160,89,0.5)]" />
                         <h3 className="text-[11px] font-black uppercase tracking-[0.4em] text-foreground">ACTIVE VECTOR SEQUENCE</h3>
                     </div>
-                    <div className="flex items-center gap-2 px-5 py-2 bg-muted rounded-full border">
-                         <Cpu className="h-3.5 w-3.5 text-primary animate-spin" />
-                         <span className="text-[10px] font-black uppercase text-foreground tracking-widest">TACTICAL SYNC ON</span>
+                    <div className="flex items-center gap-2 px-5 py-2 bg-card rounded-full border border-primary/5 shadow-sm">
+                         <Cpu className="h-3.5 w-3.5 text-primary animate-pulse" />
+                         <span className="text-[10px] font-black uppercase text-foreground tracking-widest">REAL-TIME FLOW</span>
                     </div>
                 </div>
                 <div className="flex flex-wrap justify-center gap-3">
@@ -204,7 +148,7 @@ export function AnalyzerView({
                                 initial={{ scale: 0.8, opacity: 0 }} 
                                 animate={{ scale: 1, opacity: 1 }} 
                                 className={cn(
-                                    "w-10 h-10 sm:w-14 sm:h-14 rounded-2xl flex items-center justify-center font-black text-sm sm:text-xl border transition-all",
+                                    "w-10 h-10 sm:w-14 sm:h-14 rounded-2xl flex items-center justify-center font-black text-sm sm:text-xl border transition-all shadow-sm",
                                     colorClasses,
                                     isTrigger && "ring-2 ring-primary ring-offset-2 scale-110 z-10 shadow-lg"
                                 )}

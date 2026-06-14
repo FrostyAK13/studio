@@ -232,50 +232,34 @@ export function Dashboard() {
         <div className="flex min-h-screen w-full flex-col bg-background font-sans overflow-x-hidden">
             <div className="flex flex-col flex-1">
                 <header className="sticky top-0 z-[100] flex h-16 md:h-[4.5rem] items-center border-b bg-background/95 backdrop-blur-xl px-4 shadow-sm">
-                    <div className="flex w-full items-center justify-between max-w-[1600px] mx-auto gap-4">
+                    <div className="flex w-full items-center justify-between max-w-[1600px] mx-auto">
                         <div className="flex-1 flex items-center justify-start">
-                            <div className="flex items-center bg-card border rounded-full shadow-sm h-10 px-1 overflow-hidden">
-                                <div className="flex items-center gap-3 px-5 py-2 border-r">
-                                    <div className={cn("h-2.5 w-2.5 rounded-full animate-pulse", surveillanceStatus === 'active' ? "bg-emerald-500 shadow-[0_0_12px_rgba(16,185,129,0.5)]" : "bg-rose-500")} />
-                                    <span className="text-[10px] font-black text-foreground uppercase tracking-[0.3em] hidden sm:inline">LIVE</span>
+                            <div className="flex items-center bg-card border rounded-full shadow-sm h-10 px-1">
+                                <div className="flex items-center gap-3 px-4 py-2 border-r">
+                                    <div className={cn("h-2 w-2 rounded-full animate-pulse", surveillanceStatus === 'active' ? "bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.5)]" : "bg-rose-500")} />
+                                    <span className="text-[9px] font-black text-foreground uppercase tracking-widest hidden sm:inline">LIVE</span>
                                 </div>
-                                <div className="flex items-center gap-2 px-5 py-2 bg-muted/50">
-                                    <Radio className={cn("h-3.5 w-3.5 transition-all", surveillanceStatus === 'active' ? 'text-emerald-500 animate-pulse' : 'text-rose-500')} />
-                                    <span className="text-[10px] font-black uppercase text-foreground tracking-[0.2em]">{surveillanceStatus === 'active' ? 'LIVE' : 'OFFLINE'}</span>
+                                <div className="flex items-center gap-2 px-4 py-2">
+                                    <Radio className={cn("h-3.5 w-3.5", surveillanceStatus === 'active' ? 'text-emerald-500 animate-pulse' : 'text-rose-500')} />
+                                    <span className="text-[9px] font-black uppercase text-foreground tracking-widest">{surveillanceStatus === 'active' ? 'STREAMING' : 'OFFLINE'}</span>
                                 </div>
                             </div>
                         </div>
 
                         <div className="flex-1 flex justify-center">
-                            <motion.h1 
-                                animate={{ 
-                                    y: [0, -4, 0],
-                                    filter: ["brightness(1)", "brightness(1.4)", "brightness(1)"],
-                                    textShadow: [
-                                        "0 0 10px rgba(197,160,89,0.2)",
-                                        "0 0 25px rgba(197,160,89,0.6)",
-                                        "0 0 10px rgba(197,160,89,0.2)"
-                                    ]
-                                }}
-                                transition={{ 
-                                    duration: 2,
-                                    repeat: Infinity,
-                                    ease: "easeInOut"
-                                }}
-                                className="text-xl md:text-2xl font-black text-[#C5A059] uppercase tracking-[0.4em] whitespace-nowrap drop-shadow-md cursor-default select-none"
-                            >
+                            <h1 className="text-xl md:text-2xl font-black text-primary uppercase tracking-[0.4em] animate-branding select-none">
                                 FROSTYDBOT
-                            </motion.h1>
+                            </h1>
                         </div>
 
-                        <div className="flex-1" />
+                        <div className="flex-1 flex justify-end" />
                     </div>
                 </header>
                 <main className="flex-1 flex flex-col max-w-[1600px] mx-auto w-full relative p-2 sm:p-4">
                     <Tabs defaultValue="analyzer" className="w-full">
-                        <TabsList className="flex items-center justify-start md:justify-center gap-1.5 md:gap-2 bg-transparent h-auto p-0 mb-4 md:mb-6 overflow-x-auto no-scrollbar w-full pb-2">
+                        <TabsList className="flex items-center justify-start md:justify-center gap-2 bg-transparent h-auto p-0 mb-6 overflow-x-auto no-scrollbar w-full">
                             {['analyzer', 'last-digit-analysis', 'frequency', 'global-scan', 'insight'].map((tab) => (
-                                <TabsTrigger key={tab} value={tab} className="flex-shrink-0 px-3 md:px-5 py-2 md:py-2.5 rounded-full border data-[state=active]:bg-primary data-[state=active]:text-primary-foreground text-muted-foreground font-black text-[8px] md:text-[10px] uppercase tracking-[0.1em] md:tracking-[0.2em] transition-all shadow-sm">
+                                <TabsTrigger key={tab} value={tab} className="flex-shrink-0 px-4 py-2.5 rounded-full border data-[state=active]:bg-primary data-[state=active]:text-primary-foreground font-black text-[9px] uppercase tracking-widest shadow-sm">
                                     {tab.toUpperCase().replace(/-/g, ' ')}
                                 </TabsTrigger>
                             ))}
