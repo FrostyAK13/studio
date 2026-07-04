@@ -168,7 +168,7 @@ export function Dashboard() {
                             ))}
                         </TabsList>
                         <TabsContent value="analyzer" className="mt-0 outline-none animate-in fade-in duration-500">
-                            <AnalyzerView price={Number(price) || 0} lastDigitTicks={analyzedDigits} priceHistory={analyzedPrices} maxTicks={maxTicks} handleMaxTicksChange={handleMaxTicksChange} handleMaxTicksBlur={handleMaxTicksBlur} selectedMarket={selectedMarket} onMarketChange={setSelectedMarket} decimalPlaces={decimalPlaces} tickTimestamps={tickTimestamps} />
+                            <AnalyzerView />
                         </TabsContent>
                         <TabsContent value="last-digit-analysis" className="mt-0 outline-none animate-in fade-in duration-500">
                             <ScannerView price={Number(price) || 0} lastDigitTicks={analyzedDigits} priceHistory={analyzedPrices} maxTicks={maxTicks} handleMaxTicksChange={handleMaxTicksChange} handleMaxTicksBlur={handleMaxTicksBlur} selectedMarket={selectedMarket} onMarketChange={setSelectedMarket} decimalPlaces={decimalPlaces} />
@@ -177,7 +177,7 @@ export function Dashboard() {
                             <DigitFrequencyView price={Number(price) || 0} lastDigitTicks={analyzedDigits} priceHistory={analyzedPrices} maxTicks={maxTicks} handleMaxTicksChange={handleMaxTicksChange} handleMaxTicksBlur={handleMaxTicksBlur} selectedMarket={selectedMarket} onMarketChange={setSelectedMarket} decimalPlaces={decimalPlaces} />
                         </TabsContent>
                         <TabsContent value="global-scan" className="mt-0 outline-none animate-in fade-in duration-500">
-                            <ScannerView price={Number(price) || 0} lastDigitTicks={analyzedDigits} priceHistory={analyzedPrices} maxTicks={maxTicks} handleMaxTicksChange={handleMaxTicksChange} handleMaxTicksBlur={handleMaxTicksBlur} selectedMarket={selectedMarket} onMarketChange={setSelectedMarket} decimalPlaces={decimalPlaces} />
+                            <GlobalScanView />
                         </TabsContent>
                     </Tabs>
                 </main>
