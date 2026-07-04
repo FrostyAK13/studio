@@ -3,7 +3,6 @@
 import * as React from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ScannerView } from './scanner-view';
-import { AnalyzerView } from './analyzer-view';
 import { GlobalScanView } from './global-scan-view';
 import { syntheticIndices } from '@/lib/mock-data';
 import { DigitFrequencyView } from './digit-frequency-view';
@@ -160,17 +159,14 @@ export function Dashboard() {
                     </div>
                 </header>
                 <main className="flex-1 flex flex-col max-w-[1600px] mx-auto w-full relative p-2 sm:p-4">
-                    <Tabs defaultValue="analyzer" className="w-full">
+                    <Tabs defaultValue="last-digit-analysis" className="w-full">
                         <TabsList className="flex items-center justify-start md:justify-center gap-2 bg-transparent h-auto p-0 mb-6 overflow-x-auto no-scrollbar w-full">
-                            {['analyzer', 'last-digit-analysis', 'frequency', 'global-scan'].map((tab) => (
+                            {['last-digit-analysis', 'frequency', 'global-scan'].map((tab) => (
                                 <TabsTrigger key={tab} value={tab} className="flex-shrink-0 px-4 py-2.5 rounded-full border data-[state=active]:bg-primary data-[state=active]:text-primary-foreground font-black text-[9px] uppercase tracking-widest shadow-sm">
                                     {tab.toUpperCase().replace(/-/g, ' ')}
                                 </TabsTrigger>
                             ))}
                         </TabsList>
-                        <TabsContent value="analyzer" className="mt-0 outline-none animate-in fade-in duration-500">
-                            <AnalyzerView />
-                        </TabsContent>
                         <TabsContent value="last-digit-analysis" className="mt-0 outline-none animate-in fade-in duration-500">
                             <ScannerView price={Number(price) || 0} lastDigitTicks={analyzedDigits} priceHistory={analyzedPrices} maxTicks={maxTicks} handleMaxTicksChange={handleMaxTicksChange} handleMaxTicksBlur={handleMaxTicksBlur} selectedMarket={selectedMarket} onMarketChange={setSelectedMarket} decimalPlaces={decimalPlaces} />
                         </TabsContent>
