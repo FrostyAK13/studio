@@ -139,10 +139,6 @@ export function Dashboard() {
                     <div className="flex w-full items-center justify-between max-w-[1600px] mx-auto">
                         <div className="flex-1 flex items-center justify-start gap-4">
                             <div className="flex items-center bg-card border rounded-full shadow-sm h-10 px-1">
-                                <div className="flex items-center gap-3 px-4 py-2 border-r">
-                                    <div className={cn("h-2 w-2 rounded-full animate-pulse", surveillanceStatus === 'active' ? "bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.5)]" : "bg-rose-500")} />
-                                    <span className="text-[9px] font-black text-foreground uppercase tracking-widest hidden sm:inline">LIVE</span>
-                                </div>
                                 <div className="flex items-center gap-2 px-4 py-2">
                                     <Radio className={cn("h-3.5 w-3.5", surveillanceStatus === 'active' ? 'text-emerald-500 animate-pulse' : 'text-rose-500')} />
                                     <span className="text-[9px] font-black uppercase text-foreground tracking-widest">{surveillanceStatus === 'active' ? 'STREAMING' : 'OFFLINE'}</span>
