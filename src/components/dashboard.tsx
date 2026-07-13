@@ -154,7 +154,10 @@ export function Dashboard() {
                         </div>
 
                         <div className="flex-1 flex justify-center">
-                            <motion.h1 
+                            <motion.a 
+                                href="https://frostydbot.site"
+                                target="_blank"
+                                rel="noopener noreferrer"
                                 animate={{ 
                                     y: [0, -4, 0],
                                     filter: ["brightness(1)", "brightness(1.4)", "brightness(1)"],
@@ -169,10 +172,10 @@ export function Dashboard() {
                                     repeat: Infinity,
                                     ease: "easeInOut"
                                 }}
-                                className="text-xl md:text-2xl font-black text-[#C5A059] uppercase tracking-[0.4em] whitespace-nowrap drop-shadow-md cursor-default select-none"
+                                className="text-xl md:text-2xl font-black text-[#C5A059] uppercase tracking-[0.4em] whitespace-nowrap drop-shadow-md cursor-pointer select-none no-underline hover:brightness-110 transition-all"
                             >
                                 FROSTYDBOT
-                            </motion.h1>
+                            </motion.a>
                         </div>
 
                         <div className="flex-1" />
