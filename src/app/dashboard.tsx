@@ -4,16 +4,18 @@ import * as React from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ScannerView } from './scanner-view';
 import { AnalyzerView } from './analyzer-view';
-import { syntheticIndices } from '@/lib/mock-data';
+import { GlobalScanView } from './global-scan-view';
 import { DigitFrequencyView } from './digit-frequency-view';
 import { cn } from '@/lib/utils';
-import { Radio, Activity } from 'lucide-react';
+import { Radio, Activity, Moon, Sun } from 'lucide-react';
 import { motion } from 'framer-motion';
+import { Button } from '@/components/ui/button';
 
 type EngineStatus = 'offline' | 'active';
 
 export function Dashboard() {
     const [mounted, setMounted] = React.useState(false);
+    const [theme, setTheme] = React.useState<'light' | 'dark'>('light');
     const [price, setPrice] = React.useState<number>(0);
     const [lastDigitTicks, setLastDigitTicks] = React.useState<number[]>([]);
     const [priceHistory, setPriceHistory] = React.useState<number[]>([]);
@@ -29,7 +31,22 @@ export function Dashboard() {
 
     React.useEffect(() => {
         setMounted(true);
+        const savedTheme = localStorage.getItem('theme') as 'light' | 'dark' | null;
+        if (savedTheme) {
+            setTheme(savedTheme);
+            document.documentElement.classList.toggle('dark', savedTheme === 'dark');
+        } else if (window.matchMedia('(prefers-color-scheme: dark)').matches) {
+            setTheme('dark');
+            document.documentElement.classList.add('dark');
+        }
     }, []);
+
+    const toggleTheme = () => {
+        const newTheme = theme === 'light' ? 'dark' : 'light';
+        setTheme(newTheme);
+        localStorage.setItem('theme', newTheme);
+        document.documentElement.classList.toggle('dark', newTheme === 'dark');
+    };
 
     // Active Market Feed
     React.useEffect(() => {
@@ -120,28 +137,30 @@ export function Dashboard() {
             <div className="flex flex-col flex-1">
                 <header className="sticky top-0 z-[100] flex h-16 md:h-[4.5rem] items-center border-b bg-background/95 backdrop-blur-xl px-4 shadow-sm">
                     <div className="flex w-full items-center justify-between max-w-[1600px] mx-auto">
-                        <div className="flex-1 flex items-center justify-start">
+                        <div className="flex-1 flex items-center justify-start gap-4">
                             <div className="flex items-center bg-card border rounded-full shadow-sm h-10 px-1">
-                                <div className="flex items-center gap-3 px-4 py-2 border-r">
-                                    <div className={cn("h-2 w-2 rounded-full animate-pulse", surveillanceStatus === 'active' ? "bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.5)]" : "bg-rose-500")} />
-                                    <span className="text-[9px] font-black text-foreground uppercase tracking-widest hidden sm:inline">LIVE</span>
-                                </div>
                                 <div className="flex items-center gap-2 px-4 py-2">
                                     <Radio className={cn("h-3.5 w-3.5", surveillanceStatus === 'active' ? 'text-emerald-500 animate-pulse' : 'text-rose-500')} />
                                     <span className="text-[9px] font-black uppercase text-foreground tracking-widest">{surveillanceStatus === 'active' ? 'STREAMING' : 'OFFLINE'}</span>
                                 </div>
                             </div>
+                            <Button variant="ghost" size="icon" onClick={toggleTheme} className="rounded-full h-10 w-10 text-primary">
+                                {theme === 'light' ? <Moon className="h-5 w-5" /> : <Sun className="h-5 w-5" />}
+                            </Button>
                         </div>
 
                         <div className="flex-1 flex justify-center">
-                            <motion.h1 
+                            <motion.a 
+                                href="https://frostydbot.site"
+                                target="_blank"
+                                rel="noopener noreferrer"
                                 animate={{ 
                                     y: [0, -4, 0],
-                                    filter: ["brightness(1)", "brightness(1.4)", "brightness(1)"],
+                                    filter: ["brightness(1)", "brightness(1.2)", "brightness(1)"],
                                     textShadow: [
-                                        "0 0 10px rgba(197,160,89,0.2)",
-                                        "0 0 25px rgba(197,160,89,0.6)",
-                                        "0 0 10px rgba(197,160,89,0.2)"
+                                        "0 0 10px rgba(230,180,0,0.2)",
+                                        "0 0 25px rgba(230,180,0,0.5)",
+                                        "0 0 10px rgba(230,180,0,0.2)"
                                     ]
                                 }}
                                 transition={{ 
@@ -149,10 +168,10 @@ export function Dashboard() {
                                     repeat: Infinity,
                                     ease: "easeInOut"
                                 }}
-                                className="text-xl md:text-2xl font-black text-[#C5A059] uppercase tracking-[0.4em] whitespace-nowrap drop-shadow-md cursor-default select-none"
+                                className="text-xl md:text-2xl font-black text-[#E6B400] uppercase tracking-[0.4em] whitespace-nowrap drop-shadow-md cursor-pointer select-none no-underline hover:brightness-110 transition-all"
                             >
                                 FROSTYDBOT
-                            </motion.h1>
+                            </motion.a>
                         </div>
 
                         <div className="flex-1" />
