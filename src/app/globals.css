@@ -4,7 +4,7 @@
 
 @layer base {
   :root {
-    /* Luminous Gilded Gold Theme */
+    /* Luminous Gilded Gold Theme (Light) */
     --background: 45 60% 98%;
     --foreground: 45 20% 10%;
     --card: 0 0% 100%;
@@ -26,6 +26,29 @@
     --ring: 45 80% 40%;
     --radius: 1.25rem;
   }
+
+  .dark {
+    /* Obsidian Gold Theme (Dark) */
+    --background: 45 30% 5%;
+    --foreground: 45 100% 98%;
+    --card: 45 20% 8%;
+    --card-foreground: 45 100% 98%;
+    --popover: 45 20% 8%;
+    --popover-foreground: 45 100% 98%;
+    --primary: 45 80% 50%;
+    --primary-foreground: 45 10% 5%;
+    --secondary: 45 30% 15%;
+    --secondary-foreground: 45 100% 98%;
+    --muted: 45 30% 12%;
+    --muted-foreground: 45 20% 60%;
+    --accent: 45 30% 15%;
+    --accent-foreground: 45 100% 98%;
+    --destructive: 0 62.8% 30.6%;
+    --destructive-foreground: 45 100% 98%;
+    --border: 45 30% 15%;
+    --input: 45 30% 15%;
+    --ring: 45 80% 50%;
+  }
 }
 
 @layer base {
@@ -39,9 +62,9 @@
 }
 
 .white-header-text {
-  @apply text-white;
+  @apply text-foreground;
   font-weight: 800;
-  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
 .no-scrollbar::-webkit-scrollbar { display: none; }
