@@ -135,21 +135,22 @@ export function Dashboard() {
     return (
         <div className="flex min-h-screen w-full flex-col bg-background font-sans overflow-x-hidden">
             <div className="flex flex-col flex-1">
-                <header className="sticky top-0 z-[100] flex h-16 md:h-[4.5rem] items-center border-b bg-background/95 backdrop-blur-xl px-4 shadow-sm">
-                    <div className="flex w-full items-center justify-between max-w-[1600px] mx-auto">
-                        <div className="flex-1 flex items-center justify-start gap-4">
-                            <div className="flex items-center bg-card border rounded-full shadow-sm h-10 px-1">
-                                <div className="flex items-center gap-2 px-4 py-2">
-                                    <Radio className={cn("h-3.5 w-3.5", surveillanceStatus === 'active' ? 'text-emerald-500 animate-pulse' : 'text-rose-500')} />
-                                    <span className="text-[9px] font-black uppercase text-foreground tracking-widest">{surveillanceStatus === 'active' ? 'STREAMING' : 'OFFLINE'}</span>
+                <header className="sticky top-0 z-[100] flex h-16 md:h-[4.5rem] items-center border-b bg-background/95 backdrop-blur-xl px-2 sm:px-4 shadow-sm">
+                    <div className="flex w-full items-center justify-between max-w-[1600px] mx-auto gap-2 sm:gap-4">
+                        <div className="flex-1 flex items-center justify-start gap-2 sm:gap-4">
+                            <div className="flex items-center bg-card border rounded-full shadow-sm h-9 sm:h-10 px-0.5 sm:px-1">
+                                <div className="flex items-center gap-1.5 sm:gap-2 px-2 sm:px-4 py-2">
+                                    <Radio className={cn("h-3 w-3 sm:h-3.5 sm:w-3.5", surveillanceStatus === 'active' ? 'text-emerald-500 animate-pulse' : 'text-rose-500')} />
+                                    <span className="text-[7px] sm:text-[9px] font-black uppercase text-foreground tracking-widest hidden xs:inline">{surveillanceStatus === 'active' ? 'STREAMING' : 'OFFLINE'}</span>
+                                    <span className="text-[7px] font-black uppercase text-foreground tracking-widest xs:hidden">{surveillanceStatus === 'active' ? 'STRM' : 'OFF'}</span>
                                 </div>
                             </div>
-                            <Button variant="ghost" size="icon" onClick={toggleTheme} className="rounded-full h-10 w-10 text-primary">
-                                {theme === 'light' ? <Moon className="h-5 w-5" /> : <Sun className="h-5 w-5" />}
+                            <Button variant="ghost" size="icon" onClick={toggleTheme} className="rounded-full h-9 w-9 sm:h-10 sm:w-10 text-primary">
+                                {theme === 'light' ? <Moon className="h-4 w-4 sm:h-5 sm:w-5" /> : <Sun className="h-4 w-4 sm:h-5 sm:w-5" />}
                             </Button>
                         </div>
 
-                        <div className="flex-1 flex justify-center">
+                        <div className="flex-shrink-0 flex justify-center">
                             <motion.a 
                                 href="https://frostydbot.site"
                                 target="_blank"
@@ -168,7 +169,7 @@ export function Dashboard() {
                                     repeat: Infinity,
                                     ease: "easeInOut"
                                 }}
-                                className="text-xl md:text-2xl font-black text-[#E6B400] uppercase tracking-[0.4em] whitespace-nowrap drop-shadow-md cursor-pointer select-none no-underline hover:brightness-110 transition-all"
+                                className="text-sm xs:text-base sm:text-xl md:text-2xl font-black text-[#E6B400] uppercase tracking-[0.2em] sm:tracking-[0.4em] whitespace-nowrap drop-shadow-md cursor-pointer select-none no-underline hover:brightness-110 transition-all"
                             >
                                 FROSTYDBOT
                             </motion.a>
