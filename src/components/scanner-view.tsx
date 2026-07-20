@@ -88,53 +88,6 @@ const TacticalHeatMap = ({ ticks }: { ticks: number[] }) => {
     );
 };
 
-const TacticalRecommendation = ({ ticks }: { ticks: number[] }) => {
-    const recommendation = React.useMemo(() => {
-        if (ticks.length < 50) return { status: 'INSUFFICIENT DATA', type: 'NONE', entry: null, confidence: 0, reasoning: 'Minimum 50 ticks required.' };
-        const total = ticks.length;
-        const counts = Array(10).fill(0); ticks.forEach(d => counts[d]++);
-        const P = counts.map(c => (c / total) * 100);
-        const D = P.map(p => p - 10);
-        let under8_score = 0; for (let i = 0; i <= 7; i++) under8_score += D[i];
-        let over1_score = 0; for (let i = 2; i <= 9; i++) over1_score += D[i];
-        const direction = under8_score > over1_score ? 'Under 8' : 'Over 1';
-        const best = P.map((p, i) => ({ i, p })).sort((a, b) => b.p - a.p)[0];
-        return {
-            status: 'TRADE NOW', type: direction, entry: best.i, confidence: 95,
-            reasoning: `Market identifies stable imbalance in ${direction} sector.`
-        };
-    }, [ticks]);
-
-    return (
-        <Card className="border-none shadow-sm bg-card rounded-xl border border-border overflow-hidden relative">
-            <CardContent className="p-4 sm:p-6">
-                <div className="flex flex-col lg:flex-row items-center justify-between gap-6">
-                    <div className="flex items-center gap-4">
-                        <div className={cn("w-12 h-12 rounded-xl flex items-center justify-center transition-all", recommendation.status === 'TRADE NOW' ? "bg-emerald-500 shadow-lg" : "bg-muted")}>
-                            {recommendation.status === 'TRADE NOW' ? <Zap className="h-6 w-6 text-white animate-pulse" /> : <AlertTriangle className="h-6 w-6 text-muted-foreground/40" />}
-                        </div>
-                        <div>
-                            <h3 className={cn("text-[10px] font-black uppercase tracking-[0.4em] mb-1", recommendation.status === 'TRADE NOW' ? "text-emerald-600" : "text-muted-foreground")}>{recommendation.status}</h3>
-                            <div className="flex items-center gap-2">
-                                <span className="text-xl sm:text-2xl font-black uppercase">{recommendation.type !== 'NONE' ? `${recommendation.type} @ ${recommendation.entry}` : 'AWAITING LOCK'}</span>
-                            </div>
-                        </div>
-                    </div>
-                    <div className="flex-1 max-w-md">
-                        <p className="text-[9px] font-medium text-muted-foreground leading-relaxed italic border-l-2 border-primary/30 pl-3">"{recommendation.reasoning}"</p>
-                    </div>
-                    <div className="flex items-center gap-8 bg-muted/30 px-6 py-3 rounded-2xl border border-border">
-                        <div className="text-center">
-                            <p className="text-[8px] font-black text-muted-foreground uppercase tracking-widest mb-1">STABILITY</p>
-                            <p className="text-lg font-black text-emerald-600">{recommendation.confidence.toFixed(1)}%</p>
-                        </div>
-                    </div>
-                </div>
-            </CardContent>
-        </Card>
-    );
-};
-
 export function ScannerView({
     price,
     lastDigitTicks,
@@ -183,11 +136,6 @@ export function ScannerView({
             </div>
             <div className="space-y-4 pb-24">
                 <div className="flex items-center gap-2 px-2">
-                    <ShieldCheck className="h-4 w-4 text-primary" />
-                    <h2 className="text-[8px] font-black uppercase tracking-[0.4em] text-foreground">TACTICAL</h2>
-                </div>
-                <TacticalRecommendation ticks={lastDigitTicks} />
-                <div className="flex items-center gap-2 px-2 mt-8">
                     <Activity className="h-4 w-4 text-primary" />
                     <h2 className="text-[8px] font-black uppercase tracking-[0.4em] text-foreground">ANALYSIS</h2>
                 </div>
