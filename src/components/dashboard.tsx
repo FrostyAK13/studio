@@ -7,9 +7,10 @@ import { AnalyzerView } from './analyzer-view';
 import { GlobalScanView } from './global-scan-view';
 import { DigitFrequencyView } from './digit-frequency-view';
 import { cn } from '@/lib/utils';
-import { Radio, Activity, Moon, Sun } from 'lucide-react';
+import { Radio, Activity, Moon, Sun, Wallet, ArrowRightLeft } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
 
 type EngineStatus = 'offline' | 'active';
 
@@ -135,71 +136,80 @@ export function Dashboard() {
     return (
         <div className="flex min-h-screen w-full flex-col bg-background font-sans overflow-x-hidden">
             <div className="flex flex-col flex-1">
-                <header className="sticky top-0 z-[100] flex h-16 md:h-[4.5rem] items-center border-b bg-background/95 backdrop-blur-xl px-4 shadow-sm">
-                    <div className="flex w-full items-center justify-between max-w-[1600px] mx-auto">
-                        <div className="flex-1 flex items-center justify-start gap-4">
-                            <div className="flex items-center bg-card border rounded-full shadow-sm h-10 px-1">
-                                <div className="flex items-center gap-2 px-4 py-2">
-                                    <Radio className={cn("h-3.5 w-3.5", surveillanceStatus === 'active' ? 'text-emerald-500 animate-pulse' : 'text-rose-500')} />
-                                    <span className="text-[9px] font-black uppercase text-foreground tracking-widest">{surveillanceStatus === 'active' ? 'STREAMING' : 'OFFLINE'}</span>
+                <header className="sticky top-0 z-[100] flex h-16 md:h-20 items-center border-b bg-background/95 backdrop-blur-xl px-4 shadow-sm transition-all duration-300">
+                    <div className="flex w-full items-center justify-between max-w-[1600px] mx-auto gap-4">
+                        <div className="flex-1 flex items-center justify-start gap-3 sm:gap-6">
+                            <div className="flex items-center gap-2">
+                                <div className="w-8 h-8 rounded-lg bg-primary flex items-center justify-center shadow-lg shadow-primary/20">
+                                    <Activity className="h-5 w-5 text-primary-foreground" />
+                                </div>
+                                <motion.a 
+                                    href="https://frostydbot.site"
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="text-lg sm:text-2xl font-black text-primary uppercase tracking-tighter cursor-pointer hover:opacity-80 transition-all hidden xs:inline"
+                                >
+                                    FROSTYDBOT
+                                </motion.a>
+                            </div>
+                            
+                            <div className="flex items-center bg-muted/50 border rounded-full h-9 px-1 transition-colors">
+                                <div className="flex items-center gap-2 px-3">
+                                    <Radio className={cn("h-3 w-3", surveillanceStatus === 'active' ? 'text-emerald-500 animate-pulse' : 'text-rose-500')} />
+                                    <span className="text-[9px] font-black uppercase text-foreground tracking-[0.2em] hidden sm:inline">{surveillanceStatus === 'active' ? 'STREAMING' : 'OFFLINE'}</span>
                                 </div>
                             </div>
+                        </div>
+
+                        <div className="flex flex-1 items-center justify-end gap-3 sm:gap-6">
+                            <div className="hidden md:flex flex-col items-end gap-0.5">
+                                <p className="text-[9px] font-bold text-muted-foreground uppercase tracking-widest leading-none">REAL ACCOUNT</p>
+                                <p className="text-sm font-black text-foreground tabular-nums">0.00 <span className="text-[10px] text-muted-foreground">USD</span></p>
+                            </div>
+                            
+                            <Button variant="outline" className="h-9 px-4 rounded-full border-amber-500/20 bg-amber-500/10 text-amber-600 font-black text-[10px] uppercase tracking-widest hover:bg-amber-500/20 hidden sm:flex">
+                                <ArrowRightLeft className="mr-2 h-3.5 w-3.5" /> TRANSFER
+                            </Button>
+
                             <Button variant="ghost" size="icon" onClick={toggleTheme} className="rounded-full h-10 w-10 text-primary">
                                 {theme === 'light' ? <Moon className="h-5 w-5" /> : <Sun className="h-5 w-5" />}
                             </Button>
                         </div>
-
-                        <div className="flex-1 flex justify-center">
-                            <motion.a 
-                                href="https://frostydbot.site"
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                animate={{ 
-                                    y: [0, -4, 0],
-                                    filter: ["brightness(1)", "brightness(1.4)", "brightness(1)"],
-                                    textShadow: [
-                                        "0 0 10px rgba(197,160,89,0.2)",
-                                        "0 0 25px rgba(197,160,89,0.6)",
-                                        "0 0 10px rgba(197,160,89,0.2)"
-                                    ]
-                                }}
-                                transition={{ 
-                                    duration: 2,
-                                    repeat: Infinity,
-                                    ease: "easeInOut"
-                                }}
-                                className="text-xl md:text-2xl font-black text-[#C5A059] uppercase tracking-[0.4em] whitespace-nowrap drop-shadow-md cursor-pointer select-none no-underline hover:brightness-110 transition-all"
-                            >
-                                FROSTYDBOT
-                            </motion.a>
-                        </div>
-
-                        <div className="flex-1" />
                     </div>
                 </header>
-                <main className="flex-1 flex flex-col max-w-[1600px] mx-auto w-full relative p-2 sm:p-4">
-                    <Tabs defaultValue="analyzer" className="w-full">
-                        <TabsList className="flex items-center justify-start md:justify-center gap-2 bg-transparent h-auto p-0 mb-6 overflow-x-auto no-scrollbar w-full">
-                            {['analyzer', 'last-digit-analysis', 'frequency', 'global-scan'].map((tab) => (
-                                <TabsTrigger key={tab} value={tab} className="flex-shrink-0 px-4 py-2.5 rounded-full border data-[state=active]:bg-primary data-[state=active]:text-primary-foreground font-black text-[9px] uppercase tracking-widest shadow-sm">
-                                    {tab.toUpperCase().replace(/-/g, ' ')}
-                                </TabsTrigger>
-                            ))}
-                        </TabsList>
-                        <TabsContent value="analyzer" className="mt-0 outline-none animate-in fade-in duration-500">
-                            <AnalyzerView />
-                        </TabsContent>
-                        <TabsContent value="last-digit-analysis" className="mt-0 outline-none animate-in fade-in duration-500">
-                            <ScannerView price={Number(price) || 0} lastDigitTicks={analyzedDigits} priceHistory={analyzedPrices} maxTicks={maxTicks} handleMaxTicksChange={handleMaxTicksChange} handleMaxTicksBlur={handleMaxTicksBlur} selectedMarket={selectedMarket} onMarketChange={setSelectedMarket} decimalPlaces={decimalPlaces} />
-                        </TabsContent>
-                        <TabsContent value="frequency" className="mt-0 outline-none animate-in fade-in duration-500">
-                            <DigitFrequencyView price={Number(price) || 0} lastDigitTicks={analyzedDigits} priceHistory={analyzedPrices} maxTicks={maxTicks} handleMaxTicksChange={handleMaxTicksChange} handleMaxTicksBlur={handleMaxTicksBlur} selectedMarket={selectedMarket} onMarketChange={setSelectedMarket} decimalPlaces={decimalPlaces} />
-                        </TabsContent>
-                        <TabsContent value="global-scan" className="mt-0 outline-none animate-in fade-in duration-500">
-                            <GlobalScanView />
-                        </TabsContent>
-                    </Tabs>
-                </main>
+
+                <nav className="bg-card border-b sticky top-16 md:top-20 z-50 transition-colors duration-300">
+                    <div className="max-w-[1600px] mx-auto w-full">
+                        <Tabs defaultValue="analyzer" className="w-full">
+                            <TabsList className="flex items-center justify-start md:justify-center gap-0 bg-transparent h-12 p-0 overflow-x-auto no-scrollbar w-full">
+                                {['analyzer', 'last-digit-analysis', 'frequency', 'global-scan'].map((tab) => (
+                                    <TabsTrigger 
+                                        key={tab} 
+                                        value={tab} 
+                                        className="flex-shrink-0 h-full px-6 rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-primary/5 data-[state=active]:text-primary font-black text-[10px] uppercase tracking-widest transition-all"
+                                    >
+                                        {tab.toUpperCase().replace(/-/g, ' ')}
+                                    </TabsTrigger>
+                                ))}
+                            </TabsList>
+                            
+                            <main className="flex-1 flex flex-col w-full relative p-2 sm:p-6 min-h-[calc(100vh-128px)]">
+                                <TabsContent value="analyzer" className="mt-0 outline-none animate-in fade-in duration-500">
+                                    <AnalyzerView />
+                                </TabsContent>
+                                <TabsContent value="last-digit-analysis" className="mt-0 outline-none animate-in fade-in duration-500">
+                                    <ScannerView price={Number(price) || 0} lastDigitTicks={analyzedDigits} priceHistory={analyzedPrices} maxTicks={maxTicks} handleMaxTicksChange={handleMaxTicksChange} handleMaxTicksBlur={handleMaxTicksBlur} selectedMarket={selectedMarket} onMarketChange={setSelectedMarket} decimalPlaces={decimalPlaces} />
+                                </TabsContent>
+                                <TabsContent value="frequency" className="mt-0 outline-none animate-in fade-in duration-500">
+                                    <DigitFrequencyView price={Number(price) || 0} lastDigitTicks={analyzedDigits} priceHistory={analyzedPrices} maxTicks={maxTicks} handleMaxTicksChange={handleMaxTicksChange} handleMaxTicksBlur={handleMaxTicksBlur} selectedMarket={selectedMarket} onMarketChange={setSelectedMarket} decimalPlaces={decimalPlaces} />
+                                </TabsContent>
+                                <TabsContent value="global-scan" className="mt-0 outline-none animate-in fade-in duration-500">
+                                    <GlobalScanView />
+                                </TabsContent>
+                            </main>
+                        </Tabs>
+                    </div>
+                </nav>
             </div>
         </div>
     );
