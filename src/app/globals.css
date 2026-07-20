@@ -6,16 +6,16 @@
   :root {
     /* Luminous White & Gold Theme (Light) */
     --background: 0 0% 100%;
-    --foreground: 0 0% 7%;
+    --foreground: 0 0% 10%;
     --card: 0 0% 100%;
-    --card-foreground: 0 0% 7%;
+    --card-foreground: 0 0% 10%;
     --popover: 0 0% 100%;
-    --popover-foreground: 0 0% 7%;
+    --popover-foreground: 0 0% 10%;
     --primary: 45 100% 45%;
     --primary-foreground: 0 0% 100%;
-    --secondary: 45 10% 96%;
-    --secondary-foreground: 0 0% 7%;
-    --muted: 0 0% 96%;
+    --secondary: 45 10% 97%;
+    --secondary-foreground: 0 0% 10%;
+    --muted: 0 0% 97%;
     --muted-foreground: 0 0% 45%;
     --accent: 45 100% 45%;
     --accent-foreground: 0 0% 100%;
@@ -29,24 +29,24 @@
 
   .dark {
     /* Obsidian Gold Theme (Dark) */
-    --background: 0 0% 3%;
+    --background: 0 0% 4%;
     --foreground: 45 20% 95%;
-    --card: 0 0% 6%;
+    --card: 0 0% 7%;
     --card-foreground: 45 20% 95%;
-    --popover: 0 0% 5%;
+    --popover: 0 0% 6%;
     --popover-foreground: 45 20% 95%;
     --primary: 45 93% 55%;
-    --primary-foreground: 0 0% 5%;
-    --secondary: 0 0% 12%;
+    --primary-foreground: 0 0% 7%;
+    --secondary: 0 0% 14%;
     --secondary-foreground: 45 20% 95%;
-    --muted: 0 0% 12%;
+    --muted: 0 0% 14%;
     --muted-foreground: 0 0% 65%;
     --accent: 45 93% 55%;
-    --accent-foreground: 0 0% 5%;
+    --accent-foreground: 0 0% 7%;
     --destructive: 0 62.8% 30.6%;
     --destructive-foreground: 45 20% 95%;
-    --border: 0 0% 15%;
-    --input: 0 0% 15%;
+    --border: 0 0% 16%;
+    --input: 0 0% 16%;
     --ring: 45 93% 55%;
   }
 }
@@ -54,9 +54,12 @@
 @layer base {
   * { @apply border-border; }
   body { 
-    @apply bg-background text-foreground font-body antialiased;
-    background-image: radial-gradient(circle, hsl(var(--primary) / 0.03) 1px, transparent 1px);
-    background-size: 32px 32px;
+    @apply bg-background text-foreground font-body antialiased transition-colors duration-300;
+    /* Tactical Grid Background */
+    background-image: 
+      linear-gradient(to right, hsl(var(--border) / 0.4) 1px, transparent 1px),
+      linear-gradient(to bottom, hsl(var(--border) / 0.4) 1px, transparent 1px);
+    background-size: 40px 40px;
   }
 }
 
