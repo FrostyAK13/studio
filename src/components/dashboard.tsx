@@ -10,7 +10,6 @@ import { cn } from '@/lib/utils';
 import { Radio, Activity, Moon, Sun, Wallet, ArrowRightLeft } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
 
 type EngineStatus = 'offline' | 'active';
 
@@ -138,16 +137,13 @@ export function Dashboard() {
             <div className="flex flex-col flex-1">
                 <header className="sticky top-0 z-[100] flex h-16 md:h-20 items-center border-b bg-background/95 backdrop-blur-xl px-4 shadow-sm transition-all duration-300">
                     <div className="flex w-full items-center justify-between max-w-[1600px] mx-auto gap-4">
-                        <div className="flex-1 flex items-center justify-start gap-3 sm:gap-6">
+                        <div className="flex-1 flex items-center justify-start gap-4">
                             <div className="flex items-center gap-2">
-                                <div className="w-8 h-8 rounded-lg bg-primary flex items-center justify-center shadow-lg shadow-primary/20">
-                                    <Activity className="h-5 w-5 text-primary-foreground" />
-                                </div>
                                 <motion.a 
                                     href="https://frostydbot.site"
                                     target="_blank"
                                     rel="noopener noreferrer"
-                                    className="text-lg sm:text-2xl font-black text-primary uppercase tracking-tighter cursor-pointer hover:opacity-80 transition-all hidden xs:inline"
+                                    className="text-lg sm:text-2xl font-black text-primary uppercase tracking-tighter cursor-pointer hover:opacity-80 transition-all select-none no-underline"
                                 >
                                     FROSTYDBOT
                                 </motion.a>
@@ -167,11 +163,11 @@ export function Dashboard() {
                                 <p className="text-sm font-black text-foreground tabular-nums">0.00 <span className="text-[10px] text-muted-foreground">USD</span></p>
                             </div>
                             
-                            <Button variant="outline" className="h-9 px-4 rounded-full border-amber-500/20 bg-amber-500/10 text-amber-600 font-black text-[10px] uppercase tracking-widest hover:bg-amber-500/20 hidden sm:flex">
+                            <Button variant="outline" className="h-9 px-4 rounded-full border-primary/20 bg-primary/10 text-primary font-black text-[10px] uppercase tracking-widest hover:bg-primary/20 hidden sm:flex">
                                 <ArrowRightLeft className="mr-2 h-3.5 w-3.5" /> TRANSFER
                             </Button>
 
-                            <Button variant="ghost" size="icon" onClick={toggleTheme} className="rounded-full h-10 w-10 text-primary">
+                            <Button variant="ghost" size="icon" onClick={toggleTheme} className="rounded-full h-10 w-10 text-primary hover:bg-primary/5">
                                 {theme === 'light' ? <Moon className="h-5 w-5" /> : <Sun className="h-5 w-5" />}
                             </Button>
                         </div>
@@ -181,7 +177,7 @@ export function Dashboard() {
                 <nav className="bg-card border-b sticky top-16 md:top-20 z-50 transition-colors duration-300">
                     <div className="max-w-[1600px] mx-auto w-full">
                         <Tabs defaultValue="analyzer" className="w-full">
-                            <TabsList className="flex items-center justify-start md:justify-center gap-0 bg-transparent h-12 p-0 overflow-x-auto no-scrollbar w-full">
+                            <TabsList className="flex items-center justify-start md:justify-center gap-0 bg-transparent h-12 p-0 overflow-x-auto no-scrollbar w-full border-none">
                                 {['analyzer', 'last-digit-analysis', 'frequency', 'global-scan'].map((tab) => (
                                     <TabsTrigger 
                                         key={tab} 
@@ -193,7 +189,7 @@ export function Dashboard() {
                                 ))}
                             </TabsList>
                             
-                            <main className="flex-1 flex flex-col w-full relative p-2 sm:p-6 min-h-[calc(100vh-128px)]">
+                            <main className="flex-1 flex flex-col w-full relative p-2 sm:p-6 min-h-[calc(100vh-128px)] bg-background">
                                 <TabsContent value="analyzer" className="mt-0 outline-none animate-in fade-in duration-500">
                                     <AnalyzerView />
                                 </TabsContent>
