@@ -7,7 +7,7 @@ import { AnalyzerView } from './analyzer-view';
 import { GlobalScanView } from './global-scan-view';
 import { DigitFrequencyView } from './digit-frequency-view';
 import { cn } from '@/lib/utils';
-import { Radio, Activity, Moon, Sun, Wallet, ArrowRightLeft } from 'lucide-react';
+import { Radio, Activity, Moon, Sun, ArrowRightLeft } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { Button } from '@/components/ui/button';
 
@@ -135,40 +135,50 @@ export function Dashboard() {
     return (
         <div className="flex min-h-screen w-full flex-col bg-background font-sans overflow-x-hidden">
             <div className="flex flex-col flex-1">
-                <header className="sticky top-0 z-[100] flex h-16 md:h-20 items-center border-b bg-background/95 backdrop-blur-xl px-4 shadow-sm transition-all duration-300">
-                    <div className="flex w-full items-center justify-between max-w-[1600px] mx-auto gap-4">
-                        <div className="flex-1 flex items-center justify-start gap-4">
+                <header className="sticky top-0 z-[100] flex h-16 md:h-20 items-center border-b bg-background/95 backdrop-blur-xl px-2 sm:px-4 shadow-sm transition-all duration-300">
+                    <div className="flex w-full items-center justify-between max-w-[1600px] mx-auto gap-2 sm:gap-4">
+                        <div className="flex-1 flex items-center justify-start gap-2 sm:gap-4">
                             <div className="flex items-center gap-2">
                                 <motion.a 
                                     href="https://frostydbot.site"
                                     target="_blank"
                                     rel="noopener noreferrer"
-                                    className="text-lg sm:text-2xl font-black text-primary uppercase tracking-tighter cursor-pointer hover:opacity-80 transition-all select-none no-underline"
+                                    animate={{ 
+                                        y: [0, -2, 0],
+                                        textShadow: [
+                                            "0 0 10px rgba(14,165,233,0.1)",
+                                            "0 0 20px rgba(14,165,233,0.3)",
+                                            "0 0 10px rgba(14,165,233,0.1)"
+                                        ]
+                                    }}
+                                    transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
+                                    className="text-base sm:text-2xl font-black text-[#0EA5E9] uppercase tracking-tighter cursor-pointer hover:opacity-80 transition-all select-none no-underline"
                                 >
                                     FROSTYDBOT
                                 </motion.a>
                             </div>
                             
-                            <div className="flex items-center bg-muted/50 border rounded-full h-9 px-1 transition-colors">
-                                <div className="flex items-center gap-2 px-3">
+                            <div className="flex items-center bg-muted/50 border rounded-full h-8 sm:h-9 px-1 transition-colors">
+                                <div className="flex items-center gap-1.5 sm:gap-2 px-2 sm:px-3">
                                     <Radio className={cn("h-3 w-3", surveillanceStatus === 'active' ? 'text-emerald-500 animate-pulse' : 'text-rose-500')} />
-                                    <span className="text-[9px] font-black uppercase text-foreground tracking-[0.2em] hidden sm:inline">{surveillanceStatus === 'active' ? 'STREAMING' : 'OFFLINE'}</span>
+                                    <span className="text-[7px] sm:text-[9px] font-black uppercase text-foreground tracking-[0.2em] hidden xs:inline">{surveillanceStatus === 'active' ? 'STREAMING' : 'OFFLINE'}</span>
+                                    <span className="text-[7px] font-black uppercase text-foreground tracking-[0.2em] xs:hidden">{surveillanceStatus === 'active' ? 'STRM' : 'OFF'}</span>
                                 </div>
                             </div>
                         </div>
 
-                        <div className="flex flex-1 items-center justify-end gap-3 sm:gap-6">
+                        <div className="flex flex-1 items-center justify-end gap-2 sm:gap-6">
                             <div className="hidden md:flex flex-col items-end gap-0.5">
                                 <p className="text-[9px] font-bold text-muted-foreground uppercase tracking-widest leading-none">REAL ACCOUNT</p>
                                 <p className="text-sm font-black text-foreground tabular-nums">0.00 <span className="text-[10px] text-muted-foreground">USD</span></p>
                             </div>
                             
-                            <Button variant="outline" className="h-9 px-4 rounded-full border-primary/20 bg-primary/10 text-primary font-black text-[10px] uppercase tracking-widest hover:bg-primary/20 hidden sm:flex">
-                                <ArrowRightLeft className="mr-2 h-3.5 w-3.5" /> TRANSFER
+                            <Button variant="outline" className="h-8 sm:h-9 px-3 sm:px-4 rounded-full border-primary/20 bg-primary/10 text-primary font-black text-[9px] sm:text-[10px] uppercase tracking-widest hover:bg-primary/20 hidden sm:flex">
+                                <ArrowRightLeft className="mr-2 h-3 w-3 sm:h-3.5 sm:w-3.5" /> TRANSFER
                             </Button>
 
-                            <Button variant="ghost" size="icon" onClick={toggleTheme} className="rounded-full h-10 w-10 text-primary hover:bg-primary/5">
-                                {theme === 'light' ? <Moon className="h-5 w-5" /> : <Sun className="h-5 w-5" />}
+                            <Button variant="ghost" size="icon" onClick={toggleTheme} className="rounded-full h-9 w-9 sm:h-10 sm:w-10 text-primary hover:bg-primary/5">
+                                {theme === 'light' ? <Moon className="h-4 w-4 sm:h-5 sm:w-5" /> : <Sun className="h-4 w-4 sm:h-5 sm:w-5" />}
                             </Button>
                         </div>
                     </div>
@@ -182,7 +192,7 @@ export function Dashboard() {
                                     <TabsTrigger 
                                         key={tab} 
                                         value={tab} 
-                                        className="flex-shrink-0 h-full px-6 rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-primary/5 data-[state=active]:text-primary font-black text-[10px] uppercase tracking-widest transition-all"
+                                        className="flex-shrink-0 h-full px-4 sm:px-6 rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-primary/5 data-[state=active]:text-primary font-black text-[9px] sm:text-[10px] uppercase tracking-widest transition-all"
                                     >
                                         {tab.toUpperCase().replace(/-/g, ' ')}
                                     </TabsTrigger>

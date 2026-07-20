@@ -4,50 +4,50 @@
 
 @layer base {
   :root {
-    /* Luminous White & Gold Theme (Light) */
-    --background: 0 0% 100%;
-    --foreground: 0 0% 10%;
+    /* Light Sky Blue Theme */
+    --background: 200 100% 98%;
+    --foreground: 222 47% 11%;
     --card: 0 0% 100%;
-    --card-foreground: 0 0% 10%;
+    --card-foreground: 222 47% 11%;
     --popover: 0 0% 100%;
-    --popover-foreground: 0 0% 10%;
-    --primary: 45 100% 45%;
+    --popover-foreground: 222 47% 11%;
+    --primary: 199 89% 48%;
     --primary-foreground: 0 0% 100%;
-    --secondary: 45 10% 97%;
-    --secondary-foreground: 0 0% 10%;
-    --muted: 0 0% 97%;
-    --muted-foreground: 0 0% 45%;
-    --accent: 45 100% 45%;
+    --secondary: 199 20% 96%;
+    --secondary-foreground: 222 47% 11%;
+    --muted: 199 20% 96%;
+    --muted-foreground: 215.4 16.3% 46.9%;
+    --accent: 199 89% 48%;
     --accent-foreground: 0 0% 100%;
-    --destructive: 0 84% 60%;
-    --destructive-foreground: 0 0% 98%;
-    --border: 0 0% 92%;
-    --input: 0 0% 92%;
-    --ring: 45 100% 45%;
+    --destructive: 0 84.2% 60.2%;
+    --destructive-foreground: 210 40% 98%;
+    --border: 199 30% 90%;
+    --input: 199 30% 90%;
+    --ring: 199 89% 48%;
     --radius: 1rem;
   }
 
   .dark {
-    /* Obsidian Gold Theme (Dark) */
-    --background: 0 0% 4%;
-    --foreground: 45 20% 95%;
-    --card: 0 0% 7%;
-    --card-foreground: 45 20% 95%;
-    --popover: 0 0% 6%;
-    --popover-foreground: 45 20% 95%;
-    --primary: 45 93% 55%;
-    --primary-foreground: 0 0% 7%;
-    --secondary: 0 0% 14%;
-    --secondary-foreground: 45 20% 95%;
-    --muted: 0 0% 14%;
-    --muted-foreground: 0 0% 65%;
-    --accent: 45 93% 55%;
-    --accent-foreground: 0 0% 7%;
+    /* Deep Sky / Obsidian Theme */
+    --background: 222 47% 11%;
+    --foreground: 210 40% 98%;
+    --card: 222 47% 8%;
+    --card-foreground: 210 40% 98%;
+    --popover: 222 47% 9%;
+    --popover-foreground: 210 40% 98%;
+    --primary: 199 89% 48%;
+    --primary-foreground: 222 47% 11%;
+    --secondary: 222 47% 15%;
+    --secondary-foreground: 210 40% 98%;
+    --muted: 222 47% 15%;
+    --muted-foreground: 215 20.2% 65.1%;
+    --accent: 199 89% 48%;
+    --accent-foreground: 222 47% 11%;
     --destructive: 0 62.8% 30.6%;
-    --destructive-foreground: 45 20% 95%;
-    --border: 0 0% 16%;
-    --input: 0 0% 16%;
-    --ring: 45 93% 55%;
+    --destructive-foreground: 210 40% 98%;
+    --border: 222 47% 18%;
+    --input: 222 47% 18%;
+    --ring: 199 89% 48%;
   }
 }
 
@@ -57,15 +57,20 @@
     @apply bg-background text-foreground font-body antialiased transition-colors duration-300;
     /* Tactical Grid Background */
     background-image: 
-      linear-gradient(to right, hsl(var(--border) / 0.4) 1px, transparent 1px),
-      linear-gradient(to bottom, hsl(var(--border) / 0.4) 1px, transparent 1px);
+      linear-gradient(to right, hsl(var(--primary) / 0.05) 1px, transparent 1px),
+      linear-gradient(to bottom, hsl(var(--primary) / 0.05) 1px, transparent 1px);
     background-size: 40px 40px;
   }
 }
 
-.icy-gold-text {
+.icy-blue-text {
   @apply text-primary;
-  text-shadow: 0 0 10px rgba(230, 180, 0, 0.2);
+  text-shadow: 0 0 10px rgba(14, 165, 233, 0.2);
+}
+
+.white-header-text {
+  @apply text-foreground;
+  text-shadow: 0 0 10px rgba(14, 165, 233, 0.1);
 }
 
 .no-scrollbar::-webkit-scrollbar { display: none; }
@@ -78,7 +83,7 @@
 
 @keyframes branding-shimmer {
   0%, 100% { filter: brightness(1); }
-  50% { filter: brightness(1.15); }
+  50% { filter: brightness(1.2); }
 }
 
 .animate-branding {

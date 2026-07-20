@@ -8,7 +8,6 @@ import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover
 import { motion } from 'framer-motion';
 import { Input } from '@/components/ui/input';
 import { syntheticIndices } from '@/lib/mock-data';
-import { GlobalAnalysisResult } from './dashboard';
 
 interface DerivChartProps {
     priceHistory: number[];
@@ -21,7 +20,7 @@ interface DerivChartProps {
     lastCandleUpdate?: any;
     selectedMarket: string;
     onMarketChange: (marketId: string) => void;
-    globalResults: Record<string, GlobalAnalysisResult>;
+    globalResults?: Record<string, any>;
 }
 
 const timeIntervals = [
@@ -97,7 +96,7 @@ const DigitStatsOverlay = ({ ticks }: { ticks: number[] }) => {
                                     />
                                     <circle 
                                         cx="50%" cy="50%" r={radius} 
-                                        stroke={s.isMax ? "#10b981" : s.isMin ? "#ef4444" : "#C5A059"} 
+                                        stroke={s.isMax ? "#10b981" : s.isMin ? "#ef4444" : "#0EA5E9"} 
                                         strokeWidth="3" fill="transparent" 
                                         strokeDasharray={circumference}
                                         strokeDashoffset={Math.max(0, offset)}
@@ -140,7 +139,7 @@ export function DerivChart({
     lastCandleUpdate,
     selectedMarket,
     onMarketChange,
-    globalResults
+    globalResults = {}
 }: DerivChartProps) {
     const chartContainerRef = React.useRef<HTMLDivElement>(null);
     const chartRef = React.useRef<IChartApi | null>(null);
@@ -197,19 +196,19 @@ export function DerivChart({
 
         const chart = createChart(chartContainerRef.current, {
             layout: {
-                background: { type: ColorType.Solid, color: '#FFFFFF' },
-                textColor: '#0f172a',
+                background: { type: ColorType.Solid, color: 'transparent' },
+                textColor: 'hsl(var(--foreground))',
                 fontSize: 11,
                 fontFamily: 'Poppins',
             },
             grid: {
-                vertLines: { color: '#f1f5f9' },
-                horzLines: { color: '#f1f5f9' },
+                vertLines: { color: 'hsl(var(--border) / 0.5)' },
+                horzLines: { color: 'hsl(var(--border) / 0.5)' },
             },
             width: chartContainerRef.current.clientWidth,
             height: chartContainerRef.current.clientHeight,
             rightPriceScale: {
-                borderColor: '#e2e8f0',
+                borderColor: 'hsl(var(--border))',
                 autoScale: true,
                 scaleMargins: {
                     top: 0.1,
@@ -217,21 +216,21 @@ export function DerivChart({
                 },
             },
             timeScale: {
-                borderColor: '#e2e8f0',
+                borderColor: 'hsl(var(--border))',
                 timeVisible: true,
                 secondsVisible: true,
                 shiftVisibleRangeOnNewBar: true,
             },
             crosshair: {
-                vertLine: { color: '#64748b', width: 1, style: 1 },
-                horzLine: { color: '#64748b', width: 1, style: 1 },
+                vertLine: { color: 'hsl(var(--primary))', width: 1, style: 1 },
+                horzLine: { color: 'hsl(var(--primary))', width: 1, style: 1 },
             },
         });
 
         const areaSeries = chart.addAreaSeries({
-            lineColor: '#0f172a',
-            topColor: 'rgba(15, 23, 42, 0.1)',
-            bottomColor: 'rgba(15, 23, 42, 0)',
+            lineColor: 'hsl(var(--primary))',
+            topColor: 'hsl(var(--primary) / 0.2)',
+            bottomColor: 'hsl(var(--primary) / 0)',
             lineWidth: 2,
             priceFormat: { type: 'price', precision: decimalPlaces },
             visible: chartType === 'line',
