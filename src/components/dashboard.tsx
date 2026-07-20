@@ -7,7 +7,7 @@ import { AnalyzerView } from './analyzer-view';
 import { GlobalScanView } from './global-scan-view';
 import { DigitFrequencyView } from './digit-frequency-view';
 import { cn } from '@/lib/utils';
-import { Radio, Activity, Moon, Sun, ArrowRightLeft } from 'lucide-react';
+import { Radio, Activity, Moon, Sun } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { Button } from '@/components/ui/button';
 
@@ -168,15 +168,6 @@ export function Dashboard() {
                         </div>
 
                         <div className="flex flex-1 items-center justify-end gap-2 sm:gap-6">
-                            <div className="hidden md:flex flex-col items-end gap-0.5">
-                                <p className="text-[9px] font-bold text-muted-foreground uppercase tracking-widest leading-none">REAL ACCOUNT</p>
-                                <p className="text-sm font-black text-foreground tabular-nums">0.00 <span className="text-[10px] text-muted-foreground">USD</span></p>
-                            </div>
-                            
-                            <Button variant="outline" className="h-8 sm:h-9 px-3 sm:px-4 rounded-full border-primary/20 bg-primary/10 text-primary font-black text-[9px] sm:text-[10px] uppercase tracking-widest hover:bg-primary/20 hidden sm:flex">
-                                <ArrowRightLeft className="mr-2 h-3 w-3 sm:h-3.5 sm:w-3.5" /> TRANSFER
-                            </Button>
-
                             <Button variant="ghost" size="icon" onClick={toggleTheme} className="rounded-full h-9 w-9 sm:h-10 sm:w-10 text-primary hover:bg-primary/5">
                                 {theme === 'light' ? <Moon className="h-4 w-4 sm:h-5 sm:w-5" /> : <Sun className="h-4 w-4 sm:h-5 sm:w-5" />}
                             </Button>
